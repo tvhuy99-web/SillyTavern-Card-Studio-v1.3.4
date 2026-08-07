@@ -1,0 +1,430 @@
+
+    const catalog = BOOT.catalog || { characters: [], personas: [], presets: [], extensions: {} };
+    catalog.characters = Array.isArray(catalog.characters) ? catalog.characters : [];
+    catalog.personas = Array.isArray(catalog.personas) ? catalog.personas : [];
+    catalog.presets = Array.isArray(catalog.presets) ? catalog.presets : [];
+    catalog.extensions = asObject(catalog.extensions);
+
+    function responseFromRpc(result, status) {
+        const responseStatus = Number(status || result && result.status || 200);
+        try {
+            return new Response(JSON.stringify(result && result.body !== undefined ? result.body : result || {}), {
+                status: responseStatus,
+                headers: { 'content-type': 'application/json' }
+            });
+        } catch (_) {
+            return { ok: responseStatus >= 200 && responseStatus < 300, status: responseStatus, json: function () { return Promise.resolve(clone(result)); }, text: function () { return Promise.resolve(JSON.stringify(result || {})); } };
+        }
+    }
+
+    function currentCharacterRecord() {
+        return catalog.characters.find(function (entry) { return entry && (entry.current || entry.fileName === BOOT.context.characterKey || entry.name === BOOT.context.name2 || entry.card && entry.card.name === BOOT.context.name2); })
+            || { fileName: BOOT.context.characterKey, name: BOOT.context.name2, avatar: BOOT.characterAvatar, card: BOOT.characterCard, current: true };
+    }
+    function characterNameOf(entry) { return String(entry && (entry.name || entry.card && entry.card.name) || ''); }
+    function characterIdOf(entry) { return String(entry && (entry.avatar || entry.fileName || entry.id || characterNameOf(entry)) || ''); }
+    function toOfficialCharacter(entry) {
+        const card = clone(entry && entry.card || entry || {});
+        const firstMessages = [String(card.first_mes || '')].concat(Array.isArray(card.alternate_greetings) ? card.alternate_greetings.map(String) : []);
+        return {
+            avatar: entry && (entry.avatar || entry.avatarUrl || entry.fileName) || BOOT.characterAvatar || characterNameOf(entry) + '.png',
+            version: String(card.character_version || card.spec_version || ''),
+            creator: String(card.creator || ''),
+            creator_notes: String(card.creator_notes || card.creatorcomment || ''),
+            worldbook: card.char_book && (card.char_book.name || characterNameOf(entry)) || null,
+            description: String(card.description || ''),
+            first_messages: firstMessages,
+            extensions: clone(card.extensions || {}),
+            personality: String(card.personality || ''),
+            scenario: String(card.scenario || ''),
+            mes_example: String(card.mes_example || ''),
+            raw: card
+        };
+    }
+    function updateCatalogRecord(list, predicate, value) {
+        const index = list.findIndex(predicate);
+        if (index >= 0) list[index] = clone(value);
+        else list.push(clone(value));
+    }
+
+    root.getCharacterNames = function () { return catalog.characters.map(characterNameOf).filter(Boolean); };
+    root.getCharacterIds = function () { return catalog.characters.map(characterIdOf).filter(Boolean); };
+    root.getCurrentCharacterName = function () { return characterNameOf(currentCharacterRecord()) || null; };
+    root.getCurrentCharacterId = function () { return characterIdOf(currentCharacterRecord()) || null; };
+    root.getCharacter = function (name) {
+        const target = !name || name === 'current' ? currentCharacterRecord() : catalog.characters.find(function (entry) { return characterNameOf(entry) === String(name) || characterIdOf(entry) === String(name); });
+        if (!target) return Promise.reject(new Error("Character '" + name + "' does not exist"));
+        return Promise.resolve(toOfficialCharacter(target));
+    };
+    root.createCharacter = async function (name, character) {
+        if (name === 'current' || root.getCharacterNames().includes(String(name))) return false;
+        const result = await rpc('character.create', { name: name, character: character || {} }, 120000);
+        catalog.characters.push(clone(result));
+        return true;
+    };
+    root.createOrReplaceCharacter = async function (name, character, options) {
+        const exists = root.getCharacterNames().includes(String(name));
+        if (exists) await root.replaceCharacter(name, character || {}, options || {});
+        else await root.createCharacter(name, character || {});
+        return !exists;
+    };
+    root.deleteCharacter = async function (name, options) {
+        const targetName = !name || name === 'current' ? root.getCurrentCharacterName() : String(name);
+        if (!targetName || !root.getCharacterNames().includes(targetName)) return false;
+        await rpc('character.delete', { name: targetName, options: options || {} }, 120000);
+        catalog.characters = catalog.characters.filter(function (entry) { return characterNameOf(entry) !== targetName; });
+        return true;
+    };
+    root.replaceCharacter = async function (name, character, options) {
+        const targetName = !name || name === 'current' ? root.getCurrentCharacterName() : String(name);
+        const result = await rpc('character.replace', { name: targetName, character: character || {}, options: options || {} }, 120000);
+        updateCatalogRecord(catalog.characters, function (entry) { return characterNameOf(entry) === targetName; }, result);
+    };
+    root.updateCharacterWith = async function (name, updater) {
+        updater = requireFunctionCallback('updateCharacterWith', updater);
+        const next = await updater(await root.getCharacter(name));
+        await root.replaceCharacter(name, next);
+        return next;
+    };
+
+    function personaIdOf(persona) { return String(persona && (persona.avatar_id || persona.id) || ''); }
+    function personaNameOf(persona) { return String(persona && persona.name || ''); }
+    function currentPersonaRecord() {
+        return catalog.personas.find(function (persona) { return persona && (persona.current || personaIdOf(persona) === BOOT.context.personaId || personaNameOf(persona) === BOOT.context.name1); })
+            || { id: BOOT.context.personaId || 'current', avatar_id: BOOT.context.personaId || 'current', name: BOOT.context.name1, description: '', avatar: BOOT.userAvatar, current: true };
+    }
+    function toOfficialPersona(persona) {
+        return Object.assign({
+            avatar_id: personaIdOf(persona), avatar: persona && persona.avatar || BOOT.userAvatar || personaIdOf(persona),
+            name: personaNameOf(persona), title: '', description: '', position: 0, depth: 2, role: 0,
+            lorebook: '', connections: [], is_default: false
+        }, clone(persona || {}));
+    }
+    root.getPersonaNames = function () { return catalog.personas.map(personaNameOf).filter(Boolean); };
+    root.getPersonaIds = function () { return catalog.personas.map(personaIdOf).filter(Boolean); };
+    root.getCurrentPersonaName = function () { return personaNameOf(currentPersonaRecord()) || null; };
+    root.getCurrentPersonaId = function () { return personaIdOf(currentPersonaRecord()) || null; };
+    root.getPersonaAvatarPath = function (id) { const target = !id || id === 'current' ? currentPersonaRecord() : catalog.personas.find(function (persona) { return personaIdOf(persona) === String(id) || personaNameOf(persona) === String(id); }); return target && (target.avatar || target.avatarUrl) || null; };
+    root.getPersona = function (id) { const target = !id || id === 'current' ? currentPersonaRecord() : catalog.personas.find(function (persona) { return personaIdOf(persona) === String(id) || personaNameOf(persona) === String(id); }); if (!target) throw new Error("Persona '" + id + "' does not exist"); return toOfficialPersona(target); };
+    root.createPersona = async function (name, persona) {
+        if (name === 'current' || root.getPersonaNames().includes(String(name))) return false;
+        const result = await rpc('persona.create', { name: name, persona: persona || {} }, 120000);
+        catalog.personas.push(clone(result));
+        return true;
+    };
+    root.createOrReplacePersona = async function (name, persona, options) {
+        const match = catalog.personas.find(function (entry) { return personaNameOf(entry) === String(name); });
+        if (match) await root.replacePersona(personaIdOf(match), persona || {}, options || {});
+        else await root.createPersona(name, persona || {});
+        return !match;
+    };
+    root.deletePersona = async function (id) {
+        const target = !id || id === 'current' ? currentPersonaRecord() : catalog.personas.find(function (persona) { return personaIdOf(persona) === String(id) || personaNameOf(persona) === String(id); });
+        if (!target) return false;
+        await rpc('persona.delete', { id: personaIdOf(target) }, 120000);
+        catalog.personas = catalog.personas.filter(function (persona) { return personaIdOf(persona) !== personaIdOf(target); });
+        return true;
+    };
+    root.replacePersona = async function (id, persona, options) {
+        const target = !id || id === 'current' ? currentPersonaRecord() : catalog.personas.find(function (entry) { return personaIdOf(entry) === String(id) || personaNameOf(entry) === String(id); });
+        if (!target) throw new Error("Persona '" + id + "' does not exist");
+        const result = await rpc('persona.replace', { id: personaIdOf(target), persona: persona || {}, options: options || {} }, 120000);
+        updateCatalogRecord(catalog.personas, function (entry) { return personaIdOf(entry) === personaIdOf(target); }, result);
+    };
+    root.updatePersonaWith = async function (id, updater, options) { updater = requireFunctionCallback('updatePersonaWith', updater); const next = await updater(root.getPersona(id)); await root.replacePersona(id, next, options); return next; };
+
+    function presetNameOf(preset) { return String(preset && preset.name || ''); }
+    function currentPresetRecord() { return catalog.presets.find(function (preset) { return presetNameOf(preset) === BOOT.context.presetName; }) || catalog.presets[0] || {}; }
+    root.getPresetNames = function () { return catalog.presets.map(presetNameOf).filter(Boolean); };
+    root.getLoadedPresetName = function () { return BOOT.context.presetName || presetNameOf(currentPresetRecord()); };
+    root.getPreset = function (name) {
+        const target = !name || name === 'in_use' ? currentPresetRecord() : catalog.presets.find(function (preset) { return presetNameOf(preset) === String(name); });
+        if (!target) throw new Error("Preset '" + name + "' does not exist");
+        return clone(target);
+    };
+    root.loadPreset = function (name) { if (!root.getPresetNames().includes(String(name))) return false; BOOT.context.presetName = String(name); rpc('preset.load', { name: name }, 60000).catch(function (error) { log('error', error.message); }); return true; };
+    root.createPreset = async function (name, preset) { if (name === 'in_use' || root.getPresetNames().includes(String(name))) return false; const result = await rpc('preset.create', { name: name, preset: preset || root.default_preset }, 120000); catalog.presets.push(clone(result)); return true; };
+    root.createOrReplacePreset = async function (name, preset, options) { const targetName = name === 'in_use' ? root.getLoadedPresetName() : String(name); const exists = root.getPresetNames().includes(targetName); if (exists) await root.replacePreset(targetName, preset, options); else await root.createPreset(targetName, preset); return !exists; };
+    root.deletePreset = async function (name) { if (!root.getPresetNames().includes(String(name))) return false; await rpc('preset.delete', { name: name }, 120000); catalog.presets = catalog.presets.filter(function (preset) { return presetNameOf(preset) !== String(name); }); return true; };
+    root.renamePreset = async function (name, newName) { if (!root.getPresetNames().includes(String(name)) || root.getPresetNames().includes(String(newName))) return false; const result = await rpc('preset.rename', { name: name, newName: newName }, 120000); updateCatalogRecord(catalog.presets, function (preset) { return presetNameOf(preset) === String(name); }, result); return true; };
+    root.replacePreset = async function (name, preset, options) { const targetName = name === 'in_use' ? root.getLoadedPresetName() : String(name); const result = await rpc('preset.replace', { name: targetName, preset: preset || {}, options: options || {} }, 120000); updateCatalogRecord(catalog.presets, function (entry) { return presetNameOf(entry) === targetName; }, result); };
+    root.updatePresetWith = async function (name, updater, options) { updater = requireFunctionCallback('updatePresetWith', updater); const next = await updater(root.getPreset(name)); await root.replacePreset(name, next, options); return next; };
+    root.setPreset = async function (name, partial, options) { const current = root.getPreset(name); const next = Object.assign({}, current, clone(partial || {})); await root.replacePreset(name, next, options); return next; };
+
+    root.isAdmin = function () { return false; };
+    function isBundledHelper(id) { return /(?:^|\/)JS-Slash-Runner$/i.test(String(id || '')); }
+    root.getExtensionType = function (id) { const item = catalog.extensions[String(id)]; return item && (item.type === 'global' || item.type === 'local' || item.type === 'system') ? item.type : (isBundledHelper(id) ? 'local' : null); };
+    root.getExtensionInstallationInfo = async function (id) {
+        const item = catalog.extensions[String(id)];
+        if (!item && !isBundledHelper(id)) return null;
+        return { current_branch_name: String(item && item.current_branch_name || 'bundled'), current_commit_hash: String(item && item.current_commit_hash || '36d8889a99f1cf09d3d1f8aabd0eba33975dc64d'), is_up_to_date: true, remote_url: String(item && (item.remote_url || item.url) || 'https://github.com/N0VI028/JS-Slash-Runner') };
+    };
+    root.getExtensionStatus = root.getExtensionInstallationInfo;
+    root.isInstalledExtension = function (id) { return Boolean(catalog.extensions[String(id)]) || isBundledHelper(id); };
+    function unsupportedExtensionMutation(action) { return async function () { return responseFromRpc({ ok: false, error: action + ' is unavailable in a static Card Studio deployment' }, 501); }; }
+    root.installExtension = unsupportedExtensionMutation('Extension installation');
+    root.uninstallExtension = unsupportedExtensionMutation('Extension removal');
+    root.reinstallExtension = unsupportedExtensionMutation('Extension reinstallation');
+    root.updateExtension = unsupportedExtensionMutation('Extension update');
+
+    async function readRawContent(content) {
+        if (typeof content === 'string') return content;
+        if (content && typeof content.text === 'function') return await content.text();
+        if (content instanceof ArrayBuffer) return new TextDecoder().decode(content);
+        return JSON.stringify(content || {});
+    }
+    root.importRawCharacter = async function (name, content) { const result = await rpc('raw.import.character', { name: name, content: content }, 180000); if (result && result.character) catalog.characters.push(clone(result.character)); return responseFromRpc(result); };
+    root.importRawChat = async function (name, content) { return responseFromRpc(await rpc('raw.import.chat', { name: name, content: await readRawContent(content) }, 180000)); };
+    root.importRawPreset = async function (name, content) { const result = await rpc('raw.import.preset', { name: name, content: await readRawContent(content) }, 180000); if (result && result.preset) updateCatalogRecord(catalog.presets, function (preset) { return presetNameOf(preset) === presetNameOf(result.preset); }, result.preset); return Boolean(result && result.ok !== false); };
+    root.importRawWorldbook = async function (name, content) { const result = await rpc('raw.import.worldbook', { name: name, content: await readRawContent(content) }, 180000); if (result && result.name && !lorebookNames.includes(result.name)) lorebookNames.push(result.name); return Boolean(result && result.ok !== false); };
+    root.importRawTavernRegex = function (name, content) { try { const regex = JSON.parse(String(content)); const list = Array.isArray(regex) ? regex : [regex]; root.replaceTavernRegexes(root.getTavernRegexes().concat(list)); rpc('raw.import.regex', { name: name, content: String(content) }, 60000).catch(function () {}); return true; } catch (_) { return false; } };
+
+    root.audioEnable = function (_args, value) { const settings = root.getAudioSettings(_args && _args.type || 'bgm'); const normalized = String(value === undefined ? _args && (_args.state || _args._) || 'toggle' : value).toLowerCase(); settings.enabled = normalized === 'toggle' ? !settings.enabled : !['off', 'false', '0', 'disable', 'disabled'].includes(normalized); root.setAudioSettings(_args && _args.type || 'bgm', settings); return settings.enabled ? 'on' : 'off'; };
+    root.audioPlay = function (args, value) { const source = value || args && (args.url || args.src || args._); if (String(source || '').toLowerCase() === 'pause' || String(source || '').toLowerCase() === 'stop') { root.pauseAudio(args && args.type); return ''; } root.playAudio(args && args.type || 'bgm', source); return String(source || ''); };
+    root.audioMode = function (args) { const settings = root.getAudioSettings(args && args.type || 'bgm'); if (args && args.mode) settings.mode = args.mode; root.setAudioSettings(args && args.type || 'bgm', settings); return String(settings.mode || 'repeat_all'); };
+    root.audioImport = function (args, value) { let items = value || args && (args.value || args._) || []; try { if (typeof items === 'string') items = JSON.parse(items); } catch (_) { items = [{ url: String(items) }]; } const type = args && args.type || 'bgm'; root.appendAudioList(type, Array.isArray(items) ? items : [items]); return root.getAudioList(type); };
+    root.audioSelect = function (args, value) { const type = args && args.type || 'bgm'; const list = root.getAudioList(type); const index = Math.max(0, Number(value !== undefined ? value : args && args.index) || 0); const selected = list[index] || null; if (selected) root.playAudio(type, selected); return selected; };
+
+    const ejsDefaultFeatures = Object.freeze({ enabled: true, generate_enabled: true, generate_loader_enabled: true, inject_loader_enabled: true, render_enabled: true, render_loader_enabled: true, code_blocks_enabled: true, raw_message_evaluation_enabled: true, filter_message_enabled: false, depth_limit: -1, autosave_enabled: true, preload_worldinfo_enabled: true, with_context_disabled: false, debug_enabled: false, invert_enabled: false, compile_workers: false, sandbox: !FULL_COMPATIBILITY_MODE, cache_enabled: 1, cache_size: 100, cache_hasher: 'h32ToString' });
+    let ejsFeatures = clone(ejsDefaultFeatures);
+    root.EjsTemplate = {
+        evaltemplate: async function (code, suppliedContext, options) { if (!root.ejs || typeof root.ejs.render !== 'function') return root.substitudeMacros(String(code || '')); const environment = suppliedContext || await root.EjsTemplate.prepareContext(); return await root.ejs.render(String(code || ''), environment, Object.assign({ async: true }, options || {})); },
+        prepareContext: async function (additionalContext, lastMessageId) { return Object.assign({}, root.getAllVariables(lastMessageId), { SillyTavern: root.SillyTavern, TavernHelper: root.TavernHelper, Mvu: root.Mvu, stat_data: root.stat_data, getvar: root.getvar, getwi: root.getwi, toastr: root.toastr, _: root._, YAML: root.YAML, z: root.z }, clone(additionalContext || {})); },
+        getSyntaxErrorInfo: async function (code) { try { if (root.ejs && typeof root.ejs.compile === 'function') root.ejs.compile(String(code || ''), { async: true }); return ''; } catch (error) { return String(error && error.message || error); } },
+        allVariables: function (endMessageId) { return root.getAllVariables(endMessageId); },
+        getFeatures: function () { return clone(ejsFeatures); },
+        setFeatures: function (features) { ejsFeatures = Object.assign(ejsFeatures, clone(features || {})); },
+        resetFeatures: function () { ejsFeatures = clone(ejsDefaultFeatures); }
+    };
+
+    const toolRegistry = new Map();
+    const slashRegistry = new Map();
+    const nativeSlashExecutor = root.executeSlashCommands;
+    async function executeRegisteredSlash(command) {
+        const text = String(command || '').trim();
+        const match = text.match(/^\/?([^\s|]+)(?:\s+([\s\S]*))?$/);
+        if (!match) return nativeSlashExecutor(command);
+        const registered = slashRegistry.get(match[1]);
+        if (!registered) return nativeSlashExecutor(command);
+        const callback = registered.callback || registered.execute || registered.handler;
+        if (typeof callback !== 'function') throw new Error('Registered slash command has no callback: ' + match[1]);
+        return await callback({}, match[2] || '');
+    }
+    root.executeSlashCommands = root.triggerSlash = root.triggerSlashWithResult = executeRegisteredSlash;
+    root.registerSlashCommand = function (name, callback) { slashRegistry.set(String(name).replace(/^\//, ''), { name: name, callback: callback }); return callback; };
+    const dataBankScrapers = new Map();
+    const localeData = {};
+    const ARGUMENT_TYPE = Object.freeze({ STRING: 'string', NUMBER: 'number', BOOLEAN: 'boolean', RANGE: 'range', CLOSURE: 'closure', SUBCOMMAND: 'subcommand', VARIABLE_NAME: 'variable_name', ENUM: 'enum', LIST: 'list', DICTIONARY: 'dictionary' });
+    function SlashCommand(definition) { Object.assign(this, definition || {}); }
+    function SlashCommandArgument(definition) { Object.assign(this, definition || {}); }
+    function SlashCommandNamedArgument(definition) { Object.assign(this, definition || {}); }
+    function SlashCommandEnumValue(value, description) { this.value = value; this.description = description || ''; }
+    const SlashCommandParser = { commands: slashRegistry, addCommandObject: function (command) { const name = String(command && (command.name || command.command) || ''); if (name) slashRegistry.set(name, command); return command; }, getCommand: function (name) { return slashRegistry.get(String(name)); } };
+    class Popup {
+        constructor(content, type, options) { this.content = content; this.type = type; this.options = options || {}; }
+        show() { return root.callPopup(this.content, this.type, this.options && this.options.title); }
+        complete(result) { return Promise.resolve(result); }
+    }
+    class ModuleWorkerWrapper {
+        constructor(url, options) { this.worker = new Worker(url, Object.assign({ type: 'module' }, options || {})); }
+        postMessage() { return this.worker.postMessage.apply(this.worker, arguments); }
+        terminate() { return this.worker.terminate(); }
+        addEventListener() { return this.worker.addEventListener.apply(this.worker, arguments); }
+        removeEventListener() { return this.worker.removeEventListener.apply(this.worker, arguments); }
+    }
+    class ChatCompletionService { static processRequest(options) { return root.generate(options || {}); } }
+    class TextCompletionService { static processRequest(options) { return root.generate(options || {}); } }
+    class ConnectionManagerRequestService { static sendRequest(options) { return root.generate(options || {}); } }
+
+    const compatContext = {
+        accountStorage: root.localStorage || {},
+        characters: catalog.characters,
+        groups: [],
+        getRequestHeaders: function (options) { return options && options.omitContentType ? {} : { 'Content-Type': 'application/json' }; },
+        reloadCurrentChat: function () { return rpc('chat.reload', {}, 60000); },
+        renameChat: function (name) { return rpc('chat.rename', { name: name }, 60000); },
+        maxContext: Number(currentPresetRecord().truncation_length || currentPresetRecord().max_context || 0),
+        saveMetadataDebounced: function () { return context.saveMetadata(); },
+        streamingProcessor: null,
+        eventTypes: root.tavern_events,
+        deleteMessage: root.deleteChatMessages,
+        generate: root.generate,
+        sendStreamingRequest: function (options) { return root.generate(Object.assign({}, options || {}, { should_stream: true })); },
+        sendGenerationRequest: function (options) { return root.generate(options || {}); },
+        stopGeneration: root.stopAllGeneration,
+        tokenizers: {},
+        getTextTokens: function (text) { return Array.from(String(text || '')).map(function (value) { return value.codePointAt(0); }); },
+        getTokenCount: function (text) { return Math.ceil(String(text || '').length / 4); },
+        getTokenCountAsync: function (text) { return Promise.resolve(Math.ceil(String(text || '').length / 4)); },
+        extensionPrompts: promptInjects,
+        setExtensionPrompt: function (key, value, position, depth, scan) { if (value === undefined || value === null || value === '') root.uninjectPrompts(key); else root.injectPrompts({ id: key, content: value, position: position, depth: depth, scan: scan }); },
+        updateChatMetadata: function (value) { Object.assign(context.chatMetadata, clone(value || {})); return context.saveMetadata(); },
+        saveChat: function () { return rpc('chat.save', {}, 60000); },
+        openCharacterChat: function (id) { return rpc('character.select', { id: id }, 60000); },
+        openGroupChat: function (id) { return rpc('group.select', { id: id }, 60000); },
+        sendSystemMessage: function (type, text) { return root.createChatMessages([{ role: 'system', message: text || type || '' }]); },
+        activateSendButtons: function () { root.sendMessageToParent('SET_INPUT_LOCKED', false); },
+        deactivateSendButtons: function () { root.sendMessageToParent('SET_INPUT_LOCKED', true); },
+        saveReply: function (messageId, text) { return root.setChatMessage({ message_id: messageId, message: text }); },
+        substituteParamsExtended: root.substitudeMacros,
+        SlashCommandParser: SlashCommandParser,
+        SlashCommand: SlashCommand,
+        SlashCommandArgument: SlashCommandArgument,
+        SlashCommandNamedArgument: SlashCommandNamedArgument,
+        SlashCommandEnumValue: SlashCommandEnumValue,
+        ARGUMENT_TYPE: ARGUMENT_TYPE,
+        executeSlashCommandsWithOptions: async function (command) { const pipe = await root.executeSlashCommands(command); return { pipe: pipe, isAborted: false }; },
+        registerSlashCommand: root.registerSlashCommand,
+        timestampToMoment: function (value) { return root.moment ? root.moment(value) : new Date(value); },
+        registerHelper: function (name, helper) { if (root.Handlebars && root.Handlebars.registerHelper) root.Handlebars.registerHelper(name, helper); return helper; },
+        registerMacro: root.registerMacroLike,
+        unregisterMacro: root.unregisterMacroLike,
+        registerFunctionTool: function (tool) { const name = String(tool && (tool.name || tool.function && tool.function.name) || uuid()); toolRegistry.set(name, tool); return name; },
+        unregisterFunctionTool: function (name) { return toolRegistry.delete(String(name)); },
+        isToolCallingSupported: function () { return true; },
+        canPerformToolCalls: function () { return true; },
+        ToolManager: { tools: toolRegistry, registerFunctionTool: function (tool) { return compatContext.registerFunctionTool(tool); }, unregisterFunctionTool: function (name) { return toolRegistry.delete(String(name)); } },
+        registerDebugFunction: function (name, fn) { root[String(name)] = fn; return fn; },
+        renderExtensionTemplate: function (_extension, templateId, data) { const template = typeof templateId === 'string' && templateId.includes('<') ? templateId : ''; return root.ejs && template ? root.ejs.render(template, data || {}) : template; },
+        renderExtensionTemplateAsync: async function (extension, templateId, data) { return await compatContext.renderExtensionTemplate(extension, templateId, data); },
+        registerDataBankScraper: function (name, scraper) { dataBankScrapers.set(String(name), scraper); return scraper; },
+        callPopup: root.callPopup,
+        callGenericPopup: root.callPopup,
+        showLoader: function () { const element = document.getElementById('st-loading-overlay'); if (element) element.style.display = ''; },
+        hideLoader: function () { const element = document.getElementById('st-loading-overlay'); if (element) element.style.display = 'none'; },
+        mainApi: 'openai',
+        ModuleWorkerWrapper: ModuleWorkerWrapper,
+        getTokenizerModel: function () { return root.getModelList().then(function (models) { return models[0] || ''; }); },
+        generateQuietPrompt: root.generate,
+        generateRaw: root.generateRaw,
+        generateRawData: async function (options) { return { text: await root.generateRaw(options || {}) }; },
+        writeExtensionField: context.writeExtensionField,
+        writeExtensionFieldBulk: async function (characterId, values) { const entries = Object.entries(values || {}); await Promise.all(entries.map(function (entry) { return context.writeExtensionField(characterId, entry[0], entry[1]); })); return true; },
+        selectCharacterById: function (id) { return rpc('character.select', { id: id }, 60000); },
+        messageFormatting: root.formatAsDisplayedMessage,
+        shouldSendOnEnter: function () { return true; },
+        isMobile: function () { return root.is_mobile; },
+        t: function (text) { return String(text || ''); },
+        translate: function (text) { return String(text || ''); },
+        getCurrentLocale: function () { return navigator.language || 'en'; },
+        addLocaleData: function (locale, data) { localeData[String(locale)] = Object.assign(localeData[String(locale)] || {}, clone(data || {})); },
+        tags: [], tagMap: {}, menuType: 'character_edit',
+        createCharacterData: function (name) { return { name: name || 'Character', description: '', first_mes: '', mes_example: '', extensions: {} }; },
+        Popup: Popup,
+        POPUP_TYPE: Object.freeze({ TEXT: 'text', HTML: 'html', INPUT: 'input', CONFIRM: 'confirm', DISPLAY: 'display' }),
+        POPUP_RESULT: Object.freeze({ AFFIRMATIVE: 1, NEGATIVE: 0, CANCELLED: null }),
+        chatCompletionSettings: currentPresetRecord(),
+        textCompletionSettings: currentPresetRecord(),
+        getCharacters: function () { return Promise.resolve(clone(catalog.characters)); },
+        getOneCharacter: function (id) { return root.getCharacter(id); },
+        getCharacterCardFields: function (card) { return clone(card && card.raw || card || BOOT.characterCard); },
+        getCharacterSource: function (card) { return clone(card && card.source || []); },
+        importFromExternalUrl: async function (url) { const response = await fetch(url); return await response.json(); },
+        importTags: function (tags) { compatContext.tags = Array.from(new Set(compatContext.tags.concat(Array.isArray(tags) ? tags : []))); return compatContext.tags; },
+        uuidv4: uuid,
+        humanizedDateTime: function (value) { return new Date(value || Date.now()).toLocaleString(); },
+        updateMessageBlock: function (messageId, message) { return root.setChatMessage(Object.assign({ message_id: messageId }, message || {})); },
+        appendMediaToMessage: function (message, media) { const next = clone(message || {}); next.extra = next.extra || {}; next.extra.media = Array.isArray(next.extra.media) ? next.extra.media : []; next.extra.media.push(clone(media)); return next; },
+        ensureMessageMediaIsArray: function (message) { message.extra = message.extra || {}; if (!Array.isArray(message.extra.media)) message.extra.media = message.extra.media ? [message.extra.media] : []; return message.extra.media; },
+        getMediaDisplay: function (media) { return media && (media.url || media.src || media.path) || ''; },
+        getMediaIndex: function (message, media) { return compatContext.ensureMessageMediaIsArray(message).indexOf(media); },
+        scrollChatToBottom: function () { const chatElement = document.getElementById('chat'); if (chatElement) chatElement.scrollTop = chatElement.scrollHeight; },
+        scrollOnMediaLoad: function () { return compatContext.scrollChatToBottom(); },
+        macros: { register: root.registerMacroLike, unregister: root.unregisterMacroLike, substitute: root.substitudeMacros },
+        loader: { show: function () { return compatContext.showLoader(); }, hide: function () { return compatContext.hideLoader(); } },
+        swipe: { get: function (id) { return root.getChatMessages(id, { include_swipes: true }); }, set: function (id, swipeId) { return root.setChatMessage({ message_id: id, swipe_id: swipeId }); } },
+        variables: { get: root.getVariables, getAll: root.getAllVariables, replace: root.replaceVariables, update: root.updateVariablesWith, insert: root.insertVariables, delete: root.deleteVariable },
+        loadWorldInfo: function (name) { return root.getWorldbook(name); },
+        saveWorldInfo: function (name, book) { return root.replaceWorldbook(name, book); },
+        reloadWorldInfoEditor: function () { return Promise.resolve(); },
+        updateWorldInfoList: function () { return rpc('lorebook.names', {}, 30000); },
+        convertCharacterBook: function (book) { return clone(book || {}); },
+        getWorldInfoPrompt: function () { return worldInfo.map(function (entry) { return entry.content || ''; }).join('\n'); },
+        getWorldInfoNames: root.getWorldbookNames,
+        CONNECT_API_MAP: {},
+        getTextGenServer: function () { return ''; },
+        extractMessageFromData: function (data) { return String(data && (data.message || data.text || data.content) || ''); },
+        getPresetManager: function () { return { getAllPresets: function () { return clone(catalog.presets); }, getPreset: root.getPreset, selectPreset: root.loadPreset, savePreset: root.replacePreset, deletePreset: root.deletePreset }; },
+        getChatCompletionModel: function () { return root.getModelList().then(function (models) { return models[0] || ''; }); },
+        printMessages: function () { return Promise.resolve(); },
+        clearChat: function () { return root.deleteChatMessages('0-' + root.getLastMessageId()); },
+        ChatCompletionService: ChatCompletionService,
+        TextCompletionService: TextCompletionService,
+        ConnectionManagerRequestService: ConnectionManagerRequestService,
+        updateReasoningUI: function () { return Promise.resolve(); },
+        parseReasoningFromString: function (text) { const match = String(text || '').match(/<thinking>([\s\S]*?)<\/thinking>/i); return { reasoning: match ? match[1] : '', content: match ? String(text).replace(match[0], '') : String(text || '') }; },
+        getReasoningTemplateByName: function (name) { return { name: name || 'default', prefix: '<thinking>', suffix: '</thinking>' }; },
+        unshallowCharacter: function (id) { return root.getCharacter(id); },
+        unshallowGroupMembers: function () { return Promise.resolve([]); },
+        getExtensionManifest: function (id) { return root.getExtensionInstallationInfo(id); },
+        openThirdPartyExtensionMenu: function (id) { return root.eventEmit('extension_menu_opened', id); },
+        symbols: Object.freeze({}), constants: Object.freeze({})
+    };
+
+    Object.assign(context, compatContext);
+    const officialContextKeys = ${fp};
+
+    const runtimeSillyTavern = root.SillyTavern;
+    const officialSillyTavern = {};
+    Object.keys(runtimeSillyTavern || {}).forEach(function (key) { if (key !== 'chat') officialSillyTavern[key] = runtimeSillyTavern[key]; });
+    officialContextKeys.forEach(function (key) {
+        Object.defineProperty(officialSillyTavern, key, {
+            configurable: true, enumerable: true,
+            get: function () { return context[key]; },
+            set: function (value) { context[key] = value; }
+        });
+    });
+    officialSillyTavern.getContext = root.getContext;
+    officialSillyTavern.runtime = runtimeSillyTavern;
+
+    const officialLibrarySources = {
+        lodash: function () { return root._; }, Fuse: function () { return root.Fuse; }, DOMPurify: function () { return root.DOMPurify; },
+        hljs: function () { return root.hljs; }, localforage: function () { return root.localforage; }, Handlebars: function () { return root.Handlebars; },
+        css: function () { return root.css || root.__ST_OFFICIAL_LIBS && root.__ST_OFFICIAL_LIBS.css; }, Bowser: function () { return root.bowser || root.Bowser; },
+        DiffMatchPatch: function () { return root.diff_match_patch || root.DiffMatchPatch; }, Readability: function () { return root.Readability || root.__ST_OFFICIAL_LIBS && root.__ST_OFFICIAL_LIBS.Readability; },
+        isProbablyReaderable: function () { return root.isProbablyReaderable || root.__ST_OFFICIAL_LIBS && root.__ST_OFFICIAL_LIBS.isProbablyReaderable; },
+        SVGInject: function () { return root.SVGInject || root.__ST_OFFICIAL_LIBS && root.__ST_OFFICIAL_LIBS.SVGInject; }, showdown: function () { return root.showdown; },
+        moment: function () { return root.moment; }, seedrandom: function () { return Math.seedrandom; }, Popper: function () { return root.Popper; },
+        droll: function () { return root.droll || root.__ST_OFFICIAL_LIBS && root.__ST_OFFICIAL_LIBS.droll; }, morphdom: function () { return root.morphdom; },
+        slideToggle: function () { return root.slideToggle || root.__ST_OFFICIAL_LIBS && root.__ST_OFFICIAL_LIBS.slideToggle; }, chalk: function () { return root.chalk || root.__ST_OFFICIAL_LIBS && root.__ST_OFFICIAL_LIBS.chalk; },
+        yaml: function () { return root.YAML || root.jsyaml; }, chevrotain: function () { return root.chevrotain || root.__ST_OFFICIAL_LIBS && root.__ST_OFFICIAL_LIBS.chevrotain; },
+        gzipSync: function () { return root.gzipSync || root.__ST_OFFICIAL_LIBS && root.__ST_OFFICIAL_LIBS.gzipSync; }, gzip: function () { return root.gzip || root.__ST_OFFICIAL_LIBS && root.__ST_OFFICIAL_LIBS.gzip; },
+        sha256: function () { return root.sha256 || root.__ST_OFFICIAL_LIBS && root.__ST_OFFICIAL_LIBS.sha256; }
+    };
+    const officialLibraries = Object.assign({}, runtimeSillyTavern && runtimeSillyTavern.libs || {});
+    Object.keys(officialLibrarySources).forEach(function (key) { Object.defineProperty(officialLibraries, key, { configurable: true, enumerable: true, get: officialLibrarySources[key] }); });
+    officialSillyTavern.libs = officialLibraries;
+    root.SillyTavern = officialSillyTavern;
+    root.ST = officialSillyTavern;
+
+    root.TavernHelper.tavern_events = root.tavern_events;
+    root.TavernHelper.iframe_events = root.iframe_events;
+    [
+        'audioEnable','audioImport','audioMode','audioPlay','audioSelect','getCharacterNames','getCharacterIds','getCurrentCharacterName','getCurrentCharacterId','createCharacter','createOrReplaceCharacter','deleteCharacter','getCharacter','replaceCharacter','updateCharacterWith',
+        'getPersonaNames','getPersonaIds','getCurrentPersonaName','getCurrentPersonaId','getPersonaAvatarPath','createPersona','createOrReplacePersona','deletePersona','getPersona','replacePersona','updatePersonaWith',
+        'getPresetNames','getLoadedPresetName','loadPreset','createPreset','createOrReplacePreset','deletePreset','renamePreset','getPreset','replacePreset','updatePresetWith','setPreset',
+        'isAdmin','getExtensionType','getExtensionStatus','getExtensionInstallationInfo','isInstalledExtension','installExtension','uninstallExtension','reinstallExtension','updateExtension',
+        'importRawCharacter','importRawChat','importRawPreset','importRawWorldbook','importRawTavernRegex'
+    ].forEach(function (name) { root.TavernHelper[name] = root[name]; });
+    root.updateTavernHelper = root.updateFrontendVersion = function () { return Promise.resolve(HELPER_VERSION); };
+    root.TavernHelper.updateTavernHelper = root.updateTavernHelper;
+    root.TavernHelper.updateFrontendVersion = root.updateFrontendVersion;
+    if (FULL_COMPATIBILITY_MODE && root.parent && root.parent !== root) {
+        [
+            'SillyTavern','ST','TavernHelper','Mvu','eventSource','event_types','tavern_events','iframe_events',
+            'getContext','getVariables','getAllVariables','replaceVariables','updateVariablesWith','insertVariables',
+            'insertOrAssignVariables','deleteVariable','getMessageId','getCurrentMessageId','getLastMessageId',
+            'substitudeMacros','substituteMacros','triggerSlash','triggerSlashWithResult','generate','generateRaw',
+            'jQuery','$','_','toastr','YAML','z','Zod','EjsTemplate'
+        ].forEach(function (name) {
+            try {
+                Object.defineProperty(root.parent, name, {
+                    configurable: true,
+                    enumerable: false,
+                    get: function () { return root[name]; },
+                    set: function (value) { root[name] = value; }
+                });
+            } catch (_) {}
+        });
+        try { root.parent.__cardRuntimeFullCompatibility = { version: IMPLEMENTATION_VERSION, targetSillyTavern: TAVERN_VERSION, targetTavernHelper: HELPER_VERSION }; } catch (_) {}
+    }

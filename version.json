@@ -1,0 +1,14 @@
+{
+  "application": "SillyTavern Card Studio",
+  "release": "1.3.5-compat",
+  "sillyTavernReference": "1.18.0",
+  "tavernHelperReference": "4.8.19",
+  "runtimeCompatibility": "4.8.19-compat.11",
+  "entryBundle": "./assets/index-11db71a5-modeltest-v2-htmlmodes-v1.js",
+  "uiBundle": "./assets/ui-d8367f0f.css",
+  "deploymentFormat": "portable-static-root",
+  "runtimeSwitchLocation": "Cài đặt > Thẻ HTML",
+  "modelConnectionTestPatch": "./assets/model-connection-test-v1.3.4-v2.js",
+  "htmlSettingsMode": "advanced-default",
+  "patchReport": "./COMPATIBILITY-FIX-REPORT.md"
+}

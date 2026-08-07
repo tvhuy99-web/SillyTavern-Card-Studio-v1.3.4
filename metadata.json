@@ -1,0 +1,6 @@
+{
+  "name": "SillyTavern Card Studio",
+  "description": "SillyTavern Card Studio v1.3.5 extracted project",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

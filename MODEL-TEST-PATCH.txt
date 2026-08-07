@@ -1,0 +1,24 @@
+SillyTavern Card Studio v1.3.4 - Model Connection Test Patch
+
+Thay đổi duy nhất về chức năng:
+- Thêm nút "Kiểm tra" cạnh các ô chọn/nhập Model ID trong toàn ứng dụng.
+- Bao phủ cấu hình Gemini, OpenRouter, Proxy, Proxy Tool/Chat Model, Smart Scan,
+  Gợi ý hành động, Cải thiện văn chương, Medusa 2-Pass, Co-pilot, Arena và
+  bộ chọn model nhanh trong khu trò chuyện.
+- Nút kiểm tra gửi một yêu cầu tạo nội dung tối thiểu tới đúng model/provider.
+- Hiển thị trạng thái: Đang kiểm tra, Hoạt động, Lỗi.
+- Trạng thái kiểm tra được đặt lại khi model hoặc cấu hình kết nối liên quan thay đổi.
+- Với Proxy, bộ kiểm tra ưu tiên URL/key/profile/protocol đang hiển thị trên giao diện.
+
+Không thay đổi các tính năng khác ngoài các mục được ghi bên dưới.
+
+Hotfix v2:
+- Đổi tên bundle JavaScript đã chỉnh sửa để tránh CDN/trình duyệt dùng cache của bundle cũ.
+- Nút Kiểm tra chờ tối đa 6 giây cho bộ kiểm tra model khởi tạo trước khi báo lỗi.
+
+HTML Settings Modes v1:
+- Gộp công tắc bộ xử lý và quyền chạy iframe thành hai lựa chọn duy nhất:
+  "Nâng cao" và "Cơ bản".
+- "Nâng cao" cho phép đầy đủ quyền chạy thẻ và bật bộ xử lý mới tương thích cao.
+- "Cơ bản" thu gọn quyền trong sandbox và dùng bộ xử lý cũ, dành cho người mới.
+- Mặc định mới là "Nâng cao"; lựa chọn của người dùng vẫn được lưu lại.

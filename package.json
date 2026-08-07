@@ -1,0 +1,14 @@
+{
+  "name": "sillytavern-card-studio",
+  "private": true,
+  "version": "1.3.5",
+  "type": "module",
+  "scripts": {
+    "dev": "node server.js",
+    "build": "mkdir -p dist && cp -r index.html assets scripts api-unavailable.json version.json _redirects _headers dist/ || true",
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.21.2"
+  }
+}

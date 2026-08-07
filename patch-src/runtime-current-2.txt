@@ -1,0 +1,218 @@
+
+(async function () {
+    const START_OPTIONS = ${i};
+    await window.cardStudioReady;
+    try {
+        if (window.__cardRuntimeCoreLibrariesReady) await window.__cardRuntimeCoreLibrariesReady;
+        if (window.builtin) {
+            window.builtin.zod = window.z;
+            window.builtin.yaml = window.YAML || window.jsyaml;
+            window.builtin.vueRouter = window.VueRouter;
+            window.builtin.pinia = window.Pinia;
+        }
+        if (window.SillyTavern && window.SillyTavern.libs) {
+            window.SillyTavern.libs.zod = window.z;
+            window.SillyTavern.libs.yaml = window.YAML || window.jsyaml;
+            window.SillyTavern.libs.VueRouter = window.VueRouter;
+            window.SillyTavern.libs.Pinia = window.Pinia;
+        }
+        const delayedMissing = [];
+        if (!window.z) delayedMissing.push('zod@4.4.3');
+        if (!window.YAML) delayedMissing.push('yaml@2.9.0');
+        if (delayedMissing.length) throw new Error('Missing asynchronous runtime libraries: ' + delayedMissing.join(', '));
+    } catch (error) {
+        window._cardStudio.diagnostic('CARD_RUNTIME_DEPENDENCY_MISSING', 'dependency-load', 'core-library-loader', 'Không thể tải đầy đủ thư viện tương thích TavernHelper 4.8.19: ' + error.message, { stack: error.stack, details: { required: ['zod@4.4.3', 'yaml@2.9.0'] } });
+    }
+    await window.eventEmit(
+        window.iframe_events.MESSAGE_IFRAME_RENDER_STARTED,
+        window._cardStudio?.engineMode === 'official-local' ? window.getIframeName() : 'card-message-' + window.getCurrentMessageId(),
+    );
+    const target = window._cardStudio?.engineMode === 'official-local'
+        ? document.body
+        : document.getElementById('target_mes_text') || document.getElementById('chat') || document.body;
+    let html = ${r};
+    try {
+        if (typeof window.substitudeMacros === 'function') html = window.substitudeMacros(html);
+    } catch (error) {
+        window._cardStudio.diagnostic('CARD_RUNTIME_SCRIPT_FAILED', 'macro-render', 'macro-engine', 'Không thể thay thế macro trong HTML: ' + error.message, { stack: error.stack });
+    }
+    try {
+        if (window.ejs && typeof window.ejs.render === 'function' && /<%[=-]?/.test(html)) {
+            html = await window.ejs.render(html, { getvar: window.getvar, getwi: window.getwi, toastr: window.toastr, stat_data: window.stat_data }, { async: true });
+        }
+    } catch (error) {
+        window._cardStudio.log('error', 'EJS rendering failed: ' + error.message, { stack: error.stack });
+        window._cardStudio.diagnostic('CARD_RUNTIME_EJS_RENDER_FAILED', 'render', 'EJS', 'EJS rendering failed: ' + error.message, { stack: error.stack });
+    }
+
+    try {
+        target.innerHTML = html;
+    } catch (error) {
+        window._cardStudio.diagnostic('CARD_RUNTIME_RENDER_FAILED', 'render', 'DOM', 'Không thể gắn HTML của thẻ vào DOM: ' + error.message, { stack: error.stack });
+        target.textContent = 'Không thể hiển thị giao diện HTML. Hãy mở Bảng Gỡ Lỗi để xem mã chẩn đoán.';
+    }
+
+    function enhanceAccessibility(rootNode) {
+        try {
+            const interactive = rootNode.querySelectorAll('button, [role="button"], input, select, textarea, a[href], [onclick]');
+            interactive.forEach(function (element, index) {
+                if (!element.hasAttribute('aria-label') && !element.hasAttribute('aria-labelledby')) {
+                    const text = String(element.textContent || '').replace(/\s+/g, ' ').trim();
+                    const title = element.getAttribute('title') || element.getAttribute('data-label') || element.getAttribute('name') || element.getAttribute('id');
+                    if (!text && title) element.setAttribute('aria-label', title);
+                    else if (!text && (element.querySelector('svg, i, img') || element.matches('[onclick]'))) element.setAttribute('aria-label', 'Nút tương tác ' + (index + 1));
+                }
+                if (element.matches('[onclick]') && !element.hasAttribute('tabindex') && !/^(BUTTON|A|INPUT|SELECT|TEXTAREA)$/.test(element.tagName)) {
+                    element.setAttribute('tabindex', '0');
+                    if (!element.hasAttribute('role')) element.setAttribute('role', 'button');
+                }
+            });
+            rootNode.querySelectorAll('img:not([alt])').forEach(function (image) {
+                const src = image.getAttribute('src') || '';
+                const name = src.split('/').pop() || 'Hình ảnh trong thẻ';
+                image.setAttribute('alt', name.slice(0, 120));
+            });
+            if (!document.getElementById('st-card-announcer')) {
+                const announcer = document.createElement('div');
+                announcer.id = 'st-card-announcer';
+                announcer.setAttribute('aria-live', 'polite');
+                announcer.setAttribute('aria-atomic', 'true');
+                announcer.style.cssText = 'position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0;';
+                document.body.appendChild(announcer);
+                window.cardStudioAnnounce = function (message) { announcer.textContent = String(message || ''); };
+            }
+        } catch (error) {
+            window._cardStudio.log('warn', 'Accessibility enhancement failed: ' + error.message);
+        }
+    }
+    enhanceAccessibility(target);
+
+    const dynamicDescriptors = [];
+    Array.from(target.querySelectorAll('script')).forEach(function (script, index) {
+        const type = String(script.type || '').toLowerCase();
+        if (type === 'importmap' || type === 'importmap-shim') {
+            try {
+                const importMap = document.createElement('script');
+                importMap.type = type;
+                importMap.textContent = script.textContent || '';
+                document.head.appendChild(importMap);
+            } catch (error) {
+                window._cardStudio.diagnostic('CARD_RUNTIME_IMPORTMAP_INVALID', 'script-prepare', 'importmap', 'Không thể cài import map được render: ' + error.message, { stack: error.stack });
+            }
+            script.remove();
+            return;
+        }
+        if (type && !['module', 'text/javascript', 'application/javascript', 'text/ecmascript', 'application/ecmascript'].includes(type)) return;
+        dynamicDescriptors.push({
+            id: script.id || 'rendered-script-' + index,
+            name: 'Rendered HTML script ' + (index + 1),
+            type: type === 'module' ? 'module' : 'classic',
+            src: script.getAttribute('src') || undefined,
+            content: script.textContent || '',
+            async: script.hasAttribute('async'),
+            defer: script.hasAttribute('defer'),
+            noModule: script.noModule,
+            crossOrigin: script.crossOrigin || undefined,
+            integrity: script.integrity || undefined,
+            referrerPolicy: script.referrerPolicy || undefined
+        });
+        script.remove();
+    });
+    const descriptors = dynamicDescriptors.concat(${a});
+    if (typeof window.__registerCardRuntimeScripts === 'function') window.__registerCardRuntimeScripts(descriptors);
+
+    async function runScript(info) {
+        window.__setActiveCardScript(info.id, info.name, info.info, info.buttons);
+        let scriptContent = String(info.content || '');
+        try {
+            if (scriptContent.indexOf('{{') >= 0 && typeof window.substitudeMacros === 'function') scriptContent = window.substitudeMacros(scriptContent);
+        } catch (error) {
+            window._cardStudio.diagnostic('CARD_RUNTIME_SCRIPT_FAILED', 'macro-render', 'macro-engine', 'Không thể thay thế macro trong script: ' + error.message, { stack: error.stack, scriptId: info.id, scriptName: info.name });
+        }
+        if (window.ejs && typeof window.ejs.render === 'function' && /<%[=-]?/.test(scriptContent)) {
+            try {
+                scriptContent = await window.ejs.render(scriptContent, { getvar: window.getvar, getwi: window.getwi, toastr: window.toastr, stat_data: window.stat_data }, { async: true });
+            } catch (error) {
+                window._cardStudio.log('script-error', 'EJS script rendering failed: ' + (info.name || info.id), { stack: error.stack });
+                window._cardStudio.diagnostic('CARD_RUNTIME_EJS_RENDER_FAILED', 'script-render', 'EJS', 'EJS script rendering failed: ' + (info.name || info.id), { stack: error.stack, scriptId: info.id, scriptName: info.name });
+                return;
+            }
+        }
+        return new Promise(function (resolve) {
+            const element = document.createElement('script');
+            if (info.type === 'module') element.type = 'module';
+            if (info.noModule) element.noModule = true;
+            if (info.crossOrigin) element.crossOrigin = info.crossOrigin;
+            if (info.integrity) element.integrity = info.integrity;
+            if (info.referrerPolicy) element.referrerPolicy = info.referrerPolicy;
+            if (info.src) element.src = window.resolveCardAsset(info.src);
+            else element.textContent = scriptContent + '\n//# sourceURL=card-runtime-' + encodeURIComponent(info.name || info.id) + '.js';
+            let finished = false;
+            const finish = function (error) {
+                if (finished) return;
+                finished = true;
+                if (error) {
+                    const message = 'Card script failed: ' + (info.name || info.id);
+                    window._cardStudio.log('script-error', message, { src: info.src || null, scriptId: info.id });
+                    window._cardStudio.diagnostic('CARD_RUNTIME_SCRIPT_FAILED', 'script-execution', 'script-loader', message, { resourceUrl: info.src || undefined, scriptId: info.id, scriptName: info.name });
+                }
+                resolve();
+            };
+            element.onload = function () { finish(); };
+            element.onerror = function () { finish(true); };
+            document.body.appendChild(element);
+            if (!info.src && info.type !== 'module') finish();
+            else setTimeout(function () { finish(); }, 30000);
+        });
+    }
+
+    if (START_OPTIONS.executeScripts) {
+        const deferred = [];
+        const asyncTasks = [];
+        for (const descriptor of descriptors) {
+            if (descriptor.async) {
+                asyncTasks.push(runScript(descriptor));
+            } else if (descriptor.defer || descriptor.type === 'module') {
+                deferred.push(descriptor);
+            } else {
+                await runScript(descriptor);
+            }
+        }
+        for (const descriptor of deferred) await runScript(descriptor);
+        Promise.allSettled(asyncTasks).then(function () { enhanceAccessibility(target); });
+    }
+
+    window.this_mes = document.querySelector('.mes[mesid="' + window.getMessageId() + '"]') || document.querySelector('.mes') || target;
+    window.dispatchEvent(new Event('load'));
+    enhanceAccessibility(target);
+    if (window.MutationObserver) {
+        let accessibilityTimer = 0;
+        new MutationObserver(function () {
+            if (accessibilityTimer) return;
+            accessibilityTimer = setTimeout(function () { accessibilityTimer = 0; enhanceAccessibility(target); }, 250);
+        }).observe(target, { childList: true, subtree: true });
+    }
+    await window.eventEmit(
+        window.iframe_events.MESSAGE_IFRAME_RENDER_ENDED,
+        window._cardStudio?.engineMode === 'official-local' ? window.getIframeName() : 'card-message-' + window.getMessageId(),
+    );
+
+    let lastHeight = 0;
+    const reportHeight = function () {
+        const maximumHeight = window._cardStudio && window._cardStudio.fullCompatibility ? 1000000 : 12000;
+        const height = Math.min(maximumHeight, Math.max(120, document.documentElement.scrollHeight, document.body.scrollHeight));
+        if (Math.abs(height - lastHeight) > 4) {
+            lastHeight = height;
+            window.parent.postMessage({ type: 'CARD_STUDIO_IFRAME_RESIZE', height: height }, '*');
+        }
+    };
+    const heightObserver = window.ResizeObserver ? new ResizeObserver(reportHeight) : null;
+    if (heightObserver) heightObserver.observe(document.body);
+    const heightTimer = heightObserver ? 0 : setInterval(reportHeight, 2500);
+    window.addEventListener('pagehide', function () {
+        if (heightTimer) clearInterval(heightTimer);
+        if (heightObserver) heightObserver.disconnect();
+        if (typeof window.eventClearAll === 'function') window.eventClearAll();
+    }, { once: true });
+    reportHeight();
+})();

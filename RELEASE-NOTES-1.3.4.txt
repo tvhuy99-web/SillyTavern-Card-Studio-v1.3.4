@@ -1,0 +1,43 @@
+SillyTavern Card Studio 1.3.4
+Runtime compatibility: 4.8.19-compat.10
+
+NÂNG CẤP GIAO DIỆN
+
+1. Nhận diện và điều hướng
+- Thanh tiêu đề mới có biểu tượng Studio, mô tả ngắn và huy hiệu phiên bản v1.3.4.
+- Thanh điều hướng chính bám theo màn hình trên desktop và chuyển thành thanh điều hướng dưới trên điện thoại.
+- Giữ nguyên năm khu vực cốt lõi: Nhân vật, Preset, Sổ tay Thế giới, Trò chuyện và Cài đặt.
+
+2. Trình chỉnh sửa Nhân vật và Preset
+- Thêm tìm kiếm theo tên, tên tệp, thẻ và bộ đếm tổng số mục.
+- Bố cục danh sách, vùng soạn thảo và công cụ được cân lại cho màn hình rộng lẫn màn hình nhỏ.
+- Công cụ thẻ và thao tác xuất không còn bị đẩy xuống cuối trang; bảng công cụ bám theo màn hình trên desktop.
+- Thêm thanh điều hướng nhanh giữa các phần của thẻ nhân vật.
+- Chỉ mở các phần cốt lõi ban đầu; các phần RPG, đối thoại, lời nhắc, metadata, Lorebook và JSON nâng cao được thu gọn.
+- Sửa trạng thái accordion để không tự mở lại khi giao diện render lại.
+- Bổ sung thanh tham chiếu ngân sách token 8K và cảnh báo khi nội dung cốt lõi vượt mốc.
+
+3. Sổ tay Thế giới và trình quản lý
+- Thêm tìm kiếm, bộ đếm, mô tả thư viện và trạng thái rỗng rõ ràng.
+- Bổ sung xác nhận trước khi xóa sổ tay, nhân vật hoặc preset.
+- Trình quản lý Lorebook và Schema chuyển sang bố cục thích ứng, không còn sidebar 256px cố định trên điện thoại.
+
+4. Trò chuyện và công cụ
+- Trường nhập tin nhắn đổi thành textarea tự tăng chiều cao; Enter để gửi, Shift+Enter để xuống dòng.
+- Chuẩn hóa thanh công cụ trò chuyện, Co-pilot, TTS, Mythic Dashboard và bảng gỡ lỗi bằng biểu tượng SVG.
+- Loại bỏ toàn bộ biểu tượng giả dạng văn bản trong ngoặc vuông như [Cài đặt], [Đóng] hoặc [Tải lên].
+- Cải thiện khả năng hiển thị và thao tác của thanh chat trên màn hình hẹp.
+
+5. Cài đặt, hiển thị và khả năng tiếp cận
+- Chín nhóm Cài đặt chuyển thành sidebar trên desktop và thanh cuộn ngang trên màn hình nhỏ.
+- Hệ màu slate/cyan mới, lớp nền có chiều sâu, border nhẹ, trạng thái focus và phân cấp bề mặt nhất quán.
+- Bổ sung chế độ giảm chuyển động theo prefers-reduced-motion.
+- Giữ nguyên dark-first, dữ liệu, cấu trúc thẻ và các tính năng nâng cao hiện có.
+
+ĐỒNG BỘ PHIÊN BẢN
+
+- Huy hiệu trên thanh tiêu đề: v1.3.4
+- Tiêu đề trang: SillyTavern Card Studio v1.3.4
+- Meta app-version: 1.3.4
+- version.json release: 1.3.4
+- Bundle JavaScript và CSS có hash mới để tránh cache immutable giữ giao diện cũ.

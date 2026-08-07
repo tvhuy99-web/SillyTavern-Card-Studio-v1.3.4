@@ -1,0 +1,6 @@
+{
+  "ok": false,
+  "error": "SILLYTAVERN_BACKEND_UNAVAILABLE",
+  "status": 501,
+  "message": "This static Card Studio package has no native SillyTavern server. Supported official-local endpoints are implemented inside card iframes; all other /api routes require a real SillyTavern 1.18.0 backend."
+}
