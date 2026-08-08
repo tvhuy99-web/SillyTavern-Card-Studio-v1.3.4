@@ -7,5 +7,6 @@ This directory is included to make the compatibility work auditable even though 
 - `runtime-current-*.txt`: runtime templates extracted from the final v1.3.5-compat bundle.
 - `validate_package.py`: static package validation.
 - `test-jszip.mjs`: runtime JSZip round-trip validation.
+- `test-proxy-persistence.mjs`: regression coverage for proxy-profile migration, stale session cache handling, session-only secrets and opt-in remembered secrets.
 
-The release bundle also received small direct minified-bundle fixes after the structured patch, including model-response validation, session-only secret storage, basic Worldbook activation, slash-command dispatch, relative deployment paths and packaging metadata. The final bundle and the compatibility report are the source of truth.
+The release bundle also received small direct minified-bundle fixes after the structured patch, including model-response validation, session-only secret storage, basic Worldbook activation, slash-command dispatch, relative deployment paths and packaging metadata. The proxy persistence layer in `assets/proxy-persistence-fix-v1.3.5.js` now runs before the main bundle so proxy profile metadata has one persistent source of truth while credentials remain session-only by default. Users can explicitly opt in to remembering proxy credentials on their device. The final bundle, compatibility report and runtime persistence patch are the source of truth.
