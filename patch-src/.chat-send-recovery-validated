@@ -1,0 +1,2 @@
+node --check assets/chat-send-recovery-v1.3.5.js
+node patch-src/test-chat-send-recovery.mjs
