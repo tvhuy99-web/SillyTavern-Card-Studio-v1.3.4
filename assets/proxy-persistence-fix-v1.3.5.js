@@ -5,6 +5,7 @@
 
   const KEYS = {
     profiles: 'sillyTavernStudio_proxyProfiles',
+    profilesCanonical: 'sillyTavernStudio_proxyProfilesV2',
     profileSecretsSession: 'sillyTavernStudio_proxyProfileSecrets',
     profileSecretsPersistent: 'sillyTavernStudio_proxyProfileSecretsPersistent',
     profileSecretRequired: 'sillyTavernStudio_proxyProfileSecretRequired',
@@ -23,6 +24,8 @@
 
   const local = window.localStorage;
   const session = window.sessionStorage;
+  let sessionMirrorPending = false;
+  let refreshTimer = 0;
 
   const parseJSON = (value, fallback) => {
     try { return value ? JSON.parse(value) : fallback; } catch { return fallback; }
@@ -102,7 +105,7 @@
   }
 
   function canonicalProfiles() {
-    const value = parseJSON(original.getItem.call(local, KEYS.profiles), []);
+    const value = parseJSON(original.getItem.call(local, KEYS.profilesCanonical), []);
     return Array.isArray(value) ? value : [];
   }
 
@@ -129,6 +132,9 @@
       mergeSecretMaps(previousSessionSecrets, split.secrets),
       split.profiles
     );
+    for (const id of Object.keys(split.presentSecretFields)) {
+      if (!split.nonEmptySecretIds.has(id)) delete sessionSecrets[id];
+    }
 
     const nextRequired = new Set();
     for (const id of ids) {
@@ -138,8 +144,9 @@
       } else if (previousRequired.has(id)) nextRequired.add(id);
     }
 
-    original.setItem.call(local, KEYS.profiles, JSON.stringify(split.profiles));
+    original.setItem.call(local, KEYS.profilesCanonical, JSON.stringify(split.profiles));
     original.setItem.call(session, KEYS.profileSecretsSession, JSON.stringify(sessionSecrets));
+    original.removeItem.call(local, KEYS.profiles);
     original.removeItem.call(session, KEYS.profiles);
     writeSet(KEYS.profileSecretRequired, nextRequired);
 
@@ -158,33 +165,49 @@
   }
 
   function migrateLegacyState() {
-    const localRaw = original.getItem.call(local, KEYS.profiles);
-    const sessionRaw = original.getItem.call(session, KEYS.profiles);
-    const localProfiles = parseJSON(localRaw, null);
-    const sessionProfiles = parseJSON(sessionRaw, null);
+    const canonicalRaw = original.getItem.call(local, KEYS.profilesCanonical);
+    const legacyLocalRaw = original.getItem.call(local, KEYS.profiles);
+    const legacySessionRaw = original.getItem.call(session, KEYS.profiles);
+    const canonical = parseJSON(canonicalRaw, null);
+    const legacyLocal = parseJSON(legacyLocalRaw, null);
+    const legacySession = parseJSON(legacySessionRaw, null);
 
-    let source = Array.isArray(localProfiles) ? localProfiles : [];
-    if (localRaw === null && Array.isArray(sessionProfiles)) source = sessionProfiles;
+    const source = Array.isArray(canonical)
+      ? canonical
+      : Array.isArray(legacyLocal)
+        ? legacyLocal
+        : Array.isArray(legacySession) ? legacySession : [];
 
-    const localSplit = splitProfiles(source);
-    const sessionSplit = splitProfiles(Array.isArray(sessionProfiles) ? sessionProfiles : []);
-    const canonicalIds = new Set(localSplit.profiles.map((profile, index) => profileKey(profile, index)));
-    const migratedSessionSecrets = Object.fromEntries(
-      Object.entries(sessionSplit.secrets).filter(([id]) => canonicalIds.has(String(id)))
+    const sourceSplit = splitProfiles(source);
+    const localSplit = splitProfiles(Array.isArray(legacyLocal) ? legacyLocal : []);
+    const sessionSplit = splitProfiles(Array.isArray(legacySession) ? legacySession : []);
+    const canonicalIds = new Set(sourceSplit.profiles.map((profile, index) => profileKey(profile, index)));
+    const onlyCanonicalIds = secrets => Object.fromEntries(
+      Object.entries(secrets || {}).filter(([id]) => canonicalIds.has(String(id)))
     );
 
     const existingSessionSecrets = readMap(session, KEYS.profileSecretsSession);
     const combinedSessionSecrets = pruneSecretMap(
-      mergeSecretMaps(mergeSecretMaps(existingSessionSecrets, localSplit.secrets), migratedSessionSecrets),
-      localSplit.profiles
+      mergeSecretMaps(
+        mergeSecretMaps(
+          mergeSecretMaps(existingSessionSecrets, onlyCanonicalIds(sourceSplit.secrets)),
+          onlyCanonicalIds(localSplit.secrets)
+        ),
+        onlyCanonicalIds(sessionSplit.secrets)
+      ),
+      sourceSplit.profiles
     );
 
-    original.setItem.call(local, KEYS.profiles, JSON.stringify(localSplit.profiles));
+    original.setItem.call(local, KEYS.profilesCanonical, JSON.stringify(sourceSplit.profiles));
     original.setItem.call(session, KEYS.profileSecretsSession, JSON.stringify(combinedSessionSecrets));
+    original.removeItem.call(local, KEYS.profiles);
     original.removeItem.call(session, KEYS.profiles);
 
     const required = readSet(KEYS.profileSecretRequired);
-    for (const id of localSplit.nonEmptySecretIds) required.add(id);
+    for (const id of sourceSplit.nonEmptySecretIds) required.add(id);
+    for (const id of localSplit.nonEmptySecretIds) {
+      if (canonicalIds.has(id)) required.add(id);
+    }
     for (const id of sessionSplit.nonEmptySecretIds) {
       if (canonicalIds.has(id)) required.add(id);
     }
@@ -203,14 +226,32 @@
     if (!rememberEnabled()) {
       original.removeItem.call(local, KEYS.profileSecretsPersistent);
       original.removeItem.call(local, KEYS.proxyPasswordPersistent);
-    } else if (Object.keys(localSplit.secrets).length) {
+    } else {
       const persistent = pruneSecretMap(
-        mergeSecretMaps(readMap(local, KEYS.profileSecretsPersistent), localSplit.secrets),
-        localSplit.profiles
+        mergeSecretMaps(
+          mergeSecretMaps(readMap(local, KEYS.profileSecretsPersistent), onlyCanonicalIds(sourceSplit.secrets)),
+          onlyCanonicalIds(localSplit.secrets)
+        ),
+        sourceSplit.profiles
       );
       original.setItem.call(local, KEYS.profileSecretsPersistent, JSON.stringify(persistent));
     }
   }
+
+  function clearProfiles() {
+    original.removeItem.call(local, KEYS.profilesCanonical);
+    original.removeItem.call(local, KEYS.profiles);
+    original.removeItem.call(session, KEYS.profiles);
+    original.removeItem.call(session, KEYS.profileSecretsSession);
+    original.removeItem.call(local, KEYS.profileSecretsPersistent);
+    original.removeItem.call(local, KEYS.profileSecretRequired);
+  }
+
+  const clearMirrorFlagSoon = () => {
+    const clear = () => { sessionMirrorPending = false; };
+    if (typeof queueMicrotask === 'function') queueMicrotask(clear);
+    else Promise.resolve().then(clear);
+  };
 
   migrateLegacyState();
 
@@ -237,6 +278,12 @@
         return;
       }
       writeProfiles(parsed);
+      if (this === session) {
+        sessionMirrorPending = true;
+        clearMirrorFlagSoon();
+      } else {
+        sessionMirrorPending = false;
+      }
       refreshUiSoon();
       return;
     }
@@ -261,11 +308,15 @@
     }
 
     if (key === KEYS.profiles && this === local) {
-      original.removeItem.call(local, KEYS.profiles);
-      original.removeItem.call(session, KEYS.profiles);
-      original.removeItem.call(session, KEYS.profileSecretsSession);
-      original.removeItem.call(local, KEYS.profileSecretsPersistent);
-      original.removeItem.call(local, KEYS.profileSecretRequired);
+      if (sessionMirrorPending) {
+        // Legacy startup code mirrors local -> session and immediately removes local.
+        // Keep the V2 canonical data and only consume the obsolete facade cleanup.
+        sessionMirrorPending = false;
+        original.removeItem.call(local, KEYS.profiles);
+        original.removeItem.call(session, KEYS.profiles);
+        return;
+      }
+      clearProfiles();
       refreshUiSoon();
       return;
     }
@@ -316,7 +367,10 @@
   }
 
   function isProxySecretInput(input, scope = document) {
-    if (!input) return false;
+    if (!input || input.getAttribute?.('data-sts-proxy-persistence-control') === 'true') return false;
+    const type = String(input.type || '').toLowerCase();
+    if (type && !['text', 'password', 'search', 'url', 'email'].includes(type)) return false;
+
     const aria = String(input.getAttribute?.('aria-label') || '');
     const placeholder = String(input.getAttribute?.('placeholder') || '');
     let label = '';
@@ -344,7 +398,12 @@
   }
 
   function proxyRootFor(input) {
-    return input?.closest?.('[role="dialog"], [role="tabpanel"], .bg-slate-800\/50, .bg-slate-900\/50') || document;
+    return input?.closest?.('[role="dialog"], [role="tabpanel"], .bg-slate-800\\/50, .bg-slate-900\\/50') || document;
+  }
+
+  function setStatus(detail, text, color) {
+    if (detail.textContent !== text) detail.textContent = text;
+    if (detail.style.color !== color) detail.style.color = color;
   }
 
   function refreshProxyUi() {
@@ -372,6 +431,7 @@
       const checkbox = document.createElement('input');
       checkbox.type = 'checkbox';
       checkbox.checked = rememberEnabled();
+      checkbox.setAttribute('data-sts-proxy-persistence-control', 'true');
       checkbox.setAttribute('aria-label', 'Ghi nhớ Proxy Password / Key trên thiết bị này');
 
       const text = document.createElement('span');
@@ -403,8 +463,12 @@
       host.appendChild(box);
     }
 
+    for (const checkbox of document.querySelectorAll('[data-sts-proxy-persistence-control="true"]')) {
+      if (checkbox.checked !== rememberEnabled()) checkbox.checked = rememberEnabled();
+    }
+
     for (const detail of document.querySelectorAll('[data-sts-proxy-persistence-status="true"]')) {
-      const root = detail.closest('[role="dialog"], [role="tabpanel"]') || document;
+      const root = detail.closest?.('[role="dialog"], [role="tabpanel"]') || document;
       const input = passwordField(root);
       const id = selectedProfileId(root);
       const status = profileStatus(id);
@@ -412,19 +476,27 @@
       const missingRequired = status.requiresSecret && !status.hasSecret && !currentPassword;
 
       if (missingRequired) {
-        detail.textContent = 'Profile đã được khôi phục, nhưng Password / Key của phiên trước đã hết. Hãy nhập lại để kết nối.';
-        detail.style.color = 'rgb(251 191 36)';
+        setStatus(
+          detail,
+          'Profile đã được khôi phục, nhưng Password / Key của phiên trước đã hết. Hãy nhập lại để kết nối.',
+          'rgb(251 191 36)'
+        );
       } else if (rememberEnabled()) {
-        detail.textContent = 'Secret đang được lưu trên thiết bị này. Chỉ bật tùy chọn này trên thiết bị riêng.';
-        detail.style.color = 'rgb(251 191 36)';
+        setStatus(
+          detail,
+          'Secret đang được lưu trên thiết bị này. Chỉ bật tùy chọn này trên thiết bị riêng.',
+          'rgb(251 191 36)'
+        );
       } else {
-        detail.textContent = 'Profile, URL và giao thức được lưu bền vững; Password / Key mặc định chỉ được giữ trong phiên hiện tại.';
-        detail.style.color = 'rgb(148 163 184)';
+        setStatus(
+          detail,
+          'Profile, URL và giao thức được lưu bền vững; Password / Key mặc định chỉ được giữ trong phiên hiện tại.',
+          'rgb(148 163 184)'
+        );
       }
     }
   }
 
-  let refreshTimer = 0;
   function refreshUiSoon() {
     if (typeof window.setTimeout !== 'function') return;
     window.clearTimeout?.(refreshTimer);
@@ -470,7 +542,7 @@
   }
 
   window.__STS_PROXY_PERSISTENCE__ = Object.freeze({
-    version: '1.0.0',
+    version: '1.1.0',
     getProfiles: mergedProfiles,
     isRememberingSecrets: rememberEnabled,
     setRememberSecrets,
