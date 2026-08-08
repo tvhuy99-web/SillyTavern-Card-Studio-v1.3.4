@@ -10,6 +10,7 @@ from pathlib import Path
 from urllib.parse import urlsplit
 
 ROOT = Path(__file__).resolve().parents[1]
+APP_VERSION = '1.3.6'
 EXECUTABLE_JS = [
     *sorted((ROOT / 'assets').glob('*.js')),
     ROOT / 'scripts/extensions/third-party/JS-Slash-Runner/dist/index.js',
@@ -61,7 +62,6 @@ def check_relative_imports() -> None:
         fail('Missing relative imports:\n' + '\n'.join(missing))
 
 
-
 def check_embedded_runtime_syntax() -> None:
     overlay = (ROOT / 'patch-src/runtime-current-0.txt').read_text(encoding='utf-8').replace('${fp}', '[]')
     core = (ROOT / 'patch-src/runtime-current-1.txt').read_text(encoding='utf-8')
@@ -76,6 +76,48 @@ def check_embedded_runtime_syntax() -> None:
             result = subprocess.run(['node', '--check', str(path)], capture_output=True, text=True)
             if result.returncode:
                 fail(f'Embedded runtime syntax failed for template {index}:\n{result.stderr}')
+
+
+def check_release_version() -> None:
+    package = json.loads((ROOT / 'package.json').read_text(encoding='utf-8'))
+    version = json.loads((ROOT / 'version.json').read_text(encoding='utf-8'))
+    html = (ROOT / 'index.html').read_text(encoding='utf-8')
+    patch_readme = (ROOT / 'patch-src/README.md').read_text(encoding='utf-8')
+    report = (ROOT / 'COMPATIBILITY-FIX-REPORT.md').read_text(encoding='utf-8')
+
+    if package.get('version') != APP_VERSION:
+        fail(f'package.json version must be {APP_VERSION}')
+    if version.get('release') != APP_VERSION:
+        fail(f'version.json release must be {APP_VERSION}')
+    if f'data-app-version="{APP_VERSION}"' not in html or f'content="{APP_VERSION}"' not in html:
+        fail(f'index.html app version must be {APP_VERSION}')
+    if f'v{APP_VERSION}' not in html:
+        fail(f'index.html title/assets must reference v{APP_VERSION}')
+
+    expected_assets = {
+        'modelConnectionTestPatch': f'./assets/model-connection-test-v{APP_VERSION}-v2.js',
+        'proxyPersistencePatch': f'./assets/proxy-persistence-fix-v{APP_VERSION}.js',
+        'chatSendRecoveryPatch': f'./assets/chat-send-recovery-v{APP_VERSION}.js',
+    }
+    for key, expected in expected_assets.items():
+        if version.get(key) != expected:
+            fail(f'version.json {key} mismatch: expected {expected}')
+        if not (ROOT / expected.lstrip('./')).is_file():
+            fail(f'Missing versioned asset: {expected}')
+
+    old_versioned_assets = [
+        ROOT / 'assets/model-connection-test-v1.3.4-v2.js',
+        ROOT / 'assets/proxy-persistence-fix-v1.3.5.js',
+        ROOT / 'assets/chat-send-recovery-v1.3.5.js',
+    ]
+    existing_old = [str(path.relative_to(ROOT)) for path in old_versioned_assets if path.exists()]
+    if existing_old:
+        fail('Old versioned assets remain: ' + ', '.join(existing_old))
+
+    release_metadata = '\n'.join([html, json.dumps(package), json.dumps(version), patch_readme, report])
+    if re.search(r'(?<!\d)1\.3\.(?:4|5)(?:-compat)?(?!\d)', release_metadata):
+        fail('Old application version marker remains in release metadata')
+
 
 def check_invariants() -> None:
     bundle = (ROOT / 'assets/index-11db71a5-modeltest-v2-htmlmodes-v1.js').read_text(encoding='utf-8')
@@ -110,8 +152,10 @@ def main() -> int:
     check_html_assets()
     check_relative_imports()
     check_embedded_runtime_syntax()
+    check_release_version()
     check_invariants()
     print('Static validation: PASS')
+    print(f'Application version: {APP_VERSION}')
     print(f'JavaScript files checked: {len(EXECUTABLE_JS)}')
     print(f'JSON files checked: {sum(1 for _ in ROOT.rglob("*.json"))}')
     return 0

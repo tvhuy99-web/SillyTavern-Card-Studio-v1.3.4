@@ -5,7 +5,7 @@ import { fileURLToPath } from 'node:url';
 import { dirname, resolve } from 'node:path';
 
 const here = dirname(fileURLToPath(import.meta.url));
-const code = fs.readFileSync(resolve(here, '../assets/proxy-persistence-fix-v1.3.5.js'), 'utf8');
+const code = fs.readFileSync(resolve(here, '../assets/proxy-persistence-fix-v1.3.6.js'), 'utf8');
 
 class Storage {
   constructor(seed = {}) { this.map = new Map(Object.entries(seed)); }
