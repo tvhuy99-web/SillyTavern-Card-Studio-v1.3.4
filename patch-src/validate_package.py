@@ -11,6 +11,7 @@ from urllib.parse import urlsplit
 
 ROOT = Path(__file__).resolve().parents[1]
 APP_VERSION = '1.3.6'
+MAIN_BUNDLE = './assets/index-11db71a5-modeltest-v2-htmlmodes-v1.js'
 EXECUTABLE_JS = [
     *sorted((ROOT / 'assets').glob('*.js')),
     ROOT / 'scripts/extensions/third-party/JS-Slash-Runner/dist/index.js',
@@ -93,6 +94,8 @@ def check_release_version() -> None:
         fail(f'index.html app version must be {APP_VERSION}')
     if f'v{APP_VERSION}' not in html:
         fail(f'index.html title/assets must reference v{APP_VERSION}')
+    if f'{MAIN_BUNDLE}?v={APP_VERSION}' not in html:
+        fail('Main bundle must use the application-version cache-busting query')
 
     expected_assets = {
         'modelConnectionTestPatch': f'./assets/model-connection-test-v{APP_VERSION}-v2.js',
@@ -117,6 +120,18 @@ def check_release_version() -> None:
     release_metadata = '\n'.join([html, json.dumps(package), json.dumps(version), patch_readme, report])
     if re.search(r'(?<!\d)1\.3\.(?:4|5)(?:-compat)?(?!\d)', release_metadata):
         fail('Old application version marker remains in release metadata')
+
+
+def check_cache_policy() -> None:
+    headers = (ROOT / '_headers').read_text(encoding='utf-8')
+    if '/assets/*\n  Cache-Control: public, max-age=0, must-revalidate' not in headers:
+        fail('Mutable assets must revalidate in the browser')
+    if '/\n  Cache-Control: public, max-age=0, must-revalidate' not in headers:
+        fail('Root document must revalidate in the browser')
+    if 'model-connection-test-v1.3.4' in headers:
+        fail('Old version-specific cache rule remains in _headers')
+    if '/assets/*\n  Cache-Control: public, max-age=31536000, immutable' in headers:
+        fail('Mutable /assets URLs must not be browser-immutable')
 
 
 def check_invariants() -> None:
@@ -153,6 +168,7 @@ def main() -> int:
     check_relative_imports()
     check_embedded_runtime_syntax()
     check_release_version()
+    check_cache_policy()
     check_invariants()
     print('Static validation: PASS')
     print(f'Application version: {APP_VERSION}')
