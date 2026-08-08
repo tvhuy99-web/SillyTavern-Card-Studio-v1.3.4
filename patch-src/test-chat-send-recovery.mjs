@@ -2,7 +2,7 @@ import fs from 'node:fs';
 import vm from 'node:vm';
 import assert from 'node:assert/strict';
 
-const source = fs.readFileSync(new URL('../assets/chat-send-recovery-v1.3.5.js', import.meta.url), 'utf8');
+const source = fs.readFileSync(new URL('../assets/chat-send-recovery-v1.3.6.js', import.meta.url), 'utf8');
 
 function makeHarness(fetchImpl = async () => ({ ok: true, status: 200 })) {
   const events = [];

@@ -3,11 +3,11 @@
 ## Thông tin bản phát hành
 
 - **Ứng dụng:** SillyTavern Card Studio
-- **Bản đã vá:** `1.3.5-compat`
+- **Bản đã vá:** `1.3.6`
 - **Runtime tương thích:** `4.8.19-compat.11`
 - **Mốc đối chiếu SillyTavern:** `1.18.0`, tag chính thức, commit `8172dcd0ee672d3cd9a5e5f7af134f91a45cd2b8`
 - **Mốc đối chiếu TavernHelper:** `4.8.19`, commit `36d8889a99f1cf09d3d1f8aabd0eba33975dc64d`
-- **Ngày lập báo cáo:** 24/07/2026
+- **Ngày cập nhật báo cáo:** 08/08/2026
 
 ## Tóm tắt kết quả
 
@@ -18,6 +18,8 @@ Bản vá ưu tiên khả năng tương thích API và an toàn dữ liệu tron
 - **Chưa thể sửa đầy đủ trong kiến trúc tĩnh:** 2/25 mục.
 
 Hai giới hạn lớn còn lại là phụ thuộc CDN/offline parity và các giới hạn dung lượng riêng của Card Studio. Ngoài ra, các mục liên quan backend, extension lifecycle và parser STscript chỉ có thể đạt tương thích hoàn toàn khi chạy trên SillyTavern thật hoặc khi đóng gói lại toàn bộ backend/runtime gốc.
+
+Bản `1.3.6` cũng bổ sung hai lớp tương thích vận hành: lưu proxy profile bền vững mà vẫn giữ secret theo phiên mặc định, và tự khôi phục composer khi request hội thoại lỗi nhưng giao diện bị kẹt ở trạng thái đang gửi.
 
 ## Trạng thái 25 lỗi
 
@@ -41,7 +43,7 @@ Hai giới hạn lớn còn lại là phụ thuộc CDN/offline parity và các 
 | 16 | Message API sai return type và bỏ qua refresh | **Sửa một phần lớn** | Mutation trả `Promise<void>` và phát event theo `refresh`. Vì không có renderer ST thật, `affected/all` chỉ có thể mô phỏng event và cập nhật UI Card Studio. |
 | 17 | Character, persona và preset chưa đầy đủ | **Sửa một phần** | Cải thiện context/catalog, persistence và timing một số thao tác. Blob avatar, `delete_chats`, render options, persona avatar semantics và toàn bộ preset lifecycle vẫn chưa đạt parity. |
 | 18 | Storage khác môi trường gốc | **Sửa một phần lớn** | Thay localforage shim bằng lớp IndexedDB có fallback, hỗ trợ Blob/binary, `createInstance`, `iterate`, CRUD và keys/length. Safe mode/full mode vẫn khác mô hình lưu trữ và cô lập của SillyTavern. |
-| 19 | Phiên bản runtime tự mâu thuẫn | **Đã sửa** | Đồng bộ `version.json`, HTML và runtime thành `4.8.19-compat.11`; ứng dụng thành `1.3.5-compat`. |
+| 19 | Phiên bản runtime tự mâu thuẫn | **Đã sửa** | Đồng bộ `version.json`, HTML và runtime thành `4.8.19-compat.11`; phiên bản ứng dụng thống nhất thành `1.3.6`. |
 | 20 | Hai chế độ dùng dependency khác nhau | **Sửa một phần** | Đồng bộ các lệch xác định: Vue 3.5.40, Vue Router 5.2.0 và EJS 3.1.9. Kiến trúc current/official-local vẫn không dùng cùng một module graph hoàn toàn. |
 | 21 | Phụ thuộc mạnh vào CDN | **Chưa sửa đầy đủ** | CSP đã khai báo rõ các nguồn cần thiết và lỗi tải được báo chẩn đoán. Chưa vendor toàn bộ Vue/YAML/jQuery/CSS runtime, vì vậy offline parity chưa đạt. |
 | 22 | Rủi ro lộ API key ở full mode | **Sửa một phần** | Chuyển Gemini/OpenRouter/proxy secrets từ localStorage sang sessionStorage, xóa key cũ, thêm CSP và đổi framing sang SAMEORIGIN. Trong full same-origin compatibility mode, card script vẫn có thể tiếp cận storage của origin, nên chưa thể coi là cách ly hoàn toàn. |
@@ -49,23 +51,18 @@ Hai giới hạn lớn còn lại là phụ thuộc CDN/offline parity và các 
 | 24 | Model connection test chưa phản ánh đầy đủ | **Sửa một phần lớn** | Kiểm tra output phải chứa `OK`, parse đúng response theo provider và trả preview/latency. Vẫn gửi request thật, có thể tốn quota; DOM heuristic và timeout cố định chưa bị loại bỏ hoàn toàn. |
 | 25 | Các giới hạn riêng không có trong hợp đồng gốc | **Chưa sửa đầy đủ** | Các guard dung lượng/bước vẫn tồn tại để bảo vệ tab trình duyệt. Chưa chuyển toàn bộ thành cấu hình và chưa đạt giới hạn tương đương backend ST. |
 
-## Các tệp đã thay đổi
+## Các tệp phiên bản hiện hành
 
 - `assets/index-11db71a5-modeltest-v2-htmlmodes-v1.js`
-- `assets/model-connection-test-v1.3.4-v2.js`
+- `assets/model-connection-test-v1.3.6-v2.js`
+- `assets/proxy-persistence-fix-v1.3.6.js`
+- `assets/chat-send-recovery-v1.3.6.js`
 - `index.html`
+- `package.json`
 - `version.json`
 - `_headers`
 - `_redirects`
 - `api-unavailable.json`
-
-## Các tệp đã bổ sung
-
-- `assets/index-yS4Vru8B.js`
-- `scripts/extensions/third-party/JS-Slash-Runner/manifest.json`
-- `scripts/extensions/third-party/JS-Slash-Runner/dist/index.js`
-- `scripts/extensions/third-party/JS-Slash-Runner/dist/index.css`
-- `COMPATIBILITY-FIX-REPORT.md`
 - `patch-src/*`
 
 ## Kiểm thử đã thực hiện
@@ -77,19 +74,20 @@ Hai giới hạn lớn còn lại là phụ thuộc CDN/offline parity và các 
 5. Chạy round-trip JSZip: tạo archive, nạp lại và đọc `hello.txt` thành công.
 6. Dựng runtime đã nội suy trong Node VM với DOM/bridge giả lập; kiểm tra khởi tạo, Regex, Audio, slash command đăng ký, Script Tree, Worldbook guard và capability reporting.
 7. Kiểm tra các invariant của bản vá: version thống nhất, endpoint static trả 501, manifest TavernHelper tồn tại, guard Worldbook và capability trung thực có trong runtime.
-8. Kiểm tra tính toàn vẹn ZIP sau đóng gói bằng `unzip -t`.
+8. Kiểm tra regression proxy persistence và chat-send recovery bằng Node VM.
+9. Kiểm tra tính toàn vẹn ZIP sau đóng gói bằng `unzip -t` khi tạo gói phát hành.
 
 ### Giới hạn kiểm thử
 
-Thử nghiệm khởi chạy Chromium headless trong môi trường đóng gói không hoàn tất vì tiến trình Chromium bị treo trước khi gửi request tới máy chủ cục bộ. Do đó bản này đã qua kiểm tra tĩnh, module/asset, JSON, ZIP và JSZip runtime bằng Node, và smoke test runtime bằng Node VM, nhưng **chưa được xác nhận end-to-end bằng trình duyệt thật trong chính môi trường này**. Cần smoke test thủ công trên Chrome/Edge/Firefox trước khi đưa vào production.
+Thử nghiệm khởi chạy Chromium headless trong môi trường đóng gói trước đây không hoàn tất vì tiến trình Chromium bị treo trước khi gửi request tới máy chủ cục bộ. Do đó gói đã qua kiểm tra tĩnh, module/asset, JSON, ZIP và JSZip runtime bằng Node, cùng smoke test runtime bằng Node VM, nhưng **chưa được xác nhận end-to-end bằng trình duyệt thật trong chính môi trường này**. Cần smoke test thủ công trên Chrome/Edge/Firefox trước khi đưa vào production.
 
 ## Kết luận kỹ thuật
 
-Bản vá loại bỏ các lỗi nguy hiểm nhất: JSZip bị hỏng, nguy cơ Worldbook ghi rỗng, mất metadata khi import chat, feature detection giả, version mâu thuẫn và extension operation báo thành công giả. Các API Regex, Audio, Script Tree, Variables, Chat Message và Generation đã gần hợp đồng TavernHelper 4.8.19 hơn đáng kể.
+Bản vá loại bỏ các lỗi nguy hiểm nhất: JSZip bị hỏng, nguy cơ Worldbook ghi rỗng, mất metadata khi import chat, feature detection giả, version mâu thuẫn, extension operation báo thành công giả, proxy profile bị mất/khôi phục nửa vời và composer bị kẹt sau request lỗi. Các API Regex, Audio, Script Tree, Variables, Chat Message và Generation đã gần hợp đồng TavernHelper 4.8.19 hơn đáng kể.
 
 Tuy vậy, Card Studio vẫn là một runtime tĩnh. Tương thích tuyệt đối với SillyTavern 1.18.0 chỉ có thể đạt bằng một trong hai hướng:
 
 1. chạy Card Studio như extension/tool bên trong SillyTavern thật; hoặc
 2. đóng gói backend SillyTavern cùng native TavernHelper và dùng Card Studio như giao diện bổ sung.
 
-Trong phạm vi static deployment, bản `1.3.5-compat` là mức tương thích tối đa hợp lý mà không giả mạo capability hoặc hy sinh an toàn dữ liệu.
+Trong phạm vi static deployment, bản `1.3.6` là phiên bản phát hành hiện hành và là nguồn version duy nhất cho metadata ứng dụng.
