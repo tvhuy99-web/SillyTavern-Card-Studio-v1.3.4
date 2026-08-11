@@ -12,6 +12,7 @@
   "proxyPersistencePatch": "./assets/proxy-persistence-fix-v1.3.6.js",
   "chatSendRecoveryPatch": "./assets/chat-send-recovery-v1.3.6.js",
   "uiVersionDisplayPatch": "./assets/ui-version-display-fix-v1.3.6.js",
+  "promptOrderIdentifierPatch": "./assets/prompt-order-identifier-fix-v1.3.6.js",
   "htmlSettingsMode": "advanced-default",
   "patchReport": "./COMPATIBILITY-FIX-REPORT.md"
 }
