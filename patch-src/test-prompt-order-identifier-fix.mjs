@@ -56,10 +56,28 @@ const grouped = {
     undefined,
   ],
 };
-context.JSON.stringify(grouped);
-assert.equal(grouped.prompts.length, 1);
-assert.equal(grouped.prompt_order.length, 1);
-assert.deepEqual(Array.from(grouped.prompt_order[0].order, entry => entry.identifier), ['main', 'custom-b']);
+const groupedJson = context.JSON.stringify(grouped);
+const groupedSerialized = JSON.parse(groupedJson);
+assert.equal(grouped.prompts.length, 2, 'JSON.stringify must not mutate the source prompts array');
+assert.equal(grouped.prompt_order.length, 2, 'JSON.stringify must not mutate the source grouped order array');
+assert.equal(grouped.prompt_order[0].order.length, 4, 'JSON.stringify must not mutate nested source order arrays');
+assert.equal(groupedSerialized.prompts.length, 1);
+assert.equal(groupedSerialized.prompt_order.length, 1);
+assert.deepEqual(Array.from(groupedSerialized.prompt_order[0].order, entry => entry.identifier), ['main', 'custom-b']);
+
+const frozenOrder = Array.from({ length: 114 }, () => Object.freeze({ identifier: 'main', enabled: true }));
+frozenOrder[113] = undefined;
+Object.freeze(frozenOrder);
+const frozenConfig = Object.freeze({
+  prompts: Object.freeze([Object.freeze({ identifier: 'main', system_prompt: true })]),
+  prompt_order: frozenOrder,
+});
+assert.doesNotThrow(() => context.JSON.stringify(frozenConfig), 'frozen prompt order must serialize without splice/delete errors');
+const frozenSerialized = JSON.parse(context.JSON.stringify(frozenConfig));
+assert.equal(frozenOrder.length, 114);
+assert.equal(frozenSerialized.prompt_order.length, 113);
+assert.equal(frozenSerialized.prompt_order[112].identifier, 'main');
+assert.doesNotThrow(() => context.__STS_PROMPT_ORDER_FIX__.sanitize(frozenConfig), 'public sanitizer must not mutate frozen arrays');
 
 const unrelated = { prompts: ['hello', null, 'world'] };
 const unrelatedJson = context.JSON.stringify(unrelated);
@@ -83,7 +101,7 @@ const cloned = context.structuredClone({
 });
 assert.equal(cloned.prompt_order.length, 1);
 
-assert.equal(context.__STS_PROMPT_ORDER_FIX__.version, '1.3.6');
+assert.equal(context.__STS_PROMPT_ORDER_FIX__.version, '1.3.6.1');
 assert.ok(context.__STS_PROMPT_ORDER_FIX__.stats.removedInvalidOrderEntries >= 2);
 assert.equal(context.__STS_PROMPT_ORDER_FIX__.stats.recoveredMapLookups, 1);
 

@@ -3,7 +3,7 @@
 
   if (window.__STS_PROMPT_ORDER_FIX__) return;
 
-  const APP_VERSION = '1.3.6';
+  const APP_VERSION = '1.3.6.1';
   const nativeJsonParse = JSON.parse.bind(JSON);
   const nativeJsonStringify = JSON.stringify.bind(JSON);
   const nativeMapGet = Map.prototype.get;
@@ -34,6 +34,7 @@
   };
 
   const isObject = value => value !== null && typeof value === 'object';
+  const canDeleteArrayEntries = value => Array.isArray(value) && !Object.isFrozen(value) && !Object.isSealed(value);
   const hasIdentifier = value => isObject(value) && typeof value.identifier === 'string' && value.identifier.trim().length > 0;
 
   function looksLikePromptConfig(value) {
@@ -49,7 +50,7 @@
   }
 
   function sanitizeOrderArray(order, knownPromptIds) {
-    if (!Array.isArray(order)) return;
+    if (!canDeleteArrayEntries(order)) return;
     for (let index = order.length - 1; index >= 0; index -= 1) {
       const entry = order[index];
       if (!hasIdentifier(entry)) {
@@ -69,10 +70,12 @@
   function sanitizePromptConfig(config) {
     if (!looksLikePromptConfig(config)) return;
 
-    for (let index = config.prompts.length - 1; index >= 0; index -= 1) {
-      if (!isObject(config.prompts[index])) {
-        config.prompts.splice(index, 1);
-        stats.removedInvalidPrompts += 1;
+    if (canDeleteArrayEntries(config.prompts)) {
+      for (let index = config.prompts.length - 1; index >= 0; index -= 1) {
+        if (!isObject(config.prompts[index])) {
+          config.prompts.splice(index, 1);
+          stats.removedInvalidPrompts += 1;
+        }
       }
     }
 
@@ -89,8 +92,10 @@
       for (let index = config.prompt_order.length - 1; index >= 0; index -= 1) {
         const list = config.prompt_order[index];
         if (!isObject(list) || !Array.isArray(list.order)) {
-          config.prompt_order.splice(index, 1);
-          stats.removedInvalidOrderEntries += 1;
+          if (canDeleteArrayEntries(config.prompt_order)) {
+            config.prompt_order.splice(index, 1);
+            stats.removedInvalidOrderEntries += 1;
+          }
           continue;
         }
         sanitizeOrderArray(list.order, knownPromptIds);
@@ -99,6 +104,71 @@
     }
 
     sanitizeOrderArray(config.prompt_order, knownPromptIds);
+  }
+
+  function sanitizeOrderArrayCopy(order, knownPromptIds) {
+    if (!Array.isArray(order)) return order;
+    const sanitized = [];
+    for (const entry of order) {
+      if (!hasIdentifier(entry)) {
+        stats.removedInvalidOrderEntries += 1;
+        continue;
+      }
+
+      const identifier = entry.identifier.trim();
+      if (!knownPromptIds.has(identifier) && !builtInPromptIds.has(identifier)) {
+        stats.removedOrphanOrderEntries += 1;
+        continue;
+      }
+      sanitized.push(entry);
+    }
+    return sanitized;
+  }
+
+  function sanitizePromptConfigCopy(config) {
+    if (!looksLikePromptConfig(config)) return config;
+
+    const prompts = [];
+    for (const prompt of config.prompts) {
+      if (!isObject(prompt)) {
+        stats.removedInvalidPrompts += 1;
+        continue;
+      }
+      prompts.push(prompt);
+    }
+
+    const knownPromptIds = new Set(
+      prompts
+        .filter(hasIdentifier)
+        .map(prompt => prompt.identifier.trim()),
+    );
+
+    let promptOrder = config.prompt_order;
+    if (Array.isArray(promptOrder)) {
+      const groupedOrder = promptOrder.some(entry => isObject(entry) && Array.isArray(entry.order));
+      if (groupedOrder) {
+        const sanitizedGroups = [];
+        for (const list of promptOrder) {
+          if (!isObject(list) || !Array.isArray(list.order)) {
+            stats.removedInvalidOrderEntries += 1;
+            continue;
+          }
+          sanitizedGroups.push({
+            ...list,
+            order: sanitizeOrderArrayCopy(list.order, knownPromptIds),
+          });
+        }
+        promptOrder = sanitizedGroups;
+      } else {
+        promptOrder = sanitizeOrderArrayCopy(promptOrder, knownPromptIds);
+      }
+    }
+
+    return {
+      ...config,
+      prompts,
+      ...(Array.isArray(config.prompt_order) ? { prompt_order: promptOrder } : {}),
+    };
   }
 
   function sanitizeTree(root) {
@@ -137,8 +207,16 @@
   };
 
   JSON.stringify = function patchedJsonStringify(value, replacer, space) {
-    sanitizeTree(value);
-    return nativeJsonStringify(value, replacer, space);
+    if (Array.isArray(replacer)) {
+      const safeRoot = looksLikePromptConfig(value) ? sanitizePromptConfigCopy(value) : value;
+      return nativeJsonStringify(safeRoot, replacer, space);
+    }
+
+    const userReplacer = typeof replacer === 'function' ? replacer : null;
+    return nativeJsonStringify(value, function safePromptOrderReplacer(key, candidate) {
+      const replaced = userReplacer ? userReplacer.call(this, key, candidate) : candidate;
+      return sanitizePromptConfigCopy(replaced);
+    }, space);
   };
 
   if (nativeStructuredClone) {
