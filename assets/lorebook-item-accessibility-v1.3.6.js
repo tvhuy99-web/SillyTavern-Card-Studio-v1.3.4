@@ -4,6 +4,7 @@
   const editorSelector = '[role="button"][aria-label^="Chỉnh sửa mục "]';
   const switchSelector = '[role="switch"][aria-label^="Bật mục "]';
   const editButtonSelector = 'button[aria-label^="Chỉnh sửa mục "]';
+  let headingSequence = 0;
 
   const makeSlug = (value) =>
     String(value || 'muc-so-tay')
@@ -28,7 +29,7 @@
     });
   };
 
-  const fixLorebookItem = (editor, index) => {
+  const fixLorebookItem = (editor) => {
     if (!(editor instanceof Element)) return;
 
     const originalLabel = editor.getAttribute('aria-label') || '';
@@ -38,7 +39,7 @@
 
     if (heading) {
       if (!heading.id) {
-        heading.id = `lorebook-heading-${makeSlug(title)}-${index + 1}`;
+        heading.id = `lorebook-heading-${makeSlug(title)}-${++headingSequence}`;
       }
       heading.dataset.lorebookHeading = 'true';
       ensureHeadingKeyboardEdit(heading, editor);
@@ -78,7 +79,7 @@
       root.querySelectorAll(editorSelector).forEach((editor) => editors.push(editor));
     }
 
-    editors.forEach((editor, index) => fixLorebookItem(editor, index));
+    editors.forEach((editor) => fixLorebookItem(editor));
 
     if (root instanceof Element && root.matches(switchSelector)) {
       root.removeAttribute('aria-label');
