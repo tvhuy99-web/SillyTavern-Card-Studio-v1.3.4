@@ -4,6 +4,7 @@
   const editorSelector = '[role="button"][aria-label^="Chỉnh sửa mục "]';
   const switchSelector = '[role="switch"][aria-label^="Bật mục "]';
   const editButtonSelector = 'button[aria-label^="Chỉnh sửa mục "]';
+  const unsyncedSemanticSelector = '[title="Chưa đồng bộ Semantic"]';
   let headingSequence = 0;
 
   const makeSlug = (value) =>
@@ -27,6 +28,22 @@
       event.preventDefault();
       editor.click();
     });
+  };
+
+  const hideUnsyncedSemanticStatus = (root) => {
+    const hide = (element) => {
+      element.hidden = true;
+      element.setAttribute('aria-hidden', 'true');
+      element.removeAttribute('title');
+    };
+
+    if (root instanceof Element && root.matches(unsyncedSemanticSelector)) {
+      hide(root);
+    }
+
+    if (root && typeof root.querySelectorAll === 'function') {
+      root.querySelectorAll(unsyncedSemanticSelector).forEach(hide);
+    }
   };
 
   const fixLorebookItem = (editor) => {
@@ -66,6 +83,8 @@
       redundantEditButton.setAttribute('aria-hidden', 'true');
       redundantEditButton.tabIndex = -1;
     }
+
+    hideUnsyncedSemanticStatus(root);
   };
 
   const cleanLorebookItems = (root = document) => {
@@ -90,6 +109,8 @@
         element.removeAttribute('aria-label');
       });
     }
+
+    hideUnsyncedSemanticStatus(root);
   };
 
   const start = () => {
@@ -112,7 +133,7 @@
       subtree: true,
       childList: true,
       attributes: true,
-      attributeFilter: ['role', 'aria-label', 'aria-disabled', 'tabindex'],
+      attributeFilter: ['role', 'aria-label', 'aria-disabled', 'tabindex', 'title'],
     });
   };
 
