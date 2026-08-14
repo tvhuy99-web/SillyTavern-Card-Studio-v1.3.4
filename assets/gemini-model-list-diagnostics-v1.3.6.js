@@ -32,7 +32,6 @@
 
   const notify = (message, type = 'info') => {
     window.dispatchEvent(new CustomEvent('toast', { detail: { message, type } }));
-    window.dispatchEvent(new CustomEvent('sillytavern:show-toast', { detail: { message, type } }));
   };
 
   const safeJson = (value, fallback = null) => {
