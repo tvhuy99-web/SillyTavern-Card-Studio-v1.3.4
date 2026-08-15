@@ -3,7 +3,7 @@
 
   if (window.__STS_ARENA_UX_GUARD__) return;
 
-  const VERSION = '1.1.1';
+  const VERSION = '1.2.0';
   const STOP_TEXT_RE = /(?:^|\b)(?:stop|dừng)(?:\b|$)/i;
   const STORY_CANCEL_RE = /(?:Hủy|Huỷ)\s*\(\s*Dừng\s*&\s*Chat\s*\)|Cancel\s*\([^)]*Stop[^)]*Chat[^)]*\)/i;
   const BACK_CHAT_RE = /(?:Quay lại sảnh chờ|Back to (?:the )?lobby)/i;
@@ -11,11 +11,16 @@
   const ERROR_CONTENT_RE = /\[Lỗi\s*:/i;
   const EMPTY_PLACEHOLDER_RE = /(?:^|\s)(?:Đang khởi tạo\.\.\.|Initializing\.\.\.)(?:\s|$)/i;
   const ARENA_MODE_RE = /\bARENA MODE\b/i;
+  const EDIT_TEXT_RE = /^(?:Chỉnh sửa|Edit)$/i;
+  const CLOSE_TEXT_RE = /^(?:✕|×|Đóng\b|Close\b)/i;
+  const BUSY_DIALOG_SELECTOR = '[aria-labelledby="quick-settings-title"], [aria-labelledby="arena-settings-title"]';
+  const BUSY_MARK = 'data-sts-busy-guard';
 
   const nativeFetch = typeof window.fetch === 'function' ? window.fetch.bind(window) : null;
   const activeChatFetches = new Set();
   let observer = null;
   let recentStopAt = 0;
+  let lastBusyWarningAt = 0;
 
   function textOf(value) {
     return String(value == null ? '' : value).trim();
@@ -61,7 +66,6 @@
     if (!nativeFetch) return;
     window.fetch = function guardedFetch(input, init) {
       if (!isGenerationRequest(input, init)) return nativeFetch(input, init);
-
       const localController = new AbortController();
       const upstreamSignal = init && init.signal || input && input.signal;
       let detach = null;
@@ -73,7 +77,6 @@
           detach = () => upstreamSignal.removeEventListener('abort', relay);
         }
       }
-
       const nextInit = { ...(init || {}), signal: localController.signal };
       activeChatFetches.add(localController);
       let promise;
@@ -113,10 +116,105 @@
     return false;
   }
 
+  function isChatBusyUi() {
+    if (!document) return false;
+    const sendButton = typeof document.getElementById === 'function' ? document.getElementById('send_but') : null;
+    if (sendButton && STOP_TEXT_RE.test(attrText(sendButton))) return true;
+    const chat = typeof document.getElementById === 'function' ? document.getElementById('chat') : null;
+    return !!(chat && typeof chat.getAttribute === 'function' && chat.getAttribute('aria-busy') === 'true');
+  }
+
+  function closestOf(node, selector) {
+    return node && typeof node.closest === 'function' ? node.closest(selector) : null;
+  }
+
+  function isCloseControl(node) {
+    return !!node && CLOSE_TEXT_RE.test(attrText(node));
+  }
+
+  function busyMutationKind(node) {
+    if (!node) return null;
+    const button = closestOf(node, 'button');
+    if (button && EDIT_TEXT_RE.test(textOf(button.textContent)) && closestOf(button, '#chat')) return 'edit';
+    const dialog = closestOf(node, BUSY_DIALOG_SELECTOR);
+    if (!dialog) return null;
+    const control = button || closestOf(node, 'select') || closestOf(node, 'input');
+    if (!control || isCloseControl(control)) return null;
+    return 'settings';
+  }
+
+  function warnBusyMutation(kind) {
+    const now = Date.now();
+    if (now - lastBusyWarningAt < 1200) return;
+    lastBusyWarningAt = now;
+    const message = kind === 'edit'
+      ? 'Không thể chỉnh sửa tin nhắn khi AI đang tạo phản hồi. Hãy Dừng hoặc chờ hoàn tất.'
+      : 'Không thể đổi Model / Nguồn / Preset / Persona giữa lúc AI đang tạo. Hãy Dừng hoặc chờ hoàn tất.';
+    try {
+      window.dispatchEvent(new CustomEvent('sillytavern:show-toast', { detail: { message, type: 'warning' } }));
+    } catch (_) {}
+  }
+
+  function blockBusyMutationEvent(event) {
+    if (!isChatBusyUi()) return false;
+    const kind = busyMutationKind(event && event.target);
+    if (!kind) return false;
+    try { event.preventDefault(); } catch (_) {}
+    try { event.stopPropagation(); } catch (_) {}
+    try { event.stopImmediatePropagation(); } catch (_) {}
+    warnBusyMutation(kind);
+    return true;
+  }
+
   function onClickCapture(event) {
     const target = event && event.target;
     const button = target && typeof target.closest === 'function' ? target.closest('button') : null;
-    if (isGenerationStopControl(button)) abortTrackedGenerationFetches();
+    if (isGenerationStopControl(button)) {
+      abortTrackedGenerationFetches();
+      return;
+    }
+    blockBusyMutationEvent(event);
+  }
+
+  function rememberAndDisable(control, reason) {
+    if (!control || control.disabled || typeof control.setAttribute !== 'function') return;
+    control.setAttribute(BUSY_MARK, '1');
+    control.setAttribute('data-sts-busy-prev-title', control.getAttribute('title') || '');
+    control.disabled = true;
+    control.setAttribute('aria-disabled', 'true');
+    control.setAttribute('title', reason);
+  }
+
+  function restoreBusyDisabledControls() {
+    if (!document || typeof document.querySelectorAll !== 'function') return;
+    for (const control of Array.from(document.querySelectorAll('[' + BUSY_MARK + '="1"]'))) {
+      if (!control || typeof control.removeAttribute !== 'function') continue;
+      control.disabled = false;
+      control.removeAttribute('aria-disabled');
+      const previousTitle = control.getAttribute('data-sts-busy-prev-title') || '';
+      if (previousTitle) control.setAttribute('title', previousTitle); else control.removeAttribute('title');
+      control.removeAttribute('data-sts-busy-prev-title');
+      control.removeAttribute(BUSY_MARK);
+    }
+  }
+
+  function syncBusySensitiveControls() {
+    if (!document || typeof document.querySelectorAll !== 'function') return;
+    if (!isChatBusyUi()) {
+      restoreBusyDisabledControls();
+      return;
+    }
+    const editReason = 'Đang tạo phản hồi — hãy Dừng hoặc chờ hoàn tất trước khi chỉnh sửa.';
+    for (const button of Array.from(document.querySelectorAll('#chat button'))) {
+      if (EDIT_TEXT_RE.test(textOf(button.textContent))) rememberAndDisable(button, editReason);
+    }
+    const settingsReason = 'Đang tạo phản hồi — không đổi cấu hình generation giữa lượt.';
+    for (const dialog of Array.from(document.querySelectorAll(BUSY_DIALOG_SELECTOR))) {
+      if (!dialog || typeof dialog.querySelectorAll !== 'function') continue;
+      for (const control of Array.from(dialog.querySelectorAll('button, select, input'))) {
+        if (!isCloseControl(control)) rememberAndDisable(control, settingsReason);
+      }
+    }
   }
 
   function arenaRootPresent() {
@@ -141,9 +239,7 @@
   function cardTextWithoutControls(cardInfo) {
     if (!cardInfo || !cardInfo.card) return '';
     const clone = cardInfo.card.cloneNode(true);
-    if (clone && typeof clone.querySelectorAll === 'function') {
-      Array.from(clone.querySelectorAll('button')).forEach((button) => button.remove());
-    }
+    if (clone && typeof clone.querySelectorAll === 'function') Array.from(clone.querySelectorAll('button')).forEach((button) => button.remove());
     return textOf(clone && clone.textContent);
   }
 
@@ -183,6 +279,7 @@
   function reconcileUi() {
     normalizeCompletedCandidateControls();
     dismissRecentAbortBanner();
+    syncBusySensitiveControls();
   }
 
   function startObserver() {
@@ -201,6 +298,8 @@
 
   patchFetchCancellation();
   document.addEventListener('click', onClickCapture, true);
+  document.addEventListener('pointerdown', blockBusyMutationEvent, true);
+  document.addEventListener('change', blockBusyMutationEvent, true);
   startObserver();
   queueMicrotask(reconcileUi);
 
@@ -210,6 +309,8 @@
     abortTrackedGenerationFetches,
     reconcileUi,
     isGenerationRequest,
-    isGenerationStopControl
+    isGenerationStopControl,
+    isChatBusyUi,
+    busyMutationKind
   });
 })();
