@@ -3,7 +3,7 @@
 
   if (window.__STS_CHAT_RECOVERY__) return;
 
-  const VERSION = '1.0.0';
+  const VERSION = '1.1.0';
   const RECOVERY_COOLDOWN_MS = 1200;
   const FORCE_UNLOCK_DELAY_MS = 180;
   const WATCHDOG_BUSY_MS = 90000;
@@ -11,6 +11,8 @@
   const STOP_TEXT_RE = /(?:^|\b)(?:stop|cancel|abort|dừng|hủy|huỷ)(?:\b|$)/i;
   const SEND_TEXT_RE = /(?:^|\b)(?:send|submit|generate|gửi|tạo)(?:\b|$)/i;
   const CHAT_URL_RE = /(?:chat(?:\/|_|-)?completions?|\/chat\b|\/messages?\b|\/generate\b|openai|anthropic|openrouter|gemini|text-generation|kobold|proxy)/i;
+  const ARENA_MODE_RE = /\bARENA MODE\b/i;
+  const ARENA_PENDING_TEXT_RE = /(?:^|\s)(?:Đang tạo\.\.\.|Generating\.\.\.)(?:\s|$)/i;
 
   let lastRecoveryAt = 0;
   let recoveryTimer = null;
@@ -88,6 +90,24 @@
       } catch (_) {}
     }
     return true;
+  }
+
+  function hasActiveArenaGeneration() {
+    if (!document || typeof document.querySelectorAll !== 'function') return false;
+    const pageText = textOf(document.body && document.body.textContent);
+    if (!ARENA_MODE_RE.test(pageText)) return false;
+
+    const buttons = Array.from(document.querySelectorAll('button'));
+    return buttons.some((button) => {
+      if (!button || !button.disabled || !visible(button)) return false;
+      return ARENA_PENDING_TEXT_RE.test(textOf(button.textContent));
+    });
+  }
+
+  function shouldDeferRecovery(reason) {
+    if (!hasActiveArenaGeneration()) return false;
+    const normalized = textOf(reason).toLowerCase();
+    return normalized !== 'busy-watchdog' && normalized !== 'offline';
   }
 
   function composerRoot(input) {
@@ -197,7 +217,20 @@
     return true;
   }
 
+  function dispatchRecoveryDeferred(reason) {
+    try {
+      window.dispatchEvent(new CustomEvent('sts:chat-recovery-deferred', {
+        detail: { reason: textOf(reason) || 'unknown', mode: 'arena' }
+      }));
+    } catch (_) {}
+  }
+
   function recover(reason) {
+    if (shouldDeferRecovery(reason)) {
+      dispatchRecoveryDeferred(reason);
+      return false;
+    }
+
     const stamp = now();
     if (stamp - lastRecoveryAt < RECOVERY_COOLDOWN_MS) return false;
     const composer = findComposer();
@@ -325,6 +358,8 @@
     findComposer,
     isConversationRequest,
     forceUnlock,
-    watchdogTick
+    watchdogTick,
+    hasActiveArenaGeneration,
+    shouldDeferRecovery
   });
 })();
