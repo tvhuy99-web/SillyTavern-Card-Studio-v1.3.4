@@ -1,6 +1,6 @@
 # Arena / chat UX audit — 2026-08-15
 
-This audit focuses on small but high-friction interaction failures around Arena, cancellation, retry, reload, navigation, story mode, settings changes, editing, and network recovery.
+This audit focuses on small but high-friction interaction failures around Arena, cancellation, retry, reload, navigation, story mode, settings changes, editing, summarization, and network recovery.
 
 ## Confirmed and fixed by recovery v1.2.0
 
@@ -10,7 +10,7 @@ This audit focuses on small but high-friction interaction failures around Arena,
 - A failure on one Arena side does not click global Stop while the other side is still generating.
 - Offline and the long busy watchdog remain global recovery conditions.
 
-## Confirmed and covered by Arena runtime guard v1.2.0
+## Confirmed and covered by Arena runtime guard v1.2.1
 
 - Chat-generation fetches are tracked even when the bundle forgot to attach its own `AbortSignal`.
 - Nested `/api/forward` proxy requests are recognized from their target URL/body, so Stop also cancels proxy-fallback generation and preprocessing requests.
@@ -21,15 +21,16 @@ This audit focuses on small but high-friction interaction failures around Arena,
 - A completed Arena candidate whose content is an error string cannot be selected into the conversation.
 - A completed Arena candidate with empty content / the `Đang khởi tạo...` placeholder cannot be selected.
 - A short-lived abort/CORS-style banner caused by an intentional Stop is dismissed instead of being presented as a fresh network failure.
-- `Chỉnh sửa` on an existing chat message is disabled while the main chat is generating. This prevents the visible/saved history from changing underneath an in-flight prompt and producing an answer that appears to belong to the edited text instead of the text actually sent.
-- Generation-sensitive controls inside Quick Settings and Arena Settings are disabled while the main chat is generating: provider/model/profile/preset/persona changes cannot race with a turn already in progress. Dialog Close controls remain available.
+- `Chỉnh sửa` on an existing chat message is disabled while the main chat is generating, preventing the visible/saved history from changing underneath an in-flight prompt.
+- Generation-sensitive controls inside Quick Settings and Arena Settings are disabled while the main chat is generating; dialog Close controls remain available.
+- Source-data mutation guards now also remain active whenever the composer itself is disabled by a system task. This covers Smart Context summarization, auto-loop coordination, script/input locks, and World Info synchronization, preventing edits or provider/model/preset/persona changes while those tasks are consuming the current state.
 
 ## Confirmed remaining bundle-level issues
 
 1. The direct-fetch wrapper itself still converts an `AbortError` into connection/CORS wording before upper layers see it. The guard prevents the secondary recovery loop and hides the transient banner after an intentional Stop, but the bundle should ultimately preserve abort semantics at source.
 2. Reloading a session while an Arena candidate has `completed: false` restores the stale pending flag without recreating its request/controller, so `Đang tạo...` can become permanent and Retry remains disabled. This must be normalized in session/Arena state rather than faked by toggling DOM `disabled`.
 3. Arena Retry resolves the current provider/model settings at retry time but keeps the old candidate label, allowing the displayed model name to differ from the model actually used.
-4. The core `editMessage` function itself still lacks an `isLoading/isSummarizing` guard. The normal chat UI is protected by the runtime guard, but programmatic edit paths should eventually enforce the same invariant at store/action level.
+4. The core `editMessage` function itself still lacks an `isLoading/isSummarizing` guard. Normal UI paths are protected by the runtime guard, but programmatic edit paths should eventually enforce the same invariant at store/action level.
 5. Arena completion audio can fire once after both candidates finish and again after selecting the winner and processing it.
 6. Selecting a finished candidate while the opponent is still generating intentionally aborts the opponent, but the UI does not communicate that side effect before selection.
 7. Session teardown clears the Zustand `abortControllers` set without aborting its controllers. The runtime guard covers tracked network requests on the normal Back control, but the store should abort controllers itself so every teardown path has correct semantics.

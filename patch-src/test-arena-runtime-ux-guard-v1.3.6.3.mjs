@@ -10,16 +10,23 @@ function makeHarness(fetchImpl = (input, init) => new Promise((resolve, reject) 
     if (signal.aborted) return reject(signal.reason || new DOMException('Aborted', 'AbortError'));
     signal.addEventListener('abort', () => reject(signal.reason || new DOMException('Aborted', 'AbortError')), { once: true });
   }
-}), { busy = false } = {}) {
+}), { busy = false, composerDisabled = false } = {}) {
   const listeners = new Map();
   const sendButton = makeNode({ tag: 'button', id: 'send_but', text: busy ? 'Dừng' : 'Gửi' });
+  const composer = makeNode({ tag: 'textarea', id: 'send_textarea' });
+  composer.disabled = composerDisabled;
   const chat = { getAttribute(name) { return name === 'aria-busy' ? (busy ? 'true' : 'false') : null; } };
   const document = {
     documentElement: {},
     body: { textContent: '' },
     addEventListener(type, cb) { listeners.set(type, cb); },
     querySelectorAll() { return []; },
-    getElementById(id) { if (id === 'send_but') return sendButton; if (id === 'chat') return chat; return null; }
+    getElementById(id) {
+      if (id === 'send_but') return sendButton;
+      if (id === 'send_textarea') return composer;
+      if (id === 'chat') return chat;
+      return null;
+    }
   };
   class FakeMutationObserver { constructor(cb) { this.cb = cb; } observe() {} }
   class FakeCustomEvent { constructor(type, init) { this.type = type; Object.assign(this, init); } }
@@ -64,8 +71,9 @@ function makeNode({ tag = 'button', id = '', text = '', ariaLabel = '', title = 
 {
   const h = makeHarness(async () => ({ ok: true }), { busy: true });
   const api = h.window.__STS_ARENA_UX_GUARD__;
-  assert.equal(api.version, '1.2.0');
+  assert.equal(api.version, '1.2.1');
   assert.equal(api.isChatBusyUi(), true);
+  assert.equal(api.isMutationBusyUi(), true);
   assert.equal(api.isGenerationRequest('/v1/chat/completions', {
     method: 'POST', body: JSON.stringify({ messages: [{ role: 'user', content: 'hello' }] })
   }), true);
@@ -94,8 +102,17 @@ function makeNode({ tag = 'button', id = '', text = '', ariaLabel = '', title = 
 }
 
 {
-  const h = makeHarness(async () => ({ ok: true }), { busy: false });
-  assert.equal(h.window.__STS_ARENA_UX_GUARD__.isChatBusyUi(), false);
+  const h = makeHarness(async () => ({ ok: true }), { busy: false, composerDisabled: true });
+  const api = h.window.__STS_ARENA_UX_GUARD__;
+  assert.equal(api.isChatBusyUi(), false, 'summarization/system work is not model streaming');
+  assert.equal(api.isMutationBusyUi(), true, 'disabled composer must still protect source-data mutations');
+}
+
+{
+  const h = makeHarness(async () => ({ ok: true }), { busy: false, composerDisabled: false });
+  const api = h.window.__STS_ARENA_UX_GUARD__;
+  assert.equal(api.isChatBusyUi(), false);
+  assert.equal(api.isMutationBusyUi(), false);
 }
 
 {
