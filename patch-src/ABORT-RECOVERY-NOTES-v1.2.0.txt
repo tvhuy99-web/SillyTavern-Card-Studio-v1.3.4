@@ -1,0 +1,8 @@
+Chat recovery v1.2.0
+
+- Intentional AbortError is cancellation, not a fresh network failure.
+- Wrapped user-abort text no longer triggers a second global Stop.
+- XHR abort does not invoke recovery.
+- Real fetch/HTTP failures still invoke recovery when appropriate.
+- Arena side-local failure is deferred while the other side is still generating.
+- Offline and long busy watchdog recovery remain enabled.
