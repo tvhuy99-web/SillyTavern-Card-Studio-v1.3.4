@@ -3,8 +3,10 @@
 
   if (window.__STS_ARENA_UX_GUARD__) return;
 
-  const VERSION = '1.1.0';
-  const STOP_TEXT_RE = /(?:^|\b)(?:stop|cancel|abort|dừng|hủy|huỷ)(?:\b|$)/i;
+  const VERSION = '1.1.1';
+  const STOP_TEXT_RE = /(?:^|\b)(?:stop|dừng)(?:\b|$)/i;
+  const STORY_CANCEL_RE = /(?:Hủy|Huỷ)\s*\(\s*Dừng\s*&\s*Chat\s*\)|Cancel\s*\([^)]*Stop[^)]*Chat[^)]*\)/i;
+  const BACK_CHAT_RE = /(?:Quay lại sảnh chờ|Back to (?:the )?lobby)/i;
   const CHAT_URL_RE = /(?:chat(?:\/|_|-)?completions?|\/chat\b|\/messages?\b|\/generate\b|openai|anthropic|openrouter|gemini|text-generation|kobold|proxy)/i;
   const ERROR_CONTENT_RE = /\[Lỗi\s*:/i;
   const EMPTY_PLACEHOLDER_RE = /(?:^|\s)(?:Đang khởi tạo\.\.\.|Initializing\.\.\.)(?:\s|$)/i;
@@ -102,11 +104,19 @@
     return [node.getAttribute('aria-label'), node.getAttribute('title'), node.textContent].map(textOf).filter(Boolean).join(' ');
   }
 
+  function isGenerationStopControl(button) {
+    if (!button) return false;
+    const label = attrText(button);
+    if (button.id === 'send_but' && STOP_TEXT_RE.test(label)) return true;
+    if (STORY_CANCEL_RE.test(label)) return true;
+    if (BACK_CHAT_RE.test(label)) return true;
+    return false;
+  }
+
   function onClickCapture(event) {
     const target = event && event.target;
     const button = target && typeof target.closest === 'function' ? target.closest('button') : null;
-    if (!button) return;
-    if (STOP_TEXT_RE.test(attrText(button))) abortTrackedGenerationFetches();
+    if (isGenerationStopControl(button)) abortTrackedGenerationFetches();
   }
 
   function arenaRootPresent() {
@@ -199,6 +209,7 @@
     activeGenerationFetchCount: () => activeChatFetches.size,
     abortTrackedGenerationFetches,
     reconcileUi,
-    isGenerationRequest
+    isGenerationRequest,
+    isGenerationStopControl
   });
 })();
