@@ -3,7 +3,7 @@
 
   if (window.__STS_ARENA_UX_GUARD__) return;
 
-  const VERSION = '1.2.0';
+  const VERSION = '1.2.1';
   const STOP_TEXT_RE = /(?:^|\b)(?:stop|dừng)(?:\b|$)/i;
   const STORY_CANCEL_RE = /(?:Hủy|Huỷ)\s*\(\s*Dừng\s*&\s*Chat\s*\)|Cancel\s*\([^)]*Stop[^)]*Chat[^)]*\)/i;
   const BACK_CHAT_RE = /(?:Quay lại sảnh chờ|Back to (?:the )?lobby)/i;
@@ -124,6 +124,13 @@
     return !!(chat && typeof chat.getAttribute === 'function' && chat.getAttribute('aria-busy') === 'true');
   }
 
+  function isMutationBusyUi() {
+    if (isChatBusyUi()) return true;
+    if (!document || typeof document.getElementById !== 'function') return false;
+    const composer = document.getElementById('send_textarea');
+    return !!(composer && composer.disabled);
+  }
+
   function closestOf(node, selector) {
     return node && typeof node.closest === 'function' ? node.closest(selector) : null;
   }
@@ -148,15 +155,15 @@
     if (now - lastBusyWarningAt < 1200) return;
     lastBusyWarningAt = now;
     const message = kind === 'edit'
-      ? 'Không thể chỉnh sửa tin nhắn khi AI đang tạo phản hồi. Hãy Dừng hoặc chờ hoàn tất.'
-      : 'Không thể đổi Model / Nguồn / Preset / Persona giữa lúc AI đang tạo. Hãy Dừng hoặc chờ hoàn tất.';
+      ? 'Không thể chỉnh sửa tin nhắn khi hệ thống đang xử lý. Hãy chờ tác vụ hiện tại hoàn tất hoặc Dừng nếu đang tạo phản hồi.'
+      : 'Không thể đổi Model / Nguồn / Preset / Persona khi hệ thống đang xử lý lượt hiện tại.';
     try {
       window.dispatchEvent(new CustomEvent('sillytavern:show-toast', { detail: { message, type: 'warning' } }));
     } catch (_) {}
   }
 
   function blockBusyMutationEvent(event) {
-    if (!isChatBusyUi()) return false;
+    if (!isMutationBusyUi()) return false;
     const kind = busyMutationKind(event && event.target);
     if (!kind) return false;
     try { event.preventDefault(); } catch (_) {}
@@ -200,15 +207,15 @@
 
   function syncBusySensitiveControls() {
     if (!document || typeof document.querySelectorAll !== 'function') return;
-    if (!isChatBusyUi()) {
+    if (!isMutationBusyUi()) {
       restoreBusyDisabledControls();
       return;
     }
-    const editReason = 'Đang tạo phản hồi — hãy Dừng hoặc chờ hoàn tất trước khi chỉnh sửa.';
+    const editReason = 'Hệ thống đang xử lý — chờ hoàn tất trước khi chỉnh sửa lịch sử.';
     for (const button of Array.from(document.querySelectorAll('#chat button'))) {
       if (EDIT_TEXT_RE.test(textOf(button.textContent))) rememberAndDisable(button, editReason);
     }
-    const settingsReason = 'Đang tạo phản hồi — không đổi cấu hình generation giữa lượt.';
+    const settingsReason = 'Hệ thống đang xử lý — không đổi cấu hình generation giữa lượt.';
     for (const dialog of Array.from(document.querySelectorAll(BUSY_DIALOG_SELECTOR))) {
       if (!dialog || typeof dialog.querySelectorAll !== 'function') continue;
       for (const control of Array.from(dialog.querySelectorAll('button, select, input'))) {
@@ -311,6 +318,7 @@
     isGenerationRequest,
     isGenerationStopControl,
     isChatBusyUi,
+    isMutationBusyUi,
     busyMutationKind
   });
 })();
