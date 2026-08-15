@@ -3,14 +3,12 @@
 
   if (window.__STS_ARENA_UX_GUARD__) return;
 
-  const VERSION = '1.0.1';
+  const VERSION = '1.1.0';
   const STOP_TEXT_RE = /(?:^|\b)(?:stop|cancel|abort|dừng|hủy|huỷ)(?:\b|$)/i;
   const CHAT_URL_RE = /(?:chat(?:\/|_|-)?completions?|\/chat\b|\/messages?\b|\/generate\b|openai|anthropic|openrouter|gemini|text-generation|kobold|proxy)/i;
-  const ERROR_CONTENT_RE = /^\s*\[Lỗi\s*:/i;
-  const EMPTY_PLACEHOLDER_RE = /^\s*(?:Đang khởi tạo\.\.\.|Initializing\.\.\.)\s*$/i;
+  const ERROR_CONTENT_RE = /\[Lỗi\s*:/i;
+  const EMPTY_PLACEHOLDER_RE = /(?:^|\s)(?:Đang khởi tạo\.\.\.|Initializing\.\.\.)(?:\s|$)/i;
   const ARENA_MODE_RE = /\bARENA MODE\b/i;
-  const PENDING_RE = /^\s*(?:Đang tạo\.\.\.|Generating\.\.\.)\s*$/i;
-  const SEND_IDLE_RE = /^(?:Gửi|Send)$/i;
 
   const nativeFetch = typeof window.fetch === 'function' ? window.fetch.bind(window) : null;
   const activeChatFetches = new Set();
@@ -32,22 +30,23 @@
     return input && input.body;
   }
 
-  function bodyLooksLikeGeneration(body) {
-    if (typeof body !== 'string') return false;
+  function bodyLooksLikeGeneration(body, depth = 0) {
+    if (depth > 2 || typeof body !== 'string') return false;
     if (/"messages"\s*:\s*\[|"prompt"\s*:|"contents"\s*:\s*\[|"chat_history"\s*:|"stream"\s*:\s*true/i.test(body)) return true;
     try {
       const parsed = JSON.parse(body);
       if (!parsed || typeof parsed !== 'object') return false;
-      return Boolean(
+      if (
         (Array.isArray(parsed.messages) && parsed.messages.length) ||
         (Array.isArray(parsed.contents) && parsed.contents.length) ||
         (Array.isArray(parsed.chat_history) && parsed.chat_history.length) ||
         (typeof parsed.prompt === 'string' && parsed.prompt) ||
         (parsed.stream === true && parsed.model)
-      );
-    } catch (_) {
-      return false;
-    }
+      ) return true;
+      if (typeof parsed.url === 'string' && CHAT_URL_RE.test(parsed.url) && textOf(parsed.method || 'POST').toUpperCase() !== 'GET') return true;
+      if (typeof parsed.body === 'string') return bodyLooksLikeGeneration(parsed.body, depth + 1);
+    } catch (_) {}
+    return false;
   }
 
   function isGenerationRequest(input, init) {
@@ -114,12 +113,6 @@
     return ARENA_MODE_RE.test(textOf(document.body && document.body.textContent));
   }
 
-  function globalComposerIsIdle() {
-    const sendButton = document.getElementById && document.getElementById('send_but');
-    if (!sendButton) return false;
-    return SEND_IDLE_RE.test(textOf(sendButton.textContent));
-  }
-
   function candidateCards() {
     if (!arenaRootPresent() || typeof document.querySelectorAll !== 'function') return [];
     const chooseButtons = Array.from(document.querySelectorAll('button')).filter((button) => /^(?:Chọn cái này|Choose this)$/i.test(textOf(button.textContent)));
@@ -129,7 +122,7 @@
         if (!card || typeof card.querySelectorAll !== 'function') continue;
         const buttons = Array.from(card.querySelectorAll('button'));
         const hasRetry = buttons.some((button) => /(?:Thử lại model này|Retry this model)/i.test(attrText(button)));
-        if (hasRetry) return { card, choose, buttons };
+        if (hasRetry) return { card, choose };
       }
       return null;
     }).filter(Boolean);
@@ -147,35 +140,13 @@
   function normalizeCompletedCandidateControls() {
     for (const info of candidateCards()) {
       const content = cardTextWithoutControls(info);
-      const isError = ERROR_CONTENT_RE.test(content) || /\[Lỗi\s*:/i.test(content);
-      const isEmpty = EMPTY_PLACEHOLDER_RE.test(content) || /(?:^|\s)Đang khởi tạo\.\.\.(?:\s|$)/i.test(content);
+      const isError = ERROR_CONTENT_RE.test(content);
+      const isEmpty = EMPTY_PLACEHOLDER_RE.test(content);
       if (isError || isEmpty) {
         info.choose.disabled = true;
         info.choose.setAttribute('aria-disabled', 'true');
         info.choose.setAttribute('title', isError ? 'Phản hồi này bị lỗi; hãy Thử lại.' : 'Model không trả về nội dung; hãy Thử lại.');
         info.choose.textContent = isError ? 'Không thể chọn — bị lỗi' : 'Không thể chọn — trống';
-      }
-    }
-  }
-
-  function unlockStaleArenaRetry() {
-    if (!arenaRootPresent() || !globalComposerIsIdle() || typeof document.querySelectorAll !== 'function') return;
-    const pendingButtons = Array.from(document.querySelectorAll('button')).filter((button) => PENDING_RE.test(textOf(button.textContent)) && button.disabled);
-    if (!pendingButtons.length) return;
-
-    for (const pending of pendingButtons) {
-      let card = pending.parentElement;
-      for (let i = 0; card && i < 5; i += 1, card = card.parentElement) {
-        if (!card || typeof card.querySelectorAll !== 'function') continue;
-        const retry = Array.from(card.querySelectorAll('button')).find((button) => /(?:Thử lại model này|Retry this model)/i.test(attrText(button)));
-        if (retry) {
-          retry.disabled = false;
-          retry.removeAttribute('disabled');
-          retry.setAttribute('title', 'Phiên tạo trước đã bị gián đoạn. Nhấn để thử lại model này.');
-          pending.textContent = 'Đã gián đoạn — hãy Thử lại';
-          pending.setAttribute('aria-label', 'Phiên tạo đã gián đoạn; dùng nút Thử lại');
-          break;
-        }
       }
     }
   }
@@ -201,7 +172,6 @@
 
   function reconcileUi() {
     normalizeCompletedCandidateControls();
-    unlockStaleArenaRetry();
     dismissRecentAbortBanner();
   }
 
