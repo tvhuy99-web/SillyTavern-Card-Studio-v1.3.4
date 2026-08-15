@@ -38,10 +38,22 @@ function makeHarness(fetchImpl = (input, init) => new Promise((resolve, reject) 
   return { window, document, listeners };
 }
 
+function button({ id = '', text = '', ariaLabel = '', title = '' } = {}) {
+  return {
+    id,
+    textContent: text,
+    getAttribute(name) {
+      if (name === 'aria-label') return ariaLabel || null;
+      if (name === 'title') return title || null;
+      return null;
+    }
+  };
+}
+
 {
   const h = makeHarness(async () => ({ ok: true }));
   const api = h.window.__STS_ARENA_UX_GUARD__;
-  assert.equal(api.version, '1.1.0');
+  assert.equal(api.version, '1.1.1');
   assert.equal(api.isGenerationRequest('/v1/chat/completions', {
     method: 'POST',
     body: JSON.stringify({ messages: [{ role: 'user', content: 'hello' }] })
@@ -59,6 +71,12 @@ function makeHarness(fetchImpl = (input, init) => new Promise((resolve, reject) 
     body: JSON.stringify({ name: 'card' })
   }), false, 'unrelated POST must not be tracked');
   assert.equal(api.isGenerationRequest('/v1/models', { method: 'GET' }), false, 'model list GET must not be tracked');
+
+  assert.equal(api.isGenerationStopControl(button({ id: 'send_but', text: 'Dừng' })), true);
+  assert.equal(api.isGenerationStopControl(button({ text: 'Hủy (Dừng & Chat)' })), true);
+  assert.equal(api.isGenerationStopControl(button({ ariaLabel: 'Quay lại sảnh chờ' })), true);
+  assert.equal(api.isGenerationStopControl(button({ text: 'Hủy bỏ' })), false, 'generic editor cancel must not abort chat generation');
+  assert.equal(api.isGenerationStopControl(button({ text: 'Cancel' })), false, 'generic Cancel must not abort chat generation');
 }
 
 {
