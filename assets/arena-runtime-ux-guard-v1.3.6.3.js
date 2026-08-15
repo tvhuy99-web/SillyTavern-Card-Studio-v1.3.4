@@ -3,7 +3,7 @@
 
   if (window.__STS_ARENA_UX_GUARD__) return;
 
-  const VERSION = '1.0.0';
+  const VERSION = '1.0.1';
   const STOP_TEXT_RE = /(?:^|\b)(?:stop|cancel|abort|dừng|hủy|huỷ)(?:\b|$)/i;
   const CHAT_URL_RE = /(?:chat(?:\/|_|-)?completions?|\/chat\b|\/messages?\b|\/generate\b|openai|anthropic|openrouter|gemini|text-generation|kobold|proxy)/i;
   const ERROR_CONTENT_RE = /^\s*\[Lỗi\s*:/i;
@@ -117,7 +117,7 @@
   function globalComposerIsIdle() {
     const sendButton = document.getElementById && document.getElementById('send_but');
     if (!sendButton) return false;
-    return SEND_IDLE_RE.test(textOf(sendButton.textContent)) && !sendButton.disabled;
+    return SEND_IDLE_RE.test(textOf(sendButton.textContent));
   }
 
   function candidateCards() {
