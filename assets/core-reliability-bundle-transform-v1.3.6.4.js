@@ -1,4 +1,4 @@
-export const CORE_RELIABILITY_PATCH_VERSION = '1.0.1';
+export const CORE_RELIABILITY_PATCH_VERSION = '1.0.2';
 
 function replaceExactlyOnce(source, oldText, newText, label) {
   const first = source.indexOf(oldText);
@@ -33,6 +33,11 @@ export const CORE_RELIABILITY_REPLACEMENTS = Object.freeze([
     label: 'canonicalize visual-state keys',
     oldText: 'updateWorldInfoPlacement:e=>t.setSessionData({worldInfoPlacement:e}),updateVisualState:(e,n)=>t.setSessionData({visualState:{...t.visualState,[e]:n}}),clearLogs:n.clearLogs',
     newText: 'updateWorldInfoPlacement:e=>t.setSessionData({worldInfoPlacement:e}),updateVisualState:(e,n)=>{let r={bg:"backgroundImage",music:"musicUrl",class:"globalClass",sound:"ambientSoundUrl"}[e]||e,a=("backgroundImage"===r||"musicUrl"===r||"ambientSoundUrl"===r)&&"off"===n?"":n;t.setSessionData({visualState:{...t.visualState,[r]:a}})},clearLogs:n.clearLogs'
+  },
+  {
+    label: 'canonicalize slash-command visual-state keys',
+    oldText: 'logSystemMessage:n.logSystemMessage,updateVisualState:(e,n)=>t.setSessionData({visualState:{...t.visualState,[e]:n}}),showToast:e=>console.log("Toast:",e),showPopup:e=>console.log("Popup:",e)',
+    newText: 'logSystemMessage:n.logSystemMessage,updateVisualState:(e,n)=>{let r={bg:"backgroundImage",music:"musicUrl",class:"globalClass",sound:"ambientSoundUrl"}[e]||e,a=("backgroundImage"===r||"musicUrl"===r||"ambientSoundUrl"===r)&&"off"===n?"":n;t.setSessionData({visualState:{...t.visualState,[r]:a}})},showToast:e=>console.log("Toast:",e),showPopup:e=>console.log("Popup:",e)'
   },
   {
     label: 'migrate legacy visual-state aliases on session load',
