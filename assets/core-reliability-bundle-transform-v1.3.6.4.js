@@ -1,4 +1,4 @@
-export const CORE_RELIABILITY_PATCH_VERSION = '1.0.0';
+export const CORE_RELIABILITY_PATCH_VERSION = '1.0.1';
 
 function replaceExactlyOnce(source, oldText, newText, label) {
   const first = source.indexOf(oldText);
@@ -31,8 +31,8 @@ export const CORE_RELIABILITY_REPLACEMENTS = Object.freeze([
   },
   {
     label: 'canonicalize visual-state keys',
-    oldText: 'updateVisualState:(e,n)=>t.setSessionData({visualState:{...t.visualState,[e]:n}})',
-    newText: 'updateVisualState:(e,n)=>{let r={bg:"backgroundImage",music:"musicUrl",class:"globalClass",sound:"ambientSoundUrl"}[e]||e,a=("backgroundImage"===r||"musicUrl"===r||"ambientSoundUrl"===r)&&"off"===n?"":n;t.setSessionData({visualState:{...t.visualState,[r]:a}})}'
+    oldText: 'updateWorldInfoPlacement:e=>t.setSessionData({worldInfoPlacement:e}),updateVisualState:(e,n)=>t.setSessionData({visualState:{...t.visualState,[e]:n}}),clearLogs:n.clearLogs',
+    newText: 'updateWorldInfoPlacement:e=>t.setSessionData({worldInfoPlacement:e}),updateVisualState:(e,n)=>{let r={bg:"backgroundImage",music:"musicUrl",class:"globalClass",sound:"ambientSoundUrl"}[e]||e,a=("backgroundImage"===r||"musicUrl"===r||"ambientSoundUrl"===r)&&"off"===n?"":n;t.setSessionData({visualState:{...t.visualState,[r]:a}})},clearLogs:n.clearLogs'
   },
   {
     label: 'migrate legacy visual-state aliases on session load',
