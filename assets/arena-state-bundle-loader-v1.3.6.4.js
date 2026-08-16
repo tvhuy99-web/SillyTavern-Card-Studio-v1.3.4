@@ -1,5 +1,5 @@
 import { ARENA_STATE_PATCH_VERSION, patchArenaBundleSource } from './arena-state-bundle-transform-v1.3.6.4.js?v=1.0.0';
-import { CORE_RELIABILITY_PATCH_VERSION, patchCoreReliabilityBundleSource } from './core-reliability-bundle-transform-v1.3.6.4.js?v=1.0.0';
+import { CORE_RELIABILITY_PATCH_VERSION, patchCoreReliabilityBundleSource } from './core-reliability-bundle-transform-v1.3.6.4.js?v=1.0.1';
 
 const ORIGINAL_BUNDLE_URL = new URL('./index-11db71a5-modeltest-v2-htmlmodes-v1.js?v=1.3.6-arena-source.1', import.meta.url).href;
 
