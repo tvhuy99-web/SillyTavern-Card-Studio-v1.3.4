@@ -1,5 +1,8 @@
 import assert from 'node:assert/strict';
-import { readFileSync } from 'node:fs';
+import { execFileSync } from 'node:child_process';
+import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import {
   ARENA_CORE_REPLACEMENTS,
@@ -58,4 +61,15 @@ for (const spec of CORE_RELIABILITY_REPLACEMENTS) {
   assert.ok(integratedResult.code.includes(spec.newText), `production bundle missing replacement: ${spec.label}`);
 }
 
-console.log(`core reliability bundle transform tests: OK (${CORE_RELIABILITY_REPLACEMENTS.length} strict replacements; production integration verified)`);
+// Parse the complete transformed production bundle. This catches malformed minified
+// replacements even when every exact source anchor matched successfully.
+const syntaxDir = mkdtempSync(join(tmpdir(), 'sts-core-reliability-'));
+try {
+  const syntaxFile = join(syntaxDir, 'transformed-production.mjs');
+  writeFileSync(syntaxFile, integratedResult.code, 'utf8');
+  execFileSync(process.execPath, ['--check', syntaxFile], { stdio: 'pipe' });
+} finally {
+  rmSync(syntaxDir, { recursive: true, force: true });
+}
+
+console.log(`core reliability bundle transform tests: OK (${CORE_RELIABILITY_REPLACEMENTS.length} strict replacements; production integration + syntax verified)`);
