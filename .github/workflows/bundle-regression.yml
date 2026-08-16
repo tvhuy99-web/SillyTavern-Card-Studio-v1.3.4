@@ -1,0 +1,28 @@
+name: Bundle regression checks
+
+on:
+  pull_request:
+    paths:
+      - 'assets/**'
+      - 'patch-src/**'
+      - '.github/workflows/bundle-regression.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  bundle-transforms:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Test Arena bundle transform
+        run: node patch-src/test-arena-state-bundle-transform-v1.3.6.4.mjs
+      - name: Test core reliability bundle transform
+        run: node patch-src/test-core-reliability-bundle-transform-v1.3.6.4.mjs
