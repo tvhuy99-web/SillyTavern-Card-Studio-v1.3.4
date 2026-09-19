@@ -7,12 +7,15 @@ import {
   PRESET_BOUNDARY_PATCH_COUNT,
 } from './transforms/preset-boundary.mjs';
 import { applyCardRuntimeTransform } from './transforms/card-runtime.mjs';
+import { applyProxyPersistenceTransform, PROXY_PERSISTENCE_PATCH_COUNT } from './transforms/proxy-persistence.mjs';
 import { buildCardRuntimeAssets } from './build-card-runtime.mjs';
 
 const SOURCE_URL = new URL('../assets/index-11db71a5-modeltest-v2-htmlmodes-v1.js', import.meta.url);
 const OUTPUT_URL = new URL('../assets/app-production-v1.3.6.js', import.meta.url);
 const PROMPT_NORMALIZER_SOURCE_URL = new URL('../src/features/presets/prompt-normalizer.js', import.meta.url);
 const PROMPT_NORMALIZER_OUTPUT_URL = new URL('../assets/prompt-normalizer-v1.3.6.js', import.meta.url);
+const PROXY_PERSISTENCE_SOURCE_URL = new URL('../src/providers/proxy/persistence.js', import.meta.url);
+const PROXY_PERSISTENCE_OUTPUT_URL = new URL('../assets/proxy-persistence-service-v1.3.6.js', import.meta.url);
 
 function replaceExactlyOnce(source, oldText, newText, label) {
   const first = source.indexOf(oldText);
@@ -32,6 +35,7 @@ function applyGroup(source, replacements, groupName) {
 
 const runtimeReport = await buildCardRuntimeAssets();
 await copyFile(PROMPT_NORMALIZER_SOURCE_URL, PROMPT_NORMALIZER_OUTPUT_URL);
+await copyFile(PROXY_PERSISTENCE_SOURCE_URL, PROXY_PERSISTENCE_OUTPUT_URL);
 
 let code = await readFile(SOURCE_URL, 'utf8');
 code = applyGroup(code, ARENA_CORE_REPLACEMENTS, 'arena-state');
@@ -39,11 +43,12 @@ code = applyGroup(code, CORE_RELIABILITY_REPLACEMENTS, 'core-reliability');
 code = applyGroup(code, ARENA_CANCELLATION_REPLACEMENTS, 'arena-cancellation');
 code = applyPresetBoundaryTransform(code);
 code = applyCardRuntimeTransform(code);
+code = applyProxyPersistenceTransform(code);
 
 const banner = `/* GENERATED FILE. DO NOT EDIT DIRECTLY.
    Build source: assets/index-11db71a5-modeltest-v2-htmlmodes-v1.js
    Build pipeline: build/build-production-bundle.mjs
-   Patch order: arena-state -> core-reliability -> arena-cancellation -> preset-boundaries -> card-runtime-extraction
+   Patch order: arena-state -> core-reliability -> arena-cancellation -> preset-boundaries -> card-runtime-extraction -> proxy-persistence-boundary
    Runtime source patching is not used on the normal boot path.
 */
 `;
@@ -58,6 +63,7 @@ console.log(JSON.stringify({
     coreReliability: CORE_RELIABILITY_REPLACEMENTS.length,
     arenaCancellation: ARENA_CANCELLATION_REPLACEMENTS.length,
     presetBoundaries: PRESET_BOUNDARY_PATCH_COUNT,
+    proxyPersistence: PROXY_PERSISTENCE_PATCH_COUNT,
   },
   cardRuntime: runtimeReport,
 }, null, 2));
