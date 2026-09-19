@@ -2,7 +2,7 @@ import { ARENA_STATE_PATCH_VERSION, patchArenaBundleSource } from './arena-state
 import { CORE_RELIABILITY_PATCH_VERSION, patchCoreReliabilityBundleSource } from './core-reliability-bundle-transform-v1.3.6.4.js?v=1.0.2';
 import { ARENA_CANCELLATION_PATCH_VERSION, patchArenaCancellationBundleSource } from './arena-cancellation-bundle-transform-v1.3.6.5.js?v=1.0.0';
 
-const ORIGINAL_BUNDLE_URL = new URL('./index-11db71a5-modeltest-v2-htmlmodes-v1.js?v=1.3.6-arena-source.1', import.meta.url).href;
+const ORIGINAL_BUNDLE_URL = new URL('./index-11db71a5-modeltest-v2-htmlmodes-v1.js?v=1.3.6-arena-source.2', import.meta.url).href;
 
 function publishArenaStatus(status, extra = {}) {
   window.__STS_ARENA_STATE_PATCH__ = Object.freeze({
