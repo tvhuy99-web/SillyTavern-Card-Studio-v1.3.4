@@ -1,5 +1,5 @@
 function serializeScriptValue(value) {
-  return JSON.stringify(value).replace(/<\\/script/gi, '<\\\\/script');
+  return JSON.stringify(value).replace(/<\/script/gi, '<\\/script');
 }
 
 export function buildCardRuntimeRendererScript(html, descriptors, options = {}) {
