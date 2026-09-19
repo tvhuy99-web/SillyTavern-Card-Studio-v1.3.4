@@ -1,0 +1,29 @@
+root.isAdmin = function () { return false; };
+    function isBundledHelper(id) { return /(?:^|\/)JS-Slash-Runner$/i.test(String(id || '')); }
+    root.getExtensionType = function (id) { const item = catalog.extensions[String(id)]; return item && (item.type === 'global' || item.type === 'local' || item.type === 'system') ? item.type : (isBundledHelper(id) ? 'local' : null); };
+    root.getExtensionInstallationInfo = async function (id) {
+        const item = catalog.extensions[String(id)];
+        if (!item && !isBundledHelper(id)) return null;
+        return { current_branch_name: String(item && item.current_branch_name || 'bundled'), current_commit_hash: String(item && item.current_commit_hash || '36d8889a99f1cf09d3d1f8aabd0eba33975dc64d'), is_up_to_date: true, remote_url: String(item && (item.remote_url || item.url) || 'https://github.com/N0VI028/JS-Slash-Runner') };
+    };
+    root.getExtensionStatus = root.getExtensionInstallationInfo;
+    root.isInstalledExtension = function (id) { return Boolean(catalog.extensions[String(id)]) || isBundledHelper(id); };
+    function unsupportedExtensionMutation(action) { return async function () { return responseFromRpc({ ok: false, error: action + ' is unavailable in a static Card Studio deployment' }, 501); }; }
+    root.installExtension = unsupportedExtensionMutation('Extension installation');
+    root.uninstallExtension = unsupportedExtensionMutation('Extension removal');
+    root.reinstallExtension = unsupportedExtensionMutation('Extension reinstallation');
+    root.updateExtension = unsupportedExtensionMutation('Extension update');
+
+    async function readRawContent(content) {
+        if (typeof content === 'string') return content;
+        if (content && typeof content.text === 'function') return await content.text();
+        if (content instanceof ArrayBuffer) return new TextDecoder().decode(content);
+        return JSON.stringify(content || {});
+    }
+    root.importRawCharacter = async function (name, content) { const result = await rpc('raw.import.character', { name: name, content: content }, 180000); if (result && result.character) catalog.characters.push(clone(result.character)); return responseFromRpc(result); };
+    root.importRawChat = async function (name, content) { return responseFromRpc(await rpc('raw.import.chat', { name: name, content: await readRawContent(content) }, 180000)); };
+    root.importRawPreset = async function (name, content) { const result = await rpc('raw.import.preset', { name: name, content: await readRawContent(content) }, 180000); if (result && result.preset) updateCatalogRecord(catalog.presets, function (preset) { return presetNameOf(preset) === presetNameOf(result.preset); }, result.preset); return Boolean(result && result.ok !== false); };
+    root.importRawWorldbook = async function (name, content) { const result = await rpc('raw.import.worldbook', { name: name, content: await readRawContent(content) }, 180000); if (result && result.name && !lorebookNames.includes(result.name)) lorebookNames.push(result.name); return Boolean(result && result.ok !== false); };
+    root.importRawTavernRegex = function (name, content) { try { const regex = JSON.parse(String(content)); const list = Array.isArray(regex) ? regex : [regex]; root.replaceTavernRegexes(root.getTavernRegexes().concat(list)); rpc('raw.import.regex', { name: name, content: String(content) }, 60000).catch(function () {}); return true; } catch (_) { return false; } };
+
+    
