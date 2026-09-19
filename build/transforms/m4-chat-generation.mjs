@@ -30,7 +30,10 @@ export function applyM4ChatGenerationTransform(source) {
     'async function Sd(e,t,n,r,a,i){return __stsGenerationGateway.generateOnce({prompt:e,preset:t,model:n,source:r,proxyConfig:a,signal:i})}' +
     'async function*Cd(e,t,n,r,a,i){yield* __stsGenerationGateway.stream({prompt:e,preset:t,signal:n,model:r,source:a,proxyConfig:i})}';
 
-  code = replaceRange(code, 'async function Sd(', '}var Ed=', generationBootstrap, 'generation gateway', false);
+  const generationStart = findExactlyOnce(code, 'async function Sd(', 'generation gateway/start');
+  const generationEnd = code.indexOf('}var Ed=', generationStart);
+  if (generationEnd < 0) throw new Error('[M4 chat/generation] generation gateway/end token not found');
+  code = code.slice(0, generationStart) + generationBootstrap + code.slice(generationEnd + 1);
 
   const sendStart = findExactlyOnce(
     code,
