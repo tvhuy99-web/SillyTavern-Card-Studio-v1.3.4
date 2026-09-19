@@ -1,0 +1,155 @@
+root.audioEnable = function (_args, value) { const settings = root.getAudioSettings(_args && _args.type || 'bgm'); const normalized = String(value === undefined ? _args && (_args.state || _args._) || 'toggle' : value).toLowerCase(); settings.enabled = normalized === 'toggle' ? !settings.enabled : !['off', 'false', '0', 'disable', 'disabled'].includes(normalized); root.setAudioSettings(_args && _args.type || 'bgm', settings); return settings.enabled ? 'on' : 'off'; };
+    root.audioPlay = function (args, value) { const source = value || args && (args.url || args.src || args._); if (String(source || '').toLowerCase() === 'pause' || String(source || '').toLowerCase() === 'stop') { root.pauseAudio(args && args.type); return ''; } root.playAudio(args && args.type || 'bgm', source); return String(source || ''); };
+    root.audioMode = function (args) { const settings = root.getAudioSettings(args && args.type || 'bgm'); if (args && args.mode) settings.mode = args.mode; root.setAudioSettings(args && args.type || 'bgm', settings); return String(settings.mode || 'repeat_all'); };
+    root.audioImport = function (args, value) { let items = value || args && (args.value || args._) || []; try { if (typeof items === 'string') items = JSON.parse(items); } catch (_) { items = [{ url: String(items) }]; } const type = args && args.type || 'bgm'; root.appendAudioList(type, Array.isArray(items) ? items : [items]); return root.getAudioList(type); };
+    root.audioSelect = function (args, value) { const type = args && args.type || 'bgm'; const list = root.getAudioList(type); const index = Math.max(0, Number(value !== undefined ? value : args && args.index) || 0); const selected = list[index] || null; if (selected) root.playAudio(type, selected); return selected; };
+
+    const ejsDefaultFeatures = Object.freeze({ enabled: true, generate_enabled: true, generate_loader_enabled: true, inject_loader_enabled: true, render_enabled: true, render_loader_enabled: true, code_blocks_enabled: true, raw_message_evaluation_enabled: true, filter_message_enabled: false, depth_limit: -1, autosave_enabled: true, preload_worldinfo_enabled: true, with_context_disabled: false, debug_enabled: false, invert_enabled: false, compile_workers: false, sandbox: !FULL_COMPATIBILITY_MODE, cache_enabled: 1, cache_size: 100, cache_hasher: 'h32ToString' });
+    let ejsFeatures = clone(ejsDefaultFeatures);
+    root.EjsTemplate = {
+        evaltemplate: async function (code, suppliedContext, options) { if (!root.ejs || typeof root.ejs.render !== 'function') return root.substitudeMacros(String(code || '')); const environment = suppliedContext || await root.EjsTemplate.prepareContext(); return await root.ejs.render(String(code || ''), environment, Object.assign({ async: true }, options || {})); },
+        prepareContext: async function (additionalContext, lastMessageId) { return Object.assign({}, root.getAllVariables(lastMessageId), { SillyTavern: root.SillyTavern, TavernHelper: root.TavernHelper, Mvu: root.Mvu, stat_data: root.stat_data, getvar: root.getvar, getwi: root.getwi, toastr: root.toastr, _: root._, YAML: root.YAML, z: root.z }, clone(additionalContext || {})); },
+        getSyntaxErrorInfo: async function (code) { try { if (root.ejs && typeof root.ejs.compile === 'function') root.ejs.compile(String(code || ''), { async: true }); return ''; } catch (error) { return String(error && error.message || error); } },
+        allVariables: function (endMessageId) { return root.getAllVariables(endMessageId); },
+        getFeatures: function () { return clone(ejsFeatures); },
+        setFeatures: function (features) { ejsFeatures = Object.assign(ejsFeatures, clone(features || {})); },
+        resetFeatures: function () { ejsFeatures = clone(ejsDefaultFeatures); }
+    };
+
+    const toolRegistry = new Map();
+    const slashRegistry = new Map();
+    const nativeSlashExecutor = root.executeSlashCommands;
+    async function executeRegisteredSlash(command) {
+        const text = String(command || '').trim();
+        const match = text.match(/^\/?([^\s|]+)(?:\s+([\s\S]*))?$/);
+        if (!match) return nativeSlashExecutor(command);
+        const registered = slashRegistry.get(match[1]);
+        if (!registered) return nativeSlashExecutor(command);
+        const callback = registered.callback || registered.execute || registered.handler;
+        if (typeof callback !== 'function') throw new Error('Registered slash command has no callback: ' + match[1]);
+        return await callback({}, match[2] || '');
+    }
+    root.executeSlashCommands = root.triggerSlash = root.triggerSlashWithResult = executeRegisteredSlash;
+    root.registerSlashCommand = function (name, callback) { slashRegistry.set(String(name).replace(/^\//, ''), { name: name, callback: callback }); return callback; };
+    const dataBankScrapers = new Map();
+    const localeData = {};
+    const ARGUMENT_TYPE = Object.freeze({ STRING: 'string', NUMBER: 'number', BOOLEAN: 'boolean', RANGE: 'range', CLOSURE: 'closure', SUBCOMMAND: 'subcommand', VARIABLE_NAME: 'variable_name', ENUM: 'enum', LIST: 'list', DICTIONARY: 'dictionary' });
+    function SlashCommand(definition) { Object.assign(this, definition || {}); }
+    function SlashCommandArgument(definition) { Object.assign(this, definition || {}); }
+    function SlashCommandNamedArgument(definition) { Object.assign(this, definition || {}); }
+    function SlashCommandEnumValue(value, description) { this.value = value; this.description = description || ''; }
+    const SlashCommandParser = { commands: slashRegistry, addCommandObject: function (command) { const name = String(command && (command.name || command.command) || ''); if (name) slashRegistry.set(name, command); return command; }, getCommand: function (name) { return slashRegistry.get(String(name)); } };
+    class Popup {
+        constructor(content, type, options) { this.content = content; this.type = type; this.options = options || {}; }
+        show() { return root.callPopup(this.content, this.type, this.options && this.options.title); }
+        complete(result) { return Promise.resolve(result); }
+    }
+    class ModuleWorkerWrapper {
+        constructor(url, options) { this.worker = new Worker(url, Object.assign({ type: 'module' }, options || {})); }
+        postMessage() { return this.worker.postMessage.apply(this.worker, arguments); }
+        terminate() { return this.worker.terminate(); }
+        addEventListener() { return this.worker.addEventListener.apply(this.worker, arguments); }
+        removeEventListener() { return this.worker.removeEventListener.apply(this.worker, arguments); }
+    }
+    class ChatCompletionService { static processRequest(options) { return root.generate(options || {}); } }
+    class TextCompletionService { static processRequest(options) { return root.generate(options || {}); } }
+    class ConnectionManagerRequestService { static sendRequest(options) { return root.generate(options || {}); } }
+
+    const compatContext = {
+        accountStorage: root.localStorage || {},
+        characters: catalog.characters,
+        groups: [],
+        getRequestHeaders: function (options) { return options && options.omitContentType ? {} : { 'Content-Type': 'application/json' }; },
+        reloadCurrentChat: function () { return rpc('chat.reload', {}, 60000); },
+        renameChat: function (name) { return rpc('chat.rename', { name: name }, 60000); },
+        maxContext: Number(currentPresetRecord().truncation_length || currentPresetRecord().max_context || 0),
+        saveMetadataDebounced: function () { return context.saveMetadata(); },
+        streamingProcessor: null,
+        eventTypes: root.tavern_events,
+        deleteMessage: root.deleteChatMessages,
+        generate: root.generate,
+        sendStreamingRequest: function (options) { return root.generate(Object.assign({}, options || {}, { should_stream: true })); },
+        sendGenerationRequest: function (options) { return root.generate(options || {}); },
+        stopGeneration: root.stopAllGeneration,
+        tokenizers: {},
+        getTextTokens: function (text) { return Array.from(String(text || '')).map(function (value) { return value.codePointAt(0); }); },
+        getTokenCount: function (text) { return Math.ceil(String(text || '').length / 4); },
+        getTokenCountAsync: function (text) { return Promise.resolve(Math.ceil(String(text || '').length / 4)); },
+        extensionPrompts: promptInjects,
+        setExtensionPrompt: function (key, value, position, depth, scan) { if (value === undefined || value === null || value === '') root.uninjectPrompts(key); else root.injectPrompts({ id: key, content: value, position: position, depth: depth, scan: scan }); },
+        updateChatMetadata: function (value) { Object.assign(context.chatMetadata, clone(value || {})); return context.saveMetadata(); },
+        saveChat: function () { return rpc('chat.save', {}, 60000); },
+        openCharacterChat: function (id) { return rpc('character.select', { id: id }, 60000); },
+        openGroupChat: function (id) { return rpc('group.select', { id: id }, 60000); },
+        sendSystemMessage: function (type, text) { return root.createChatMessages([{ role: 'system', message: text || type || '' }]); },
+        activateSendButtons: function () { root.sendMessageToParent('SET_INPUT_LOCKED', false); },
+        deactivateSendButtons: function () { root.sendMessageToParent('SET_INPUT_LOCKED', true); },
+        saveReply: function (messageId, text) { return root.setChatMessage({ message_id: messageId, message: text }); },
+        substituteParamsExtended: root.substitudeMacros,
+        SlashCommandParser: SlashCommandParser,
+        SlashCommand: SlashCommand,
+        SlashCommandArgument: SlashCommandArgument,
+        SlashCommandNamedArgument: SlashCommandNamedArgument,
+        SlashCommandEnumValue: SlashCommandEnumValue,
+        ARGUMENT_TYPE: ARGUMENT_TYPE,
+        executeSlashCommandsWithOptions: async function (command) { const pipe = await root.executeSlashCommands(command); return { pipe: pipe, isAborted: false }; },
+        registerSlashCommand: root.registerSlashCommand,
+        timestampToMoment: function (value) { return root.moment ? root.moment(value) : new Date(value); },
+        registerHelper: function (name, helper) { if (root.Handlebars && root.Handlebars.registerHelper) root.Handlebars.registerHelper(name, helper); return helper; },
+        registerMacro: root.registerMacroLike,
+        unregisterMacro: root.unregisterMacroLike,
+        registerFunctionTool: function (tool) { const name = String(tool && (tool.name || tool.function && tool.function.name) || uuid()); toolRegistry.set(name, tool); return name; },
+        unregisterFunctionTool: function (name) { return toolRegistry.delete(String(name)); },
+        isToolCallingSupported: function () { return true; },
+        canPerformToolCalls: function () { return true; },
+        ToolManager: { tools: toolRegistry, registerFunctionTool: function (tool) { return compatContext.registerFunctionTool(tool); }, unregisterFunctionTool: function (name) { return toolRegistry.delete(String(name)); } },
+        registerDebugFunction: function (name, fn) { root[String(name)] = fn; return fn; },
+        renderExtensionTemplate: function (_extension, templateId, data) { const template = typeof templateId === 'string' && templateId.includes('<') ? templateId : ''; return root.ejs && template ? root.ejs.render(template, data || {}) : template; },
+        renderExtensionTemplateAsync: async function (extension, templateId, data) { return await compatContext.renderExtensionTemplate(extension, templateId, data); },
+        registerDataBankScraper: function (name, scraper) { dataBankScrapers.set(String(name), scraper); return scraper; },
+        callPopup: root.callPopup,
+        callGenericPopup: root.callPopup,
+        showLoader: function () { const element = document.getElementById('st-loading-overlay'); if (element) element.style.display = ''; },
+        hideLoader: function () { const element = document.getElementById('st-loading-overlay'); if (element) element.style.display = 'none'; },
+        mainApi: 'openai',
+        ModuleWorkerWrapper: ModuleWorkerWrapper,
+        getTokenizerModel: function () { return root.getModelList().then(function (models) { return models[0] || ''; }); },
+        generateQuietPrompt: root.generate,
+        generateRaw: root.generateRaw,
+        generateRawData: async function (options) { return { text: await root.generateRaw(options || {}) }; },
+        writeExtensionField: context.writeExtensionField,
+        writeExtensionFieldBulk: async function (characterId, values) { const entries = Object.entries(values || {}); await Promise.all(entries.map(function (entry) { return context.writeExtensionField(characterId, entry[0], entry[1]); })); return true; },
+        selectCharacterById: function (id) { return rpc('character.select', { id: id }, 60000); },
+        messageFormatting: root.formatAsDisplayedMessage,
+        shouldSendOnEnter: function () { return true; },
+        isMobile: function () { return root.is_mobile; },
+        t: function (text) { return String(text || ''); },
+        translate: function (text) { return String(text || ''); },
+        getCurrentLocale: function () { return navigator.language || 'en'; },
+        addLocaleData: function (locale, data) { localeData[String(locale)] = Object.assign(localeData[String(locale)] || {}, clone(data || {})); },
+        tags: [], tagMap: {}, menuType: 'character_edit',
+        createCharacterData: function (name) { return { name: name || 'Character', description: '', first_mes: '', mes_example: '', extensions: {} }; },
+        Popup: Popup,
+        POPUP_TYPE: Object.freeze({ TEXT: 'text', HTML: 'html', INPUT: 'input', CONFIRM: 'confirm', DISPLAY: 'display' }),
+        POPUP_RESULT: Object.freeze({ AFFIRMATIVE: 1, NEGATIVE: 0, CANCELLED: null }),
+        chatCompletionSettings: currentPresetRecord(),
+        textCompletionSettings: currentPresetRecord(),
+        getCharacters: function () { return Promise.resolve(clone(catalog.characters)); },
+        getOneCharacter: function (id) { return root.getCharacter(id); },
+        getCharacterCardFields: function (card) { return clone(card && card.raw || card || BOOT.characterCard); },
+        getCharacterSource: function (card) { return clone(card && card.source || []); },
+        importFromExternalUrl: async function (url) { const response = await fetch(url); return await response.json(); },
+        importTags: function (tags) { compatContext.tags = Array.from(new Set(compatContext.tags.concat(Array.isArray(tags) ? tags : []))); return compatContext.tags; },
+        uuidv4: uuid,
+        humanizedDateTime: function (value) { return new Date(value || Date.now()).toLocaleString(); },
+        updateMessageBlock: function (messageId, message) { return root.setChatMessage(Object.assign({ message_id: messageId }, message || {})); },
+        appendMediaToMessage: function (message, media) { const next = clone(message || {}); next.extra = next.extra || {}; next.extra.media = Array.isArray(next.extra.media) ? next.extra.media : []; next.extra.media.push(clone(media)); return next; },
+        ensureMessageMediaIsArray: function (message) { message.extra = message.extra || {}; if (!Array.isArray(message.extra.media)) message.extra.media = message.extra.media ? [message.extra.media] : []; return message.extra.media; },
+        getMediaDisplay: function (media) { return media && (media.url || media.src || media.path) || ''; },
+        getMediaIndex: function (message, media) { return compatContext.ensureMessageMediaIsArray(message).indexOf(media); },
+        scrollChatToBottom: function () { const chatElement = document.getElementById('chat'); if (chatElement) chatElement.scrollTop = chatElement.scrollHeight; },
+        scrollOnMediaLoad: function () { return compatContext.scrollChatToBottom(); },
+        macros: { register: root.registerMacroLike, unregister: root.unregisterMacroLike, substitute: root.substitudeMacros },
+        loader: { show: function () { return compatContext.showLoader(); }, hide: function () { return compatContext.hideLoader(); } },
+        swipe: { get: function (id) { return root.getChatMessages(id, { include_swipes: true }); }, set: function (id, swipeId) { return root.setChatMessage({ message_id: id, swipe_id: swipeId }); } },
+        variables: { get: 
