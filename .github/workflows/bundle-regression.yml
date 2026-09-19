@@ -34,14 +34,14 @@ jobs:
         run: |
           git diff --exit-code -- assets/app-production-v1.3.6.js
           git diff --exit-code -- assets/prompt-normalizer-v1.3.6.js
-          git diff --exit-code -- assets/card-runtime-core-v1.3.6.js
+          git diff --exit-code -- assets/card-runtime-core-builder-v1.3.6.js
           git diff --exit-code -- assets/card-runtime-renderer-v1.3.6.js
       - name: Parse generated runtime modules
         run: |
           node --check assets/app-entry-v1.3.6.js
           node --check assets/app-production-v1.3.6.js
           node --check assets/prompt-normalizer-v1.3.6.js
-          node --check assets/card-runtime-core-v1.3.6.js
+          node --check assets/card-runtime-core-builder-v1.3.6.js
           node --check assets/card-runtime-renderer-v1.3.6.js
       - name: Test scoped preset normalizer
         run: node tests/prompt-normalizer.mjs
