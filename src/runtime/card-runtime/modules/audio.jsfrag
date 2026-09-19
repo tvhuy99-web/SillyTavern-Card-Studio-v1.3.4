@@ -1,0 +1,53 @@
+    function defaultAudioSettings() { return { enabled: true, mode: 'repeat_all', muted: false, volume: 50 }; }
+    const persistedAudioState = clone(extensionSettings.__cardRuntimeAudioState || {});
+    const audioState = { bgm: clone(persistedAudioState.bgm || []), ambient: clone(persistedAudioState.ambient || []), current: { bgm: null, ambient: null }, settings: { bgm: Object.assign(defaultAudioSettings(), clone(persistedAudioState.settings && persistedAudioState.settings.bgm || {})), ambient: Object.assign(defaultAudioSettings(), clone(persistedAudioState.settings && persistedAudioState.settings.ambient || {})) } };
+    function persistAudioState() { extensionSettings.__cardRuntimeAudioState = { bgm: clone(audioState.bgm), ambient: clone(audioState.ambient), settings: clone(audioState.settings) }; rpc('extension.settings.save', { settings: extensionSettings }, 30000).catch(function (error) { log('warn', 'Could not persist audio settings: ' + error.message); }); }
+    function audioType(value) { return value === 'ambient' ? 'ambient' : 'bgm'; }
+    function normalizeAudio(item) { if (!item) return null; const url = String(item.url || item.src || ''); if (!url) return null; const title = String(item.title || url.split('/').pop() || url); return { title: title, url: url }; }
+    root.getAudioList = function (type) { return clone(audioState[audioType(type)]); };
+    root.replaceAudioList = function (type, list) { audioState[audioType(type)] = (Array.isArray(list) ? list : []).map(normalizeAudio).filter(Boolean); persistAudioState(); return undefined; };
+    root.appendAudioList = function (type, list) {
+        const kind = audioType(type);
+        (Array.isArray(list) ? list : [list]).map(normalizeAudio).filter(Boolean).forEach(function (item) {
+            if (!audioState[kind].some(function (existing) { return existing.title === item.title || existing.url === item.url; })) audioState[kind].push(item);
+        });
+        persistAudioState();
+        return undefined;
+    };
+    root.getAudioSettings = function (type) { return clone(audioState.settings[audioType(type)]); };
+    root.setAudioSettings = function (type, settings) {
+        if (settings === undefined && type && typeof type === 'object') { settings = type; type = 'bgm'; }
+        const kind = audioType(type);
+        Object.assign(audioState.settings[kind], clone(settings || {}));
+        audioState.settings[kind].volume = Math.max(0, Math.min(100, Number(audioState.settings[kind].volume) || 0));
+        const current = audioState.current[kind];
+        if (current && current.element) { current.element.volume = audioState.settings[kind].volume / 100; current.element.muted = audioState.settings[kind].muted; }
+        persistAudioState();
+        return undefined;
+    };
+    root.getCurrentAudio = function (type) {
+        const current = audioState.current[audioType(type)];
+        if (!current) return { src: '', title: '', playing: false, progress: 0 };
+        const element = current.element;
+        const progress = element && Number.isFinite(element.duration) && element.duration > 0 ? Math.max(0, Math.min(100, element.currentTime / element.duration * 100)) : 0;
+        return { src: current.item.url, title: current.item.title, playing: Boolean(element && !element.paused), progress: progress };
+    };
+    root.playAudio = function (type, audio) {
+        if (audio === undefined) { audio = type; type = 'bgm'; }
+        const kind = audioType(type);
+        const item = normalizeAudio(typeof audio === 'string' ? { url: audio } : (audio || audioState[kind][0]));
+        if (!item) return;
+        root.appendAudioList(kind, [item]);
+        const previous = audioState.current[kind];
+        if (previous && previous.element) previous.element.pause();
+        const element = new Audio(root.resolveCardAsset(item.url));
+        const settings = audioState.settings[kind];
+        element.volume = settings.volume / 100;
+        element.muted = settings.muted;
+        element.loop = settings.mode === 'repeat_one';
+        audioState.current[kind] = { item: item, element: element };
+        element.play().catch(function (error) { log('warn', 'Audio autoplay was blocked: ' + error.message); });
+    };
+    root.pauseAudio = function (type) { const current = audioState.current[audioType(type)]; if (current && current.element) current.element.pause(); };
+    root.play_audio = function (url) { return root.playAudio('bgm', url); };
+

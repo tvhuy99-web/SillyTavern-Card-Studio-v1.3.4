@@ -1,0 +1,72 @@
+    let readyResolve;
+    root.cardStudioReady = new Promise(function (resolve) { readyResolve = resolve; });
+    root.addEventListener('message', function (event) {
+        if (event.source !== root.parent || !event.data) return;
+        const data = event.data;
+        if (data.type === 'CARD_RUNTIME_MIRROR_SUBSCRIBE') {
+            mirrorSubscribed = true;
+            startMirrorObserver();
+            setTimeout(sendMirrorSnapshot, 0);
+            return;
+        }
+        if (data.type === 'CARD_RUNTIME_MIRROR_UNSUBSCRIBE') {
+            mirrorSubscribed = false;
+            stopMirrorObserver();
+            return;
+        }
+        if (data.type === 'CARD_RUNTIME_MIRROR_REQUEST') {
+            mirrorSubscribed = true;
+            startMirrorObserver();
+            sendMirrorSnapshot();
+            return;
+        }
+        if (data.type === 'CARD_RUNTIME_RPC_RESULT') {
+            const pending = pendingRpc.get(data.requestId);
+            if (!pending) return;
+            clearTimeout(pending.timeout);
+            pendingRpc.delete(data.requestId);
+            if (data.ok) pending.resolve(data.result);
+            else {
+                pending.reject(new Error(data.error || 'Card runtime request failed.'));
+            }
+            return;
+        }
+        if (data.type === 'CARD_RUNTIME_EVENT') {
+            emitEvent.apply(null, [data.eventName].concat(Array.isArray(data.args) ? data.args : []));
+            return;
+        }
+        if (data.type === 'CARD_RUNTIME_STATE_UPDATE') {
+            if (data.payload && data.payload.chatHistory) chatHistory = clone(data.payload.chatHistory);
+            if (data.payload && data.payload.extensionSettings) extensionSettings = clone(data.payload.extensionSettings);
+            if (data.payload && Array.isArray(data.payload.worldInfo)) worldInfo = clone(data.payload.worldInfo);
+            if (data.payload && Array.isArray(data.payload.lorebookNames)) lorebookNames = Array.from(new Set(data.payload.lorebookNames.map(String)));
+            if (data.payload && data.payload.variableScopes) {
+                Object.entries(data.payload.variableScopes).forEach(function (entry) { scopeCache.set(entry[0], clone(asObject(entry[1]))); });
+                if (Object.prototype.hasOwnProperty.call(data.payload.variableScopes, 'chat')) {
+                    root.__st_live_data = scopeCache.get('chat') || {};
+                    root.stat_data = root.__st_live_data && root.__st_live_data.stat_data ? root.__st_live_data.stat_data : root.__st_live_data;
+                    emitEvent('mvu-variable-update-ended', { stat_data: root.stat_data, variables: root.__st_live_data });
+                }
+            }
+            syncContext();
+            return;
+        }
+        if (data.type === 'HANDSHAKE_ACK') {
+            if (data.payload && Array.isArray(data.payload.chatHistory)) chatHistory = clone(data.payload.chatHistory);
+            if (data.payload && data.payload.extensionSettings) extensionSettings = clone(data.payload.extensionSettings);
+            if (data.payload && Array.isArray(data.payload.worldInfo)) worldInfo = clone(data.payload.worldInfo);
+            if (data.payload && Array.isArray(data.payload.lorebookNames)) lorebookNames = Array.from(new Set(data.payload.lorebookNames.map(String)));
+            if (data.payload && data.payload.variableScopes) Object.entries(data.payload.variableScopes).forEach(function (entry) { scopeCache.set(entry[0], clone(asObject(entry[1]))); });
+            if (data.payload && Array.isArray(data.payload.worldInfo)) worldInfo = clone(data.payload.worldInfo);
+            syncContext();
+            readyResolve(true);
+            setTimeout(function () {
+                emitEvent(root.tavern_events.CHAT_CHANGED, BOOT.context.chatId);
+                emitEvent(root.tavern_events.EXTENSION_SETTINGS_LOADED);
+                emitEvent(root.tavern_events.SETTINGS_LOADED);
+                emitEvent(root.tavern_events.APP_READY);
+            }, 0);
+        }
+                if (data.type === 'EXECUTE_BUTTON_SCRIPT') emitEvent('btn_click_' + data.payload.buttonName);
+    });
+

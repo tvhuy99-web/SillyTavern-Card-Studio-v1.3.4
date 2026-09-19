@@ -7,7 +7,6 @@ This directory is included to make the compatibility work auditable even though 
 - `runtime-current-*.txt`: runtime templates extracted from the final v1.3.6 bundle.
 - `validate_package.py`: static package validation.
 - `test-jszip.mjs`: runtime JSZip round-trip validation.
-- `test-proxy-persistence.mjs`: regression coverage for proxy-profile migration, stale session cache handling, session-only secrets and opt-in remembered secrets.
 - `test-chat-send-recovery.mjs`: regression coverage for stuck conversation sending state after HTTP/network failures and for safe composer recovery.
 - `test-chat-send-recovery-v1.3.6.2.mjs`: regression coverage for intentional abort suppression, real network recovery, and Arena side-error isolation.
 - `test-ui-version-display.mjs`: regression coverage for repairing the hard-coded visible application version without changing unrelated historical version text.
@@ -15,7 +14,7 @@ This directory is included to make the compatibility work auditable even though 
 - `test-card-runtime-dependency-compat.mjs`: regression coverage for the Vue Router 5.2.0 global-build bootstrap compatibility rewrite across iframe srcdoc and script resource assignment paths.
 - `AUDIT-ARENA-UX-2026-08-15.md`: detailed Arena/chat user-experience audit and remaining bundle-level issues.
 
-The release bundle also received small direct minified-bundle fixes after the structured patch, including model-response validation, session-only secret storage, basic Worldbook activation, slash-command dispatch, relative deployment paths and packaging metadata. The proxy persistence layer in `assets/proxy-persistence-fix-v1.3.6.js` runs before the main bundle so proxy profile metadata has one persistent source of truth while credentials remain session-only by default. Users can explicitly opt in to remembering proxy credentials on their device.
+The release bundle also received small direct minified-bundle fixes after the structured patch, including model-response validation, session-only secret storage, basic Worldbook activation, slash-command dispatch, relative deployment paths and packaging metadata. Proxy persistence moved to `src/providers/proxy/persistence.js`; regression coverage now lives in `tests/proxy-persistence.mjs`. Production no longer patches `Storage.prototype` or infers persistence state from DOM controls.
 
 The chat recovery layer in `assets/chat-send-recovery-v1.3.6.2.js` runs before the main bundle. It watches conversation-style Fetch/XHR failures, visible error notifications and long-lived busy composer state. Intentional cancellation (`AbortError`, user-abort text, or XHR abort) is never treated as a fresh network failure, and while Arena still has an active side, a side-local fetch/HTTP failure cannot trigger the global Stop action. Real network failures, offline state and the long busy watchdog remain recoverable.
 

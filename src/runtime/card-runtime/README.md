@@ -1,33 +1,7 @@
 # Card Runtime source
 
-Mốc 3 moves Card Runtime ownership out of the minified application bundle.
+Mốc 3 owns Card Runtime source outside the legacy application bundle and splits the runtime by subsystem.
 
-## Runtime assets
+The `modules/*.jsfrag` files are build-time source modules. They deliberately share one lexical scope when composed because safe-mode iframes are opaque-origin and do not fetch/import runtime modules. This preserves the current CSP/CORS/sandbox model while giving each subsystem a real source owner.
 
-- `core.template.js`: iframe runtime bootstrap and bridge. A build token receives compatibility API fragments.
-- `renderer.js`: builds the per-card render/execution script.
-- `compat/*.jsfrag`: compatibility APIs grouped by ownership while preserving one lexical runtime scope.
-
-The build step produces:
-
-- `assets/card-runtime-core-builder-v1.3.6.js`
-- `assets/card-runtime-renderer-v1.3.6.js`
-
-The application bundle no longer embeds the Card Runtime core, compatibility API block, or renderer implementation. It imports two generated modules and only supplies BOOT/render payloads.
-
-## Compatibility fragment boundaries
-
-1. catalog + characters
-2. personas + presets
-3. extension management + raw imports
-4. runtime services: regex/audio/scripts/generation
-5. variables + worldbook
-6. context + SillyTavern/TavernHelper exposure
-
-These fragments are deliberately composed into one iframe runtime source because they share runtime-local state. Later refactors may turn individual fragments into runtime ES modules after their state dependencies are made explicit.
-
-## Ownership rule
-
-Do not edit generated files in `assets/`. Change `src/runtime/card-runtime/` and rebuild.
-
-The old global `card-runtime-dependency-compat` patch and runtime bundle fallback are no longer part of the production path.
+Do not edit generated files in `assets/`. Change the owning module and rebuild.

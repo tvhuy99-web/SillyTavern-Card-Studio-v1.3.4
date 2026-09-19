@@ -1,0 +1,91 @@
+    function parseRange(range) {
+        if (!chatHistory.length) return [];
+        if (range === undefined || range === null || range === '') return chatHistory.map(function (_, index) { return index; });
+        if (typeof range === 'number') {
+            const index = resolveIndex(range);
+            return index >= 0 && index < chatHistory.length ? [index] : [];
+        }
+        const normalized = String(range).replace(/{{\s*lastMessageId\s*}}/gi, String(chatHistory.length - 1)).trim();
+        const match = normalized.match(/^(-?\d+)\s*-\s*(-?\d+)$/);
+        if (!match) {
+            const index = resolveIndex(Number(normalized));
+            return Number.isFinite(Number(normalized)) && index >= 0 && index < chatHistory.length ? [index] : [];
+        }
+        const start = resolveIndex(Number(match[1]));
+        const end = resolveIndex(Number(match[2]));
+        const low = Math.max(0, Math.min(start, end));
+        const high = Math.min(chatHistory.length - 1, Math.max(start, end));
+        const result = [];
+        for (let index = low; index <= high; index += 1) result.push(index);
+        return result;
+    }
+    root.getChatMessages = function (range, option) {
+        option = option || {};
+        const includeSwipes = Boolean(option.include_swipes);
+        return parseRange(range).map(function (index) {
+            const message = clone(chatHistory[index]);
+            if (!includeSwipes) {
+                delete message.swipe_id; delete message.swipes; delete message.swipes_data; delete message.swipes_info;
+            } else {
+                message.swipes = Array.isArray(message.swipes) && message.swipes.length ? message.swipes : [message.message];
+                message.swipe_id = Math.max(0, Math.min(message.swipes.length - 1, Number(message.swipe_id) || 0));
+                message.swipes_data = Array.isArray(message.swipes_data) ? message.swipes_data : message.swipes.map(function () { return {}; });
+                message.swipes_info = Array.isArray(message.swipes_info) ? message.swipes_info : message.swipes.map(function () { return {}; });
+            }
+            return message;
+        }).filter(function (message) {
+            if (option.role && option.role !== 'all' && message.role !== option.role) return false;
+            if (option.hide_state === 'hidden' && !message.is_hidden) return false;
+            if (option.hide_state === 'unhidden' && message.is_hidden) return false;
+            return true;
+        });
+    };
+    async function applyChatMutation(method, args) {
+        const result = await rpc(method, args, 60000);
+        if (result && Array.isArray(result.chatHistory)) chatHistory = clone(result.chatHistory);
+        syncContext();
+        const refresh = args && args.option && args.option.refresh || 'affected';
+        if (method === 'chat.create') await emitEvent(root.tavern_events.MESSAGE_RECEIVED, result && result.messageId);
+        if (method === 'chat.set') await emitEvent(root.tavern_events.MESSAGE_UPDATED, result && result.messageId);
+        if (method === 'chat.delete') await emitEvent(root.tavern_events.MESSAGE_DELETED, result && result.messageId);
+        if (refresh === 'all') await emitEvent(root.tavern_events.CHAT_CHANGED, BOOT.context.chatId);
+        else if (refresh === 'affected') await emitEvent(root.tavern_events.CHARACTER_MESSAGE_RENDERED, result && result.messageId);
+        return undefined;
+    }
+    root.setChatMessages = function (messages, option) { return applyChatMutation('chat.set', { messages: messages, option: option }); };
+    root.setChatMessage = function (message, option) { return root.setChatMessages([message], option); };
+    root.createChatMessages = function (messages, option) { return applyChatMutation('chat.create', { messages: messages, option: option }); };
+    root.deleteChatMessages = function (messageIds, option) { return applyChatMutation('chat.delete', { messageIds: messageIds, option: option }); };
+    root.rotateChatMessages = function (begin, middle, end, option) { return applyChatMutation('chat.rotate', { begin: begin, middle: middle, end: end, option: option }); };
+    root.getLastMessageId = function () { return chatHistory.length - 1; };
+    const fallbackIframeName = 'TH-message--' + BOOT.context.messageId + '--' + (Number(BOOT.context.iframeIndex) || 0);
+    if (OFFICIAL_LOCAL_ENGINE) {
+        try {
+            root.__TH_IFRAME_ID = root.frameElement && root.frameElement.id || root.name || fallbackIframeName;
+            if (!root.name) root.name = root.__TH_IFRAME_ID;
+        } catch (_) { root.__TH_IFRAME_ID = root.name || fallbackIframeName; }
+        root.getIframeName = function () {
+            try {
+                const frameId = root.frameElement && root.frameElement.id;
+                if (frameId) {
+                    root.__TH_IFRAME_ID = frameId;
+                    if (!root.name) root.name = frameId;
+                    return frameId;
+                }
+            } catch (_) {}
+            return root.__TH_IFRAME_ID || root.name || fallbackIframeName;
+        };
+    } else {
+        root.getIframeName = function () { return 'TH-message--' + BOOT.context.messageId + '--0'; };
+    }
+    root.getCurrentMessageId = function () { return BOOT.context.messageId; };
+    root.getMessageId = function (iframeName) {
+        if (iframeName === undefined || iframeName === null || iframeName === '') return BOOT.context.messageId;
+        const match = String(iframeName).match(OFFICIAL_LOCAL_ENGINE
+            ? /^TH-message--(\d+)--\d+(?:_\d+)?$/
+            : /^TH-message--(-?\d+)--\d+$/);
+        if (!match) throw new Error('Invalid TavernHelper message iframe name: ' + iframeName);
+        return Number(match[1]);
+    };
+    root.reloadIframe = function () { root.location.reload(); };
+

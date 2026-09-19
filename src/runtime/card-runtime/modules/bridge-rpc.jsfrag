@@ -1,0 +1,22 @@
+    const pendingRpc = new Map();
+    function rpc(method, args, timeoutMs) {
+        const requestId = uuid();
+        return new Promise(function (resolve, reject) {
+            const timeout = setTimeout(function () {
+                pendingRpc.delete(requestId);
+                const message = 'Card runtime request timed out: ' + method;
+                diagnostic('CARD_RUNTIME_RPC_TIMEOUT', 'rpc', 'bridge', message, { method: method, scriptId: activeScriptId });
+                reject(new Error(message));
+            }, Math.max(1000, timeoutMs || 30000));
+            pendingRpc.set(requestId, { resolve: resolve, reject: reject, timeout: timeout });
+            root.parent.postMessage({
+                type: 'CARD_RUNTIME_RPC',
+                requestId: requestId,
+                method: method,
+                args: clone(args || {}),
+                context: clone(BOOT.context)
+            }, '*');
+        });
+    }
+    root.cardRuntimeRpc = rpc;
+
