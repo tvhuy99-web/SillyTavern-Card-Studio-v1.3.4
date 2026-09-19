@@ -2,7 +2,7 @@
   'use strict';
   if (window.__STS_CHAT_RECOVERY__) return;
 
-  const VERSION = '1.3.0';
+  const VERSION = '1.4.0';
   const RECOVERY_COOLDOWN_MS = 1200;
   const FORCE_UNLOCK_DELAY_MS = 180;
   const WATCHDOG_BUSY_MS = 90000;
@@ -15,7 +15,6 @@
   let lastRecoveryAt = 0;
   let recoveryTimer = null;
   let busySince = 0;
-  let observer = null;
   let activeConversationRequests = 0;
   const originalFetch = typeof window.fetch === 'function' ? window.fetch.bind(window) : null;
   const NativeXHR = typeof window.XMLHttpRequest === 'function' ? window.XMLHttpRequest : null;
@@ -101,8 +100,21 @@
     return !!(sendButton && (sendButton.disabled || isBusyElement(sendButton) || STOP_TEXT_RE.test(attrText(sendButton))));
   }
   function findComposer() {
-    if (!document || typeof document.querySelectorAll !== 'function') return null;
-    const candidates = Array.from(document.querySelectorAll('textarea, [contenteditable="true"], input[type="text"]')).filter(visible).filter((node) => !(typeof node.closest === 'function' && node.closest('[role="dialog"]')));
+    if (!document) return null;
+
+    const directInput = typeof document.getElementById === 'function' ? document.getElementById('send_textarea') : null;
+    const directSend = typeof document.getElementById === 'function' ? document.getElementById('send_but') : null;
+    if (directInput && directSend) {
+      const root = composerRoot(directInput) || directInput.parentElement || document.body;
+      let buttons = root && typeof root.querySelectorAll === 'function' ? Array.from(root.querySelectorAll('button')) : [];
+      if (!buttons.includes(directSend)) buttons.push(directSend);
+      return { input: directInput, root, buttons };
+    }
+
+    if (typeof document.querySelectorAll !== 'function') return null;
+    const candidates = Array.from(document.querySelectorAll('textarea, [contenteditable="true"], input[type="text"]'))
+      .filter(visible)
+      .filter((node) => !(typeof node.closest === 'function' && node.closest('[role="dialog"]')));
     let fallback = null;
     for (const input of candidates) {
       const root = composerRoot(input);
@@ -217,11 +229,12 @@
     return false;
   }
   function startObserver() {
-    if (typeof MutationObserver !== 'function' || !document || !document.documentElement) return;
-    observer = new MutationObserver((mutations) => { if (mutationHasError(mutations)) scheduleRecovery('visible-error'); });
-    observer.observe(document.documentElement, { childList: true, subtree: true });
+    // Network failures are already tracked by fetch/XHR/unhandledrejection.
+    // Avoid observing the entire DOM, which is expensive during streaming.
+    return false;
   }
   function watchdogTick() {
+    if (document && document.hidden) return;
     const composer = findComposer();
     const busy = composer && rootIsBusy(composer.root, composer.input);
     if (!busy) { busySince = 0; return; }
@@ -232,14 +245,13 @@
 
   patchFetch();
   patchXHR();
-  startObserver();
   window.addEventListener('offline', () => scheduleRecovery('offline'));
   window.addEventListener('unhandledrejection', (event) => {
     const reason = event && event.reason;
     const message = errorText(reason);
     if (!isAbortLike(reason) && ERROR_TEXT_RE.test(message)) scheduleRecovery('unhandled-' + message.slice(0, 120));
   });
-  setInterval(watchdogTick, 2500);
+  setInterval(watchdogTick, 5000);
 
   window.__STS_CHAT_RECOVERY__ = Object.freeze({
     version: VERSION,
