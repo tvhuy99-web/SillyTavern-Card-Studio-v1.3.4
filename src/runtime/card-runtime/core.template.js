@@ -1,6 +1,9 @@
 // Build-time template. The compatibility API token is replaced by build/build-card-runtime.mjs.
-export function startCardRuntimeCore(boot) {
-  if (!boot || typeof boot !== 'object') throw new TypeError('Card Runtime BOOT payload must be an object.');
+(function registerCardRuntimeCore(root) {
+  if (root.__STS_START_CARD_RUNTIME__) return;
+
+  root.__STS_START_CARD_RUNTIME__ = function startCardRuntimeCore(boot) {
+    if (!boot || typeof boot !== 'object') throw new TypeError('Card Runtime BOOT payload must be an object.');
 
 (function () {
     'use strict';
@@ -1931,5 +1934,6 @@ export function startCardRuntimeCore(boot) {
     root.parent.postMessage({ type: 'HANDSHAKE_INIT', payload: { messageId: BOOT.context.messageId } }, '*');
     setTimeout(function () { readyResolve(true); }, 5000);
 })();
-  return window.cardStudioReady;
-}
+    return window.cardStudioReady;
+  };
+})(window);
