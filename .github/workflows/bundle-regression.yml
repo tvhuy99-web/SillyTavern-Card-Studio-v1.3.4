@@ -43,6 +43,8 @@ jobs:
           node --check assets/prompt-normalizer-v1.3.6.js
           node --check assets/card-runtime-core-builder-v1.3.6.js
           node --check assets/card-runtime-renderer-v1.3.6.js
+      - name: Test M2/M3 architecture boundaries
+        run: node tests/architecture-m2-m3.mjs
       - name: Test scoped preset normalizer
         run: node tests/prompt-normalizer.mjs
       - name: Test Card Runtime extraction
