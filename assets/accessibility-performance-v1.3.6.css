@@ -1,0 +1,54 @@
+/* Performance-first accessibility mode.
+   This installation is optimized for screen-reader use and low UI latency. */
+
+html,
+body,
+#root {
+  scroll-behavior: auto !important;
+}
+
+*,
+*::before,
+*::after {
+  animation: none !important;
+  animation-delay: 0s !important;
+  animation-duration: 0s !important;
+  transition: none !important;
+  transition-delay: 0s !important;
+  transition-duration: 0s !important;
+  scroll-behavior: auto !important;
+}
+
+[class*="backdrop-blur"],
+[class*="backdrop-filter"] {
+  -webkit-backdrop-filter: none !important;
+  backdrop-filter: none !important;
+}
+
+[class~="blur"],
+[class*="blur-"],
+[class~="grayscale"],
+[class*="grayscale-"],
+[class~="sepia"],
+[class*="sepia-"] {
+  filter: none !important;
+}
+
+[class~="shadow"],
+[class*="shadow-"] {
+  box-shadow: none !important;
+}
+
+[class*="hover:scale"]:hover,
+[class*="active:scale"]:active,
+[class*="group-hover:scale"] {
+  transform: none !important;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  html,
+  body,
+  #root {
+    scroll-behavior: auto !important;
+  }
+}
