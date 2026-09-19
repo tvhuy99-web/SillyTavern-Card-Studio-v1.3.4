@@ -1,5 +1,8 @@
 # Mốc 1 — Build-time bundle pipeline
 
+> **Superseded transition note:** The M1 legacy fallback described below was removed when M2/M3 completed. Production now boots only the generated owned-source bundle.
+
+
 ## Mục tiêu
 
 Loại runtime patching khỏi đường khởi động bình thường mà chưa thay đổi hành vi ứng dụng.
