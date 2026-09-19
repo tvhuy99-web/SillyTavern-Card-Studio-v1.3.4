@@ -2,7 +2,7 @@ import { copyFile, readFile, writeFile } from 'node:fs/promises';
 
 const CORE_TEMPLATE_URL = new URL('../src/runtime/card-runtime/core.template.js', import.meta.url);
 const RENDERER_SOURCE_URL = new URL('../src/runtime/card-runtime/renderer.js', import.meta.url);
-const CORE_OUTPUT_URL = new URL('../assets/card-runtime-core-v1.3.6.js', import.meta.url);
+const CORE_BUILDER_OUTPUT_URL = new URL('../assets/card-runtime-core-builder-v1.3.6.js', import.meta.url);
 const RENDERER_OUTPUT_URL = new URL('../assets/card-runtime-renderer-v1.3.6.js', import.meta.url);
 
 const COMPATIBILITY_FRAGMENTS = [
@@ -13,6 +13,45 @@ const COMPATIBILITY_FRAGMENTS = [
   '../src/runtime/card-runtime/compat/variables-worldbook.jsfrag',
   '../src/runtime/card-runtime/compat/context-exposure.jsfrag',
 ].map(path => new URL(path, import.meta.url));
+
+function replaceExactlyOnce(source, oldText, newText, label) {
+  const first = source.indexOf(oldText);
+  if (first < 0) throw new Error(`[card runtime build] ${label}: token not found`);
+  const second = source.indexOf(oldText, first + oldText.length);
+  if (second >= 0) throw new Error(`[card runtime build] ${label}: token matched more than once`);
+  return source.slice(0, first) + newText + source.slice(first + oldText.length);
+}
+
+function toClassicRuntimeSource(moduleSource) {
+  const classic = replaceExactlyOnce(
+    moduleSource,
+    'export function startCardRuntimeCore(boot) {',
+    'function startCardRuntimeCore(boot) {',
+    'core export wrapper',
+  );
+  return classic + '\nstartCardRuntimeCore(window.__CARD_STUDIO_BOOT__);\n';
+}
+
+function makeCoreBuilderModule(classicCoreSource) {
+  const safeCoreSource = classicCoreSource.replace(/<\\\/script/gi, '<\\\\/script');
+  return `const CARD_RUNTIME_CORE_SOURCE = ${JSON.stringify(safeCoreSource)};
+
+function serializeScriptValue(value) {
+  return JSON.stringify(value)
+    .replace(/<\\/script/gi, '<\\\\/script')
+    .replace(/<!--/g, '<\\\\!--');
+}
+
+export function buildCardRuntimeCoreScript(boot) {
+  if (!boot || typeof boot !== 'object') {
+    throw new TypeError('Card Runtime BOOT payload must be an object.');
+  }
+  return 'window.__CARD_STUDIO_BOOT__ = ' + serializeScriptValue(boot) + ';\\n' + CARD_RUNTIME_CORE_SOURCE;
+}
+
+export const CARD_RUNTIME_CORE_SOURCE_BYTES = CARD_RUNTIME_CORE_SOURCE.length;
+`;
+}
 
 export async function buildCardRuntimeAssets() {
   let core = await readFile(CORE_TEMPLATE_URL, 'utf8');
@@ -26,12 +65,16 @@ export async function buildCardRuntimeAssets() {
   }
 
   core = core.slice(0, first) + fragments.join('') + core.slice(first + token.length);
+  const classicCore = toClassicRuntimeSource(core);
+  const coreBuilder = makeCoreBuilderModule(classicCore);
 
-  await writeFile(CORE_OUTPUT_URL, core, 'utf8');
+  await writeFile(CORE_BUILDER_OUTPUT_URL, coreBuilder, 'utf8');
   await copyFile(RENDERER_SOURCE_URL, RENDERER_OUTPUT_URL);
 
   return {
-    coreBytes: core.length,
+    coreSourceBytes: classicCore.length,
+    coreBuilderBytes: coreBuilder.length,
     compatibilityFragments: fragments.length,
+    iframeModuleImportRequired: false,
   };
 }
