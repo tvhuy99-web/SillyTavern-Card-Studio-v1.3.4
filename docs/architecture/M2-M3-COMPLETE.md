@@ -96,3 +96,24 @@ Thay đổi source owner rồi chạy `npm run build:bundle`.
 ## Những gì còn lại cho các mốc sau
 
 Các global patch khác như proxy persistence, chat recovery, Arena UX guard, model diagnostics và một số UI compatibility script vẫn còn. Chúng không thuộc Mốc 2/3 và sẽ được đưa về module owner ở các mốc tiếp theo.
+
+
+## Cleanup và regression guard
+
+Các artifact forensic cũ của Card Runtime đã được xóa khỏi nhánh chính:
+
+- `patch-src/runtime-core-original.txt`
+- `patch-src/runtime-current-0.txt`
+- `patch-src/runtime-current-1.txt`
+- `patch-src/runtime-current-2.txt`
+- `patch-src/runtime-overlay-original.txt`
+
+Git history vẫn giữ toàn bộ dữ liệu cũ nếu cần forensic.
+
+CI chạy thêm `tests/architecture-m2-m3.mjs` để ngăn tái xuất hiện:
+
+- global prompt monkey-patch;
+- legacy Card Runtime dependency patch;
+- runtime-transform loader fallback;
+- Card Runtime core/renderer bị nhúng trở lại application bundle;
+- generated prompt/runtime assets lệch khỏi source owner.
