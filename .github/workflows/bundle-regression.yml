@@ -37,6 +37,7 @@ jobs:
           git diff --exit-code -- assets/proxy-persistence-service-v1.3.6.js
           git diff --exit-code -- assets/card-runtime-core-builder-v1.3.6.js
           git diff --exit-code -- assets/card-runtime-renderer-v1.3.6.js
+          git diff --exit-code -- assets/m4
       - name: Parse generated runtime modules
         run: |
           node --check assets/app-entry-v1.3.6.js
@@ -45,8 +46,20 @@ jobs:
           node --check assets/proxy-persistence-service-v1.3.6.js
           node --check assets/card-runtime-core-builder-v1.3.6.js
           node --check assets/card-runtime-renderer-v1.3.6.js
+          node --check assets/m4/providers/common/generation-utils.js
+          node --check assets/m4/providers/common/generation-gateway.js
+          node --check assets/m4/providers/proxy/generation.js
+          node --check assets/m4/providers/openrouter/generation.js
+          node --check assets/m4/providers/gemini/generation.js
+          node --check assets/m4/features/chat/turn-policy.js
       - name: Test M2/M3 architecture boundaries
         run: node tests/architecture-m2-m3.mjs
+      - name: Test M4 architecture boundaries
+        run: node tests/architecture-m4.mjs
+      - name: Test M4 generation gateway
+        run: node tests/m4-generation-gateway.mjs
+      - name: Test M4 chat turn policy
+        run: node tests/m4-chat-turn-policy.mjs
       - name: Test scoped preset normalizer
         run: node tests/prompt-normalizer.mjs
       - name: Test owned proxy persistence
