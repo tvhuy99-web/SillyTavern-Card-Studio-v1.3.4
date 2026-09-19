@@ -1,5 +1,5 @@
-const CORE_BUILDER_IMPORT = "import { buildCardRuntimeCoreScript as __stsBuildCardRuntimeCoreScript } from './card-runtime-core-builder-v1.3.6.js?v=1.3.6-m3.3';\n";
-const RENDERER_IMPORT = "import { buildCardRuntimeRendererScript as __stsBuildCardRuntimeRendererScript } from './card-runtime-renderer-v1.3.6.js?v=1.3.6-m3.3';\n";
+const CORE_BUILDER_IMPORT = "import { buildCardRuntimeCoreScript as __stsBuildCardRuntimeCoreScript } from './card-runtime-core-builder-v1.3.6.js?v=1.3.6-m3.4';\n";
+const RENDERER_IMPORT = "import { buildCardRuntimeRendererScript as __stsBuildCardRuntimeRendererScript, normalizeCardRuntimeMarkup as __stsNormalizeCardRuntimeMarkup } from './card-runtime-renderer-v1.3.6.js?v=1.3.6-m3.4';\n";
 
 function findExactlyOnce(source, token, label) {
   const first = source.indexOf(token);
@@ -40,6 +40,14 @@ export function applyCardRuntimeTransform(source) {
   const rendererArgs = code.indexOf('(U,H,{executeScripts:', rendererStart);
   if (rendererArgs < 0) throw new Error('[card runtime] renderer call boundary not found');
   code = code.slice(0, rendererStart) + 'q=__stsBuildCardRuntimeRendererScript' + code.slice(rendererArgs);
+
+  // Preserve the old dependency-compat behavior at the iframe boundary,
+  // without patching Element/HTMLIFrameElement prototypes globally.
+  const srcDocToken = 'srcDoc:U,style:';
+  const srcDocAt = findExactlyOnce(code, srcDocToken, 'Card Runtime iframe srcDoc');
+  code = code.slice(0, srcDocAt)
+    + 'srcDoc:__stsNormalizeCardRuntimeMarkup(U),style:'
+    + code.slice(srcDocAt + srcDocToken.length);
 
   const imports = CORE_BUILDER_IMPORT + RENDERER_IMPORT;
   if (!code.startsWith(imports)) code = imports + code;
