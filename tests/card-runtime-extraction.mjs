@@ -37,4 +37,13 @@ assert.ok(coreBuilder.includes('__STS_START_CARD_RUNTIME__'));
 assert.ok(!coreBuilder.includes('/*__STS_COMPATIBILITY_API__*/'));
 assert.ok(renderer.includes('buildCardRuntimeRendererScript'));
 
+const runtimeModule = await import('../assets/card-runtime-core-builder-v1.3.6.js?test=' + Date.now());
+const injected = runtimeModule.buildCardRuntimeCoreScript({
+  context: { compatibilityMode: 'safe', messageId: 1 },
+  probe: '</script><script>boom()</script><!--probe',
+});
+assert.ok(!injected.includes('</script'), 'inline runtime payload must escape closing script tags');
+assert.ok(!injected.includes('<!--'), 'inline runtime payload must escape HTML comment openers');
+assert.ok(injected.includes('__STS_START_CARD_RUNTIME__(window.__CARD_STUDIO_BOOT__)'));
+
 console.log('card runtime extraction tests: OK');
