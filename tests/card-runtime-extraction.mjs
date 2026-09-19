@@ -1,16 +1,40 @@
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import { applyCardRuntimeTransform } from '../build/transforms/card-runtime.mjs';
+import { buildCardRuntimeAssets } from '../build/build-card-runtime.mjs';
 
-const bundle = fs.readFileSync(new URL('../assets/index-11db71a5-modeltest-v2-htmlmodes-v1.js', import.meta.url), 'utf8');
+const bundle = fs.readFileSync(
+  new URL('../assets/index-11db71a5-modeltest-v2-htmlmodes-v1.js', import.meta.url),
+  'utf8',
+);
 const transformed = applyCardRuntimeTransform(bundle);
 
-assert.ok(transformed.includes("card-runtime-core-v1.3.6.js?v=1.3.6-m3.1"));
+assert.ok(transformed.includes('card-runtime-core-builder-v1.3.6.js?v=1.3.6-m3.3'));
+assert.ok(transformed.includes('card-runtime-renderer-v1.3.6.js?v=1.3.6-m3.3'));
+assert.ok(transformed.includes('__stsBuildCardRuntimeCoreScript'));
 assert.ok(transformed.includes('__stsBuildCardRuntimeRendererScript'));
-assert.ok(!transformed.includes("const BOOT = ${t};"), 'inline Card Runtime core must be removed');
-assert.ok(!transformed.includes("const START_OPTIONS = ${i};"), 'inline renderer must be removed');
-assert.ok(!transformed.includes("yp=String.raw"), 'embedded compatibility API must be removed');
+assert.ok(!transformed.includes('card-runtime-core-v1.3.6.js?v='));
+assert.ok(!transformed.includes('const BOOT = ${t};'), 'inline Card Runtime core must be removed');
+assert.ok(!transformed.includes('const START_OPTIONS = ${i};'), 'inline renderer must be removed');
+assert.ok(!transformed.includes('yp=String.raw'), 'embedded compatibility API must be removed');
 assert.ok(transformed.includes('vue-router@5.1.0/dist/vue-router.global.js'));
 assert.ok(!transformed.includes('vue-router@5.2.0/dist/vue-router.global.js'));
 
-console.log('card runtime extraction transform tests: OK');
+const report = await buildCardRuntimeAssets();
+assert.equal(report.compatibilityFragments, 6);
+assert.equal(report.iframeModuleImportRequired, false);
+
+const coreBuilder = fs.readFileSync(
+  new URL('../assets/card-runtime-core-builder-v1.3.6.js', import.meta.url),
+  'utf8',
+);
+const renderer = fs.readFileSync(
+  new URL('../assets/card-runtime-renderer-v1.3.6.js', import.meta.url),
+  'utf8',
+);
+assert.ok(coreBuilder.includes('buildCardRuntimeCoreScript'));
+assert.ok(coreBuilder.includes('__STS_START_CARD_RUNTIME__'));
+assert.ok(!coreBuilder.includes('/*__STS_COMPATIBILITY_API__*/'));
+assert.ok(renderer.includes('buildCardRuntimeRendererScript'));
+
+console.log('card runtime extraction tests: OK');
