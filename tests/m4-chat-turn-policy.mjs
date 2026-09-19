@@ -1,0 +1,54 @@
+import assert from 'node:assert/strict';
+import { createChatTurnPolicy } from '../src/features/chat/turn-policy.js';
+
+const policy = createChatTurnPolicy({ now: () => 1234, random: () => 0.5 });
+const state = {
+  variables: { hp: 10 },
+  card: { rpg_data: { gold: 3 } },
+  worldInfoRuntime: { seen: true },
+  worldInfoState: { active: [1] },
+  arenaModelId: 'challenger',
+  arenaProvider: 'proxy',
+  arenaUserProfileId: 'p2',
+};
+
+const turn = policy.beginTurn({ state, content: 'Xin chào', sequence: 8 });
+assert.equal(turn.sequence, 8);
+assert.equal(turn.userMessage.role, 'user');
+assert.equal(turn.userMessage.timestamp, 1234);
+assert.equal(turn.userMessage.content, 'Xin chào');
+turn.variables.hp = 1;
+assert.equal(state.variables.hp, 10, 'turn snapshot must not mutate store state');
+
+const context = policy.buildContext([
+  { role: 'user', content: 'u1' },
+  { role: 'model', content: '<content>a1</content>' },
+  { role: 'model', content: 'a2' },
+  { role: 'user', content: 'u2' },
+], 'new', 'forced');
+assert.equal(context.recentText, 'a1\na2\nu2');
+assert.equal(context.scanInput, 'a1\na2\nu2\nnew\nforced');
+assert.deepEqual(context.promptHistory, [
+  { role: 'model', content: '<content>a1</content>' },
+  { role: 'model', content: 'a2' },
+  { role: 'user', content: 'u2' },
+]);
+
+const arena = policy.createArenaState({
+  source: 'proxy',
+  proxy_model: 'main-proxy',
+  proxy_profile_id: 'p1',
+}, state);
+assert.equal(arena.modelA.modelId, 'main-proxy');
+assert.equal(arena.modelA.profileId, 'p1');
+assert.equal(arena.modelB.modelId, 'challenger');
+assert.equal(arena.modelB.profileId, 'p2');
+assert.equal(arena.modelA.status, 'pending');
+
+assert.equal(policy.isAbortLike(new DOMException('Aborted', 'AbortError')), true);
+assert.equal(policy.isAbortLike(new Error('network failed')), false);
+assert.equal(policy.generationStatus('text', { aborted: false }), 'success');
+assert.equal(policy.generationStatus('', { aborted: false }), 'error');
+assert.equal(policy.generationStatus('text', { aborted: true }), 'stopped');
+
+console.log('M4 chat turn policy tests: OK');

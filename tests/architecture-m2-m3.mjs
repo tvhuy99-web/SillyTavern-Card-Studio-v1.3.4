@@ -27,7 +27,7 @@ for (const forbidden of [
   assert.ok(!entry.includes(forbidden), 'app entry must not reference legacy artifact: ' + forbidden);
 }
 
-assert.ok(entry.includes("stage: 'M2-M3-complete'"));
+assert.ok(entry.includes("stage: 'M4-complete'"));
 assert.ok(entry.includes("proxyPersistence: 'owned-provider-service'"));
 assert.ok(entry.includes("cardRuntime: 'modular-owned-source'"));
 assert.ok(!entry.includes('LEGACY_FALLBACK'));
