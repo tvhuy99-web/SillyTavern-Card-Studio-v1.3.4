@@ -27,13 +27,19 @@ function toClassicRuntimeSource(source) {
 }
 
 function makeCoreBuilderModule(classicCoreSource) {
-  const safeCoreSource = classicCoreSource.replace(/<\\\/script/gi, '<\\\\/script');
+  const safeCoreSource = classicCoreSource
+    .replaceAll('</script', '<\\/script')
+    .replaceAll('<!--', '<\\!--');
   return `const CARD_RUNTIME_CORE_SOURCE = ${JSON.stringify(safeCoreSource)};
 
+function escapeInlineScriptText(value) {
+  return String(value)
+    .replaceAll('</script', '<\\/script')
+    .replaceAll('<!--', '<\\!--');
+}
+
 function serializeScriptValue(value) {
-  return JSON.stringify(value)
-    .replace(/<\\/script/gi, '<\\\\/script')
-    .replace(/<!--/g, '<\\\\!--');
+  return escapeInlineScriptText(JSON.stringify(value));
 }
 
 export function buildCardRuntimeCoreScript(boot) {
@@ -46,7 +52,6 @@ export function buildCardRuntimeCoreScript(boot) {
 export const CARD_RUNTIME_CORE_SOURCE_BYTES = CARD_RUNTIME_CORE_SOURCE.length;
 `;
 }
-
 export async function buildCardRuntimeAssets() {
   let core = await readFile(CORE_TEMPLATE_URL, 'utf8');
   const fragments = [];
