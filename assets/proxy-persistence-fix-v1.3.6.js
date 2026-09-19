@@ -536,13 +536,23 @@
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', refreshProxyUi, { once: true });
   else refreshUiSoon();
 
-  if (typeof MutationObserver === 'function' && document.documentElement) {
-    const observer = new MutationObserver(refreshUiSoon);
-    observer.observe(document.documentElement, { childList: true, subtree: true });
+  function proxyUiInteraction(event) {
+    const target = event?.target?.closest?.('button, [role="button"], select, label');
+    if (!target) return;
+    const label = [
+      target.getAttribute?.('aria-label'),
+      target.getAttribute?.('title'),
+      target.textContent
+    ].filter(Boolean).join(' ');
+    if (/(proxy|api|cấu hình|settings|kết nối|connection)/i.test(label)) {
+      window.setTimeout(refreshProxyUi, 48);
+    }
   }
 
+  document.addEventListener?.('click', proxyUiInteraction, true);
+
   window.__STS_PROXY_PERSISTENCE__ = Object.freeze({
-    version: '1.1.0',
+    version: '1.2.0',
     getProfiles: mergedProfiles,
     isRememberingSecrets: rememberEnabled,
     setRememberSecrets,
