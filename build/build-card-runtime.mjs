@@ -30,16 +30,17 @@ function makeCoreBuilderModule(classicCoreSource) {
   const safeCoreSource = classicCoreSource
     .replaceAll('</script', '<\\/script')
     .replaceAll('<!--', '<\\!--');
-  return `const CARD_RUNTIME_CORE_SOURCE = ${JSON.stringify(safeCoreSource)};
 
-function escapeInlineScriptText(value) {
-  return String(value)
-    .replaceAll('</script', '<\\/script')
-    .replaceAll('<!--', '<\\!--');
-}
+  // String.raw is intentional: generated source must retain two backslashes
+  // in '\\\\u003c' so the generated module emits a literal \\u003c sequence
+  // into the inline script instead of reconstructing a raw '<'.
+  return String.raw`const CARD_RUNTIME_CORE_SOURCE = ${JSON.stringify(safeCoreSource)};
 
 function serializeScriptValue(value) {
-  return escapeInlineScriptText(JSON.stringify(value));
+  return JSON.stringify(value)
+    .replaceAll('<', '\\\\u003c')
+    .replaceAll('>', '\\\\u003e')
+    .replaceAll('&', '\\\\u0026');
 }
 
 export function buildCardRuntimeCoreScript(boot) {
