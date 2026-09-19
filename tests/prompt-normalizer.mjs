@@ -1,9 +1,11 @@
 import assert from 'node:assert/strict';
+import fs from 'node:fs';
 import {
   getPromptOrderIntegrity,
   normalizePresetConfig,
   normalizePresetList,
 } from '../src/features/presets/prompt-normalizer.js';
+import { applyPresetBoundaryTransform } from '../build/transforms/preset-boundary.mjs';
 
 const source = Object.freeze({
   name: 'Imported',
@@ -56,4 +58,14 @@ assert.deepEqual(getPromptOrderIntegrity(grouped), {
 const unrelated = { name: 'No prompt payload', temperature: 1 };
 assert.deepEqual(normalizePresetConfig(unrelated), unrelated);
 
-console.log('prompt normalizer tests: OK');
+const legacyBundle = fs.readFileSync(
+  new URL('../assets/index-11db71a5-modeltest-v2-htmlmodes-v1.js', import.meta.url),
+  'utf8',
+);
+const boundaryBundle = applyPresetBoundaryTransform(legacyBundle);
+assert.ok(boundaryBundle.startsWith('import { normalizePresetConfig as __stsNormalizePresetConfig'));
+assert.ok(boundaryBundle.includes('t(__stsNormalizePresetList(r.result))'));
+assert.ok(boundaryBundle.includes('let n=__stsNormalizePresetConfig(t);await nn(n)'));
+assert.ok(boundaryBundle.includes('return __stsNormalizePresetConfig(r)},bu=At()'));
+
+console.log('prompt normalizer and preset boundary tests: OK');
