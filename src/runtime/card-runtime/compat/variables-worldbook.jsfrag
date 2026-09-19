@@ -1,0 +1,42 @@
+root.getVariables, getAll: root.getAllVariables, replace: root.replaceVariables, update: root.updateVariablesWith, insert: root.insertVariables, delete: root.deleteVariable },
+        loadWorldInfo: function (name) { return root.getWorldbook(name); },
+        saveWorldInfo: function (name, book) { return root.replaceWorldbook(name, book); },
+        reloadWorldInfoEditor: function () { return Promise.resolve(); },
+        updateWorldInfoList: function () { return rpc('lorebook.names', {}, 30000); },
+        convertCharacterBook: function (book) { return clone(book || {}); },
+        getWorldInfoPrompt: function () { return worldInfo.map(function (entry) { return entry.content || ''; }).join('\n'); },
+        getWorldInfoNames: root.getWorldbookNames,
+        CONNECT_API_MAP: {},
+        getTextGenServer: function () { return ''; },
+        extractMessageFromData: function (data) { return String(data && (data.message || data.text || data.content) || ''); },
+        getPresetManager: function () { return { getAllPresets: function () { return clone(catalog.presets); }, getPreset: root.getPreset, selectPreset: root.loadPreset, savePreset: root.replacePreset, deletePreset: root.deletePreset }; },
+        getChatCompletionModel: function () { return root.getModelList().then(function (models) { return models[0] || ''; }); },
+        printMessages: function () { return Promise.resolve(); },
+        clearChat: function () { return root.deleteChatMessages('0-' + root.getLastMessageId()); },
+        ChatCompletionService: ChatCompletionService,
+        TextCompletionService: TextCompletionService,
+        ConnectionManagerRequestService: ConnectionManagerRequestService,
+        updateReasoningUI: function () { return Promise.resolve(); },
+        parseReasoningFromString: function (text) { const match = String(text || '').match(/<thinking>([\s\S]*?)<\/thinking>/i); return { reasoning: match ? match[1] : '', content: match ? String(text).replace(match[0], '') : String(text || '') }; },
+        getReasoningTemplateByName: function (name) { return { name: name || 'default', prefix: '<thinking>', suffix: '</thinking>' }; },
+        unshallowCharacter: function (id) { return root.getCharacter(id); },
+        unshallowGroupMembers: function () { return Promise.resolve([]); },
+        getExtensionManifest: function (id) { return root.getExtensionInstallationInfo(id); },
+        openThirdPartyExtensionMenu: function (id) { return root.eventEmit('extension_menu_opened', id); },
+        symbols: Object.freeze({}), constants: Object.freeze({})
+    };
+
+    Object.assign(context, compatContext);
+    const officialContextKeys = ${fp};
+
+    const runtimeSillyTavern = root.SillyTavern;
+    const officialSillyTavern = {};
+    Object.keys(runtimeSillyTavern || {}).forEach(function (key) { if (key !== 'chat') officialSillyTavern[key] = runtimeSillyTavern[key]; });
+    officialContextKeys.forEach(function (key) {
+        Object.defineProperty(officialSillyTavern, key, {
+            configurable: true, enumerable: true,
+            get: function () { return context[key]; },
+            set: function (value) { context[key] = value; }
+        });
+    });
+    officialSillyTavern.getContext = 
