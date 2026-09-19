@@ -16,11 +16,8 @@
   "patchReport": "./COMPATIBILITY-FIX-REPORT.md",
   "runtimeEntry": "./assets/app-entry-v1.3.6.js",
   "legacySourceBundle": "./assets/index-11db71a5-modeltest-v2-htmlmodes-v1.js",
-  "legacyFallbackLoader": "./assets/arena-state-bundle-loader-v1.3.6.5.js",
-  "architectureStage": "M3-external-card-runtime",
+  "architectureStage": "M3-owned-card-runtime",
   "promptNormalizer": "./assets/prompt-normalizer-v1.3.6.js",
-  "cardRuntimeCore": "./assets/card-runtime-core-v1.3.6.js",
   "cardRuntimeRenderer": "./assets/card-runtime-renderer-v1.3.6.js",
-  "legacyPromptOrderFallbackPatch": "./assets/prompt-order-identifier-fix-v1.3.6.js",
-  "legacyCardDependencyFallbackPatch": "./assets/card-runtime-dependency-compat-v1.3.6.2.js"
+  "cardRuntimeCoreBuilder": "./assets/card-runtime-core-builder-v1.3.6.js"
 }
