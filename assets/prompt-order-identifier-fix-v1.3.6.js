@@ -3,7 +3,7 @@
 
   if (window.__STS_PROMPT_ORDER_FIX__) return;
 
-  const APP_VERSION = '1.3.6.1';
+  const APP_VERSION = '1.3.6.2';
   const nativeJsonParse = JSON.parse.bind(JSON);
   const nativeJsonStringify = JSON.stringify.bind(JSON);
   const nativeMapGet = Map.prototype.get;
@@ -193,41 +193,67 @@
     return root;
   }
 
+  const promptOrderMaps = new WeakSet();
+  const nonPromptOrderMaps = new WeakSet();
+
   function isPromptOrderMap(map) {
     if (!(map instanceof Map) || map.size === 0) return false;
-    for (const [key, value] of map.entries()) {
-      if (typeof key !== 'string' || !hasIdentifier(value)) return false;
-      if (value.identifier !== key || typeof value.enabled !== 'boolean') return false;
+    if (promptOrderMaps.has(map)) return true;
+    if (nonPromptOrderMaps.has(map)) return false;
+
+    const first = map.entries().next();
+    if (first.done) {
+      nonPromptOrderMaps.add(map);
+      return false;
     }
+
+    const [firstKey, firstValue] = first.value;
+    if (typeof firstKey !== 'string' || !hasIdentifier(firstValue) || firstValue.identifier !== firstKey || typeof firstValue.enabled !== 'boolean') {
+      nonPromptOrderMaps.add(map);
+      return false;
+    }
+
+    for (const [key, value] of map.entries()) {
+      if (typeof key !== 'string' || !hasIdentifier(value) || value.identifier !== key || typeof value.enabled !== 'boolean') {
+        nonPromptOrderMaps.add(map);
+        return false;
+      }
+    }
+
+    promptOrderMaps.add(map);
     return true;
   }
 
+  function parsedTextCanContainPromptConfig(text) {
+    return typeof text === 'string' && text.indexOf('"prompts"') >= 0;
+  }
+
   JSON.parse = function patchedJsonParse(text, reviver) {
-    return sanitizeTree(nativeJsonParse(text, reviver));
+    const parsed = nativeJsonParse(text, reviver);
+    if (!parsedTextCanContainPromptConfig(text)) return parsed;
+    return sanitizeTree(parsed);
   };
 
   JSON.stringify = function patchedJsonStringify(value, replacer, space) {
-    if (Array.isArray(replacer)) {
-      const safeRoot = looksLikePromptConfig(value) ? sanitizePromptConfigCopy(value) : value;
-      return nativeJsonStringify(safeRoot, replacer, space);
+    if (!looksLikePromptConfig(value)) {
+      return nativeJsonStringify(value, replacer, space);
     }
 
-    const userReplacer = typeof replacer === 'function' ? replacer : null;
-    return nativeJsonStringify(value, function safePromptOrderReplacer(key, candidate) {
-      const replaced = userReplacer ? userReplacer.call(this, key, candidate) : candidate;
-      return sanitizePromptConfigCopy(replaced);
-    }, space);
+    const safeRoot = sanitizePromptConfigCopy(value);
+    return nativeJsonStringify(safeRoot, replacer, space);
   };
 
   if (nativeStructuredClone) {
     window.structuredClone = function patchedStructuredClone(value, options) {
-      return sanitizeTree(nativeStructuredClone(value, options));
+      const cloned = nativeStructuredClone(value, options);
+      return looksLikePromptConfig(cloned) ? sanitizePromptConfig(cloned) || cloned : cloned;
     };
   }
 
   Map.prototype.get = function patchedMapGet(key) {
     const value = nativeMapGet.call(this, key);
-    if (value !== undefined || typeof key !== 'string' || !isPromptOrderMap(this)) return value;
+    if (value !== undefined || typeof key !== 'string') return value;
+    if (!isPromptOrderMap(this)) return value;
 
     stats.recoveredMapLookups += 1;
     return { identifier: key, enabled: false };
