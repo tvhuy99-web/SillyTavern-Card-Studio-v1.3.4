@@ -3,20 +3,18 @@
 
   if (window.__STS_ARENA_UX_GUARD__) return;
 
-  const VERSION = '1.3.0';
+  const VERSION = '1.4.0';
   const STOP_TEXT_RE = /(?:^|\b)(?:stop|dừng)(?:\b|$)/i;
   const STORY_CANCEL_RE = /(?:Hủy|Huỷ)\s*\(\s*Dừng\s*&\s*Chat\s*\)|Cancel\s*\([^)]*Stop[^)]*Chat[^)]*\)/i;
   const BACK_CHAT_RE = /(?:Quay lại sảnh chờ|Back to (?:the )?lobby)/i;
   const ERROR_CONTENT_RE = /\[Lỗi\s*:/i;
   const EMPTY_PLACEHOLDER_RE = /(?:^|\s)(?:Đang khởi tạo\.\.\.|Initializing\.\.\.)(?:\s|$)/i;
-  const ARENA_MODE_RE = /\bARENA MODE\b/i;
   const EDIT_TEXT_RE = /^(?:Chỉnh sửa|Edit)$/i;
   const CLOSE_TEXT_RE = /^(?:✕|×|Đóng\b|Close\b)/i;
   const BUSY_DIALOG_SELECTOR = '[aria-labelledby="quick-settings-title"], [aria-labelledby="arena-settings-title"]';
   const BUSY_MARK = 'data-sts-busy-guard';
   const STOP_ARM_DELAY_MS = 450;
 
-  let observer = null;
   let recentStopAt = 0;
   let lastBusyWarningAt = 0;
   let lastSendActivationAt = 0;
@@ -117,6 +115,7 @@
     if (suppressAccidentalImmediateStop(event, button)) return;
     if (isGenerationStopControl(button)) {
       recentStopAt = Date.now();
+      setTimeout(dismissRecentAbortBanner, 80);
       return;
     }
     blockBusyMutationEvent(event);
@@ -163,13 +162,11 @@
     }
   }
 
-  function arenaRootPresent() {
-    return ARENA_MODE_RE.test(textOf(document.body && document.body.textContent));
-  }
-
   function candidateCards() {
-    if (!arenaRootPresent() || typeof document.querySelectorAll !== 'function') return [];
-    const chooseButtons = Array.from(document.querySelectorAll('button')).filter((button) => /^(?:Chọn cái này|Choose this)$/i.test(textOf(button.textContent)));
+    if (!document || typeof document.getElementById !== 'function') return [];
+    const chat = document.getElementById('chat');
+    if (!chat || typeof chat.querySelectorAll !== 'function') return [];
+    const chooseButtons = Array.from(chat.querySelectorAll('button')).filter((button) => /^(?:Chọn cái này|Choose this)$/i.test(textOf(button.textContent)));
     return chooseButtons.map((choose) => {
       let card = choose.parentElement;
       for (let i = 0; card && i < 5; i += 1, card = card.parentElement) {
@@ -229,17 +226,9 @@
   }
 
   function startObserver() {
-    if (typeof MutationObserver !== 'function' || !document || !document.documentElement) return;
-    let queued = false;
-    observer = new MutationObserver(() => {
-      if (queued) return;
-      queued = true;
-      queueMicrotask(() => {
-        queued = false;
-        reconcileUi();
-      });
-    });
-    observer.observe(document.documentElement, { childList: true, subtree: true, characterData: true, attributes: true, attributeFilter: ['disabled', 'aria-busy'] });
+    // Intentionally disabled: the previous whole-document observer caused every
+    // React/streaming DOM mutation to trigger global UI scans on the main thread.
+    return false;
   }
 
   function abortTrackedGenerationFetches() {
@@ -250,7 +239,6 @@
   document.addEventListener('click', onClickCapture, true);
   document.addEventListener('pointerdown', blockBusyMutationEvent, true);
   document.addEventListener('change', blockBusyMutationEvent, true);
-  startObserver();
   queueMicrotask(reconcileUi);
 
   window.__STS_ARENA_UX_GUARD__ = Object.freeze({
