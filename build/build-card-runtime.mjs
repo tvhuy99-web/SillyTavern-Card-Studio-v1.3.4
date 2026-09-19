@@ -22,14 +22,8 @@ function replaceExactlyOnce(source, oldText, newText, label) {
   return source.slice(0, first) + newText + source.slice(first + oldText.length);
 }
 
-function toClassicRuntimeSource(moduleSource) {
-  const classic = replaceExactlyOnce(
-    moduleSource,
-    'export function startCardRuntimeCore(boot) {',
-    'function startCardRuntimeCore(boot) {',
-    'core export wrapper',
-  );
-  return classic + '\nstartCardRuntimeCore(window.__CARD_STUDIO_BOOT__);\n';
+function toClassicRuntimeSource(source) {
+  return source;
 }
 
 function makeCoreBuilderModule(classicCoreSource) {
@@ -46,7 +40,7 @@ export function buildCardRuntimeCoreScript(boot) {
   if (!boot || typeof boot !== 'object') {
     throw new TypeError('Card Runtime BOOT payload must be an object.');
   }
-  return 'window.__CARD_STUDIO_BOOT__ = ' + serializeScriptValue(boot) + ';\\n' + CARD_RUNTIME_CORE_SOURCE;
+  return 'window.__CARD_STUDIO_BOOT__ = ' + serializeScriptValue(boot) + ';\\n' + CARD_RUNTIME_CORE_SOURCE + '\\nwindow.cardStudioReady = Promise.resolve(window.__STS_START_CARD_RUNTIME__(window.__CARD_STUDIO_BOOT__));\\n';
 }
 
 export const CARD_RUNTIME_CORE_SOURCE_BYTES = CARD_RUNTIME_CORE_SOURCE.length;
