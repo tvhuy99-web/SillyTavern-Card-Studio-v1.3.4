@@ -1,0 +1,66 @@
+    const storageState = { local: new Map(Object.entries(BOOT.storage.local || {})), session: new Map(Object.entries(BOOT.storage.session || {})) };
+    function storageMock(type) {
+        const map = storageState[type];
+        return {
+            getItem: function (key) { key = String(key); return map.has(key) ? map.get(key) : null; },
+            setItem: function (key, value) { key = String(key); value = String(value); map.set(key, value); rpc('storage.set', { storageType: type, key: key, value: value }).catch(function () {}); },
+            removeItem: function (key) { key = String(key); map.delete(key); rpc('storage.remove', { storageType: type, key: key }).catch(function () {}); },
+            clear: function () { map.clear(); rpc('storage.clear', { storageType: type }).catch(function () {}); },
+            key: function (index) { return Array.from(map.keys())[index] || null; },
+            get length() { return map.size; }
+        };
+    }
+    if (!FULL_COMPATIBILITY_MODE) {
+        try {
+            Object.defineProperty(root, 'localStorage', { configurable: true, value: storageMock('local') });
+            Object.defineProperty(root, 'sessionStorage', { configurable: true, value: storageMock('session') });
+        } catch (error) { log('warn', 'Storage shim could not be installed: ' + error.message); }
+    }
+    function createLocalForageInstance(config) {
+        config = Object.assign({ name: 'card-studio', storeName: 'keyvaluepairs' }, config || {});
+        let databasePromise = null;
+        function openDatabase() {
+            if (!root.indexedDB) return Promise.resolve(null);
+            if (databasePromise) return databasePromise;
+            databasePromise = new Promise(function (resolve, reject) {
+                const request = root.indexedDB.open(String(config.name), 1);
+                request.onupgradeneeded = function () { if (!request.result.objectStoreNames.contains(config.storeName)) request.result.createObjectStore(config.storeName); };
+                request.onsuccess = function () { resolve(request.result); };
+                request.onerror = function () { reject(request.error || new Error('IndexedDB open failed')); };
+            }).catch(function () { return null; });
+            return databasePromise;
+        }
+        function transaction(mode, operation) {
+            return openDatabase().then(function (database) {
+                if (!database) return operation(null);
+                return new Promise(function (resolve, reject) {
+                    const tx = database.transaction(config.storeName, mode);
+                    const store = tx.objectStore(config.storeName);
+                    let result;
+                    try { result = operation(store, resolve, reject); } catch (error) { reject(error); }
+                    tx.onerror = function () { reject(tx.error || new Error('IndexedDB transaction failed')); };
+                    if (result !== undefined && !(result && typeof result.onsuccess === 'function')) resolve(result);
+                });
+            });
+        }
+        const fallbackPrefix = '__localforage__:' + config.name + ':' + config.storeName + ':';
+        const api = {
+            config: function (next) { if (next) Object.assign(config, next); return true; },
+            ready: function () { return openDatabase().then(function () { return api; }); },
+            getItem: function (key) { return transaction('readonly', function (store, resolve) { if (!store) { const raw = root.localStorage.getItem(fallbackPrefix + key); if (raw == null) return null; try { return JSON.parse(raw); } catch (_) { return raw; } } const request = store.get(String(key)); request.onsuccess = function () { resolve(request.result === undefined ? null : request.result); }; }); },
+            setItem: function (key, value) { return transaction('readwrite', function (store, resolve) { if (!store) { root.localStorage.setItem(fallbackPrefix + key, JSON.stringify(value)); return value; } const request = store.put(value, String(key)); request.onsuccess = function () { resolve(value); }; }); },
+            removeItem: function (key) { return transaction('readwrite', function (store, resolve) { if (!store) { root.localStorage.removeItem(fallbackPrefix + key); return; } const request = store.delete(String(key)); request.onsuccess = function () { resolve(); }; }); },
+            clear: function () { return transaction('readwrite', function (store, resolve) { if (!store) { const keys = []; for (let i = 0; i < root.localStorage.length; i += 1) { const key = root.localStorage.key(i); if (key && key.indexOf(fallbackPrefix) === 0) keys.push(key); } keys.forEach(function (key) { root.localStorage.removeItem(key); }); return; } const request = store.clear(); request.onsuccess = function () { resolve(); }; }); },
+            keys: function () { return transaction('readonly', function (store, resolve) { if (!store) { const keys = []; for (let i = 0; i < root.localStorage.length; i += 1) { const key = root.localStorage.key(i); if (key && key.indexOf(fallbackPrefix) === 0) keys.push(key.slice(fallbackPrefix.length)); } return keys; } const request = store.getAllKeys(); request.onsuccess = function () { resolve(request.result.map(String)); }; }); },
+            length: function () { return api.keys().then(function (keys) { return keys.length; }); },
+            key: function (index) { return api.keys().then(function (keys) { return keys[index] === undefined ? null : keys[index]; }); },
+            iterate: function (iterator) { return api.keys().then(async function (keys) { for (let i = 0; i < keys.length; i += 1) { const value = await api.getItem(keys[i]); const result = await iterator(value, keys[i], i + 1); if (result !== undefined) return result; } }); },
+            createInstance: function (next) { return createLocalForageInstance(Object.assign({}, config, next || {})); },
+            driver: function () { return root.indexedDB ? 'asyncStorage' : 'localStorageWrapper'; },
+            setDriver: function () { return Promise.resolve(); },
+            defineDriver: function () { return Promise.resolve(); }
+        };
+        return api;
+    }
+    root.localforage = createLocalForageInstance({ name: 'sillytavern-card-studio', storeName: 'card-runtime' });
+

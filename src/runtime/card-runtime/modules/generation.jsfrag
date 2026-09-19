@@ -1,0 +1,56 @@
+    const promptInjects = new Map();
+    root.injectPrompts = function (injects) {
+        const list = Array.isArray(injects) ? injects : [injects];
+        list.filter(Boolean).forEach(function (inject, index) {
+            const id = String(inject.id || inject.identifier || 'card-inject-' + index);
+            promptInjects.set(id, Object.assign({}, clone(inject), { id: id }));
+        });
+        return Array.from(promptInjects.keys());
+    };
+    root.uninjectPrompts = function (ids) {
+        (Array.isArray(ids) ? ids : [ids]).forEach(function (id) { promptInjects.delete(String(id)); });
+    };
+    root.builtin_prompt_default_order = Object.freeze(['world_info_before', 'persona_description', 'char_description', 'char_personality', 'scenario', 'chat_history', 'world_info_after', 'user_input']);
+    root.placeholder_prompt_default_order = root.builtin_prompt_default_order;
+    const activeGenerationIds = new Set();
+    function prepareGenerationOptions(options) {
+        const merged = Object.assign({}, options || {});
+        if (!merged.generation_id) merged.generation_id = uuid();
+        merged.injects = Array.from(promptInjects.values()).concat(Array.isArray(merged.injects) ? merged.injects : []);
+        if (merged.images !== undefined && merged.image === undefined) merged.image = merged.images;
+        return merged;
+    }
+    function runGeneration(raw, options) {
+        const merged = prepareGenerationOptions(options);
+        activeGenerationIds.add(String(merged.generation_id));
+        return rpc('generation.generate', { raw: raw, options: merged }, 360000).finally(function () { activeGenerationIds.delete(String(merged.generation_id)); });
+    }
+    root.generate = function (options) { return runGeneration(false, options); };
+    root.generateRaw = function (options) { return runGeneration(true, options); };
+    root.stopGenerationById = function (generationId) {
+        const id = String(generationId || '');
+        if (!activeGenerationIds.has(id)) return false;
+        activeGenerationIds.delete(id);
+        rpc('generation.stop', { generationId: id }, 10000).catch(function (error) { log('warn', 'Could not stop generation ' + id + ': ' + error.message); });
+        return true;
+    };
+    root.stopAllGeneration = function () {
+        const hadActive = activeGenerationIds.size > 0;
+        activeGenerationIds.clear();
+        if (hadActive) rpc('generation.stopAll', {}, 10000).catch(function (error) { log('warn', 'Could not stop all generations: ' + error.message); });
+        return hadActive;
+    };
+    root.getModelList = function (customApi) { return rpc('generation.models', { custom_api: customApi || null }, 30000).then(function (models) { return Array.from(new Set((Array.isArray(models) ? models : []).map(String).filter(Boolean))).sort(); }); };
+    root.getProxyPresetNames = function () {
+        const profiles = BOOT.proxyProfiles || BOOT.catalog && BOOT.catalog.proxyProfiles || [];
+        return Array.from(new Set((Array.isArray(profiles) ? profiles : []).map(function (profile) { return String(profile && (profile.name || profile.id) || ''); }).filter(Boolean)));
+    };
+
+    root.executeSlashCommands = root.triggerSlash = function (command) {
+        return rpc('slash.execute', { command: safeString(command, 200000) }, 120000);
+    };
+    root.triggerSlashWithResult = root.triggerSlash;
+    root.sendMessageAsUser = function (text) { root.sendMessageToParent('SEND_USER_MESSAGE', safeString(text, 200000)); };
+    root.sendMessageAsCharacter = function (text) { root.sendMessageToParent('SEND_CHARACTER_MESSAGE', safeString(text, 200000)); };
+    root.appendMessage = function (text) { root.sendMessageToParent('APPEND_MESSAGE', safeString(text, 200000)); };
+

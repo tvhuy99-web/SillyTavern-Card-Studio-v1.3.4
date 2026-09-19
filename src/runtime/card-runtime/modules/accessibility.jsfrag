@@ -1,0 +1,78 @@
+    const noopClassList = { add: function () {}, remove: function () {}, toggle: function () { return false; }, contains: function () { return false; } };
+    const phantomInput = {
+        _value: '', style: {}, dataset: {}, classList: noopClassList,
+        get value() { return this._value; },
+        set value(value) { this._value = String(value); root.sendMessageToParent('SET_INPUT_VALUE', this._value); },
+        focus: function () {}, blur: function () {}, click: function () {}, addEventListener: function () {}, removeEventListener: function () {},
+        dispatchEvent: function (event) { if (event && (event.type === 'click' || event.type === 'submit')) root.sendMessageAsUser(this._value); return true; },
+        setAttribute: function () {}, getAttribute: function () { return null; }
+    };
+    const phantomButton = {
+        style: {}, dataset: {}, classList: noopClassList,
+        click: function () { root.sendMessageAsUser(phantomInput.value); },
+        submit: function () { root.sendMessageAsUser(phantomInput.value); },
+        focus: function () {}, blur: function () {}, addEventListener: function () {}, removeEventListener: function () {},
+        dispatchEvent: function (event) { if (event && (event.type === 'click' || event.type === 'submit')) this.click(); return true; },
+        setAttribute: function () {}, getAttribute: function () { return null; }
+    };
+    function safeParentQuery(selector) {
+        selector = String(selector || '');
+        if (selector === '#send_textarea' || selector === '#chat_input' || selector === 'textarea[name="chat"]' || selector === 'textarea#send_textarea') return phantomInput;
+        if (selector === '#send_but' || selector === '#send_form' || selector === 'button#send_but') return phantomButton;
+        if (selector === '#chat') return document.getElementById('chat');
+        if (selector === 'body' || selector === '#app' || selector === '#content' || selector === '#main') return document.body;
+        try { return document.querySelector(selector); } catch (error) {
+            diagnostic('CARD_RUNTIME_SANDBOX_BLOCKED', 'parent-dom', 'querySelector', 'Selector không hợp lệ hoặc không thể ánh xạ trong DOM tương thích: ' + selector, { details: { selector: selector, error: error && error.message } });
+            return null;
+        }
+    }
+    root.__st_parent_mock = {
+        querySelector: safeParentQuery,
+        querySelectorAll: function (selector) { try { return document.querySelectorAll(selector); } catch (_) { return []; } },
+        getElementById: function (id) { return safeParentQuery('#' + String(id || '').replace(/[^A-Za-z0-9_:-]/g, '')); },
+        getElementsByClassName: function (name) { return document.getElementsByClassName(name); },
+        getElementsByTagName: function (name) { return document.getElementsByTagName(name); },
+        createElement: function (tag) { return document.createElement(tag); },
+        createTextNode: function (text) { return document.createTextNode(text); },
+        addEventListener: function (name, handler, options) { document.addEventListener(name, handler, options); },
+        removeEventListener: function (name, handler, options) { document.removeEventListener(name, handler, options); },
+        dispatchEvent: function (event) { return document.dispatchEvent(event); },
+        get activeElement() { return document.activeElement; },
+        get body() { return document.body; },
+        get head() { return document.head; },
+        get documentElement() { return document.documentElement; },
+        get location() { return root.location; },
+        readyState: 'complete'
+    };
+
+    if (!root.toastr) {
+        root.toastr = {
+            info: function (message) { root.sendMessageToParent('SHOW_TOAST', { type: 'info', message: safeString(message, 20000) }); },
+            success: function (message) { root.sendMessageToParent('SHOW_TOAST', { type: 'success', message: safeString(message, 20000) }); },
+            warning: function (message) { root.sendMessageToParent('SHOW_TOAST', { type: 'warning', message: safeString(message, 20000) }); },
+            error: function (message) { root.sendMessageToParent('SHOW_TOAST', { type: 'error', message: safeString(message, 20000) }); },
+            clear: function () {}, remove: function () {}, options: {}
+        };
+    }
+    root.callPopup = root.showPopup = function (content, type, title) {
+        root.sendMessageToParent('SHOW_POPUP', { html: safeString(content, 500000), type: type || 'text', title: safeString(title || 'Thông báo Thẻ', 120) });
+        return Promise.resolve(true);
+    };
+    if (!navigator.clipboard) Object.defineProperty(navigator, 'clipboard', { value: { writeText: function (text) { root.sendMessageToParent('COPY_TO_CLIPBOARD', safeString(text, 1000000)); return Promise.resolve(); } } });
+
+    root.setBackground = function (url) {
+        const element = document.getElementById('sheld');
+        if (element) element.style.backgroundImage = url ? 'url("' + root.resolveCardAsset(url).replace(/"/g, '') + '")' : 'none';
+        root.sendMessageToParent('SET_VISUAL_STATE', { type: 'bg', value: url || '' });
+    };
+    root.PlaySound = root.play_audio;
+    root.ClickSound = function () {};
+    root.hide_mes = function (id) { const element = document.querySelector('.mes[mesid="' + id + '"], #message-' + id); if (element) element.style.display = 'none'; };
+    root.show_mes = function (id) { const element = document.querySelector('.mes[mesid="' + id + '"], #message-' + id); if (element) element.style.display = ''; };
+    root.formatAsDisplayedMessage = function (text) {
+        const processed = root.formatAsTavernRegexedString(root.substitudeMacros(text));
+        return root.marked && root.marked.parse ? root.marked.parse(processed) : processed;
+    };
+    root.retrieveDisplayedMessage = function (messageId) { return document.querySelector('.mes[mesid="' + messageId + '"] .mes_text, #message-' + messageId + ' .mes_text'); };
+    root.refreshOneMessage = function () { return Promise.resolve(); };
+

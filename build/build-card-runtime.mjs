@@ -5,6 +5,26 @@ const RENDERER_SOURCE_URL = new URL('../src/runtime/card-runtime/renderer.js', i
 const CORE_BUILDER_OUTPUT_URL = new URL('../assets/card-runtime-core-builder-v1.3.6.js', import.meta.url);
 const RENDERER_OUTPUT_URL = new URL('../assets/card-runtime-renderer-v1.3.6.js', import.meta.url);
 
+const CORE_MODULE_FRAGMENTS = [
+  { name: "BRIDGE_RPC", token: "/*__STS_MODULE_BRIDGE_RPC__*/", url: new URL("../src/runtime/card-runtime/modules/bridge-rpc.jsfrag", import.meta.url) },
+  { name: "EVENTS", token: "/*__STS_MODULE_EVENTS__*/", url: new URL("../src/runtime/card-runtime/modules/events.jsfrag", import.meta.url) },
+  { name: "VARIABLES", token: "/*__STS_MODULE_VARIABLES__*/", url: new URL("../src/runtime/card-runtime/modules/variables.jsfrag", import.meta.url) },
+  { name: "CHAT", token: "/*__STS_MODULE_CHAT__*/", url: new URL("../src/runtime/card-runtime/modules/chat.jsfrag", import.meta.url) },
+  { name: "MACROS", token: "/*__STS_MODULE_MACROS__*/", url: new URL("../src/runtime/card-runtime/modules/macros.jsfrag", import.meta.url) },
+  { name: "GENERATION", token: "/*__STS_MODULE_GENERATION__*/", url: new URL("../src/runtime/card-runtime/modules/generation.jsfrag", import.meta.url) },
+  { name: "WORLDBOOK", token: "/*__STS_MODULE_WORLDBOOK__*/", url: new URL("../src/runtime/card-runtime/modules/worldbook.jsfrag", import.meta.url) },
+  { name: "REGEX", token: "/*__STS_MODULE_REGEX__*/", url: new URL("../src/runtime/card-runtime/modules/regex.jsfrag", import.meta.url) },
+  { name: "AUDIO", token: "/*__STS_MODULE_AUDIO__*/", url: new URL("../src/runtime/card-runtime/modules/audio.jsfrag", import.meta.url) },
+  { name: "STORAGE", token: "/*__STS_MODULE_STORAGE__*/", url: new URL("../src/runtime/card-runtime/modules/storage.jsfrag", import.meta.url) },
+  { name: "BRIDGE_NETWORK", token: "/*__STS_MODULE_BRIDGE_NETWORK__*/", url: new URL("../src/runtime/card-runtime/modules/bridge-network.jsfrag", import.meta.url) },
+  { name: "ACCESSIBILITY", token: "/*__STS_MODULE_ACCESSIBILITY__*/", url: new URL("../src/runtime/card-runtime/modules/accessibility.jsfrag", import.meta.url) },
+  { name: "SCRIPTS", token: "/*__STS_MODULE_SCRIPTS__*/", url: new URL("../src/runtime/card-runtime/modules/scripts.jsfrag", import.meta.url) },
+  { name: "VARIABLES_MVU", token: "/*__STS_MODULE_VARIABLES_MVU__*/", url: new URL("../src/runtime/card-runtime/modules/variables-mvu.jsfrag", import.meta.url) },
+  { name: "BRIDGE_CONTEXT", token: "/*__STS_MODULE_BRIDGE_CONTEXT__*/", url: new URL("../src/runtime/card-runtime/modules/bridge-context.jsfrag", import.meta.url) },
+  { name: "HUD", token: "/*__STS_MODULE_HUD__*/", url: new URL("../src/runtime/card-runtime/modules/hud.jsfrag", import.meta.url) },
+  { name: "BRIDGE_HANDSHAKE", token: "/*__STS_MODULE_BRIDGE_HANDSHAKE__*/", url: new URL("../src/runtime/card-runtime/modules/bridge-handshake.jsfrag", import.meta.url) },
+];
+
 const COMPATIBILITY_FRAGMENTS = [
   '../src/runtime/card-runtime/compat/catalog-characters.jsfrag',
   '../src/runtime/card-runtime/compat/personas-presets.jsfrag',
@@ -55,6 +75,11 @@ export const CARD_RUNTIME_CORE_SOURCE_BYTES = CARD_RUNTIME_CORE_SOURCE.length;
 }
 export async function buildCardRuntimeAssets() {
   let core = await readFile(CORE_TEMPLATE_URL, 'utf8');
+  const coreTemplateBytes = core.length;
+  for (const fragment of CORE_MODULE_FRAGMENTS) {
+    const source = await readFile(fragment.url, 'utf8');
+    core = replaceExactlyOnce(core, fragment.token, source, 'module/' + fragment.name);
+  }
   const fragments = [];
   for (const url of COMPATIBILITY_FRAGMENTS) fragments.push(await readFile(url, 'utf8'));
 
@@ -73,7 +98,9 @@ export async function buildCardRuntimeAssets() {
 
   return {
     coreSourceBytes: classicCore.length,
+    coreTemplateBytes,
     coreBuilderBytes: coreBuilder.length,
+    coreModuleFragments: CORE_MODULE_FRAGMENTS.length,
     compatibilityFragments: fragments.length,
     iframeModuleImportRequired: false,
   };

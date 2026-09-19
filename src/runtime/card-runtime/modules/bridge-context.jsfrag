@@ -1,0 +1,135 @@
+    function buildLegacyChat() {
+        return chatHistory.map(function (message) {
+            return {
+                name: message.name, is_user: message.role === 'user', is_system: message.role === 'system',
+                is_name: true, send_date: Date.now(), mes: message.message, extra: clone(message.extra || {}),
+                swipe_id: message.swipe_id || 0, swipes: clone(message.swipes || [message.message]), swipes_data: clone(message.swipes_data || [{}])
+            };
+        });
+    }
+    const bootCharacters = BOOT.catalog && Array.isArray(BOOT.catalog.characters) ? BOOT.catalog.characters.map(function (entry) { return clone(entry.card || entry); }) : [clone(BOOT.characterCard)];
+    const currentCharacterIndex = Math.max(0, bootCharacters.findIndex(function (entry) { return entry && entry.name === BOOT.context.name2; }));
+    const context = {
+        chat: buildLegacyChat(), characters: bootCharacters, characterId: currentCharacterIndex, groups: clone(BOOT.catalog && BOOT.catalog.groups || []), groupId: BOOT.context.groupId || null,
+        name1: BOOT.context.name1, name2: BOOT.context.name2, chatId: BOOT.context.chatId, onlineStatus: BOOT.context.onlineStatus || 'Connected',
+        eventSource: root.eventSource, event_types: root.tavern_events, extensionSettings: extensionSettings,
+        powerUserSettings: root.power_user, chatMetadata: clone(BOOT.chatMetadata || {}), worldInfo: worldInfo,
+        getCurrentChatId: function () { return BOOT.context.chatId; },
+        saveMetadata: function () { return Promise.resolve(); }, saveSettingsDebounced: function () { return Promise.resolve(); },
+        executeSlashCommands: root.executeSlashCommands, substituteParams: root.substitudeMacros,
+        sendMessageAsUser: root.sendMessageAsUser, addOneMessage: function (message) { return root.createChatMessages([message]); },
+        deleteLastMessage: function () { return root.deleteChatMessages(-1); },
+        writeExtensionField: function (_characterId, key, value) { return rpc('character.extension.write', { key: key, value: value }, 30000); },
+        getThumbnailUrl: function (_type, url) { return root.resolveCardAsset(url); }
+    };
+    function syncContext() {
+        context.chat = buildLegacyChat();
+        context.extensionSettings = extensionSettings;
+        context.worldInfo = worldInfo;
+        root.__st_chat_history = chatHistory;
+        root.__st_world_info = worldInfo;
+        if (root.SillyTavern) {
+            root.SillyTavern.extensionSettings = extensionSettings;
+            if (root.SillyTavern.chat) root.SillyTavern.chat.history = chatHistory;
+        }
+    }
+    root.__st_context = context;
+    root.__st_chat_history = chatHistory;
+    root.__st_world_info = worldInfo;
+    root.getContext = function () { return context; };
+
+    const SillyTavern = {
+        version: TAVERN_VERSION, status: 'ready', getContext: root.getContext, extensionSettings: extensionSettings,
+        user: { name: BOOT.context.name1, avatar: BOOT.userAvatar },
+        libs: {
+            lodash: root._, Fuse: root.Fuse, DOMPurify: root.DOMPurify, hljs: root.hljs, localforage: root.localforage,
+            Handlebars: root.Handlebars, showdown: root.showdown, moment: root.moment, seedrandom: Math.seedrandom,
+            yaml: root.YAML || root.jsyaml, YAML: root.YAML || root.jsyaml, jQuery: root.jQuery, Vue: root.Vue, VueRouter: root.VueRouter, Pinia: root.Pinia, PIXI: root.PIXI, axios: root.axios, marked: root.marked,
+            Popper: root.Popper, Bowser: root.bowser || root.Bowser, DiffMatchPatch: root.diff_match_patch, morphdom: root.morphdom
+        },
+        config: { main_api: BOOT.context.mainApi || 'openai', visual_novel_mode: Boolean(BOOT.context.visualNovelMode) },
+        chat: { history: chatHistory, send: root.sendMessageAsUser, lastMessage: function () { return chatHistory[chatHistory.length - 1] || null; }, getHistory: function () { return clone(chatHistory); }, delete: function (range) { return root.deleteChatMessages(range); } },
+        worldInfo: { get: function () { return clone(worldInfo); } },
+        util: { isMobile: function () { return root.is_mobile; }, delay: function (ms) { return new Promise(function (resolve) { setTimeout(resolve, ms); }); }, uuidv4: uuid, renderMarkdown: root.formatAsDisplayedMessage },
+        markdown: { render: root.formatAsDisplayedMessage }, files: { url: root.resolveCardAsset },
+        commands: { registerCommand: function (name, callback) { root.eventOn('slash_' + name, callback); }, runCommand: root.executeSlashCommands },
+        modules: { quickReply: {}, expression: {}, characterSelect: {} }, extensions: { quickReply: { enabled: true }, expression: { enabled: true }, characterSelect: { enabled: true } },
+        saveExtensionSettings: function (settings) {
+            extensionSettings = Object.assign(extensionSettings, clone(settings || {}));
+            context.extensionSettings = extensionSettings;
+            rpc('extension.settings.save', { settings: extensionSettings }, 30000).catch(function () {});
+            return Promise.resolve(clone(extensionSettings));
+        },
+        loadExtensionSettings: function () { return clone(extensionSettings); },
+        loadCharacterData: function () { return rpc('character.data.get', {}, 30000); },
+        saveCharacterData: function (data) { return rpc('character.data.save', { data: data }, 30000); },
+        event: root.eventSource
+    };
+    root.ST = root.SillyTavern = SillyTavern;
+    root.saveSettingsDebounced = SillyTavern.saveExtensionSettings;
+    root.user_avatar = BOOT.userAvatar;
+    root.humanized_iso_date = function (value) { return new Date(value || Date.now()).toLocaleString(); };
+    if (root.Zod) { root.z = root.Zod; try { if (!root.z.z) root.z.z = root.z; } catch (_) {} }
+
+    root.builtin = {
+        lodash: root._, jquery: root.jQuery, vue: root.Vue, vueRouter: root.VueRouter, pinia: root.Pinia, pixi: root.PIXI, axios: root.axios,
+        zod: root.z, ejs: root.ejs, yaml: root.YAML || root.jsyaml, localforage: root.localforage
+    };
+    const helperNames = [
+        'audioEnable','audioImport','audioMode','audioPlay','audioSelect','playAudio','pauseAudio','getAudioList','replaceAudioList','appendAudioList','getAudioSettings','setAudioSettings','getCurrentAudio',
+        'getCharacterNames','getCharacterIds','getCurrentCharacterName','getCurrentCharacterId','createCharacter','createOrReplaceCharacter','deleteCharacter','getCharacter','replaceCharacter','updateCharacterWith',
+        'getChatMessages','setChatMessages','setChatMessage','createChatMessages','deleteChatMessages','rotateChatMessages','formatAsDisplayedMessage','retrieveDisplayedMessage','refreshOneMessage',
+        'isAdmin','getExtensionType','getExtensionStatus','getExtensionInstallationInfo','isInstalledExtension','installExtension','uninstallExtension','reinstallExtension','updateExtension',
+        'generate','generateRaw','getModelList','getProxyPresetNames','stopGenerationById','stopAllGeneration','initializeGlobal','waitGlobalInitialized',
+        'importRawCharacter','importRawChat','importRawPreset','importRawWorldbook','importRawTavernRegex',
+        'injectPrompts','uninjectPrompts','getLorebookEntries','replaceLorebookEntries','updateLorebookEntriesWith','updatelorebookEntriesWith','setLorebookEntries','createLorebookEntries','createLorebookEntry','deleteLorebookEntries','deleteLorebookEntry',
+        'getLorebookSettings','setLorebookSettings','getLorebooks','deleteLorebook','createLorebook','getCharLorebooks','setCurrentCharLorebooks','getCurrentCharPrimaryLorebook','getChatLorebook','setChatLorebook','getOrCreateChatLorebook',
+        'registerMacroLike','unregisterMacroLike','isPresetNormalPrompt','isPresetSystemPrompt','isPresetPlaceholderPrompt','getPresetNames','getLoadedPresetName','loadPreset','createPreset','createOrReplacePreset','deletePreset','renamePreset','getPreset','replacePreset','updatePresetWith','setPreset',
+        'getPersonaNames','getPersonaIds','getCurrentPersonaName','getCurrentPersonaId','getPersonaAvatarPath','createPersona','createOrReplacePersona','deletePersona','getPersona','replacePersona','updatePersonaWith',
+        'getCharData','getCharAvatarPath','getChatHistoryBrief','getChatHistoryDetail','getScriptTrees','replaceScriptTrees','updateScriptTreesWith','getAllEnabledScriptButtons','getButtonEvent','getScriptButtons','replaceScriptButtons','updateScriptButtonsWith','appendInexistentScriptButtons','getScriptName','getScriptInfo','replaceScriptInfo','eventOnButton','triggerSlash','triggerSlashWithResult','formatAsTavernRegexedString','isCharacterTavernRegexesEnabled',
+        'getTavernRegexes','replaceTavernRegexes','updateTavernRegexesWith','reloadIframe','substitudeMacros','substituteMacros','getLastMessageId','getIframeName','getScriptId','getCurrentMessageId','getMessageId','errorCatched','getVariables','getAllVariables','replaceVariables','updateVariablesWith',
+        'insertOrAssignVariables','insertVariables','deleteVariable','registerVariableSchema','getWorldbookNames','getGlobalWorldbookNames','rebindGlobalWorldbooks','getCharWorldbookNames',
+        'rebindCharWorldbooks','getChatWorldbookName','rebindChatWorldbook','getOrCreateChatWorldbook','createWorldbook','createOrReplaceWorldbook','deleteWorldbook','getWorldbook','replaceWorldbook','updateWorldbookWith','createWorldbookEntries','deleteWorldbookEntries','getFrontendVersion','updateTavernHelper','updateFrontendVersion'
+    ];
+    root.getFrontendVersion = root.getTavernHelperVersion || function () { return HELPER_VERSION; };
+    root.updateTavernHelper = root.updateTavernHelper || unsupported('updateTavernHelper');
+    root.updateFrontendVersion = root.updateTavernHelper;
+    const officialFunctionSurface = [
+        'audioEnable','audioImport','audioMode','audioPlay','audioSelect','setChatMessage','eventOnButton','getButtonEvent','replaceScriptButtons','updateScriptButtonsWith','appendInexistentScriptButtons','replaceScriptInfo',
+        'createLorebookEntry','deleteLorebookEntry','getChatLorebook','setChatLorebook','unregisterMacroLike','replaceScriptTrees','updateScriptTreesWith','triggerSlashWithResult',
+        'getFrontendVersion','updateTavernHelper','updateFrontendVersion','getExtensionInstallationInfo'
+    ];
+    officialFunctionSurface.forEach(function (name) { if (typeof root[name] !== 'function') root[name] = unsupported(name); });
+    const TavernHelper = { builtin: root.builtin, builtin_prompt_default_order: root.builtin_prompt_default_order, default_preset: root.default_preset, RawCharacter: root.RawCharacter };
+    helperNames.forEach(function (name) { if (typeof root[name] === 'function') TavernHelper[name] = root[name]; });
+    TavernHelper.capabilities = CAPABILITIES;
+    TavernHelper.getCapabilities = function () { return clone(CAPABILITIES); };
+    TavernHelper.hasCapability = function (name) { return Boolean(CAPABILITIES[name]); };
+    TavernHelper.getTavernHelperVersion = function () { return HELPER_VERSION; };
+    TavernHelper.getRuntimeCompatibilityVersion = function () { return IMPLEMENTATION_VERSION; };
+    TavernHelper.getTargetTavernHelperVersion = function () { return '4.8.19'; };
+    TavernHelper.getTavernHelperExtensionId = function () { return 'third-party/JS-Slash-Runner'; };
+    TavernHelper.getTavernVersion = function () { return TAVERN_VERSION; };
+    TavernHelper.getFrontendVersion = TavernHelper.getTavernHelperVersion;
+    TavernHelper.errorCatched = function (fn, fallback) {
+        if (typeof fn !== 'function') {
+            log('script-error', 'errorCatched expected a function, received ' + typeof fn, { scriptId: activeScriptId });
+            return async function () { return fallback; };
+        }
+        return async function () { try { return await fn.apply(this, arguments); } catch (error) { log('error', error.message, { stack: error.stack, scriptId: activeScriptId }); return fallback; } };
+    };
+    root.getTavernHelperVersion = TavernHelper.getTavernHelperVersion;
+    root.getTavernHelperExtensionId = TavernHelper.getTavernHelperExtensionId;
+    root.getTavernVersion = TavernHelper.getTavernVersion;
+    root.errorCatched = TavernHelper.errorCatched;
+    root.TavernHelper = TavernHelper;
+    Mvu.extensions.TavernHelper = TavernHelper;
+
+    root.module = { exports: {} };
+    root.exports = root.module.exports;
+    root.require = function (name) {
+        const modules = { lodash: root._, jquery: root.jQuery, vue: root.Vue, 'vue-router': root.VueRouter, pinia: root.Pinia, 'pixi.js': root.PIXI, axios: root.axios, zod: root.z, ejs: root.ejs, yaml: root.YAML || root.jsyaml, handlebars: root.Handlebars, dompurify: root.DOMPurify, 'js-yaml': root.jsyaml };
+        if (modules[name]) return modules[name];
+        throw new Error('Module is not exposed in the isolated card runtime: ' + name);
+    };
+

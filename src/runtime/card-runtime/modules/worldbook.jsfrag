@@ -1,0 +1,143 @@
+    let lorebookNames = Array.from(new Set(BOOT.lorebookNames || []));
+    let globalWorldbookNames = clone(extensionSettings.__cardRuntimeGlobalWorldbooks || []);
+    let chatWorldbookName = extensionSettings.__cardRuntimeChatWorldbook || null;
+    let charWorldbooks = clone(extensionSettings.__cardRuntimeCharWorldbooks || null);
+    root.getLorebooks = root.getWorldbookNames = function () { return clone(lorebookNames); };
+    root.getGlobalWorldbookNames = function () { return clone(globalWorldbookNames); };
+    root.getCharWorldbookNames = function () {
+        if (charWorldbooks && typeof charWorldbooks === 'object') return { primary: charWorldbooks.primary || null, additional: clone(Array.isArray(charWorldbooks.additional) ? charWorldbooks.additional : []) };
+        const primary = root.getCurrentCharPrimaryLorebook();
+        return { primary: primary, additional: [] };
+    };
+    root.getChatWorldbookName = root.getChatLorebook = function () { return chatWorldbookName; };
+    root.getLorebookEntries = function (name) { return rpc('lorebook.entries.get', { name: name }, 30000).then(function (entries) { return clone(Array.isArray(entries) ? entries : []); }); };
+    root.replaceLorebookEntries = function (name, entries) {
+        if (!Array.isArray(entries)) return Promise.reject(new TypeError('replaceLorebookEntries expected an array'));
+        return rpc('lorebook.entries.replace', { name: name, entries: clone(entries) }, 60000).then(function (result) { return clone(Array.isArray(result) ? result : entries); });
+    };
+    root.updateLorebookEntriesWith = root.updatelorebookEntriesWith = async function (name, updater) {
+        updater = requireFunctionCallback('updateLorebookEntriesWith', updater);
+        const entries = await root.getLorebookEntries(name);
+        const updated = await updater(clone(entries));
+        const next = updated === undefined ? entries : updated;
+        if (!Array.isArray(next)) throw new TypeError('Worldbook updater must return an array');
+        await root.replaceLorebookEntries(name, next);
+        return await root.getLorebookEntries(name);
+    };
+    root.setLorebookEntries = async function (name, patches) {
+        const current = await root.getLorebookEntries(name);
+        const patchMap = new Map((Array.isArray(patches) ? patches : []).map(function (entry) { return [String(entry.uid), entry]; }));
+        const updated = current.map(function (entry) { return patchMap.has(String(entry.uid)) ? Object.assign({}, entry, clone(patchMap.get(String(entry.uid)))) : entry; });
+        await root.replaceLorebookEntries(name, updated);
+        return updated;
+    };
+    root.createLorebookEntries = async function (name, entries) {
+        const additions = (Array.isArray(entries) ? entries : [entries]).filter(Boolean);
+        const result = await rpc('lorebook.entries.create', { name: name, entries: additions }, 60000);
+        const worldbook = await root.getLorebookEntries(name);
+        let newEntries = [];
+        if (result && Array.isArray(result.new_entries)) newEntries = result.new_entries;
+        else if (result && Array.isArray(result.new_uids)) {
+            const ids = new Set(result.new_uids.map(String));
+            newEntries = worldbook.filter(function (entry) { return ids.has(String(entry.uid)); });
+        } else newEntries = worldbook.slice(Math.max(0, worldbook.length - additions.length));
+        return { worldbook: worldbook, new_entries: clone(newEntries) };
+    };
+    root.deleteLorebookEntries = async function (name, predicateOrRange) {
+        const current = await root.getLorebookEntries(name);
+        let deleted = [];
+        let next = current;
+        if (typeof predicateOrRange === 'function') {
+            deleted = current.filter(function (entry) { return Boolean(predicateOrRange(clone(entry))); });
+            const deletedIds = new Set(deleted.map(function (entry) { return String(entry.uid); }));
+            next = current.filter(function (entry) { return !deletedIds.has(String(entry.uid)); });
+        } else {
+            const result = await rpc('lorebook.entries.delete', { name: name, range: predicateOrRange }, 60000);
+            const worldbook = await root.getLorebookEntries(name);
+            const remainingIds = new Set(worldbook.map(function (entry) { return String(entry.uid); }));
+            deleted = current.filter(function (entry) { return !remainingIds.has(String(entry.uid)); });
+            return { worldbook: worldbook, deleted_entries: deleted, delete_occurred: Boolean(result && result.delete_occurred || deleted.length) };
+        }
+        await root.replaceLorebookEntries(name, next);
+        return { worldbook: next, deleted_entries: deleted, delete_occurred: deleted.length > 0 };
+    };
+    root.createLorebook = root.createWorldbook = async function (name, entries) {
+        const existed = lorebookNames.includes(String(name));
+        if (existed) return false;
+        await rpc('lorebook.create', { name: name, entries: Array.isArray(entries) ? entries : [] }, 60000);
+        if (!lorebookNames.includes(String(name))) lorebookNames.push(String(name));
+        return true;
+    };
+    root.deleteLorebook = root.deleteWorldbook = async function (name) { const result = await rpc('lorebook.delete', { name: name }, 60000); lorebookNames = lorebookNames.filter(function (item) { return item !== name; }); return Boolean(result); };
+    root.getWorldbook = function (name) { return root.getLorebookEntries(name); };
+    root.replaceWorldbook = async function (name, worldbook, options) {
+        if (!Array.isArray(worldbook)) throw new TypeError('replaceWorldbook expected WorldbookEntry[]; refusing to overwrite data with an invalid value');
+        await root.replaceLorebookEntries(name, worldbook);
+        await emitEvent(root.tavern_events.WORLDINFO_UPDATED, name, options || {});
+    };
+    root.updateWorldbookWith = async function (name, updater, options) {
+        updater = requireFunctionCallback('updateWorldbookWith', updater);
+        const current = await root.getWorldbook(name);
+        const updated = await updater(clone(current));
+        const next = updated === undefined ? current : updated;
+        if (!Array.isArray(next)) throw new TypeError('Worldbook updater must return WorldbookEntry[]');
+        await root.replaceWorldbook(name, next, options);
+        return await root.getWorldbook(name);
+    };
+    root.createOrReplaceWorldbook = async function (name, worldbook, options) {
+        const existed = lorebookNames.includes(String(name));
+        if (!existed) await root.createWorldbook(name, []);
+        await root.replaceWorldbook(name, Array.isArray(worldbook) ? worldbook : [], options);
+        return !existed;
+    };
+    root.getOrCreateChatLorebook = root.getOrCreateChatWorldbook = async function (requestedName) {
+        const name = requestedName || chatWorldbookName || BOOT.context.chatId + '-chat-lorebook';
+        if (!lorebookNames.includes(name)) await root.createLorebook(name, []);
+        await root.rebindChatWorldbook('current', name);
+        return name;
+    };
+    root.getCurrentCharPrimaryLorebook = function () { return BOOT.characterCard && BOOT.characterCard.char_book ? (BOOT.characterCard.char_book.name || BOOT.context.name2) : null; };
+    root.getCharLorebooks = root.getCharWorldbookNames;
+    root.setCurrentCharLorebooks = root.rebindCharWorldbooks = async function (characterName, bindings) {
+        if (arguments.length === 1 && characterName && typeof characterName === 'object') { bindings = characterName; characterName = 'current'; }
+        if (characterName !== 'current') throw new Error('Only the current character can be rebound in Card Studio');
+        charWorldbooks = { primary: bindings && bindings.primary || null, additional: clone(bindings && Array.isArray(bindings.additional) ? bindings.additional : []) };
+        extensionSettings.__cardRuntimeCharWorldbooks = clone(charWorldbooks);
+        await rpc('extension.settings.save', { settings: extensionSettings }, 30000);
+        await emitEvent(root.tavern_events.WORLDINFO_SETTINGS_UPDATED, clone(charWorldbooks));
+    };
+    root.rebindGlobalWorldbooks = async function (names) {
+        globalWorldbookNames = Array.from(new Set((Array.isArray(names) ? names : []).map(String)));
+        extensionSettings.__cardRuntimeGlobalWorldbooks = clone(globalWorldbookNames);
+        await rpc('extension.settings.save', { settings: extensionSettings }, 30000);
+        await emitEvent(root.tavern_events.WORLDINFO_SETTINGS_UPDATED, clone(globalWorldbookNames));
+    };
+    root.rebindChatWorldbook = async function (_chatName, name) {
+        chatWorldbookName = name || null;
+        extensionSettings.__cardRuntimeChatWorldbook = chatWorldbookName;
+        await rpc('extension.settings.save', { settings: extensionSettings }, 30000);
+        await emitEvent(root.tavern_events.WORLDINFO_SETTINGS_UPDATED, chatWorldbookName);
+    };
+    root.createWorldbookEntries = root.createLorebookEntries;
+    root.deleteWorldbookEntries = root.deleteLorebookEntries;
+    root.createLorebookEntry = async function (name, entry) {
+        const result = await root.createLorebookEntries(name, [entry]);
+        return result.new_entries.length ? result.new_entries[0].uid : null;
+    };
+    root.deleteLorebookEntry = async function (name, uid) { const result = await root.deleteLorebookEntries(name, function (entry) { return String(entry.uid) === String(uid); }); return result.delete_occurred; };
+    root.setChatLorebook = function (name) { return root.rebindChatWorldbook('current', name).then(function () { return chatWorldbookName; }); };
+    let lorebookSettings = { scan_depth: 2, context_percentage: 25, budget_cap: 0, min_activations: 0, max_depth: 0, max_recursion_steps: 0 };
+    root.getLorebookSettings = function () { return clone(lorebookSettings); };
+    root.setLorebookSettings = function (settings) { lorebookSettings = Object.assign(lorebookSettings, clone(settings || {})); return clone(lorebookSettings); };
+    root.getwi = async function (bookOrKey, maybeKey) {
+        const key = maybeKey === undefined ? bookOrKey : maybeKey;
+        const book = maybeKey === undefined ? null : bookOrKey;
+        let entries = worldInfo;
+        if (book) { try { entries = await root.getLorebookEntries(book); } catch (_) {} }
+        if (!key) return entries.map(function (entry) { return entry.content || ''; }).join('\n');
+        const found = entries.find(function (entry) {
+            return entry && (entry.comment === key || entry.name === key || (Array.isArray(entry.keys) && entry.keys.includes(key)));
+        });
+        return found ? found.content || '' : '';
+    };
+

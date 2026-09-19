@@ -1,0 +1,216 @@
+    let chatHistory = clone(BOOT.chatHistory || []);
+    let worldInfo = clone(BOOT.worldInfo || []);
+    let extensionSettings = clone(BOOT.extensionSettings || {});
+    const scopeCache = new Map(Object.entries(BOOT.variableScopes || {}).map(function (entry) { return [entry[0], clone(asObject(entry[1]))]; }));
+    const schemaCache = new Map();
+    let activeScriptId = 'default';
+    let activeScriptName = 'default';
+    let activeScriptInfo = '';
+    let activeScriptButtons = [];
+    const scriptRegistry = new Map();
+
+    function resolveIndex(messageId) {
+        if (!chatHistory.length) return -1;
+        if (messageId === undefined || messageId === 'latest') return chatHistory.length - 1;
+        const id = Math.trunc(Number(messageId));
+        return id < 0 ? chatHistory.length + id : id;
+    }
+    function normalizeOption(option) { return Object.assign({ type: 'chat' }, option || {}); }
+    function scopeKey(option) {
+        const normalized = normalizeOption(option);
+        if (normalized.type === 'message') return 'message:' + resolveIndex(normalized.message_id);
+        if (normalized.type === 'script') return 'script:' + (normalized.script_id || activeScriptId || 'default');
+        if (normalized.type === 'extension') return 'extension:' + (normalized.extension_id || 'unknown');
+        return normalized.type;
+    }
+    function scopeValue(option) {
+        const key = scopeKey(option);
+        if (!scopeCache.has(key)) scopeCache.set(key, {});
+        return scopeCache.get(key);
+    }
+    function validateScopeValue(key, variables) {
+        const schema = schemaCache.get(key);
+        if (!schema) return clone(asObject(variables));
+        try {
+            if (typeof schema.parse === 'function') return clone(asObject(schema.parse(variables)));
+            if (typeof schema.safeParse === 'function') {
+                const result = schema.safeParse(variables);
+                if (!result || result.success !== true) throw new Error('Variable schema validation failed for ' + key);
+                return clone(asObject(result.data));
+            }
+        } catch (error) {
+            diagnostic('CARD_RUNTIME_STORAGE_FAILED', 'variables', 'schema-validation', error && error.message || String(error), { method: 'replaceVariables', details: { scope: key } });
+            throw error;
+        }
+        return clone(asObject(variables));
+    }
+    function persistScope(option, variables) {
+        const normalized = normalizeOption(option);
+        if (normalized.type === 'script' && !normalized.script_id) normalized.script_id = activeScriptId || 'default';
+        if (normalized.type === 'message' && normalized.message_id === undefined) normalized.message_id = 'latest';
+        const key = scopeKey(normalized);
+        const previous = clone(scopeValue(normalized));
+        const clean = validateScopeValue(key, variables);
+        scopeCache.set(key, clean);
+        if (normalized.type === 'chat') {
+            root.__st_live_data = clean;
+            root.stat_data = clean && clean.stat_data ? clean.stat_data : clean;
+        }
+        emitEvent('mvu-variable-update-started', { scope: normalized, variables: clone(clean) });
+        rpc('variables.replace', { option: normalized, variables: clean }, 30000).then(function () {
+            emitEvent('mvu-variable-update-ended', { scope: normalized, variables: clone(clean), stat_data: root.stat_data });
+        }).catch(function (error) {
+            scopeCache.set(key, previous);
+            if (normalized.type === 'chat') {
+                root.__st_live_data = previous;
+                root.stat_data = previous && previous.stat_data ? previous.stat_data : previous;
+            }
+            emitEvent('mvu-variable-update-ended', { scope: normalized, variables: clone(previous), error: error && error.message });
+            log('warn', 'Could not persist ' + key + ' variables; local state was rolled back: ' + error.message);
+        });
+        return clone(clean);
+    }
+    root.getVariables = function (option) { return clone(scopeValue(option)); };
+    function getNearestMessageVariables(messageId) {
+        let index = resolveIndex(messageId === undefined ? BOOT.context.messageId : messageId);
+        if (index < 0) return {};
+        for (; index >= 0; index -= 1) {
+            const key = 'message:' + index;
+            const value = scopeCache.get(key);
+            if (value && Object.keys(asObject(value)).length > 0) return clone(value);
+        }
+        return {};
+    }
+    root.getAllVariables = function () {
+        // TavernHelper 4.8.19: global -> character -> (script outside message iframes)
+        // -> chat -> every message-variable layer up to the current message.
+        // Preset variables are intentionally not merged by the upstream API.
+        const merged = {};
+        deepMerge(merged, root.getVariables({ type: 'global' }), false);
+        deepMerge(merged, root.getVariables({ type: 'character' }), false);
+        const isMessageIframe = String(root.getIframeName ? root.getIframeName() : '').startsWith('TH-message');
+        if (!isMessageIframe) deepMerge(merged, root.getVariables({ type: 'script', script_id: activeScriptId || 'default' }), false);
+        deepMerge(merged, root.getVariables({ type: 'chat' }), false);
+        if (isMessageIframe) {
+            const currentMessageId = Math.max(-1, Math.min(resolveIndex(BOOT.context.messageId), chatHistory.length - 1));
+            for (let index = 0; index <= currentMessageId; index += 1) {
+                deepMerge(merged, root.getVariables({ type: 'message', message_id: index }), false);
+            }
+        }
+        return clone(merged);
+    };
+    root.replaceVariables = function (variables, option) { return persistScope(option, variables); };
+    function requireFunctionCallback(apiName, callback) {
+        if (typeof callback === 'function') return callback;
+        const receivedType = callback === null ? 'null' : typeof callback;
+        const message = apiName + ' expected a function callback, received ' + receivedType;
+        diagnostic('CARD_RUNTIME_CALLBACK_EXPECTED_FUNCTION', 'api-call', apiName, message, {
+            method: apiName, scriptId: activeScriptId, scriptName: activeScriptName,
+            details: { receivedType: receivedType, runtimeVersion: IMPLEMENTATION_VERSION }
+        });
+        const error = new TypeError(message);
+        try { error.__cardRuntimeCallbackDiagnosed = true; } catch (_) {}
+        throw error;
+    }
+    root.updateVariablesWith = function (updater, option) {
+        updater = requireFunctionCallback('updateVariablesWith', updater);
+        const current = root.getVariables(option);
+        const result = updater(current);
+        if (result && typeof result.then === 'function') {
+            return result.then(function (updated) { return persistScope(option, updated === undefined ? current : updated); });
+        }
+        return persistScope(option, result === undefined ? current : result);
+    };
+    function deepMerge(target, source, onlyMissing) {
+        Object.keys(asObject(source)).forEach(function (key) {
+            const next = source[key];
+            if (asObject(next) === next) {
+                if (asObject(target[key]) !== target[key]) target[key] = {};
+                deepMerge(target[key], next, onlyMissing);
+            } else if (!onlyMissing || !(key in target)) target[key] = clone(next);
+        });
+        return target;
+    }
+    root.insertOrAssignVariables = function (variables, option) {
+        return persistScope(option, deepMerge(root.getVariables(option), variables, false));
+    };
+    root.insertVariables = function (variables, option) {
+        return persistScope(option, deepMerge(root.getVariables(option), variables, true));
+    };
+    function pathParts(path) {
+        if (Array.isArray(path)) return path.map(String).filter(function (part) { return part !== ''; });
+        const source = String(path == null ? '' : path);
+        const parts = [];
+        let token = '';
+        let quote = '';
+        let escaped = false;
+        let bracket = false;
+        for (let index = 0; index < source.length; index += 1) {
+            const char = source[index];
+            if (escaped) { token += char; escaped = false; continue; }
+            if (char === '\\') { escaped = true; continue; }
+            if (quote) {
+                if (char === quote) quote = '';
+                else token += char;
+                continue;
+            }
+            if (bracket && (char === '"' || char === "'")) { quote = char; continue; }
+            if (!bracket && char === '.') { if (token !== '') parts.push(token); token = ''; continue; }
+            if (!bracket && char === '[') { if (token !== '') parts.push(token); token = ''; bracket = true; continue; }
+            if (bracket && char === ']') { if (token !== '') parts.push(token.trim()); token = ''; bracket = false; continue; }
+            token += char;
+        }
+        if (escaped) token += '\\';
+        if (token !== '') parts.push(token);
+        return parts.filter(function (part) { return part !== ''; });
+    }
+    function deepGet(object, path, fallback) {
+        let current = object;
+        for (const key of pathParts(path)) {
+            if (current == null || !(key in Object(current))) return fallback;
+            current = current[key];
+        }
+        return current === undefined ? fallback : current;
+    }
+    function deepSet(object, path, value) {
+        const parts = pathParts(path);
+        if (!parts.length) return object;
+        let current = object;
+        parts.forEach(function (key, index) {
+            if (index === parts.length - 1) current[key] = clone(value);
+            else {
+                if (!current[key] || typeof current[key] !== 'object') current[key] = /^\d+$/.test(parts[index + 1]) ? [] : {};
+                current = current[key];
+            }
+        });
+        return object;
+    }
+    function deepDelete(object, path) {
+        const parts = pathParts(path);
+        if (!parts.length) return false;
+        const key = parts.pop();
+        const parent = deepGet(object, parts.join('.'));
+        if (!parent || !Object.prototype.hasOwnProperty.call(parent, key)) return false;
+        if (Array.isArray(parent) && /^\d+$/.test(key)) parent.splice(Number(key), 1); else delete parent[key];
+        return true;
+    }
+    root.deleteVariable = function (path, option) {
+        const variables = root.getVariables(option);
+        const occurred = deepDelete(variables, path);
+        persistScope(option, variables);
+        return { variables: variables, delete_occurred: occurred };
+    };
+    root.registerVariableSchema = function (schema, option) { schemaCache.set(scopeKey(option), schema); };
+    root.getvar = function (path) {
+        const chat = root.getVariables({ type: 'chat' });
+        return deepGet(chat && chat.stat_data ? chat.stat_data : chat, String(path || '').replace(/^stat_data\./, ''));
+    };
+    root.setvar = function (path, value) {
+        const variables = root.getVariables({ type: 'chat' });
+        const target = variables && variables.stat_data ? variables.stat_data : variables;
+        deepSet(target, String(path || '').replace(/^stat_data\./, ''), value);
+        return persistScope({ type: 'chat' }, variables);
+    };
+    root.__st_live_data = scopeValue({ type: 'chat' });
+    root.stat_data = root.__st_live_data && root.__st_live_data.stat_data ? root.__st_live_data.stat_data : root.__st_live_data;
+

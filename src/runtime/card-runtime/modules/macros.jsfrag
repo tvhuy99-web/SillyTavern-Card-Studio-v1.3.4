@@ -1,0 +1,84 @@
+    const macroHandlers = [];
+    function stripPrivateVariableKeys(value) {
+        if (Array.isArray(value)) return value.map(stripPrivateVariableKeys);
+        if (!value || typeof value !== 'object') return value;
+        const result = {};
+        Object.keys(value).forEach(function (key) {
+            if (String(key).startsWith('$')) return;
+            result[key] = stripPrivateVariableKeys(value[key]);
+        });
+        return result;
+    }
+    function macroScopeVariables(type) {
+        if (type === 'message') return root.getVariables({ type: 'message', message_id: BOOT.context.messageId });
+        return root.getVariables({ type: type });
+    }
+    function normalizeSmartStateVariables(value) {
+        if (Array.isArray(value)) {
+            if (value.length > 1 && typeof value[1] === 'string') {
+                const mainValue = value[0];
+                return Array.isArray(mainValue)
+                    ? mainValue.filter(function (item) { return item !== '$__META_EXTENSIBLE__$'; }).map(normalizeSmartStateVariables)
+                    : [normalizeSmartStateVariables(mainValue)];
+            }
+            return value.map(normalizeSmartStateVariables);
+        }
+        if (!value || typeof value !== 'object') return value;
+        const result = {};
+        Object.keys(value).forEach(function (key) {
+            if (key === '$meta' || String(key).startsWith('$')) return;
+            result[key] = normalizeSmartStateVariables(value[key]);
+        });
+        return result;
+    }
+    function buildRuntimeSmartStateBlock() {
+        const base = safeString(BOOT.smartStateBlock || '');
+        const cleanVariables = normalizeSmartStateVariables(root.getVariables({ type: 'chat' }));
+        let logicStore = '';
+        try {
+            if (cleanVariables && Object.keys(asObject(cleanVariables)).length) logicStore = '<LogicStore>\n' + JSON.stringify(cleanVariables, null, 2) + '\n</LogicStore>';
+        } catch (_) {}
+        const remainder = base.replace(/<LogicStore>[\s\S]*?<\/LogicStore>\s*/i, '').trim();
+        return [logicStore, remainder].filter(Boolean).join('\n\n');
+    }
+    function stringifyVariableMacro(value, format) {
+        if (value === undefined) return '';
+        const clean = stripPrivateVariableKeys(value);
+        if (format === 'format' && root.YAML && typeof root.YAML.stringify === 'function') {
+            try { return safeString(root.YAML.stringify(clean)).replace(/\s+$/, ''); } catch (_) {}
+        }
+        if (typeof clean === 'string') return clean;
+        try { return JSON.stringify(clean); } catch (_) { return safeString(clean); }
+    }
+    root.registerMacroLike = function (pattern, handler) { macroHandlers.push({ pattern: pattern, handler: handler }); };
+    root.unregisterMacroLike = function (pattern) {
+        const source = pattern instanceof RegExp ? pattern.toString() : String(pattern || '');
+        let removed = false;
+        for (let index = macroHandlers.length - 1; index >= 0; index -= 1) {
+            const candidate = macroHandlers[index] && macroHandlers[index].pattern;
+            const candidateSource = candidate instanceof RegExp ? candidate.toString() : String(candidate || '');
+            if (candidateSource === source) { macroHandlers.splice(index, 1); removed = true; }
+        }
+        return removed;
+    };
+    root.substitudeMacros = root.substituteMacros = function (input) {
+        let text = safeString(input);
+        const now = new Date();
+        text = text.replace(/{{\s*char\s*}}/gi, BOOT.context.name2)
+            .replace(/{{\s*user\s*}}/gi, BOOT.context.name1)
+            .replace(/{{\s*lastMessageId\s*}}/gi, String(root.getLastMessageId()))
+            .replace(/{{\s*messageId\s*}}/gi, String(BOOT.context.messageId))
+            .replace(/{{\s*time\s*}}/gi, now.toLocaleTimeString())
+            .replace(/{{\s*date\s*}}/gi, now.toLocaleDateString())
+            .replace(/{{\s*smart_state_block\s*}}/gi, buildRuntimeSmartStateBlock())
+            .replace(/{{(get|format)_(global|preset|character|chat|message)_variable::([^}]+)}}/gi, function (_, format, scope, path) {
+                return stringifyVariableMacro(deepGet(macroScopeVariables(String(scope).toLowerCase()), String(path).trim()), String(format).toLowerCase());
+            })
+            .replace(/{{getvar::([^}]+)}}/gi, function (_, path) { const value = root.getvar(path); return value == null ? '' : String(value); })
+            .replace(/{{getglobalvar::([^}]+)}}/gi, function (_, path) { const value = deepGet(root.getVariables({ type: 'global' }), path); return value == null ? '' : String(value); })
+            .replace(/{{random:([^}]+)}}/gi, function (_, values) { const list = values.split(','); return list[Math.floor(Math.random() * list.length)].trim(); });
+        macroHandlers.forEach(function (entry) { try { text = text.replace(entry.pattern, entry.handler); } catch (_) {} });
+        return text;
+    };
+    root.substituteParams = root.substitudeMacros;
+

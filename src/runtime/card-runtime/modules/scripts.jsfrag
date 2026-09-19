@@ -1,0 +1,109 @@
+    const globalInitializers = new Map([['Mvu', true], ['TavernHelper', true]]);
+    root.initializeGlobal = function (name, value) { if (!(name in root)) root[name] = value; globalInitializers.set(name, true); emitEvent('global_initialized_' + name, root[name]); return root[name]; };
+    root.waitGlobalInitialized = async function (name) {
+        if (name in root || globalInitializers.has(name)) return root[name] === undefined ? true : root[name];
+        await root.eventWaitOnce('global_initialized_' + name);
+        return root[name];
+    };
+    const scriptTreeScopes = clone(extensionSettings.__cardRuntimeScriptTrees || { global: [], preset: [], character: [] });
+    function flattenScripts(trees, output) {
+        output = output || [];
+        (Array.isArray(trees) ? trees : []).forEach(function (tree) {
+            if (!tree) return;
+            if (tree.type === 'folder') flattenScripts(tree.scripts, output);
+            else if (tree.type === 'script') output.push(tree);
+        });
+        return output;
+    }
+    function rebuildCharacterRegistry() {
+        scriptRegistry.clear();
+        flattenScripts(scriptTreeScopes.character).forEach(function (script, index) {
+            const id = String(script.id || 'script-' + index);
+            const buttons = script.button && Array.isArray(script.button.buttons) ? script.button.buttons : (Array.isArray(script.buttons) ? script.buttons : []);
+            scriptRegistry.set(id, { type: 'script', enabled: script.enabled !== false, id: id, name: String(script.name || id), content: String(script.content || ''), info: String(script.info || ''), buttons: clone(buttons), data: clone(script.data || {}), export_with: clone(script.export_with || { data: true, button: true }) });
+        });
+    }
+    root.__registerCardRuntimeScripts = function (scripts) {
+        scriptTreeScopes.character = (Array.isArray(scripts) ? scripts : []).map(function (script, index) {
+            const id = String(script && script.id || 'script-' + index);
+            const buttons = Array.isArray(script && script.buttons) ? clone(script.buttons) : [];
+            return { type: 'script', enabled: script && script.enabled !== false, id: id, name: String(script && script.name || id), content: String(script && script.content || ''), info: String(script && script.info || ''), button: { enabled: buttons.length > 0, buttons: buttons }, data: clone(script && script.data || {}), export_with: clone(script && script.export_with || { data: true, button: true }) };
+        });
+        rebuildCharacterRegistry();
+    };
+    root.getScriptId = function () { return activeScriptId; };
+    root.getScriptName = function () { return activeScriptName; };
+    root.getScriptInfo = function () { return activeScriptInfo; };
+    root.getScriptButtons = function () { return clone(activeScriptButtons); };
+    root.__setActiveCardScript = function (id, name, info, buttons) {
+        activeScriptId = String(id || 'default');
+        const registered = scriptRegistry.get(activeScriptId) || {};
+        activeScriptName = String(name || registered.name || id || 'default');
+        activeScriptInfo = String(info === undefined ? (registered.info || '') : (info || ''));
+        activeScriptButtons = Array.isArray(buttons) ? clone(buttons) : clone(registered.buttons || []);
+    };
+    root.getButtonEvent = function (name) { return 'btn_click_' + name; };
+    root.replaceScriptButtons = function (param1, param2) {
+        const hasExplicitId = typeof param1 === 'string' && arguments.length > 1;
+        const resolvedId = hasExplicitId ? String(param1) : String(activeScriptId || 'default');
+        const buttons = hasExplicitId ? param2 : param1;
+        const cleanButtons = Array.isArray(buttons) ? clone(buttons) : [];
+        const registered = scriptRegistry.get(resolvedId);
+        if (registered) registered.buttons = cleanButtons;
+        if (resolvedId === activeScriptId) activeScriptButtons = clone(cleanButtons);
+        flattenScripts(scriptTreeScopes.character).forEach(function (script) { if (String(script.id) === resolvedId) script.button = { enabled: cleanButtons.length > 0, buttons: clone(cleanButtons) }; });
+        root.sendMessageToParent('UPDATE_SCRIPT_BUTTONS', { scriptId: resolvedId, buttons: cleanButtons });
+    };
+    root.updateScriptButtonsWith = function (updater) {
+        updater = requireFunctionCallback('updateScriptButtonsWith', updater);
+        const current = root.getScriptButtons();
+        const result = updater(current);
+        if (result && typeof result.then === 'function') return result.then(function (buttons) { root.replaceScriptButtons(buttons); return root.getScriptButtons(); });
+        root.replaceScriptButtons(result);
+        return root.getScriptButtons();
+    };
+    root.appendInexistentScriptButtons = function (param1, param2) {
+        const hasExplicitId = typeof param1 === 'string' && arguments.length > 1;
+        const resolvedId = hasExplicitId ? String(param1) : String(activeScriptId || 'default');
+        const additions = hasExplicitId ? param2 : param1;
+        const registered = scriptRegistry.get(resolvedId);
+        const current = resolvedId === activeScriptId ? root.getScriptButtons() : clone(registered && registered.buttons || []);
+        const next = current.slice();
+        (Array.isArray(additions) ? additions : []).forEach(function (button) { if (button && !next.some(function (existing) { return existing && existing.name === button.name; })) next.push(clone(button)); });
+        root.replaceScriptButtons(resolvedId, next);
+        return next;
+    };
+    root.replaceScriptInfo = function (info) {
+        const cleanInfo = String(info == null ? '' : info);
+        activeScriptInfo = cleanInfo;
+        const registered = scriptRegistry.get(activeScriptId);
+        if (registered) registered.info = cleanInfo;
+        flattenScripts(scriptTreeScopes.character).forEach(function (script) { if (String(script.id) === activeScriptId) script.info = cleanInfo; });
+    };
+    root.getAllEnabledScriptButtons = function () {
+        const result = {};
+        scriptRegistry.forEach(function (script, scriptId) {
+            if (script.enabled === false) return;
+            const buttons = (script.buttons || []).filter(function (button) { return button && button.visible !== false; }).map(function (button, index) { return { button_id: scriptId + '--' + index, button_name: String(button.name || '') }; }).filter(function (button) { return Boolean(button.button_name); });
+            if (buttons.length) result[scriptId] = buttons;
+        });
+        return result;
+    };
+    root.getScriptTrees = function (option) { const type = option && option.type || 'character'; return clone(Array.isArray(scriptTreeScopes[type]) ? scriptTreeScopes[type] : []); };
+    root.replaceScriptTrees = function (trees, option) {
+        const type = option && option.type || 'character';
+        if (!['global','preset','character'].includes(type)) throw new Error('Unknown script-tree scope: ' + type);
+        scriptTreeScopes[type] = clone(Array.isArray(trees) ? trees : []);
+        extensionSettings.__cardRuntimeScriptTrees = clone(scriptTreeScopes);
+        if (type === 'character') rebuildCharacterRegistry();
+        rpc('extension.settings.save', { settings: extensionSettings }, 30000).catch(function (error) { log('warn', 'Could not persist script trees: ' + error.message); });
+        return root.getScriptTrees(option);
+    };
+    root.updateScriptTreesWith = function (updater, option) {
+        updater = requireFunctionCallback('updateScriptTreesWith', updater);
+        const current = root.getScriptTrees(option);
+        const result = updater(current);
+        if (result && typeof result.then === 'function') return result.then(function (trees) { return root.replaceScriptTrees(trees, option); });
+        return root.replaceScriptTrees(result, option);
+    };
+

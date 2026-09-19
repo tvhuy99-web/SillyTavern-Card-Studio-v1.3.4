@@ -1,0 +1,74 @@
+    function compileRegex(source) {
+        if (source instanceof RegExp) return source;
+        const match = String(source || '').match(/^\/(.*)\/([dgimsuvy]*)$/s);
+        try { return match ? new RegExp(match[1], match[2]) : new RegExp(String(source || ''), 'g'); } catch (_) { return null; }
+    }
+    const regexScopes = {
+        global: clone(extensionSettings.__cardRuntimeGlobalRegexes || []),
+        preset: clone(extensionSettings.__cardRuntimePresetRegexes || []),
+        character: clone(BOOT.characterCard && BOOT.characterCard.extensions && (BOOT.characterCard.extensions.regex_scripts || BOOT.characterCard.extensions.RegexScripts) || [])
+    };
+    function regexScope(option) { return option && option.type === 'global' ? 'global' : option && option.type === 'preset' ? 'preset' : 'character'; }
+    function normalizeRegex(script) {
+        const source = script && script.source || {};
+        const destination = script && script.destination || {};
+        return Object.assign({}, clone(script || {}), {
+            id: String(script && script.id || uuid()),
+            script_name: String(script && (script.script_name || script.scriptName) || ''),
+            enabled: script && script.enabled !== undefined ? Boolean(script.enabled) : !(script && script.disabled),
+            find_regex: String(script && (script.find_regex || script.findRegex) || ''),
+            replace_string: String(script && (script.replace_string || script.replaceString) || ''),
+            trim_strings: clone(script && (script.trim_strings || script.trimStrings) || []),
+            source: { user_input: source.user_input !== false, ai_output: source.ai_output !== false, slash_command: Boolean(source.slash_command), world_info: Boolean(source.world_info), reasoning: Boolean(source.reasoning) },
+            destination: { display: destination.display !== false, prompt: destination.prompt !== false },
+            run_on_edit: Boolean(script && (script.run_on_edit || script.runOnEdit)),
+            min_depth: (script && (script.min_depth ?? script.minDepth)) ?? null,
+            max_depth: (script && (script.max_depth ?? script.maxDepth)) ?? null
+        });
+    }
+    root.getTavernRegexes = function (option) { return clone(regexScopes[regexScope(option)].map(normalizeRegex)); };
+    root.replaceTavernRegexes = async function (regexes, option) {
+        const scope = regexScope(option);
+        regexScopes[scope] = clone((Array.isArray(regexes) ? regexes : []).map(normalizeRegex));
+        if (scope === 'character') await rpc('regex.replace', { regexes: regexScopes.character }, 60000);
+        else {
+            extensionSettings[scope === 'global' ? '__cardRuntimeGlobalRegexes' : '__cardRuntimePresetRegexes'] = clone(regexScopes[scope]);
+            await rpc('extension.settings.save', { settings: extensionSettings }, 30000);
+        }
+        return undefined;
+    };
+    root.updateTavernRegexesWith = async function (updater, option) {
+        updater = requireFunctionCallback('updateTavernRegexesWith', updater);
+        const current = root.getTavernRegexes(option);
+        const result = await updater(clone(current));
+        const next = result === undefined ? current : result;
+        if (!Array.isArray(next)) throw new TypeError('Regex updater must return TavernRegex[]');
+        await root.replaceTavernRegexes(next, option);
+        return root.getTavernRegexes(option);
+    };
+    root.isCharacterTavernRegexesEnabled = function () { return extensionSettings.__cardRuntimeCharacterRegexEnabled !== false; };
+    root.formatAsTavernRegexedString = function (input, source, destination, options) {
+        if (typeof source === 'number' || Array.isArray(source)) { options = destination || {}; destination = source === 1 ? 'prompt' : 'display'; source = 'ai_output'; }
+        source = source || 'ai_output';
+        destination = destination || 'display';
+        options = options || {};
+        let output = safeString(input);
+        const lists = regexScopes.global.concat(regexScopes.preset, root.isCharacterTavernRegexesEnabled() ? regexScopes.character : []);
+        lists.map(normalizeRegex).forEach(function (script) {
+            if (!script.enabled) return;
+            if (!script.source[source]) return;
+            if (!script.destination[destination]) return;
+            if (options.isEdit && !script.run_on_edit) return;
+            if (typeof options.depth === 'number' && ((typeof script.min_depth === 'number' && options.depth < script.min_depth) || (typeof script.max_depth === 'number' && options.depth > script.max_depth))) return;
+            const regex = compileRegex(script.find_regex);
+            if (!regex) return;
+            output = output.replace(regex, function (match) {
+                const captures = Array.prototype.slice.call(arguments, 1, -2);
+                let replacement = script.replace_string;
+                (script.trim_strings || []).forEach(function (text) { replacement = replacement.split(String(text)).join(''); });
+                return replacement.replace(/\$(\d+)/g, function (_, index) { const number = Number(index); return number === 0 ? match : (captures[number - 1] == null ? '' : String(captures[number - 1])); });
+            });
+        });
+        return output;
+    };
+

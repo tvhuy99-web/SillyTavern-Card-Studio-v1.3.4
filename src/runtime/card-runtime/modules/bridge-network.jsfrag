@@ -1,0 +1,237 @@
+    root.__st_embedded_assets = clone(BOOT.embeddedAssets || {});
+    function normalizeRuntimeDependencyUrl(uri) {
+        const value = String(uri || '');
+        if (value === 'https://unpkg.com/vue-router@5.2.0/dist/vue-router.global.js') return 'https://unpkg.com/vue-router@5.1.0/dist/vue-router.global.js';
+        if (value === 'https://cdn.jsdelivr.net/npm/vue-router@5.2.0/dist/vue-router.global.js') return 'https://cdn.jsdelivr.net/npm/vue-router@5.1.0/dist/vue-router.global.js';
+        return value;
+    }
+    root.resolveCardAsset = function (uri) {
+        const embedded = root.__st_embedded_assets[String(uri)];
+        return normalizeRuntimeDependencyUrl(embedded || uri);
+    };
+    const originalFetch = root.fetch.bind(root);
+    function localJsonResponse(value, status) {
+        return new Response(JSON.stringify(value), { status: status || 200, headers: { 'content-type': 'application/json; charset=utf-8', 'x-card-runtime': 'official-local' } });
+    }
+    async function localRequestBody(resource, options) {
+        try {
+            if (options && typeof options.body === 'string') return JSON.parse(options.body || '{}');
+            if (resource && typeof resource !== 'string' && typeof resource.clone === 'function') return await resource.clone().json();
+        } catch (_) {}
+        return {};
+    }
+    function localApiFetch(resource, options, url) {
+        if (!OFFICIAL_LOCAL_ENGINE) return null;
+        let pathname = String(url || '');
+        try { pathname = new URL(pathname, root.location.href).pathname; } catch (_) {}
+        if (!/^\/?api\//i.test(pathname)) return null;
+        pathname = pathname.replace(/\/+$/, '');
+        const catalog = BOOT.catalog || { characters: [], personas: [], presets: [], extensions: {} };
+        if (pathname === '/api/characters/all') return Promise.resolve(localJsonResponse((catalog.characters || []).map(function (entry) { return clone(entry.card || entry); })));
+        if (pathname === '/api/groups/all') return Promise.resolve(localJsonResponse(clone(root.groups || [])));
+        if (pathname === '/api/chats/get') return Promise.resolve(localJsonResponse(clone(chatHistory)));
+        if (pathname === '/api/worldinfo/get') return Promise.resolve(localJsonResponse({ entries: clone(BOOT.worldInfo || []) }));
+        if (pathname === '/api/presets/list') return Promise.resolve(localJsonResponse(clone(catalog.presets || [])));
+        if (pathname === '/api/extensions/discover') return Promise.resolve(localJsonResponse(clone(catalog.extensions || {})));
+        if (pathname === '/api/extensions/version') {
+            return localRequestBody(resource, options).then(function (body) {
+                const id = String(body.extensionName || body.id || body.name || 'third-party/JS-Slash-Runner');
+                const info = catalog.extensions && catalog.extensions[id] || { id: id, installed: id === 'third-party/JS-Slash-Runner', enabled: id === 'third-party/JS-Slash-Runner' };
+                return localJsonResponse(Object.assign({ isUpToDate: true }, clone(info)));
+            });
+        }
+        if (pathname === '/api/extensions/install' || pathname === '/api/extensions/delete' || pathname === '/api/extensions/update') {
+            return Promise.resolve(localJsonResponse({ ok: false, error: 'Extension mutation is unavailable in a static Card Studio deployment.' }, 501));
+        }
+        return Promise.resolve(localJsonResponse({ error: 'SillyTavern endpoint is not implemented by the browser-local runtime.', path: pathname }, 501));
+    }
+    root.fetch = function (resource, options) {
+        const url = typeof resource === 'string' ? resource : resource && resource.url;
+        const resolved = root.resolveCardAsset(url);
+        if (resolved !== url) return originalFetch(resolved, options);
+        const localApiResult = localApiFetch(resource, options, url);
+        if (localApiResult) return localApiResult;
+        if (/^(?:https?:|data:|blob:)/i.test(String(url))) return originalFetch(resource, options);
+        if (!FULL_COMPATIBILITY_MODE && /^\/?api\//i.test(String(url))) {
+            return Promise.resolve(new Response(JSON.stringify({ error: 'Direct SillyTavern backend endpoints are unavailable; use TavernHelper.generate or cardRuntimeRpc.' }), { status: 403, headers: { 'content-type': 'application/json' } }));
+        }
+        return originalFetch(resource, options);
+    };
+    if (OFFICIAL_LOCAL_ENGINE && root.axios && root.axios.defaults) {
+        // Axios otherwise prefers XMLHttpRequest in a browser and would miss
+        // the local endpoint bridge above.
+        root.axios.defaults.adapter = 'fetch';
+    }
+    const NativeXHR = root.XMLHttpRequest;
+    if (!OFFICIAL_LOCAL_ENGINE) {
+        root.XMLHttpRequest = function () {
+            const xhr = new NativeXHR();
+            const nativeOpen = xhr.open;
+            xhr.open = function (method, url) {
+                const args = Array.prototype.slice.call(arguments);
+                args[1] = root.resolveCardAsset(url);
+                return nativeOpen.apply(xhr, args);
+            };
+            return xhr;
+        };
+    } else {
+        function RuntimeXHR() {
+            this._native = new NativeXHR();
+            this._listeners = new Map();
+            this._headers = {};
+            this._responseHeaders = new Headers();
+            this._local = false;
+            this._aborted = false;
+            this._readyState = 0;
+            this._status = 0;
+            this._statusText = '';
+            this._response = null;
+            this._responseText = '';
+            this._responseURL = '';
+            this._responseXML = null;
+            this.responseType = '';
+            this.timeout = 0;
+            this.withCredentials = false;
+            this.upload = this._native.upload || {};
+            const self = this;
+            if (this._native && typeof this._native.addEventListener === 'function') {
+                ['readystatechange','loadstart','progress','abort','error','load','timeout','loadend'].forEach(function (type) {
+                    self._native.addEventListener(type, function (event) {
+                        self._syncNative();
+                        self._emit(type, event);
+                    });
+                });
+            }
+        }
+        RuntimeXHR.prototype._syncNative = function () {
+            const native = this._native;
+            ['readyState','status','statusText','response','responseText','responseURL','responseXML'].forEach(function (key) {
+                try { this['_' + key] = native[key]; } catch (_) {}
+            }, this);
+        };
+        RuntimeXHR.prototype._emit = function (type, nativeEvent) {
+            const event = nativeEvent || { type: type };
+            const listeners = Array.from(this._listeners.get(type) || []);
+            listeners.forEach(function (listener) {
+                try { if (typeof listener === 'function') listener.call(this, event); else listener && listener.handleEvent && listener.handleEvent(event); } catch (error) { setTimeout(function () { throw error; }, 0); }
+            }, this);
+            const handler = this['on' + type];
+            if (typeof handler === 'function') handler.call(this, event);
+        };
+        RuntimeXHR.prototype.addEventListener = function (type, listener) {
+            const list = this._listeners.get(type) || [];
+            if (!list.includes(listener)) list.push(listener);
+            this._listeners.set(type, list);
+        };
+        RuntimeXHR.prototype.removeEventListener = function (type, listener) {
+            const list = this._listeners.get(type) || [];
+            this._listeners.set(type, list.filter(function (candidate) { return candidate !== listener; }));
+        };
+        RuntimeXHR.prototype.dispatchEvent = function (event) { this._emit(event && event.type || '', event); return true; };
+        RuntimeXHR.prototype.open = function (method, url, async, user, password) {
+            this._method = String(method || 'GET').toUpperCase();
+            this._url = root.resolveCardAsset(url);
+            this._async = async !== false;
+            let pathname = String(this._url || '');
+            try { pathname = new URL(pathname, root.location.href).pathname; } catch (_) {}
+            this._local = /^\/?api\//i.test(pathname);
+            if (!this._local) {
+                const result = this._native.open(this._method, this._url, this._async, user, password);
+                this._native.responseType = this.responseType;
+                this._native.timeout = this.timeout;
+                this._native.withCredentials = this.withCredentials;
+                return result;
+            }
+            if (!this._async) throw new Error('Synchronous XMLHttpRequest is unavailable for browser-local SillyTavern endpoints.');
+            this._readyState = 1;
+            this._emit('readystatechange');
+        };
+        RuntimeXHR.prototype.setRequestHeader = function (name, value) {
+            if (!this._local) return this._native.setRequestHeader(name, value);
+            const key = String(name).toLowerCase();
+            this._headers[key] = this._headers[key] ? this._headers[key] + ', ' + value : String(value);
+        };
+        RuntimeXHR.prototype.getResponseHeader = function (name) {
+            if (!this._local) return this._native.getResponseHeader(name);
+            return this._responseHeaders.get(String(name));
+        };
+        RuntimeXHR.prototype.getAllResponseHeaders = function () {
+            if (!this._local) return this._native.getAllResponseHeaders();
+            let output = '';
+            this._responseHeaders.forEach(function (value, key) { output += key + ': ' + value + '\r\n'; });
+            return output;
+        };
+        RuntimeXHR.prototype.overrideMimeType = function (mime) {
+            this._overrideMimeType = String(mime || '');
+            if (!this._local && this._native.overrideMimeType) this._native.overrideMimeType(mime);
+        };
+        RuntimeXHR.prototype.send = function (body) {
+            if (!this._local) {
+                this._native.responseType = this.responseType;
+                this._native.timeout = this.timeout;
+                this._native.withCredentials = this.withCredentials;
+                return this._native.send(body);
+            }
+            const self = this;
+            self._emit('loadstart');
+            const requestOptions = { method: self._method, headers: self._headers };
+            if (!['GET', 'HEAD'].includes(self._method) && body !== undefined && body !== null) requestOptions.body = body;
+            root.fetch(self._url, requestOptions).then(async function (response) {
+                if (self._aborted) return;
+                self._status = response.status;
+                self._statusText = response.statusText;
+                self._responseURL = response.url || String(self._url || '');
+                self._responseHeaders = response.headers;
+                self._readyState = 2;
+                self._emit('readystatechange');
+                const text = await response.text();
+                if (self._aborted) return;
+                self._readyState = 3;
+                self._emit('readystatechange');
+                self._responseText = text;
+                if (self.responseType === 'json') {
+                    try { self._response = text ? JSON.parse(text) : null; } catch (_) { self._response = null; }
+                } else if (self.responseType === 'blob') {
+                    self._response = new Blob([text], { type: response.headers.get('content-type') || 'text/plain' });
+                } else if (self.responseType === 'arraybuffer') {
+                    self._response = new TextEncoder().encode(text).buffer;
+                } else if (self.responseType === 'document') {
+                    self._responseXML = new DOMParser().parseFromString(text, 'text/html');
+                    self._response = self._responseXML;
+                } else {
+                    self._response = text;
+                }
+                self._readyState = 4;
+                self._emit('readystatechange');
+                self._emit('load');
+                self._emit('loadend');
+            }).catch(function (error) {
+                if (self._aborted) return;
+                self._readyState = 4;
+                self._status = 0;
+                self._statusText = error && error.message || 'Network Error';
+                self._emit('readystatechange');
+                self._emit('error');
+                self._emit('loadend');
+            });
+        };
+        RuntimeXHR.prototype.abort = function () {
+            this._aborted = true;
+            if (!this._local) return this._native.abort();
+            this._readyState = 0;
+            this._emit('abort');
+            this._emit('loadend');
+        };
+        Object.defineProperties(RuntimeXHR.prototype, {
+            readyState: { get: function () { return this._local ? this._readyState : Number(this._native.readyState || 0); } },
+            status: { get: function () { return this._local ? this._status : Number(this._native.status || 0); } },
+            statusText: { get: function () { return this._local ? this._statusText : String(this._native.statusText || ''); } },
+            response: { get: function () { return this._local ? this._response : this._native.response; } },
+            responseText: { get: function () { return this._local ? this._responseText : this._native.responseText; } },
+            responseURL: { get: function () { return this._local ? this._responseURL : this._native.responseURL; } },
+            responseXML: { get: function () { return this._local ? this._responseXML : this._native.responseXML; } },
+        });
+        ['UNSENT','OPENED','HEADERS_RECEIVED','LOADING','DONE'].forEach(function (name, index) { RuntimeXHR[name] = index; RuntimeXHR.prototype[name] = index; });
+        root.XMLHttpRequest = RuntimeXHR;
+    }
+

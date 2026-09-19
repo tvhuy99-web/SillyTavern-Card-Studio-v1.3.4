@@ -9,10 +9,12 @@ const bundle = fs.readFileSync(
 );
 const transformed = applyCardRuntimeTransform(bundle);
 
-assert.ok(transformed.includes('card-runtime-core-builder-v1.3.6.js?v=1.3.6-m3.3'));
-assert.ok(transformed.includes('card-runtime-renderer-v1.3.6.js?v=1.3.6-m3.3'));
+assert.ok(transformed.includes('card-runtime-core-builder-v1.3.6.js?v=1.3.6-m3.5'));
+assert.ok(transformed.includes('card-runtime-renderer-v1.3.6.js?v=1.3.6-m3.5'));
 assert.ok(transformed.includes('__stsBuildCardRuntimeCoreScript'));
 assert.ok(transformed.includes('__stsBuildCardRuntimeRendererScript'));
+assert.ok(transformed.includes('__stsNormalizeCardRuntimeMarkup'));
+assert.ok(transformed.includes('srcDoc:__stsNormalizeCardRuntimeMarkup(U),style:'));
 assert.ok(!transformed.includes('card-runtime-core-v1.3.6.js?v='));
 assert.ok(!transformed.includes('const BOOT = ${t};'), 'inline Card Runtime core must be removed');
 assert.ok(!transformed.includes('const START_OPTIONS = ${i};'), 'inline renderer must be removed');
@@ -21,6 +23,8 @@ assert.ok(transformed.includes('vue-router@5.1.0/dist/vue-router.global.js'));
 assert.ok(!transformed.includes('vue-router@5.2.0/dist/vue-router.global.js'));
 
 const report = await buildCardRuntimeAssets();
+assert.equal(report.coreModuleFragments, 17);
+assert.ok(report.coreTemplateBytes < 30000, 'core template should only retain bootstrap/composition glue');
 assert.equal(report.compatibilityFragments, 6);
 assert.equal(report.iframeModuleImportRequired, false);
 

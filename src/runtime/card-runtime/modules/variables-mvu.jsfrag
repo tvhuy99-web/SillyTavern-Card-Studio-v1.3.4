@@ -1,0 +1,16 @@
+    const Mvu = {
+        events: { VARIABLE_UPDATE_STARTED: 'mvu-variable-update-started', VARIABLE_UPDATE_ENDED: 'mvu-variable-update-ended' },
+        getMvuData: function (option) { const variables = root.getVariables(option || { type: 'chat' }); return variables && variables.stat_data ? variables : { stat_data: variables }; },
+        getMvuVariable: function (target, path, option) { return deepGet(target || Mvu.getMvuData(option), path, option && option.default_value); },
+        set: function (target, path, value) {
+            if (typeof target === 'string') { value = path; path = target; const variables = root.getVariables({ type: 'chat' }); deepSet(variables, path, value); return root.replaceVariables(variables, { type: 'chat' }); }
+            deepSet(target, path, value); return target;
+        },
+        insert: function (target, path, value) {
+            const list = deepGet(target, path, []); if (Array.isArray(list)) list.push(clone(value)); else deepSet(target, path, value); return target;
+        },
+        remove: function (target, path) { deepDelete(target, path); return target; },
+        extensions: {}
+    };
+    root.Mvu = Mvu;
+

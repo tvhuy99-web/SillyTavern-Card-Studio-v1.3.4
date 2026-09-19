@@ -1,0 +1,40 @@
+    let mirrorSubscribed = false;
+    let mirrorSnapshotTimer = 0;
+    let mirrorObserver = null;
+    function buildMirrorSnapshot() {
+        try {
+            const cloneRoot = document.documentElement.cloneNode(true);
+            Array.from(cloneRoot.querySelectorAll('script')).forEach(function (node) { node.remove(); });
+            Array.from(cloneRoot.querySelectorAll('#st-loading-overlay')).forEach(function (node) { node.remove(); });
+            Array.from(cloneRoot.querySelectorAll('[autofocus]')).forEach(function (node) { node.removeAttribute('autofocus'); });
+            return '<!doctype html>' + cloneRoot.outerHTML;
+        } catch (error) {
+            diagnostic('CARD_RUNTIME_HUD_SNAPSHOT_FAILED', 'hud-mirror', 'snapshot', 'Không thể tạo bản sao giao diện HUD: ' + (error && error.message || error), { stack: error && error.stack });
+            return '';
+        }
+    }
+    function sendMirrorSnapshot() {
+        if (!mirrorSubscribed) return;
+        const html = buildMirrorSnapshot();
+        if (!html) return;
+        if (html.length > 2000000) {
+            diagnostic('CARD_RUNTIME_PAYLOAD_TOO_LARGE', 'hud-mirror', 'snapshot', 'Bản sao HUD vượt quá giới hạn 2 MB.', { details: { size: html.length } });
+            return;
+        }
+        root.parent.postMessage({ type: 'CARD_RUNTIME_MIRROR_SNAPSHOT', payload: { messageId: BOOT.context.messageId, html: html, timestamp: Date.now() } }, '*');
+    }
+    function scheduleMirrorSnapshot() {
+        if (!mirrorSubscribed || mirrorSnapshotTimer) return;
+        mirrorSnapshotTimer = setTimeout(function () { mirrorSnapshotTimer = 0; sendMirrorSnapshot(); }, 750);
+    }
+    function startMirrorObserver() {
+        if (!mirrorSubscribed || mirrorObserver || !root.MutationObserver || !document.documentElement) return;
+        mirrorObserver = new root.MutationObserver(scheduleMirrorSnapshot);
+        mirrorObserver.observe(document.documentElement, { childList: true, subtree: true, attributes: true, characterData: true });
+    }
+    function stopMirrorObserver() {
+        if (mirrorSnapshotTimer) { clearTimeout(mirrorSnapshotTimer); mirrorSnapshotTimer = 0; }
+        if (mirrorObserver) { mirrorObserver.disconnect(); mirrorObserver = null; }
+    }
+    root.addEventListener('pagehide', stopMirrorObserver, { once: true });
+
