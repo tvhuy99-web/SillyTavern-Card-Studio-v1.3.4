@@ -2230,6 +2230,7 @@ var e=Object.create,t=Object.defineProperty,n=Object.getOwnPropertyDescriptor,r=
 
     let mirrorSubscribed = false;
     let mirrorSnapshotTimer = 0;
+    let mirrorObserver = null;
     function buildMirrorSnapshot() {
         try {
             const cloneRoot = document.documentElement.cloneNode(true);
@@ -2254,11 +2255,18 @@ var e=Object.create,t=Object.defineProperty,n=Object.getOwnPropertyDescriptor,r=
     }
     function scheduleMirrorSnapshot() {
         if (!mirrorSubscribed || mirrorSnapshotTimer) return;
-        mirrorSnapshotTimer = setTimeout(function () { mirrorSnapshotTimer = 0; sendMirrorSnapshot(); }, 120);
+        mirrorSnapshotTimer = setTimeout(function () { mirrorSnapshotTimer = 0; sendMirrorSnapshot(); }, 750);
     }
-    if (root.MutationObserver) {
-        new MutationObserver(scheduleMirrorSnapshot).observe(document.documentElement, { childList: true, subtree: true, attributes: true, characterData: true });
+    function startMirrorObserver() {
+        if (!mirrorSubscribed || mirrorObserver || !root.MutationObserver || !document.documentElement) return;
+        mirrorObserver = new root.MutationObserver(scheduleMirrorSnapshot);
+        mirrorObserver.observe(document.documentElement, { childList: true, subtree: true, attributes: true, characterData: true });
     }
+    function stopMirrorObserver() {
+        if (mirrorSnapshotTimer) { clearTimeout(mirrorSnapshotTimer); mirrorSnapshotTimer = 0; }
+        if (mirrorObserver) { mirrorObserver.disconnect(); mirrorObserver = null; }
+    }
+    root.addEventListener('pagehide', stopMirrorObserver, { once: true });
 
     let readyResolve;
     root.cardStudioReady = new Promise(function (resolve) { readyResolve = resolve; });
@@ -2267,16 +2275,18 @@ var e=Object.create,t=Object.defineProperty,n=Object.getOwnPropertyDescriptor,r=
         const data = event.data;
         if (data.type === 'CARD_RUNTIME_MIRROR_SUBSCRIBE') {
             mirrorSubscribed = true;
+            startMirrorObserver();
             setTimeout(sendMirrorSnapshot, 0);
             return;
         }
         if (data.type === 'CARD_RUNTIME_MIRROR_UNSUBSCRIBE') {
             mirrorSubscribed = false;
-            if (mirrorSnapshotTimer) { clearTimeout(mirrorSnapshotTimer); mirrorSnapshotTimer = 0; }
+            stopMirrorObserver();
             return;
         }
         if (data.type === 'CARD_RUNTIME_MIRROR_REQUEST') {
             mirrorSubscribed = true;
+            startMirrorObserver();
             sendMirrorSnapshot();
             return;
         }
@@ -2392,22 +2402,33 @@ ${yp}
         target.textContent = 'Không thể hiển thị giao diện HTML. Hãy mở Bảng Gỡ Lỗi để xem mã chẩn đoán.';
     }
 
+    let accessibilitySequence = 0;
     function enhanceAccessibility(rootNode) {
         try {
-            const interactive = rootNode.querySelectorAll('button, [role="button"], input, select, textarea, a[href], [onclick]');
-            interactive.forEach(function (element, index) {
+            if (!rootNode) return;
+            const selector = 'button, [role="button"], input, select, textarea, a[href], [onclick]';
+            const interactive = [];
+            if (rootNode.nodeType === 1 && typeof rootNode.matches === 'function' && rootNode.matches(selector)) interactive.push(rootNode);
+            if (typeof rootNode.querySelectorAll === 'function') rootNode.querySelectorAll(selector).forEach(function (element) { interactive.push(element); });
+            interactive.forEach(function (element) {
                 if (!element.hasAttribute('aria-label') && !element.hasAttribute('aria-labelledby')) {
                     const text = String(element.textContent || '').replace(/\s+/g, ' ').trim();
                     const title = element.getAttribute('title') || element.getAttribute('data-label') || element.getAttribute('name') || element.getAttribute('id');
                     if (!text && title) element.setAttribute('aria-label', title);
-                    else if (!text && (element.querySelector('svg, i, img') || element.matches('[onclick]'))) element.setAttribute('aria-label', 'Nút tương tác ' + (index + 1));
+                    else if (!text && (element.querySelector('svg, i, img') || element.matches('[onclick]'))) {
+                        accessibilitySequence += 1;
+                        element.setAttribute('aria-label', 'Nút tương tác ' + accessibilitySequence);
+                    }
                 }
                 if (element.matches('[onclick]') && !element.hasAttribute('tabindex') && !/^(BUTTON|A|INPUT|SELECT|TEXTAREA)$/.test(element.tagName)) {
                     element.setAttribute('tabindex', '0');
                     if (!element.hasAttribute('role')) element.setAttribute('role', 'button');
                 }
             });
-            rootNode.querySelectorAll('img:not([alt])').forEach(function (image) {
+            const images = [];
+            if (rootNode.nodeType === 1 && typeof rootNode.matches === 'function' && rootNode.matches('img:not([alt])')) images.push(rootNode);
+            if (typeof rootNode.querySelectorAll === 'function') rootNode.querySelectorAll('img:not([alt])').forEach(function (image) { images.push(image); });
+            images.forEach(function (image) {
                 const src = image.getAttribute('src') || '';
                 const name = src.split('/').pop() || 'Hình ảnh trong thẻ';
                 image.setAttribute('alt', name.slice(0, 120));
@@ -2425,7 +2446,6 @@ ${yp}
             window._cardStudio.log('warn', 'Accessibility enhancement failed: ' + error.message);
         }
     }
-    enhanceAccessibility(target);
 
     const dynamicDescriptors = [];
     Array.from(target.querySelectorAll('script')).forEach(function (script, index) {
@@ -2519,18 +2539,31 @@ ${yp}
             }
         }
         for (const descriptor of deferred) await runScript(descriptor);
-        Promise.allSettled(asyncTasks).then(function () { enhanceAccessibility(target); });
+        Promise.allSettled(asyncTasks);
     }
 
     window.this_mes = document.querySelector('.mes[mesid="' + window.getMessageId() + '"]') || document.querySelector('.mes') || target;
     window.dispatchEvent(new Event('load'));
     enhanceAccessibility(target);
+    let accessibilityObserver = null;
+    let accessibilityTimer = 0;
+    const pendingAccessibilityNodes = new Set();
     if (window.MutationObserver) {
-        let accessibilityTimer = 0;
-        new MutationObserver(function () {
-            if (accessibilityTimer) return;
-            accessibilityTimer = setTimeout(function () { accessibilityTimer = 0; enhanceAccessibility(target); }, 250);
-        }).observe(target, { childList: true, subtree: true });
+        accessibilityObserver = new MutationObserver(function (mutations) {
+            mutations.forEach(function (mutation) {
+                mutation.addedNodes.forEach(function (node) {
+                    if (node && node.nodeType === 1) pendingAccessibilityNodes.add(node);
+                });
+            });
+            if (!pendingAccessibilityNodes.size || accessibilityTimer) return;
+            accessibilityTimer = setTimeout(function () {
+                accessibilityTimer = 0;
+                const nodes = Array.from(pendingAccessibilityNodes);
+                pendingAccessibilityNodes.clear();
+                nodes.forEach(enhanceAccessibility);
+            }, 50);
+        });
+        accessibilityObserver.observe(target, { childList: true, subtree: true });
     }
     await window.eventEmit(
         window.iframe_events.MESSAGE_IFRAME_RENDER_ENDED,
@@ -2552,6 +2585,9 @@ ${yp}
     window.addEventListener('pagehide', function () {
         if (heightTimer) clearInterval(heightTimer);
         if (heightObserver) heightObserver.disconnect();
+        if (accessibilityTimer) clearTimeout(accessibilityTimer);
+        if (accessibilityObserver) accessibilityObserver.disconnect();
+        pendingAccessibilityNodes.clear();
         if (typeof window.eventClearAll === 'function') window.eventClearAll();
     }, { once: true });
     reportHeight();
