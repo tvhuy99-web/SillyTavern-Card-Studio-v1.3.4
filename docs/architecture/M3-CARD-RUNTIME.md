@@ -1,109 +1,39 @@
-# Mốc 3 — Card Runtime trở thành source sở hữu riêng
+# Mốc 3 — Card Runtime có source riêng
 
-## Trạng thái
+## Mục tiêu
 
-Hoàn thành ở cấp ownership/build architecture.
+Tách Card Runtime khỏi legacy minified bundle để runtime có nơi sở hữu source rõ ràng, giữ sandbox và accessibility hiện tại.
 
-Card Runtime không còn là hai khối JavaScript lớn bị nhúng trực tiếp trong application bundle.
+## Source
 
-## Trước Mốc 3
+- `src/runtime/card-runtime/core.template.js`
+- `src/runtime/card-runtime/renderer.js`
+- `src/runtime/card-runtime/compat/*.jsfrag`
 
-```text
-app bundle
-  -> 41 KB compatibility API String.raw
-  -> 131 KB Card Runtime core String.raw
-  -> 14 KB renderer/executor String.raw
-  -> iframe srcdoc
-```
+## Build
 
-Việc sửa TavernHelper, Worldbook, Variables, HUD hoặc accessibility đồng nghĩa sửa chuỗi lớn nằm trong bundle minify.
+`build/build-card-runtime.mjs` ghép sáu compatibility fragment vào core template và tạo:
 
-## Sau Mốc 3
+- `assets/card-runtime-core-builder-v1.3.6.js`
+- `assets/card-runtime-renderer-v1.3.6.js`
 
-```text
-src/runtime/card-runtime/
-  core.template.js
-  renderer.js
-  compat/
-    catalog-characters.jsfrag
-    personas-presets.jsfrag
-    extensions-imports.jsfrag
-    services.jsfrag
-    variables-worldbook.jsfrag
-    context-exposure.jsfrag
-        |
-        v
-build/build-card-runtime.mjs
-        |
-        +-> assets/card-runtime-core-v1.3.6.js
-        +-> assets/card-runtime-renderer-v1.3.6.js
-```
+`build/transforms/card-runtime.mjs` loại core/renderer nhúng khỏi legacy application bundle và thay bằng hai builder import có ownership rõ.
 
-Application bundle chỉ còn:
+## Sandbox
 
-1. serialize BOOT payload,
-2. đặt `window.__CARD_STUDIO_BOOT__`,
-3. import Card Runtime core trong iframe,
-4. dùng renderer module để tạo script render/execution.
+Safe mode tiếp tục không có `allow-same-origin`. Core builder chạy ở parent, serialize BOOT và trả về classic script để chèn inline trong `srcDoc`. Iframe không cần tự fetch/import runtime, vì vậy không tạo phụ thuộc CORS/CSP mới.
 
-## Vì sao compatibility API dùng source fragments
+## Compatibility boundaries
 
-Các API hiện chia sẻ nhiều lexical runtime state như:
+1. catalog + characters
+2. personas + presets
+3. extensions + raw imports
+4. services: regex/audio/scripts/generation
+5. variables + worldbook
+6. context + SillyTavern/TavernHelper exposure
 
-- `BOOT`
-- `rpc`
-- `chatHistory`
-- `extensionSettings`
-- `scopeCache`
-- event bus
-- catalog
+## Invariant
 
-Tách ngay thành nhiều ES module runtime độc lập sẽ buộc thêm global bridge hoặc dependency container giả, làm kiến trúc xấu hơn.
-
-Mốc 3 vì vậy tách **ownership source** thành sáu fragment rõ ràng, sau đó build-compose chúng vào **một iframe ES module**. Khi state boundary được tách ở các mốc sau, từng fragment mới có thể trở thành module độc lập mà không tạo coupling mới.
-
-## Runtime dependency compatibility
-
-Patch `card-runtime-dependency-compat-v1.3.6.2.js` trước đây sửa global prototype:
-
-- iframe `srcdoc`
-- `Element.setAttribute`
-- script `src`
-- link `href`
-
-chỉ để đổi Vue Router global 5.2 sang 5.1.
-
-Mốc 3 hấp thụ mapping này vào ownership của Card Runtime:
-
-- built-in runtime dependency URL được build thành 5.1;
-- `resolveCardAsset()` normalize đúng hai URL Vue Router legacy.
-
-Patch prototype cũ không còn trong normal boot. Nó chỉ còn phục vụ legacy fallback.
-
-## Accessibility và HUD
-
-Runtime source mới được lấy từ **bundle hiện hành**, không từ các `runtime-current-*.txt` cũ.
-
-Do đó giữ nguyên các tối ưu mới:
-
-- accessibility observer chỉ xử lý node vừa thêm;
-- có cleanup khi iframe pagehide;
-- HUD observer chỉ tồn tại khi subscribed;
-- HUD mirror throttle 750 ms;
-- unsubscribe/pagehide disconnect observer.
-
-## Build ownership
-
-- `build/build-card-runtime.mjs` sinh runtime assets.
-- `build/transforms/card-runtime.mjs` loại Card Runtime inline khỏi app bundle.
-- `build/build-production-bundle.mjs` gọi cả hai trước khi sinh production bundle.
-- CI kiểm tra generated runtime assets không lệch source.
-
-## Legacy fallback
-
-Hai file sau vẫn tồn tại vì legacy loader cần chúng khi production boot thất bại trước mount:
-
-- `assets/prompt-order-identifier-fix-v1.3.6.js`
-- `assets/card-runtime-dependency-compat-v1.3.6.2.js`
-
-Chúng không còn được nạp từ `index.html`.
+- Không sửa generated runtime asset bằng tay.
+- Card Runtime behavior phải được sửa dưới `src/runtime/card-runtime/`.
+- Production bundle không còn chứa inline core runtime hoặc inline renderer cũ.
