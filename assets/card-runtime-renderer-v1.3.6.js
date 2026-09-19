@@ -1,3 +1,22 @@
+const CARD_RUNTIME_URL_REPLACEMENTS = Object.freeze([
+  [
+    'https://unpkg.com/vue-router@5.2.0/dist/vue-router.global.js',
+    'https://unpkg.com/vue-router@5.1.0/dist/vue-router.global.js',
+  ],
+  [
+    'https://cdn.jsdelivr.net/npm/vue-router@5.2.0/dist/vue-router.global.js',
+    'https://cdn.jsdelivr.net/npm/vue-router@5.1.0/dist/vue-router.global.js',
+  ],
+]);
+
+export function normalizeCardRuntimeMarkup(value) {
+  let next = String(value == null ? '' : value);
+  for (const [from, to] of CARD_RUNTIME_URL_REPLACEMENTS) {
+    next = next.split(from).join(to);
+  }
+  return next;
+}
+
 function serializeScriptValue(value) {
   return JSON.stringify(value).replace(/<\/script/gi, '<\\/script');
 }
