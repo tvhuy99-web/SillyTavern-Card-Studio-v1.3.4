@@ -1,0 +1,52 @@
+root.getPersonaNames = function () { return catalog.personas.map(personaNameOf).filter(Boolean); };
+    root.getPersonaIds = function () { return catalog.personas.map(personaIdOf).filter(Boolean); };
+    root.getCurrentPersonaName = function () { return personaNameOf(currentPersonaRecord()) || null; };
+    root.getCurrentPersonaId = function () { return personaIdOf(currentPersonaRecord()) || null; };
+    root.getPersonaAvatarPath = function (id) { const target = !id || id === 'current' ? currentPersonaRecord() : catalog.personas.find(function (persona) { return personaIdOf(persona) === String(id) || personaNameOf(persona) === String(id); }); return target && (target.avatar || target.avatarUrl) || null; };
+    root.getPersona = function (id) { const target = !id || id === 'current' ? currentPersonaRecord() : catalog.personas.find(function (persona) { return personaIdOf(persona) === String(id) || personaNameOf(persona) === String(id); }); if (!target) throw new Error("Persona '" + id + "' does not exist"); return toOfficialPersona(target); };
+    root.createPersona = async function (name, persona) {
+        if (name === 'current' || root.getPersonaNames().includes(String(name))) return false;
+        const result = await rpc('persona.create', { name: name, persona: persona || {} }, 120000);
+        catalog.personas.push(clone(result));
+        return true;
+    };
+    root.createOrReplacePersona = async function (name, persona, options) {
+        const match = catalog.personas.find(function (entry) { return personaNameOf(entry) === String(name); });
+        if (match) await root.replacePersona(personaIdOf(match), persona || {}, options || {});
+        else await root.createPersona(name, persona || {});
+        return !match;
+    };
+    root.deletePersona = async function (id) {
+        const target = !id || id === 'current' ? currentPersonaRecord() : catalog.personas.find(function (persona) { return personaIdOf(persona) === String(id) || personaNameOf(persona) === String(id); });
+        if (!target) return false;
+        await rpc('persona.delete', { id: personaIdOf(target) }, 120000);
+        catalog.personas = catalog.personas.filter(function (persona) { return personaIdOf(persona) !== personaIdOf(target); });
+        return true;
+    };
+    root.replacePersona = async function (id, persona, options) {
+        const target = !id || id === 'current' ? currentPersonaRecord() : catalog.personas.find(function (entry) { return personaIdOf(entry) === String(id) || personaNameOf(entry) === String(id); });
+        if (!target) throw new Error("Persona '" + id + "' does not exist");
+        const result = await rpc('persona.replace', { id: personaIdOf(target), persona: persona || {}, options: options || {} }, 120000);
+        updateCatalogRecord(catalog.personas, function (entry) { return personaIdOf(entry) === personaIdOf(target); }, result);
+    };
+    root.updatePersonaWith = async function (id, updater, options) { updater = requireFunctionCallback('updatePersonaWith', updater); const next = await updater(root.getPersona(id)); await root.replacePersona(id, next, options); return next; };
+
+    function presetNameOf(preset) { return String(preset && preset.name || ''); }
+    function currentPresetRecord() { return catalog.presets.find(function (preset) { return presetNameOf(preset) === BOOT.context.presetName; }) || catalog.presets[0] || {}; }
+    root.getPresetNames = function () { return catalog.presets.map(presetNameOf).filter(Boolean); };
+    root.getLoadedPresetName = function () { return BOOT.context.presetName || presetNameOf(currentPresetRecord()); };
+    root.getPreset = function (name) {
+        const target = !name || name === 'in_use' ? currentPresetRecord() : catalog.presets.find(function (preset) { return presetNameOf(preset) === String(name); });
+        if (!target) throw new Error("Preset '" + name + "' does not exist");
+        return clone(target);
+    };
+    root.loadPreset = function (name) { if (!root.getPresetNames().includes(String(name))) return false; BOOT.context.presetName = String(name); rpc('preset.load', { name: name }, 60000).catch(function (error) { log('error', error.message); }); return true; };
+    root.createPreset = async function (name, preset) { if (name === 'in_use' || root.getPresetNames().includes(String(name))) return false; const result = await rpc('preset.create', { name: name, preset: preset || root.default_preset }, 120000); catalog.presets.push(clone(result)); return true; };
+    root.createOrReplacePreset = async function (name, preset, options) { const targetName = name === 'in_use' ? root.getLoadedPresetName() : String(name); const exists = root.getPresetNames().includes(targetName); if (exists) await root.replacePreset(targetName, preset, options); else await root.createPreset(targetName, preset); return !exists; };
+    root.deletePreset = async function (name) { if (!root.getPresetNames().includes(String(name))) return false; await rpc('preset.delete', { name: name }, 120000); catalog.presets = catalog.presets.filter(function (preset) { return presetNameOf(preset) !== String(name); }); return true; };
+    root.renamePreset = async function (name, newName) { if (!root.getPresetNames().includes(String(name)) || root.getPresetNames().includes(String(newName))) return false; const result = await rpc('preset.rename', { name: name, newName: newName }, 120000); updateCatalogRecord(catalog.presets, function (preset) { return presetNameOf(preset) === String(name); }, result); return true; };
+    root.replacePreset = async function (name, preset, options) { const targetName = name === 'in_use' ? root.getLoadedPresetName() : String(name); const result = await rpc('preset.replace', { name: targetName, preset: preset || {}, options: options || {} }, 120000); updateCatalogRecord(catalog.presets, function (entry) { return presetNameOf(entry) === targetName; }, result); };
+    root.updatePresetWith = async function (name, updater, options) { updater = requireFunctionCallback('updatePresetWith', updater); const next = await updater(root.getPreset(name)); await root.replacePreset(name, next, options); return next; };
+    root.setPreset = async function (name, partial, options) { const current = root.getPreset(name); const next = Object.assign({}, current, clone(partial || {})); await root.replacePreset(name, next, options); return next; };
+
+    
