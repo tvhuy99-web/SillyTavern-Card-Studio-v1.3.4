@@ -1,5 +1,8 @@
 # Mốc 0 — Bản đồ kiến trúc hiện tại
 
+> **Historical snapshot:** This document describes the pre-M1 architecture. M2/M3 removed the prompt/card global patches from production and moved Card Runtime ownership under `src/runtime/card-runtime/`.
+
+
 ## Kết luận
 
 Dự án hiện không có cây mã nguồn React/Vite gốc đầy đủ. Nguồn chạy thực tế là một bundle minify lớn cộng với nhiều lớp patch/transform. Vì vậy việc tái cấu trúc phải đi theo hướng **ổn định source-of-truth trước, sau đó tách module dần**, không viết lại toàn bộ một lần.
