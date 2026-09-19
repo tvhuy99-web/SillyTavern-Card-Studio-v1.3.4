@@ -30,11 +30,11 @@ index.html
 
 Đường chạy bình thường không còn fetch legacy bundle, patch text, tạo Blob URL rồi import.
 
-## Fallback chuyển tiếp
+## Trạng thái fallback sau Mốc 3
 
-`app-entry-v1.3.6.js` giữ fallback sang loader cũ **chỉ khi production bundle lỗi trước khi ứng dụng mount**. Nếu app đã mount thì không khởi tạo lần hai.
+Fallback runtime loader của Mốc 1 đã được **gỡ bỏ hoàn toàn** khi Mốc 2/Mốc 3 hoàn tất.
 
-Fallback là cầu chuyển tiếp, không phải kiến trúc cuối.
+`app-entry-v1.3.6.js` hiện chỉ nạp production bundle đã build sẵn. Nếu production bundle lỗi, ứng dụng báo lỗi và dừng thay vì quay lại chuỗi runtime patch cũ.
 
 ## Vì sao build-time không dùng patchArenaBundleSource()
 
