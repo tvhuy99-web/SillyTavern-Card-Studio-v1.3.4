@@ -2,8 +2,8 @@ const CARD_RUNTIME_CORE_SOURCE = "// Build-time template. The compatibility API 
 
 function escapeInlineScriptText(value) {
   return String(value)
-    .replaceAll('</script', '<\\/script')
-    .replaceAll('<!--', '<\\!--');
+    .replaceAll('</script', '<\/script')
+    .replaceAll('<!--', '<\!--');
 }
 
 function serializeScriptValue(value) {
@@ -14,7 +14,7 @@ export function buildCardRuntimeCoreScript(boot) {
   if (!boot || typeof boot !== 'object') {
     throw new TypeError('Card Runtime BOOT payload must be an object.');
   }
-  return 'window.__CARD_STUDIO_BOOT__ = ' + serializeScriptValue(boot) + ';\\n' + CARD_RUNTIME_CORE_SOURCE + '\\nwindow.cardStudioReady = Promise.resolve(window.__STS_START_CARD_RUNTIME__(window.__CARD_STUDIO_BOOT__));\\n';
+  return 'window.__CARD_STUDIO_BOOT__ = ' + serializeScriptValue(boot) + ';\n' + CARD_RUNTIME_CORE_SOURCE + '\nwindow.cardStudioReady = Promise.resolve(window.__STS_START_CARD_RUNTIME__(window.__CARD_STUDIO_BOOT__));\n';
 }
 
 export const CARD_RUNTIME_CORE_SOURCE_BYTES = CARD_RUNTIME_CORE_SOURCE.length;
