@@ -1,0 +1,54 @@
+root.getContext;
+    officialSillyTavern.runtime = runtimeSillyTavern;
+
+    const officialLibrarySources = {
+        lodash: function () { return root._; }, Fuse: function () { return root.Fuse; }, DOMPurify: function () { return root.DOMPurify; },
+        hljs: function () { return root.hljs; }, localforage: function () { return root.localforage; }, Handlebars: function () { return root.Handlebars; },
+        css: function () { return root.css || root.__ST_OFFICIAL_LIBS && root.__ST_OFFICIAL_LIBS.css; }, Bowser: function () { return root.bowser || root.Bowser; },
+        DiffMatchPatch: function () { return root.diff_match_patch || root.DiffMatchPatch; }, Readability: function () { return root.Readability || root.__ST_OFFICIAL_LIBS && root.__ST_OFFICIAL_LIBS.Readability; },
+        isProbablyReaderable: function () { return root.isProbablyReaderable || root.__ST_OFFICIAL_LIBS && root.__ST_OFFICIAL_LIBS.isProbablyReaderable; },
+        SVGInject: function () { return root.SVGInject || root.__ST_OFFICIAL_LIBS && root.__ST_OFFICIAL_LIBS.SVGInject; }, showdown: function () { return root.showdown; },
+        moment: function () { return root.moment; }, seedrandom: function () { return Math.seedrandom; }, Popper: function () { return root.Popper; },
+        droll: function () { return root.droll || root.__ST_OFFICIAL_LIBS && root.__ST_OFFICIAL_LIBS.droll; }, morphdom: function () { return root.morphdom; },
+        slideToggle: function () { return root.slideToggle || root.__ST_OFFICIAL_LIBS && root.__ST_OFFICIAL_LIBS.slideToggle; }, chalk: function () { return root.chalk || root.__ST_OFFICIAL_LIBS && root.__ST_OFFICIAL_LIBS.chalk; },
+        yaml: function () { return root.YAML || root.jsyaml; }, chevrotain: function () { return root.chevrotain || root.__ST_OFFICIAL_LIBS && root.__ST_OFFICIAL_LIBS.chevrotain; },
+        gzipSync: function () { return root.gzipSync || root.__ST_OFFICIAL_LIBS && root.__ST_OFFICIAL_LIBS.gzipSync; }, gzip: function () { return root.gzip || root.__ST_OFFICIAL_LIBS && root.__ST_OFFICIAL_LIBS.gzip; },
+        sha256: function () { return root.sha256 || root.__ST_OFFICIAL_LIBS && root.__ST_OFFICIAL_LIBS.sha256; }
+    };
+    const officialLibraries = Object.assign({}, runtimeSillyTavern && runtimeSillyTavern.libs || {});
+    Object.keys(officialLibrarySources).forEach(function (key) { Object.defineProperty(officialLibraries, key, { configurable: true, enumerable: true, get: officialLibrarySources[key] }); });
+    officialSillyTavern.libs = officialLibraries;
+    root.SillyTavern = officialSillyTavern;
+    root.ST = officialSillyTavern;
+
+    root.TavernHelper.tavern_events = root.tavern_events;
+    root.TavernHelper.iframe_events = root.iframe_events;
+    [
+        'audioEnable','audioImport','audioMode','audioPlay','audioSelect','getCharacterNames','getCharacterIds','getCurrentCharacterName','getCurrentCharacterId','createCharacter','createOrReplaceCharacter','deleteCharacter','getCharacter','replaceCharacter','updateCharacterWith',
+        'getPersonaNames','getPersonaIds','getCurrentPersonaName','getCurrentPersonaId','getPersonaAvatarPath','createPersona','createOrReplacePersona','deletePersona','getPersona','replacePersona','updatePersonaWith',
+        'getPresetNames','getLoadedPresetName','loadPreset','createPreset','createOrReplacePreset','deletePreset','renamePreset','getPreset','replacePreset','updatePresetWith','setPreset',
+        'isAdmin','getExtensionType','getExtensionStatus','getExtensionInstallationInfo','isInstalledExtension','installExtension','uninstallExtension','reinstallExtension','updateExtension',
+        'importRawCharacter','importRawChat','importRawPreset','importRawWorldbook','importRawTavernRegex'
+    ].forEach(function (name) { root.TavernHelper[name] = root[name]; });
+    root.updateTavernHelper = root.updateFrontendVersion = function () { return Promise.resolve(HELPER_VERSION); };
+    root.TavernHelper.updateTavernHelper = root.updateTavernHelper;
+    root.TavernHelper.updateFrontendVersion = root.updateFrontendVersion;
+    if (FULL_COMPATIBILITY_MODE && root.parent && root.parent !== root) {
+        [
+            'SillyTavern','ST','TavernHelper','Mvu','eventSource','event_types','tavern_events','iframe_events',
+            'getContext','getVariables','getAllVariables','replaceVariables','updateVariablesWith','insertVariables',
+            'insertOrAssignVariables','deleteVariable','getMessageId','getCurrentMessageId','getLastMessageId',
+            'substitudeMacros','substituteMacros','triggerSlash','triggerSlashWithResult','generate','generateRaw',
+            'jQuery','$','_','toastr','YAML','z','Zod','EjsTemplate'
+        ].forEach(function (name) {
+            try {
+                Object.defineProperty(root.parent, name, {
+                    configurable: true,
+                    enumerable: false,
+                    get: function () { return root[name]; },
+                    set: function (value) { root[name] = value; }
+                });
+            } catch (_) {}
+        });
+        try { root.parent.__cardRuntimeFullCompatibility = { version: IMPLEMENTATION_VERSION, targetSillyTavern: TAVERN_VERSION, targetTavernHelper: HELPER_VERSION }; } catch (_) {}
+    }
