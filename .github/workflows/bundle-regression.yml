@@ -4,7 +4,12 @@ on:
   pull_request:
     paths:
       - 'assets/**'
+      - 'build/**'
+      - 'src/**'
       - 'patch-src/**'
+      - 'index.html'
+      - 'package.json'
+      - 'version.json'
       - '.github/workflows/bundle-regression.yml'
   workflow_dispatch:
 
@@ -22,6 +27,10 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '22'
+      - name: Build static production bundle
+        run: node build/build-production-bundle.mjs
+      - name: Verify generated production bundle is committed
+        run: git diff --exit-code -- assets/app-production-v1.3.6.js
       - name: Test Arena bundle transform
         run: node patch-src/test-arena-state-bundle-transform-v1.3.6.4.mjs
       - name: Test core reliability bundle transform
