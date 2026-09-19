@@ -19,6 +19,11 @@ const REPLACEMENTS = Object.freeze([
     oldText: 'enabled:"boolean"==typeof e.enabled&&e.enabled,injection_order:e.injection_order??void 0}).filter(Boolean)}return r},bu=At()',
     newText: 'enabled:"boolean"==typeof e.enabled&&e.enabled,injection_order:e.injection_order??void 0}).filter(Boolean)}return __stsNormalizePresetConfig(r)},bu=At()',
   },
+  {
+    label: 'normalize updated preset before persistence and in-memory replacement',
+    oldText: 'updateActivePreset:async t=>{try{await nn(t),e(e=>{let n=e.presets.findIndex(e=>e.name===t.name);-1!==n&&(e.presets[n]=t)})}catch{e(e=>{e.error="Failed to update preset"})}}',
+    newText: 'updateActivePreset:async t=>{try{let n=__stsNormalizePresetConfig(t);await nn(n),e(e=>{let r=e.presets.findIndex(e=>e.name===n.name);-1!==r&&(e.presets[r]=n)})}catch{e(e=>{e.error="Failed to update preset"})}}',
+  },
 ]);
 
 export function applyPresetBoundaryTransform(source) {
