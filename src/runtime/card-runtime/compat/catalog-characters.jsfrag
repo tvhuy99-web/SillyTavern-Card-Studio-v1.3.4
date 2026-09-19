@@ -1,0 +1,103 @@
+
+    const catalog = BOOT.catalog || { characters: [], personas: [], presets: [], extensions: {} };
+    catalog.characters = Array.isArray(catalog.characters) ? catalog.characters : [];
+    catalog.personas = Array.isArray(catalog.personas) ? catalog.personas : [];
+    catalog.presets = Array.isArray(catalog.presets) ? catalog.presets : [];
+    catalog.extensions = asObject(catalog.extensions);
+
+    function responseFromRpc(result, status) {
+        const responseStatus = Number(status || result && result.status || 200);
+        try {
+            return new Response(JSON.stringify(result && result.body !== undefined ? result.body : result || {}), {
+                status: responseStatus,
+                headers: { 'content-type': 'application/json' }
+            });
+        } catch (_) {
+            return { ok: responseStatus >= 200 && responseStatus < 300, status: responseStatus, json: function () { return Promise.resolve(clone(result)); }, text: function () { return Promise.resolve(JSON.stringify(result || {})); } };
+        }
+    }
+
+    function currentCharacterRecord() {
+        return catalog.characters.find(function (entry) { return entry && (entry.current || entry.fileName === BOOT.context.characterKey || entry.name === BOOT.context.name2 || entry.card && entry.card.name === BOOT.context.name2); })
+            || { fileName: BOOT.context.characterKey, name: BOOT.context.name2, avatar: BOOT.characterAvatar, card: BOOT.characterCard, current: true };
+    }
+    function characterNameOf(entry) { return String(entry && (entry.name || entry.card && entry.card.name) || ''); }
+    function characterIdOf(entry) { return String(entry && (entry.avatar || entry.fileName || entry.id || characterNameOf(entry)) || ''); }
+    function toOfficialCharacter(entry) {
+        const card = clone(entry && entry.card || entry || {});
+        const firstMessages = [String(card.first_mes || '')].concat(Array.isArray(card.alternate_greetings) ? card.alternate_greetings.map(String) : []);
+        return {
+            avatar: entry && (entry.avatar || entry.avatarUrl || entry.fileName) || BOOT.characterAvatar || characterNameOf(entry) + '.png',
+            version: String(card.character_version || card.spec_version || ''),
+            creator: String(card.creator || ''),
+            creator_notes: String(card.creator_notes || card.creatorcomment || ''),
+            worldbook: card.char_book && (card.char_book.name || characterNameOf(entry)) || null,
+            description: String(card.description || ''),
+            first_messages: firstMessages,
+            extensions: clone(card.extensions || {}),
+            personality: String(card.personality || ''),
+            scenario: String(card.scenario || ''),
+            mes_example: String(card.mes_example || ''),
+            raw: card
+        };
+    }
+    function updateCatalogRecord(list, predicate, value) {
+        const index = list.findIndex(predicate);
+        if (index >= 0) list[index] = clone(value);
+        else list.push(clone(value));
+    }
+
+    root.getCharacterNames = function () { return catalog.characters.map(characterNameOf).filter(Boolean); };
+    root.getCharacterIds = function () { return catalog.characters.map(characterIdOf).filter(Boolean); };
+    root.getCurrentCharacterName = function () { return characterNameOf(currentCharacterRecord()) || null; };
+    root.getCurrentCharacterId = function () { return characterIdOf(currentCharacterRecord()) || null; };
+    root.getCharacter = function (name) {
+        const target = !name || name === 'current' ? currentCharacterRecord() : catalog.characters.find(function (entry) { return characterNameOf(entry) === String(name) || characterIdOf(entry) === String(name); });
+        if (!target) return Promise.reject(new Error("Character '" + name + "' does not exist"));
+        return Promise.resolve(toOfficialCharacter(target));
+    };
+    root.createCharacter = async function (name, character) {
+        if (name === 'current' || root.getCharacterNames().includes(String(name))) return false;
+        const result = await rpc('character.create', { name: name, character: character || {} }, 120000);
+        catalog.characters.push(clone(result));
+        return true;
+    };
+    root.createOrReplaceCharacter = async function (name, character, options) {
+        const exists = root.getCharacterNames().includes(String(name));
+        if (exists) await root.replaceCharacter(name, character || {}, options || {});
+        else await root.createCharacter(name, character || {});
+        return !exists;
+    };
+    root.deleteCharacter = async function (name, options) {
+        const targetName = !name || name === 'current' ? root.getCurrentCharacterName() : String(name);
+        if (!targetName || !root.getCharacterNames().includes(targetName)) return false;
+        await rpc('character.delete', { name: targetName, options: options || {} }, 120000);
+        catalog.characters = catalog.characters.filter(function (entry) { return characterNameOf(entry) !== targetName; });
+        return true;
+    };
+    root.replaceCharacter = async function (name, character, options) {
+        const targetName = !name || name === 'current' ? root.getCurrentCharacterName() : String(name);
+        const result = await rpc('character.replace', { name: targetName, character: character || {}, options: options || {} }, 120000);
+        updateCatalogRecord(catalog.characters, function (entry) { return characterNameOf(entry) === targetName; }, result);
+    };
+    root.updateCharacterWith = async function (name, updater) {
+        updater = requireFunctionCallback('updateCharacterWith', updater);
+        const next = await updater(await root.getCharacter(name));
+        await root.replaceCharacter(name, next);
+        return next;
+    };
+
+    function personaIdOf(persona) { return String(persona && (persona.avatar_id || persona.id) || ''); }
+    function personaNameOf(persona) { return String(persona && persona.name || ''); }
+    function currentPersonaRecord() {
+        return catalog.personas.find(function (persona) { return persona && (persona.current || personaIdOf(persona) === BOOT.context.personaId || personaNameOf(persona) === BOOT.context.name1); })
+            || { id: BOOT.context.personaId || 'current', avatar_id: BOOT.context.personaId || 'current', name: BOOT.context.name1, description: '', avatar: BOOT.userAvatar, current: true };
+    }
+    function toOfficialPersona(persona) {
+        return Object.assign({
+            avatar_id: personaIdOf(persona), avatar: persona && persona.avatar || BOOT.userAvatar || personaIdOf(persona),
+            name: personaNameOf(persona), title: '', description: '', position: 0, depth: 2, role: 0,
+            lorebook: '', connections: [], is_default: false
+        }, clone(persona || {}));
+    }
+    
