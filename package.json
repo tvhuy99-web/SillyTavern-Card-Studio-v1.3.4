@@ -5,8 +5,9 @@
   "type": "module",
   "scripts": {
     "dev": "node server.js",
-    "build": "mkdir -p dist && cp -r index.html assets scripts api-unavailable.json version.json _redirects _headers dist/ || true",
-    "start": "node server.js"
+    "build": "npm run build:bundle && rm -rf dist && mkdir -p dist && cp -r index.html assets scripts api-unavailable.json version.json _redirects _headers dist/",
+    "start": "node server.js",
+    "build:bundle": "node build/build-production-bundle.mjs"
   },
   "dependencies": {
     "express": "^4.21.2"
