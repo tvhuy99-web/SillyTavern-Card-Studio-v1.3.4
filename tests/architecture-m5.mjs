@@ -19,8 +19,8 @@ assert.ok(!index.includes('arena-runtime-ux-guard-v1.3.6.5.js'));
 
 for (const token of [
   './m5/app/state/runtime-state.js?v=1.3.6-m5.1',
-  './m5/app/persistence/session-state.js?v=1.3.6-m5.2',
-  './m5/diagnostics/state.js?v=1.3.6-m5.2',
+  './m5/app/persistence/session-state.js?v=1.3.6-m5.3',
+  './m5/diagnostics/state.js?v=1.3.6-m5.3',
   './m5/features/arena/state-machine.js?v=1.3.6-m5.1',
   '__stsSessionPersistence.createSessionSnapshot',
   '__stsSessionPersistence.normalizeLoadedSession',
@@ -41,6 +41,11 @@ for (const forbidden of [
 const snapshotStart = production.indexOf('__stsSessionPersistence.createSessionSnapshot');
 assert.ok(snapshotStart >= 0);
 assert.ok(!production.slice(snapshotStart - 150, snapshotStart + 500).includes('logs:e.logs'));
+assert.ok(!production.includes('[e,i,o,s,l,c,u,d,h,p,m,g,f,y,v,x,_,w,k,S,C,E,N,T,U,H]'), 'diagnostics must not trigger autosave');
+assert.ok(production.includes('__stsDiagnosticsState.drop(e)'));
+assert.ok(production.includes('__stsDiagnosticsState.clearAll()'));
+assert.ok(production.includes('__stsSessionPersistence.normalizeLoadedSession(a).record'));
+assert.ok(!production.includes('lastUpdated:Date.now(),initialDiagnosticLog:d}'));
 
 for (const [source, generated] of [
   ['src/app/state/runtime-state.js', 'assets/m5/app/state/runtime-state.js'],
@@ -52,6 +57,8 @@ for (const [source, generated] of [
 
 assert.equal(exists('assets/chat-send-recovery-v1.3.6.5.js'), false);
 assert.equal(exists('assets/arena-runtime-ux-guard-v1.3.6.5.js'), false);
+assert.equal(read('src/app/entry.js'), read('assets/app-entry-v1.3.6.js'), 'generated app entry must match source owner');
+assert.ok(index.includes('app-entry-v1.3.6.js?v=1.3.6-m7.3'));
 
 const runtimeGuard = read('src/ui/runtime-guard.js');
 assert.ok(!runtimeGuard.includes('window.fetch ='));
