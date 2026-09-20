@@ -137,7 +137,8 @@ export function normalizeLoadedSession(input) {
 
 export function createSessionSnapshot(state, overrides = {}, deps = {}) {
   if (!state?.sessionId || !state?.card || !state?.preset) return null;
-  const messages = overrides.messages ?? state.messages;
+  const sourceMessages = overrides.messages ?? state.messages;
+  const messages = compactHistoricalMessages(sourceMessages).messages;
   const lastContent = messages.length ? messages[messages.length - 1].content : '';
   const snippet = typeof deps.snippet === 'function'
     ? deps.snippet(lastContent, 50)
