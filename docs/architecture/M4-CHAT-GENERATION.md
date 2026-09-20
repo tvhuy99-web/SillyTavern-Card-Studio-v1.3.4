@@ -1,13 +1,16 @@
-# Mốc 4 — Chat and generation domain ownership
+# Mốc 4 — Business logic outside React UI
 
-## Goal
+## Status
 
-Move chat-turn business rules, conversation orchestration and provider generation logic out of the React/minified UI bundle without changing visible behavior or the iframe sandbox.
+**Complete.** React/UI no longer owns the chat send pipeline, provider generation, Smart Scan selection algorithm, prompt assembly orchestration, AI/RPG response processing, or Arena retry prompt assembly.
 
-## Owners
+## Source owners
 
 - `src/features/chat/turn-policy.js`
 - `src/features/chat/conversation-service.js`
+- `src/features/chat/response-processor.js`
+- `src/features/world-info/smart-scan-service.js`
+- `src/features/prompts/prompt-service.js`
 - `src/providers/common/generation-gateway.js`
 - `src/providers/common/generation-utils.js`
 - `src/providers/proxy/generation.js`
@@ -15,32 +18,34 @@ Move chat-turn business rules, conversation orchestration and provider generatio
 - `src/providers/gemini/generation.js`
 - `build/transforms/m4-chat-generation.mjs`
 
-## What moved
+## Ownership after M4
 
-The UI bundle no longer owns:
+The React bundle is now an adapter layer for the affected paths:
 
-- creation of per-turn snapshots for variables/RPG/world-info;
-- recent-three-message scan input and prompt-history projection;
-- the send pipeline that coordinates Smart Scan, World Info, prompt creation, generation and post-processing;
-- initial Arena pair generation, controller ownership and streaming update lifecycle;
-- send-level abort and error classification;
-- Gemini/OpenRouter/Proxy routing for chat generation;
-- Proxy/OpenRouter request payloads and streaming SSE parsing.
+- `sendMessage` delegates to `conversationService.send()`;
+- the World Info hook delegates Smart Scan selection to `smart-scan-service` and retains only React scanning-state wiring plus legacy output rendering;
+- prompt construction for normal sends and Arena retries delegates to `prompt-service`;
+- AI response post-processing delegates to `response-processor`;
+- provider request construction, routing and streaming live under the generation gateway/providers.
 
-`Sd` and `Cd` remain compatibility adapters because legacy callers still use those symbols. Their implementation delegates immediately to the owned Generation Gateway.
-
-The React hook exposes a thin `sendMessage` adapter that calls `conversationService.send(content, options)`.
-
-## Boundary
-
-Smart Scan selection, prompt-builder internals and AI/RPG response processing are still legacy implementations at this point. M4 injects them into the conversation service behind explicit dependency boundaries instead of allowing the React send callback to compose them directly. This preserves behavior while making those implementations independently extractable later.
-
-Arena selection/retry state transitions remain owned by the M5 Arena state machine. M4 owns only the initial two-provider conversation request lifecycle.
+The legacy low-level prompt primitives (`vd`/`xd`), regex/output renderer, World Info resolver, and Mythic parser/applicator remain compatibility dependencies injected into the owned services. They are no longer composed inside React event handlers. Moving those low-level engines to fully readable source is a later source-recovery concern, not an M4 UI/business-ownership boundary.
 
 ## Invariants
 
-- no provider streaming parser lives inside the React bundle;
-- no chat turn snapshot cloning lives inside `sendMessage`;
-- no Smart Scan, prompt construction, generation or initial Arena orchestration lives inside the React `sendMessage` callback;
+- no provider streaming parser lives inside React callbacks;
+- no Smart Scan semantic/LLM selection algorithm lives inside the React hook;
+- no prompt assembly recipe lives inside send or Arena retry callbacks;
+- no integrated RPG response state transition lives inside the React hook;
+- no chat-turn snapshot cloning lives inside `sendMessage`;
 - no new runtime monkey patch is introduced;
 - generated `assets/m4/**` files match their `src/**` owners exactly.
+
+## Regression coverage
+
+- `tests/architecture-m4.mjs`
+- `tests/m4-generation-gateway.mjs`
+- `tests/m4-chat-turn-policy.mjs`
+- `tests/m4-conversation-service.mjs`
+- `tests/m4-smart-scan-service.mjs`
+- `tests/m4-prompt-service.mjs`
+- `tests/m4-response-processor.mjs`
