@@ -8,7 +8,7 @@ const index = read('index.html');
 const entry = read('assets/app-entry-v1.3.6.js');
 const production = read('assets/app-production-v1.3.6.js');
 
-assert.ok(entry.includes("stage: 'M6-complete'"));
+assert.ok(entry.includes("stage: 'M7-complete'"));
 assert.ok(entry.includes("uiSemantics: 'source-build-owned'"));
 assert.ok(entry.includes("accessibility: 'semantic-controls'"));
 assert.ok(entry.includes("modelTestUi: 'owned-enhancer'"));
