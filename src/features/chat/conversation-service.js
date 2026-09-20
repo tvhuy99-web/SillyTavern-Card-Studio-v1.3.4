@@ -27,7 +27,14 @@ export function createConversationService(deps) {
         sequence: turn.sequence,
         forceActiveUids: options?.forceActiveUids,
       });
-    } catch {
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      console.error('[World Info] Scan failed unexpectedly:', error);
+      deps.logSystemMessage?.(
+        'error',
+        'system',
+        `[World Info] Scan failed unexpectedly; continuing without dynamic entries. Error: ${message}`,
+      );
       scan = { activeEntries: [], updatedRuntimeState: state.worldInfoRuntime };
     }
     scan = {
