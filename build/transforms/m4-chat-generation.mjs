@@ -99,6 +99,34 @@ export function applyM4ChatGenerationTransform(source) {
     'return{sendMessage:(0,b.useCallback)((t,o)=>__stsConversationService.send(t,o),[__stsConversationService])';
   code = code.slice(0, sendStart) + sendAdapter + code.slice(sendEnd);
 
+  code = replaceExactlyOnce(
+    code,
+    'g||(i=Xu(i),',
+    '(i=Xu(i),',
+    'plain text mode keeps prompt variables',
+  );
+
+  const plainTextMacroStart = findExactlyOnce(
+    code,
+    'i=g?i.replace(/{{current_page_history}}/g,Q)',
+    'plain text prompt macro branch',
+  );
+  const normalMacroBranch = code.indexOf(
+    ':i.replace(/{{worldInfo_before}}/g,P)',
+    plainTextMacroStart,
+  );
+  if (normalMacroBranch < 0) {
+    throw new Error('[M4 chat/generation] normal prompt macro branch not found');
+  }
+  const macroBranchEnd = code.indexOf(',!g){let e=', normalMacroBranch);
+  if (macroBranchEnd < 0) {
+    throw new Error('[M4 chat/generation] prompt macro branch end not found');
+  }
+  const normalMacroExpression = code.slice(normalMacroBranch + 1, macroBranchEnd);
+  code = code.slice(0, plainTextMacroStart) +
+    'i=' + normalMacroExpression +
+    code.slice(macroBranchEnd);
+
   const runtimeChatMutation =
     'p=(0,b.useCallback)(async e=>{ol.getState().setMessages(e),await(n?.({messages:e}));let t=ol.getState();return Eh(e,t.persona?.name||"User",t.card?.name||"Character",!0)},[n])';
   const runtimeChatMutationReplacement =
@@ -130,4 +158,4 @@ export function applyM4ChatGenerationTransform(source) {
   return code;
 }
 
-export const M4_CHAT_GENERATION_PATCH_COUNT = 11;
+export const M4_CHAT_GENERATION_PATCH_COUNT = 13;
