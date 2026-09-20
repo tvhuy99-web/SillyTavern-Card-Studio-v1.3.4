@@ -15,8 +15,8 @@ assert.ok(entry.includes("responseDomain: 'owned-response-processor'"));
 for (const token of [
   './m4/providers/common/generation-gateway.js?v=1.3.6-m4.1',
   './m4/features/chat/turn-policy.js?v=1.3.6-m4.5',
-  './m4/features/chat/conversation-service.js?v=1.3.6-m4.5',
-  './m4/features/world-info/smart-scan-service.js?v=1.3.6-m4.3',
+  './m4/features/chat/conversation-service.js?v=1.3.6-m4.6',
+  './m4/features/world-info/smart-scan-service.js?v=1.3.6-m4.6',
   './m4/features/prompts/prompt-service.js?v=1.3.6-m4.3',
   './m4/features/chat/response-processor.js?v=1.3.6-m4.3',
   '__stsGenerationGateway.generateOnce',
@@ -65,6 +65,10 @@ assert.ok(!production.includes('stsSessionBook'));
 assert.ok(!production.includes('[Smart Scan] Skipped API call'));
 assert.ok(!production.includes('[Integrated RPG] Detected'));
 assert.ok(!production.includes(',Vs=async('), 'legacy Proxy chat generator must be removed from production');
+assert.ok(!production.includes('.replace(/{{worldInfo}}/g,"")'), 'plain-text mode must not erase {{worldInfo}}');
+assert.ok(!production.includes('.replace(/{{worldInfo_before}}/g,"")'), 'plain-text mode must not erase {{worldInfo_before}}');
+assert.ok(!production.includes('.replace(/{{worldInfo_after}}/g,"")'), 'plain-text mode must not erase {{worldInfo_after}}');
+assert.ok(!production.includes('g||(i=Xu(i),'), 'plain-text mode must not disable prompt variable expansion');
 assert.ok(!production.includes('i=g?i.replace(/{{current_page_history}}/g,Q)'), 'plain text mode must not erase prompt context macros');
 assert.ok(!production.includes('g||(i=Xu(i),'), 'plain text mode must still expand prompt variables');
 assert.ok(production.includes('i=i.replace(/{{worldInfo_before}}/g,P).replace(/{{worldInfo_after}}/g,M).replace(/{{worldInfo}}/g,L)'), 'World Info macros must resolve in all display modes');
