@@ -14,3 +14,5 @@ Current owned areas:
 - `runtime/card-runtime/`: modular Card Runtime source and compatibility surface.
 
 Do not copy the whole legacy bundle into `src/`. Move a subsystem only after its ownership/state boundary is explicit and its old patch can be removed.
+
+- `ui/`: source-owned accessibility/performance styles and model-test enhancer; M6 semantic rewrites are enforced at the build boundary until the remaining legacy UI source is fully extracted.

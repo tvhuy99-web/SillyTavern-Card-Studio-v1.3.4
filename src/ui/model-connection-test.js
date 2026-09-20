@@ -1,5 +1,10 @@
-(() => {
+export function installModelConnectionTestEnhancer(deps = {}) {
   'use strict';
+
+  if (typeof window === 'undefined' || typeof document === 'undefined') return false;
+  if (window.__STS_MODEL_TEST_UI__) return false;
+  window.__STS_MODEL_TEST_UI__ = Object.freeze({ version: 'm6.1' });
+
 
   const MODEL_WORD = /(model|mô\s*hình)/i;
   const EXCLUDED_LABEL = /(nguồn\s*(?:&\s*)?mô\s*hình|nguồn\s*model|model\s*source|tải.*(?:model|mô\s*hình)|danh\s*sách.*(?:model|mô\s*hình))/i;
@@ -15,58 +20,7 @@
     proxyProfiles: 'sillyTavernStudio_proxyProfiles'
   };
 
-  const style = document.createElement('style');
-  style.textContent = `
-    [${CONTROL_ATTR}="true"] {
-      width: calc(100% - 7.25rem) !important;
-      min-width: 0 !important;
-      vertical-align: middle;
-    }
-    .${BUTTON_CLASS} {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      gap: .3rem;
-      min-width: 6.65rem;
-      min-height: 2.25rem;
-      margin-left: .55rem;
-      padding: .45rem .7rem;
-      border: 1px solid rgb(71 85 105);
-      border-radius: .45rem;
-      background: rgb(51 65 85);
-      color: rgb(226 232 240);
-      font-size: .75rem;
-      font-weight: 700;
-      line-height: 1rem;
-      vertical-align: middle;
-      cursor: pointer;
-      white-space: nowrap;
-      transition: background-color .15s ease, border-color .15s ease, color .15s ease, opacity .15s ease;
-    }
-    .${BUTTON_CLASS}:hover:not(:disabled) { background: rgb(71 85 105); }
-    .${BUTTON_CLASS}:focus-visible { outline: 2px solid rgb(56 189 248); outline-offset: 2px; }
-    .${BUTTON_CLASS}:disabled { cursor: wait; opacity: .72; }
-    .${BUTTON_CLASS}[data-state="success"] {
-      border-color: rgb(34 197 94 / .7);
-      background: rgb(20 83 45 / .65);
-      color: rgb(187 247 208);
-    }
-    .${BUTTON_CLASS}[data-state="error"] {
-      border-color: rgb(239 68 68 / .7);
-      background: rgb(127 29 29 / .5);
-      color: rgb(254 202 202);
-    }
-    .${BUTTON_CLASS}[data-state="testing"] {
-      border-color: rgb(14 165 233 / .65);
-      background: rgb(12 74 110 / .55);
-      color: rgb(186 230 253);
-    }
-    @media (max-width: 430px) {
-      [${CONTROL_ATTR}="true"] { width: calc(100% - 6.45rem) !important; }
-      .${BUTTON_CLASS} { min-width: 5.85rem; padding-inline: .5rem; margin-left: .4rem; }
-    }
-  `;
-  document.head.appendChild(style);
+
 
   const parseJSON = (value, fallback) => {
     try { return value ? JSON.parse(value) : fallback; } catch { return fallback; }
@@ -83,10 +37,7 @@
     ...parseJSON(localStorage.getItem(STORAGE.connection), {})
   });
 
-  const getProfiles = () => {
-    const profiles = parseJSON(sessionStorage.getItem(STORAGE.proxyProfiles) || localStorage.getItem(STORAGE.proxyProfiles), []);
-    return Array.isArray(profiles) ? profiles : [];
-  };
+  const getProfiles = () => deps.proxyPersistence?.getProfiles?.() || [];
 
   const normalizeText = value => String(value || '').replace(/\s+/g, ' ').trim();
 
@@ -270,7 +221,7 @@
     const passwordInput = findFieldByLabel(page, /(password\s*\/\s*key|proxy password|password)/i);
 
     const url = normalizeText(proxyUrlInput?.value) || normalizeText(profile?.url) || normalizeText(localStorage.getItem(STORAGE.proxyUrl)) || 'http://127.0.0.1:8889';
-    const password = String(passwordInput?.value || profile?.password || sessionStorage.getItem(STORAGE.proxyPassword) || '').trim();
+    const password = String(passwordInput?.value || profile?.password || deps.proxyPersistence?.getPassword?.() || sessionStorage.getItem(STORAGE.proxyPassword) || '').trim();
     const legacySwitch = page.querySelector('[role="switch"][aria-label="Legacy Mode"]');
     const legacyMode = legacySwitch
       ? legacySwitch.getAttribute('aria-checked') === 'true'
@@ -424,4 +375,6 @@
   } else {
     scan(document);
   }
-})();
+
+  return true;
+}
