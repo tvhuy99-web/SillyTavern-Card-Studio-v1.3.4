@@ -82,7 +82,7 @@ export function applyM5StateTransform(source) {
 
   code = replaceOnce(code,
     'if("proxy"===l&&arenaProfileId){let e=cs().find(e=>e.id===arenaProfileId);if(!e)throw Error(\`Cấu hình Proxy Arena không còn tồn tại: ${arenaProfileId}\`);h={url:e.url,password:e.password,legacyMode:e.legacyMode}}',
-    'h=__stsArenaState.resolveProxyConfig(l,arenaProfileId,cs())',
+    'h=__stsArenaState.resolveProxyConfig(l,arenaProfileId,cs());',
     "arena retry proxy");
   code = replaceOnce(code,
     'let r={...t.arena,[c]:{...t.arena[c],content:v}};n.updateMessage(e,{arena:r})',
