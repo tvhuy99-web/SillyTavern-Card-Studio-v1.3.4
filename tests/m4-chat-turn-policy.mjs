@@ -29,10 +29,18 @@ const context = policy.buildContext([
 assert.equal(context.recentText, 'a1\na2\nu2');
 assert.equal(context.scanInput, 'a1\na2\nu2\nnew\nforced');
 assert.deepEqual(context.promptHistory, [
-  { role: 'model', content: '<content>a1</content>' },
+  { role: 'model', content: 'a1' },
   { role: 'model', content: 'a2' },
   { role: 'user', content: 'u2' },
 ]);
+
+const pipeline = '<basic_confirmation>ok</basic_confirmation><draft>draft</draft><revision_confirmation>rev</revision_confirmation><content>final</content>';
+const compacted = policy.compactModelMessages([
+  { id: 'm1', role: 'model', content: pipeline },
+  { id: 'u2', role: 'user', content: 'next' },
+], { keepLatest: false });
+assert.equal(compacted.changed, true);
+assert.equal(compacted.messages[0].content, 'final');
 
 const arena = policy.createArenaState({
   source: 'proxy',
