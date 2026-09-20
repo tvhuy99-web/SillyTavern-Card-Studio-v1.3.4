@@ -10,7 +10,7 @@ function publish(status, extra = {}) {
     promptRecovery: 'preset-boundary',
     cardRuntime: 'modular-owned-source',
     proxyPersistence: 'owned-provider-service',
-    chatDomain: 'owned-turn-policy',
+    chatDomain: 'owned-conversation-service',
     generationDomain: 'owned-provider-gateway',
     statePersistence: 'tiered-owned-state',
     arenaState: 'owned-state-machine',

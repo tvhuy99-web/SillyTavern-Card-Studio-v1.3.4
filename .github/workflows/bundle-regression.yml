@@ -53,6 +53,7 @@ jobs:
           node --check assets/m4/providers/openrouter/generation.js
           node --check assets/m4/providers/gemini/generation.js
           node --check assets/m4/features/chat/turn-policy.js
+          node --check assets/m4/features/chat/conversation-service.js
           node --check assets/m5/app/state/runtime-state.js
           node --check assets/m5/app/persistence/session-state.js
           node --check assets/m5/diagnostics/state.js
@@ -66,6 +67,8 @@ jobs:
         run: node tests/m4-generation-gateway.mjs
       - name: Test M4 chat turn policy
         run: node tests/m4-chat-turn-policy.mjs
+      - name: Test M4 conversation service
+        run: node tests/m4-conversation-service.mjs
       - name: Test M5 architecture boundaries
         run: node tests/architecture-m5.mjs
       - name: Test M5 state and persistence

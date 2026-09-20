@@ -39,7 +39,7 @@ export function applyM5StateTransform(source) {
     "resetStore:()=>e(e=>{e.abortControllers.forEach(e=>{try{e.abort()}catch{}}),e.abortControllers.clear(),Object.assign(e,il)})",
     "resetStore:()=>e(e=>{__stsRuntimeState.abortAll(\"store-reset\"),Object.assign(e,il)})",
     "runtime reset");
-  code = replaceAllChecked(code, "ol.getState().abortControllers.size", "__stsRuntimeState.size()", 4, "runtime size refs");
+  code = replaceAllChecked(code, "ol.getState().abortControllers.size", "__stsRuntimeState.size()", 3, "runtime size refs");
   code = replaceOnce(code, "t.abortControllers.size>0", "__stsRuntimeState.size()>0", "stop generation runtime size");
   code = replaceOnce(code, "r.abortControllers.size>0", "__stsRuntimeState.size()>0", "arena selection runtime size");
 
@@ -101,28 +101,6 @@ export function applyM5StateTransform(source) {
     'n.updateMessage(e,{arena:__stsArenaState.complete(t.arena,c)})',
     "arena retry complete");
 
-  code = replaceRange(code,
-    'let t,arenaMain=w.arena?.modelA||{},arenaChallenger=w.arena?.modelB||{}',
-    'let arenaControllerA=new AbortController,arenaControllerB=new AbortController;',
-    'let arenaPair=__stsArenaState.describePair(w.arena,{...s,...ns()}),r=arenaPair.main.model,a=arenaPair.challenger.model,i=arenaPair.challenger.provider,arenaMainProvider=arenaPair.main.provider,arenaMainProxyConfig=__stsArenaState.resolveProxyConfig(arenaMainProvider,arenaPair.main.profileId,cs()),t=__stsArenaState.resolveProxyConfig(i,arenaPair.challenger.profileId,cs());let arenaControllerA=new AbortController,arenaControllerB=new AbortController;',
-    "arena initial pair", false);
-  code = replaceOnce(code,
-    'let r={...t.arena,[n]:{...t.arena[n],content:i}};e.updateMessage(w.id,{arena:r})',
-    'e.updateMessage(w.id,{arena:__stsArenaState.withContent(t.arena,n,i)})',
-    "arena initial progress");
-  code = replaceOnce(code,
-    'let t={...u.arena,[n]:{...u.arena[n],content:i,status:arenaSignal.aborted?"stopped":i.trim()?"success":"error"}};e.updateMessage(w.id,{arena:t})',
-    'e.updateMessage(w.id,{arena:__stsArenaState.withResult(u.arena,n,i,arenaSignal)})',
-    "arena initial result");
-  code = replaceOnce(code,
-    'let a=arenaSignal.aborted||"AbortError"===t?.name||/(?:the user aborted a request|generation was stopped|operation was aborted|signal is aborted)/i.test(String(t?.message||""))?{...r.arena,[n]:{...r.arena[n],content:i,status:"stopped"}}:{...r.arena,[n]:{...r.arena[n],content:\`[Lỗi: ${t.message}]\`,status:"error"}};e.updateMessage(w.id,{arena:a})',
-    'let a=__stsArenaState.withError(r.arena,n,t,arenaSignal,i);e.updateMessage(w.id,{arena:a})',
-    "arena initial error");
-  code = replaceOnce(code,
-    'let r={...t.arena,[n]:{...t.arena[n],completed:!0}};e.updateMessage(w.id,{arena:r})',
-    'e.updateMessage(w.id,{arena:__stsArenaState.complete(t.arena,n)})',
-    "arena initial complete");
-
   code = replaceRange(code, 'arenaNormalizeSideOnLoad=e=>', 'lp=e=>', 'lp=e=>', "arena inline normalizers", false);
 
   code = replaceOnce(code,
@@ -151,4 +129,4 @@ export function applyM5StateTransform(source) {
   return code;
 }
 
-export const M5_STATE_PATCH_COUNT = 32;
+export const M5_STATE_PATCH_COUNT = 27;

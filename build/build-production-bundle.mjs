@@ -38,6 +38,7 @@ const M4_DOMAIN_ASSETS = [
   ['../src/providers/openrouter/generation.js', '../assets/m4/providers/openrouter/generation.js'],
   ['../src/providers/gemini/generation.js', '../assets/m4/providers/gemini/generation.js'],
   ['../src/features/chat/turn-policy.js', '../assets/m4/features/chat/turn-policy.js'],
+  ['../src/features/chat/conversation-service.js', '../assets/m4/features/chat/conversation-service.js'],
 ].map(([source, output]) => ({
   source: new URL(source, import.meta.url),
   output: new URL(output, import.meta.url),
