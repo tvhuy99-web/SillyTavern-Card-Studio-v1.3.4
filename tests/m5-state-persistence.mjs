@@ -39,6 +39,10 @@ diagnosticsState.addTurn({ id: 2 });
 diagnosticsState.clearAll();
 diagnosticsState.activate('s1');
 assert.equal(diagnosticsState.snapshot().turns.length, 0, 'global cleanup must clear RAM diagnostics');
+diagnosticsState.addSystem({ message: 'fresh' });
+diagnosticsState.activate('other-2');
+diagnosticsState.activate('s1');
+assert.equal(diagnosticsState.snapshot().systemLog[0].message, 'fresh', 'active session must stay attached after global cleanup');
 
 const state = {
   sessionId: 's1',
