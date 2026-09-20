@@ -39,6 +39,8 @@ jobs:
           git diff --exit-code -- assets/card-runtime-renderer-v1.3.6.js
           git diff --exit-code -- assets/m4
           git diff --exit-code -- assets/m5
+      - name: Diagnose production module syntax
+        run: node tests/parse-production-module.mjs
       - name: Parse generated runtime modules
         run: |
           node --check assets/app-entry-v1.3.6.js
