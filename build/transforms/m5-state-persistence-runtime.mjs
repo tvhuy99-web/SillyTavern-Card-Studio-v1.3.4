@@ -1,4 +1,4 @@
-const M5_IMPORTS = "import { runtimeState as __stsRuntimeState } from './m5/app/state/runtime-state.js?v=1.3.6-m5.1';\nimport { diagnosticsState as __stsDiagnosticsState } from './m5/diagnostics/state.js?v=1.3.6-m5.1';\nimport * as __stsSessionPersistence from './m5/app/persistence/session-state.js?v=1.3.6-m5.1';\nimport * as __stsArenaState from './m5/features/arena/state-machine.js?v=1.3.6-m5.1';\n";
+const M5_IMPORTS = "import { runtimeState as __stsRuntimeState } from './m5/app/state/runtime-state.js?v=1.3.6-m5.1';\nimport { diagnosticsState as __stsDiagnosticsState } from './m5/diagnostics/state.js?v=1.3.6-m5.2';\nimport * as __stsSessionPersistence from './m5/app/persistence/session-state.js?v=1.3.6-m5.2';\nimport * as __stsArenaState from './m5/features/arena/state-machine.js?v=1.3.6-m5.1';\n";
 
 function replaceOnce(source, oldText, newText, label) {
   const first = source.indexOf(oldText);
@@ -37,7 +37,7 @@ export function applyM5StateTransform(source) {
     "runtime controller actions");
   code = replaceOnce(code,
     "resetStore:()=>e(e=>{e.abortControllers.forEach(e=>{try{e.abort()}catch{}}),e.abortControllers.clear(),Object.assign(e,il)})",
-    "resetStore:()=>e(e=>{__stsRuntimeState.abortAll(\"store-reset\"),Object.assign(e,il)})",
+    "resetStore:()=>e(e=>{__stsRuntimeState.abortAll(\"store-reset\"),__stsDiagnosticsState.activate(null),Object.assign(e,il),e.logs=__stsDiagnosticsState.snapshot()})",
     "runtime reset");
   code = replaceAllChecked(code, "ol.getState().abortControllers.size", "__stsRuntimeState.size()", 3, "runtime size refs");
   code = replaceOnce(code, "t.abortControllers.size>0", "__stsRuntimeState.size()>0", "stop generation runtime size");
@@ -48,7 +48,7 @@ export function applyM5StateTransform(source) {
     "logs:__stsDiagnosticsState.snapshot()", "diagnostics initial state");
   code = replaceOnce(code,
     "setSessionData:t=>e(e=>{Object.assign(e,t),t.logs&&(e.logs={turns:Array.isArray(t.logs.turns)?t.logs.turns.slice(0,10):[],systemLog:Array.isArray(t.logs.systemLog)?t.logs.systemLog.slice(0,1):[],smartScanLog:Array.isArray(t.logs.smartScanLog)?t.logs.smartScanLog.slice(0,1):[],mythicLog:Array.isArray(t.logs.mythicLog)?t.logs.mythicLog.slice(0,1):[],networkLog:Array.isArray(t.logs.networkLog)?t.logs.networkLog.slice(0,1).map(Bs):[],selectionLog:Array.isArray(t.logs.selectionLog)?t.logs.selectionLog.slice(0,1):[]})})",
-    "setSessionData:t=>e(e=>{Object.assign(e,t),t.logs&&(e.logs=__stsDiagnosticsState.replace(t.logs))})",
+    "setSessionData:t=>e(e=>{t.sessionId&&t.sessionId!==e.sessionId&&__stsDiagnosticsState.activate(t.sessionId),Object.assign(e,t),t.sessionId&&(e.logs=__stsDiagnosticsState.snapshot()),t.logs&&(e.logs=__stsDiagnosticsState.replace(t.logs))})",
     "diagnostics setSessionData");
 
   const diagnosticReplacements = [
@@ -116,8 +116,8 @@ export function applyM5StateTransform(source) {
   code = replaceOnce(code, 'initialDiagnosticLog:n.initialDiagnosticLog||""', 'initialDiagnosticLog:""', "diagnostics not hydrated");
   code = replaceOnce(code,
     'logs:{turns:Array.isArray(n.logs?.turns)?n.logs.turns.slice(0,10):[],systemLog:Array.isArray(n.logs?.systemLog)?n.logs.systemLog.slice(0,1):[],smartScanLog:Array.isArray(n.logs?.smartScanLog)?n.logs.smartScanLog.slice(0,1):[],mythicLog:Array.isArray(n.logs?.mythicLog)?n.logs.mythicLog.slice(0,1):[],networkLog:Array.isArray(n.logs?.networkLog)?n.logs.networkLog.slice(0,1).map(Bs):[],selectionLog:Array.isArray(n.logs?.selectionLog)?n.logs.selectionLog.slice(0,1):[]}',
-    'logs:__stsDiagnosticsState.clear()',
-    "diagnostics not hydrated from session");
+    'logs:__stsDiagnosticsState.activate(n.sessionId||e)',
+    "diagnostics restored from active session cache");
 
   code = replaceRange(code,
     'let U=(0,b.useCallback)((e={})=>{',
