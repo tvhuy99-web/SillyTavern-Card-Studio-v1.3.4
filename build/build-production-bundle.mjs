@@ -1,7 +1,7 @@
 import { copyFile, mkdir, readFile, writeFile } from 'node:fs/promises';
-import { ARENA_CORE_REPLACEMENTS } from '../assets/arena-state-bundle-transform-v1.3.6.4.js';
-import { CORE_RELIABILITY_REPLACEMENTS } from '../assets/core-reliability-bundle-transform-v1.3.6.4.js';
-import { ARENA_CANCELLATION_REPLACEMENTS } from '../assets/arena-cancellation-bundle-transform-v1.3.6.5.js';
+import { ARENA_CORE_REPLACEMENTS } from './transforms/arena-state.mjs';
+import { CORE_RELIABILITY_REPLACEMENTS } from './transforms/core-reliability.mjs';
+import { ARENA_CANCELLATION_REPLACEMENTS } from './transforms/arena-cancellation.mjs';
 import {
   applyPresetBoundaryTransform,
   PRESET_BOUNDARY_PATCH_COUNT,
@@ -13,13 +13,22 @@ import { applyM5StateTransform, M5_STATE_PATCH_COUNT } from './transforms/m5-sta
 import { applyM6UiAccessibilityTransform, M6_UI_ACCESSIBILITY_PATCH_COUNT } from './transforms/m6-ui-accessibility.mjs';
 import { buildCardRuntimeAssets } from './build-card-runtime.mjs';
 
-const SOURCE_URL = new URL('../assets/index-11db71a5-modeltest-v2-htmlmodes-v1.js', import.meta.url);
+const SOURCE_URL = new URL('../legacy/app-bundle-input-v1.3.6.js', import.meta.url);
 const OUTPUT_URL = new URL('../assets/app-production-v1.3.6.js', import.meta.url);
+const APP_ENTRY_SOURCE_URL = new URL('../src/app/entry.js', import.meta.url);
+const APP_ENTRY_OUTPUT_URL = new URL('../assets/app-entry-v1.3.6.js', import.meta.url);
 const PROMPT_NORMALIZER_SOURCE_URL = new URL('../src/features/presets/prompt-normalizer.js', import.meta.url);
 const PROMPT_NORMALIZER_OUTPUT_URL = new URL('../assets/prompt-normalizer-v1.3.6.js', import.meta.url);
 const PROXY_PERSISTENCE_SOURCE_URL = new URL('../src/providers/proxy/persistence.js', import.meta.url);
 const PROXY_PERSISTENCE_OUTPUT_URL = new URL('../assets/proxy-persistence-service-v1.3.6.js', import.meta.url);
 
+
+const M7_DOMAIN_ASSETS = [
+  ['../src/diagnostics/gemini-model-list.js', '../assets/m7/diagnostics/gemini-model-list.js'],
+].map(([source, output]) => ({
+  source: new URL(source, import.meta.url),
+  output: new URL(output, import.meta.url),
+}));
 
 const M6_DOMAIN_ASSETS = [
   ['../src/ui/model-connection-test.js', '../assets/m6/ui/model-connection-test.js'],
@@ -75,7 +84,8 @@ function applyGroup(source, replacements, groupName) {
 const runtimeReport = await buildCardRuntimeAssets();
 await copyFile(PROMPT_NORMALIZER_SOURCE_URL, PROMPT_NORMALIZER_OUTPUT_URL);
 await copyFile(PROXY_PERSISTENCE_SOURCE_URL, PROXY_PERSISTENCE_OUTPUT_URL);
-for (const asset of [...M4_DOMAIN_ASSETS, ...M5_DOMAIN_ASSETS, ...M6_DOMAIN_ASSETS]) {
+await copyFile(APP_ENTRY_SOURCE_URL, APP_ENTRY_OUTPUT_URL);
+for (const asset of [...M4_DOMAIN_ASSETS, ...M5_DOMAIN_ASSETS, ...M6_DOMAIN_ASSETS, ...M7_DOMAIN_ASSETS]) {
   await mkdir(new URL('./', asset.output), { recursive: true });
   await copyFile(asset.source, asset.output);
 }
@@ -92,7 +102,7 @@ code = applyM5StateTransform(code);
 code = applyM6UiAccessibilityTransform(code);
 
 const banner = `/* GENERATED FILE. DO NOT EDIT DIRECTLY.
-   Build source: assets/index-11db71a5-modeltest-v2-htmlmodes-v1.js
+   Build source: legacy/app-bundle-input-v1.3.6.js
    Build pipeline: build/build-production-bundle.mjs
    Patch order: arena-state -> core-reliability -> arena-cancellation -> preset-boundaries -> card-runtime-extraction -> proxy-persistence-boundary -> m4-chat-generation-domain -> m5-state-persistence-runtime -> m6-ui-accessibility
    Runtime source patching is not used on the normal boot path.
