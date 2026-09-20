@@ -1,5 +1,5 @@
 /* GENERATED FILE. DO NOT EDIT DIRECTLY.
-   Build source: assets/index-11db71a5-modeltest-v2-htmlmodes-v1.js
+   Build source: legacy/app-bundle-input-v1.3.6.js
    Build pipeline: build/build-production-bundle.mjs
    Patch order: arena-state -> core-reliability -> arena-cancellation -> preset-boundaries -> card-runtime-extraction -> proxy-persistence-boundary -> m4-chat-generation-domain -> m5-state-persistence-runtime -> m6-ui-accessibility
    Runtime source patching is not used on the normal boot path.

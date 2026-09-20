@@ -55,7 +55,7 @@ assert.equal(imported.getProfiles()[0].id, 'p2');
 assert.equal(imported.getProfiles()[0].password, 'temporary');
 
 const legacyBundle = fs.readFileSync(
-  new URL('../assets/index-11db71a5-modeltest-v2-htmlmodes-v1.js', import.meta.url),
+  new URL('../legacy/app-bundle-input-v1.3.6.js', import.meta.url),
   'utf8',
 );
 const transformed = applyProxyPersistenceTransform(legacyBundle);

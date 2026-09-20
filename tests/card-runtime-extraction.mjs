@@ -4,7 +4,7 @@ import { applyCardRuntimeTransform } from '../build/transforms/card-runtime.mjs'
 import { buildCardRuntimeAssets } from '../build/build-card-runtime.mjs';
 
 const bundle = fs.readFileSync(
-  new URL('../assets/index-11db71a5-modeltest-v2-htmlmodes-v1.js', import.meta.url),
+  new URL('../legacy/app-bundle-input-v1.3.6.js', import.meta.url),
   'utf8',
 );
 const transformed = applyCardRuntimeTransform(bundle);

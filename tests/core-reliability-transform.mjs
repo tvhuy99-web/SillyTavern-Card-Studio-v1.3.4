@@ -7,12 +7,12 @@ import { fileURLToPath } from 'node:url';
 import {
   ARENA_CORE_REPLACEMENTS,
   patchArenaBundleSource
-} from '../assets/arena-state-bundle-transform-v1.3.6.4.js';
+} from '../build/transforms/arena-state.mjs';
 import {
   CORE_RELIABILITY_PATCH_VERSION,
   CORE_RELIABILITY_REPLACEMENTS,
   patchCoreReliabilityBundleSource
-} from '../assets/core-reliability-bundle-transform-v1.3.6.4.js';
+} from '../build/transforms/core-reliability.mjs';
 
 const fixture = CORE_RELIABILITY_REPLACEMENTS.map((spec) => spec.oldText).join(';/*fixture*/;');
 const fixtureResult = patchCoreReliabilityBundleSource(fixture);
@@ -49,9 +49,9 @@ assert.throws(
 
 // Integration check against the exact production bundle, after the Arena transform
 // because that is the order used by the browser loader.
-const productionBundlePath = fileURLToPath(new URL('../assets/index-11db71a5-modeltest-v2-htmlmodes-v1.js', import.meta.url));
+const productionBundlePath = fileURLToPath(new URL('../legacy/app-bundle-input-v1.3.6.js', import.meta.url));
 const productionSource = readFileSync(productionBundlePath, 'utf8');
-const productionUrl = 'https://example.test/assets/index-11db71a5-modeltest-v2-htmlmodes-v1.js?v=test';
+const productionUrl = 'https://example.test/assets/app-production-v1.3.6.js?v=test';
 const arenaResult = patchArenaBundleSource(productionSource, productionUrl);
 assert.equal(arenaResult.report.appliedCount, ARENA_CORE_REPLACEMENTS.length);
 const integratedResult = patchCoreReliabilityBundleSource(arenaResult.code);

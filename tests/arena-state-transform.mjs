@@ -3,7 +3,7 @@ import {
   ARENA_CORE_REPLACEMENTS,
   ARENA_STATE_PATCH_VERSION,
   patchArenaBundleSource
-} from '../assets/arena-state-bundle-transform-v1.3.6.4.js';
+} from '../build/transforms/arena-state.mjs';
 
 const bundleUrl = 'https://example.test/assets/index-original.js?v=test';
 const viteResolver = 'function c(e){return import.meta.resolve?import.meta.resolve(e):new URL(e,import.meta.url).href}';
