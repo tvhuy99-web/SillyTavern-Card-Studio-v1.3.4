@@ -14,8 +14,8 @@ assert.ok(entry.includes("responseDomain: 'owned-response-processor'"));
 
 for (const token of [
   './m4/providers/common/generation-gateway.js?v=1.3.6-m4.1',
-  './m4/features/chat/turn-policy.js?v=1.3.6-m4.4',
-  './m4/features/chat/conversation-service.js?v=1.3.6-m4.4',
+  './m4/features/chat/turn-policy.js?v=1.3.6-m4.5',
+  './m4/features/chat/conversation-service.js?v=1.3.6-m4.5',
   './m4/features/world-info/smart-scan-service.js?v=1.3.6-m4.3',
   './m4/features/prompts/prompt-service.js?v=1.3.6-m4.3',
   './m4/features/chat/response-processor.js?v=1.3.6-m4.3',
@@ -65,6 +65,9 @@ assert.ok(!production.includes('stsSessionBook'));
 assert.ok(!production.includes('[Smart Scan] Skipped API call'));
 assert.ok(!production.includes('[Integrated RPG] Detected'));
 assert.ok(!production.includes(',Vs=async('), 'legacy Proxy chat generator must be removed from production');
+assert.ok(production.includes('__stsChatTurnPolicy.compactModelMessages(e,{keepLatest:!0})'));
+assert.ok(production.includes('chat_history:n.messages.map(e=>`[${e.role}] ${__stsChatTurnPolicy.modelContextContent(e)}`).join("\\n")'));
+assert.ok(!production.includes('chat_history:n.messages.map(e=>`[${e.role}] ${e.content}`).join("\\n")'));
 
 for (const [source, generated] of [
   ['src/providers/common/generation-utils.js', 'assets/m4/providers/common/generation-utils.js'],
