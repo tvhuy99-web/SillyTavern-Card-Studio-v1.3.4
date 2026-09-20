@@ -48,6 +48,9 @@ assert.equal((loreSource.match(/Chỉnh sửa mục/g) || []).length, 0);
 assert.ok(loreSource.includes('ariaLabel:void 0,checked:!1!==e.enabled'));
 assert.ok(!loreSource.includes('role:"img"'));
 assert.ok(!production.includes('Chưa đồng bộ Semantic'));
+assert.ok(production.includes('showPipeline:__stsShowPipeline=!1'));
+assert.ok(production.includes('__stsShowPipeline&&n.push({label:a,content:t})'));
+assert.ok(production.includes('isStreaming:U,onArenaSelect:S,onArenaRetry:C,showPipeline:L})');
 
 const promptStart = production.indexOf('pu=({prompt:e,index:t,onUpdate:n,onRemove:r,onEdit:a,movingPromptIndex:i,onSelectToMove:o,onMoveTo:s,onCancelMove:l})=>');
 const promptEnd = production.indexOf(',mu=', promptStart);
