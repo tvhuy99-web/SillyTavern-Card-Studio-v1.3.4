@@ -1,12 +1,13 @@
 import { proxyPersistence as __stsProxyPersistence } from './proxy-persistence-service-v1.3.6.js?v=1.3.6-m2-final';
-import { installModelConnectionTestEnhancer } from './m6/ui/model-connection-test.js?v=1.3.6-m6.2';
-import { installRuntimeUxGuard } from './m5/ui/runtime-guard.js?v=1.3.6-m6.2';
+import { installGeminiModelListDiagnostics } from './m7/diagnostics/gemini-model-list.js?v=1.3.6-m7.1';
+import { installModelConnectionTestEnhancer } from './m6/ui/model-connection-test.js?v=1.3.6-m7.1';
+import { installRuntimeUxGuard } from './m5/ui/runtime-guard.js?v=1.3.6-m7.1';
 
-const PRODUCTION_BUNDLE_URL = new URL('./app-production-v1.3.6.js?v=1.3.6-m6.2', import.meta.url).href;
+const PRODUCTION_BUNDLE_URL = new URL('./app-production-v1.3.6.js?v=1.3.6-m7.1', import.meta.url).href;
 
 function publish(status, extra = {}) {
   window.__STS_BUILD_PIPELINE__ = Object.freeze({
-    stage: 'M6-complete',
+    stage: 'M7-complete',
     status,
     productionBundle: PRODUCTION_BUNDLE_URL,
     promptRecovery: 'preset-boundary',
@@ -23,12 +24,17 @@ function publish(status, extra = {}) {
     uiSemantics: 'source-build-owned',
     accessibility: 'semantic-controls',
     modelTestUi: 'owned-enhancer',
+    geminiModelList: 'owned-diagnostic-service',
+    assetPolicy: 'generated-vendor-static-only',
+    legacyBuildInput: 'outside-runtime-assets',
+    runtimePatchScripts: 'none',
     ...extra
   });
 }
 
 installRuntimeUxGuard();
 installModelConnectionTestEnhancer({ proxyPersistence: __stsProxyPersistence });
+installGeminiModelListDiagnostics();
 publish('loading-production');
 
 try {
@@ -38,6 +44,6 @@ try {
   publish('production-error', {
     error: String(error && error.message || error || 'unknown')
   });
-  console.error('[M6 boot] Production bundle failed to initialize.', error);
+  console.error('[M7 boot] Production bundle failed to initialize.', error);
   throw error;
 }
