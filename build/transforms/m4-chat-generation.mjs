@@ -19,7 +19,7 @@ function conversationServiceBootstrap() {
   return 'const __stsConversationService=__stsCreateConversationService({' +
     'getState:()=>ol.getState(),setError:e.setError,setLoading:e.setLoading,startTurn:a.startTurn,' +
     'addAbortController:e.addAbortController,removeAbortController:e.removeAbortController,' +
-    'addMessage:e.addMessage,updateMessage:e.updateMessage,setSessionData:e.setSessionData,' +
+    'addMessage:e.addMessage,updateMessage:e.updateMessage,setMessages:e.setMessages,setSessionData:e.setSessionData,' +
     'turnPolicy:__stsChatTurnPolicy,nextSequence:gh,' +
     'preprocessInput:(t,s)=>s.visualState.disableInteractiveMode?t:gd(t,s.card.extensions?.regex_scripts||[],[1],{isMarkdown:!1,isPrompt:!0,depth:0,...Zu(s.extensionSettings,s.preset),macros:{char:s.card.name,bot:s.card.name,user:s.persona?.name||"User"}}).displayContent,' +
     'scanWorldInfo:i,logSmartScan:a.logSmartScan,logSelection:a.logSelection,' +
@@ -47,6 +47,10 @@ function responseProcessorAdapter() {
 
 export function applyM4ChatGenerationTransform(source) {
   let code = source;
+  const legacyHistorySanitizer = 'bd=e=>e?e.replace(/<(thinking|inner_monologue)>[\\s\\S]*?<\\/\\1>/gi,"").replace(/<UpdateVariable(?:variable)?>[\\s\\S]*?<\\/UpdateVariable(?:variable)?>/gi,"").replace(/<LogicStore>[\\s\\S]*?<\\/LogicStore>/gi,"").replace(/<VisualInterface>[\\s\\S]*?<\\/VisualInterface>/gi,"").replace(/<StatusPlaceHolderImpl\\s*\\/?>/gi,"").replace(/\\[CHOICE:[\\s\\S]*?\\]/gi,"").replace(/\`\`\`[\\s\\S]*?\`\`\`/g,"").replace(/<tableThink>[\\s\\S]*?<\\/tableEdit>/gi,"").replace(/\\n\\s*\\n/g,"\\n").trim():""';
+  const compactHistorySanitizer = 'bd=e=>{if(!e)return"";let t=String(e),n=t.match(/<content\\b[^>]*>([\\s\\S]*?)<\\/content>/i),r=n?n[1]:t;return r.replace(/<(thinking|thinking_requirements|step_outline|plan|inner_monologue|basic_confirmation|draft|revision_confirmation)\\b[^>]*>[\\s\\S]*?<\\/\\1>/gi,"").replace(/<UpdateVariable(?:variable)?>[\\s\\S]*?<\\/UpdateVariable(?:variable)?>/gi,"").replace(/<LogicStore>[\\s\\S]*?<\\/LogicStore>/gi,"").replace(/<VisualInterface>[\\s\\S]*?<\\/VisualInterface>/gi,"").replace(/<StatusPlaceHolderImpl\\s*\\/?>/gi,"").replace(/\\[CHOICE:[\\s\\S]*?\\]/gi,"").replace(/\`\`\`[\\s\\S]*?\`\`\`/g,"").replace(/<tableThink>[\\s\\S]*?<\\/tableEdit>/gi,"").replace(/<\\/?content\\b[^>]*>/gi,"").replace(/\\n\\s*\\n/g,"\\n").trim()}';
+  const sanitizerIndex = findExactlyOnce(code, legacyHistorySanitizer, 'history pipeline sanitizer');
+  code = code.slice(0, sanitizerIndex) + compactHistorySanitizer + code.slice(sanitizerIndex + legacyHistorySanitizer.length);
   code = replaceRange(code, ',Vs=async(', ',Ks=async(', '', 'remove legacy proxy chat generator');
 
   const generationBootstrap =
@@ -99,4 +103,4 @@ export function applyM4ChatGenerationTransform(source) {
   return code;
 }
 
-export const M4_CHAT_GENERATION_PATCH_COUNT = 6;
+export const M4_CHAT_GENERATION_PATCH_COUNT = 7;
