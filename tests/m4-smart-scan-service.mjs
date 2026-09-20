@@ -60,4 +60,23 @@ const baseInput = {
   assert.equal(result.selectionData.selectedItems[0].score, 1);
 }
 
+{
+  let resolveArgs;
+  const logs = [];
+  const result = await scanWorldInfo(baseInput, {
+    getSettings: () => ({ enabled: true, mode: 'ultimate', max_entries: 5, semantic_threshold: 0.99 }),
+    embed: async () => [0, 0],
+    loadIndex: async () => {},
+    getIndex: () => [],
+    cosine: () => 0,
+    callSelectionModel: async () => { throw new Error('selection offline'); },
+    parseJson: JSON.parse,
+    resolveWorldInfo: (...args) => (resolveArgs = args, { activeEntries: ['keyword-fallback'] }),
+    logSystemMessage: (...args) => logs.push(args),
+  });
+  assert.deepEqual(result.activeEntries, ['keyword-fallback']);
+  assert.equal(resolveArgs[6], false, 'ultimate mode must keep keyword fallback enabled');
+  assert.ok(logs.some(item => String(item[2]).includes('deterministic World Info fallback')));
+}
+
 console.log('M4 Smart Scan service checks: OK');
