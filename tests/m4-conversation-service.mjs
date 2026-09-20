@@ -27,6 +27,7 @@ const deps = {
   updateMessage: (id, patch) => Object.assign(
     state.messages.find(item => item.id === id), patch,
   ),
+  setMessages: messages => { state.messages = messages; },
   setSessionData: patch => Object.assign(state, patch),
   turnPolicy: {
     beginTurn({ content, sequence }) {
@@ -55,6 +56,9 @@ const deps = {
     },
     isAbortLike(error, signal) {
       return signal?.aborted || error?.name === 'AbortError';
+    },
+    compactModelMessages(messages) {
+      return { messages, changed: false };
     },
   },
   nextSequence: messages => messages.filter(message => message.role === 'user').length + 1,
