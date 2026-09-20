@@ -9,7 +9,8 @@ import {
 import { applyCardRuntimeTransform } from './transforms/card-runtime.mjs';
 import { applyProxyPersistenceTransform, PROXY_PERSISTENCE_PATCH_COUNT } from './transforms/proxy-persistence.mjs';
 import { applyM4ChatGenerationTransform, M4_CHAT_GENERATION_PATCH_COUNT } from './transforms/m4-chat-generation.mjs';
-import { applyM5StateTransform, M5_STATE_PATCH_COUNT } from './transforms/m5-state-persistence-runtime.mjs';
+import { applyM5StateTransform, M5_STATE_PATCH_COUNT } from './transforms/m5-state-persistence-runtime -> m6-ui-accessibility.mjs';
+import { applyM6UiAccessibilityTransform, M6_UI_ACCESSIBILITY_PATCH_COUNT } from './transforms/m6-ui-accessibility.mjs';
 import { buildCardRuntimeAssets } from './build-card-runtime.mjs';
 
 const SOURCE_URL = new URL('../assets/index-11db71a5-modeltest-v2-htmlmodes-v1.js', import.meta.url);
@@ -19,6 +20,15 @@ const PROMPT_NORMALIZER_OUTPUT_URL = new URL('../assets/prompt-normalizer-v1.3.6
 const PROXY_PERSISTENCE_SOURCE_URL = new URL('../src/providers/proxy/persistence.js', import.meta.url);
 const PROXY_PERSISTENCE_OUTPUT_URL = new URL('../assets/proxy-persistence-service-v1.3.6.js', import.meta.url);
 
+
+
+const M6_DOMAIN_ASSETS = [
+  ['../src/ui/model-connection-test.js', '../assets/m6/ui/model-connection-test.js'],
+  ['../src/ui/styles/accessibility.css', '../assets/m6/ui/accessibility.css'],
+].map(([source, output]) => ({
+  source: new URL(source, import.meta.url),
+  output: new URL(output, import.meta.url),
+}));
 
 const M5_DOMAIN_ASSETS = [
   ['../src/app/state/runtime-state.js', '../assets/m5/app/state/runtime-state.js'],
@@ -62,7 +72,7 @@ function applyGroup(source, replacements, groupName) {
 const runtimeReport = await buildCardRuntimeAssets();
 await copyFile(PROMPT_NORMALIZER_SOURCE_URL, PROMPT_NORMALIZER_OUTPUT_URL);
 await copyFile(PROXY_PERSISTENCE_SOURCE_URL, PROXY_PERSISTENCE_OUTPUT_URL);
-for (const asset of [...M4_DOMAIN_ASSETS, ...M5_DOMAIN_ASSETS]) {
+for (const asset of [...M4_DOMAIN_ASSETS, ...M5_DOMAIN_ASSETS, ...M6_DOMAIN_ASSETS]) {
   await mkdir(new URL('./', asset.output), { recursive: true });
   await copyFile(asset.source, asset.output);
 }
@@ -76,6 +86,7 @@ code = applyCardRuntimeTransform(code);
 code = applyProxyPersistenceTransform(code);
 code = applyM4ChatGenerationTransform(code);
 code = applyM5StateTransform(code);
+code = applyM6UiAccessibilityTransform(code);
 
 const banner = `/* GENERATED FILE. DO NOT EDIT DIRECTLY.
    Build source: assets/index-11db71a5-modeltest-v2-htmlmodes-v1.js
@@ -98,6 +109,7 @@ console.log(JSON.stringify({
     proxyPersistence: PROXY_PERSISTENCE_PATCH_COUNT,
     m4ChatGeneration: M4_CHAT_GENERATION_PATCH_COUNT,
     m5StatePersistenceRuntime: M5_STATE_PATCH_COUNT,
+    m6UiAccessibility: M6_UI_ACCESSIBILITY_PATCH_COUNT,
   },
   cardRuntime: runtimeReport,
 }, null, 2));
