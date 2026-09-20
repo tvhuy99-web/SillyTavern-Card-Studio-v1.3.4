@@ -3,7 +3,7 @@ import { installGeminiModelListDiagnostics } from './m7/diagnostics/gemini-model
 import { installModelConnectionTestEnhancer } from './m6/ui/model-connection-test.js?v=1.3.6-m7.1';
 import { installRuntimeUxGuard } from './m5/ui/runtime-guard.js?v=1.3.6-m7.1';
 
-const PRODUCTION_BUNDLE_URL = new URL('./app-production-v1.3.6.js?v=1.3.6-m7.2', import.meta.url).href;
+const PRODUCTION_BUNDLE_URL = new URL('./app-production-v1.3.6.js?v=1.3.6-m7.3', import.meta.url).href;
 
 function publish(status, extra = {}) {
   window.__STS_BUILD_PIPELINE__ = Object.freeze({
