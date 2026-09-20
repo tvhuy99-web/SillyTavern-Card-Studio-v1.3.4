@@ -206,6 +206,12 @@ export function createConversationService(deps) {
         state, turn, scan, generatedEntries, options?.forcedContent,
       );
 
+      const compactedHistory = deps.turnPolicy.compactModelMessages(
+        deps.getState().messages,
+        { keepLatest: false },
+      );
+      if (compactedHistory.changed) deps.setMessages(compactedHistory.messages);
+
       const message = deps.createPlaceholderMessage('model');
       message.rpgState = turn.rpgState;
       message.worldInfoRuntime = scan.updatedRuntimeState;
