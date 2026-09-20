@@ -99,12 +99,15 @@ export function applyM4ChatGenerationTransform(source) {
     'return{sendMessage:(0,b.useCallback)((t,o)=>__stsConversationService.send(t,o),[__stsConversationService])';
   code = code.slice(0, sendStart) + sendAdapter + code.slice(sendEnd);
 
-  code = replaceExactlyOnce(
+  const plainTextVariableGate = 'g||(i=Xu(i),';
+  const plainTextVariableGateIndex = findExactlyOnce(
     code,
-    'g||(i=Xu(i),',
-    '(i=Xu(i),',
+    plainTextVariableGate,
     'plain text mode keeps prompt variables',
   );
+  code = code.slice(0, plainTextVariableGateIndex) +
+    '(i=Xu(i),' +
+    code.slice(plainTextVariableGateIndex + plainTextVariableGate.length);
 
   const plainTextMacroStart = findExactlyOnce(
     code,
