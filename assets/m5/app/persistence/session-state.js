@@ -17,6 +17,73 @@ const NON_PERSISTENT_KEYS = Object.freeze([
   'rpgNotification',
 ]);
 
+const INTERNAL_PIPELINE_RE = /<(basic_confirmation|draft|revision_confirmation)\b[^>]*>[\s\S]*?<\/\1>/gi;
+const CONTENT_RE = /<content\b[^>]*>([\s\S]*?)<\/content>/i;
+
+function compactModelContent(value) {
+  const text = String(value ?? '');
+  const content = text.match(CONTENT_RE);
+  if (content) return content[1].trim();
+  if (!/<(?:basic_confirmation|draft|revision_confirmation|content)\b/i.test(text)) return text;
+  return text
+    .replace(INTERNAL_PIPELINE_RE, '')
+    .replace(/<\/?content\b[^>]*>/gi, '')
+    .trim();
+}
+
+function compactArenaSide(side) {
+  if (!side || typeof side !== 'object') return side;
+  const compacted = compactModelContent(side.content);
+  return compacted === String(side.content ?? '') ? side : { ...side, content: compacted };
+}
+
+function compactHistoricalMessages(messages) {
+  if (!Array.isArray(messages) || messages.length === 0) {
+    return { messages: Array.isArray(messages) ? messages : [], changed: false };
+  }
+  let latestModelIndex = -1;
+  for (let index = messages.length - 1; index >= 0; index -= 1) {
+    if (messages[index]?.role === 'model') {
+      latestModelIndex = index;
+      break;
+    }
+  }
+
+  let changed = false;
+  const next = messages.map((message, index) => {
+    if (!message || message.role !== 'model' || index === latestModelIndex) return message;
+
+    const content = compactModelContent(message.content);
+    const originalRawContent = Object.prototype.hasOwnProperty.call(message, 'originalRawContent')
+      ? compactModelContent(message.originalRawContent)
+      : undefined;
+    const arena = message.arena ? {
+      ...message.arena,
+      modelA: compactArenaSide(message.arena.modelA),
+      modelB: compactArenaSide(message.arena.modelB),
+    } : message.arena;
+
+    const contentChanged = content !== String(message.content ?? '');
+    const rawChanged = Object.prototype.hasOwnProperty.call(message, 'originalRawContent') &&
+      originalRawContent !== String(message.originalRawContent ?? '');
+    const arenaChanged = Boolean(message.arena) &&
+      (arena.modelA !== message.arena.modelA || arena.modelB !== message.arena.modelB);
+
+    if (!contentChanged && !rawChanged && !arenaChanged) return message;
+    changed = true;
+    return {
+      ...message,
+      content,
+      ...(Object.prototype.hasOwnProperty.call(message, 'originalRawContent')
+        ? { originalRawContent }
+        : {}),
+      ...(message.arena ? { arena } : {}),
+    };
+  });
+
+  return { messages: next, changed };
+}
+
 function normalizeVisualState(value) {
   const state = { ...(value || {}) };
   const aliases = {
@@ -51,6 +118,10 @@ export function normalizeLoadedSession(input) {
 
   if (needsMessageNormalization(record.chatHistory)) needsRewrite = true;
   record.chatHistory = normalizeMessagesOnLoad(record.chatHistory);
+  const compacted = compactHistoricalMessages(record.chatHistory);
+  if (compacted.changed) needsRewrite = true;
+  record.chatHistory = compacted.messages;
+
   const visual = normalizeVisualState(record.visualState);
   if (JSON.stringify(visual) !== JSON.stringify(record.visualState || {})) needsRewrite = true;
   record.visualState = visual;
