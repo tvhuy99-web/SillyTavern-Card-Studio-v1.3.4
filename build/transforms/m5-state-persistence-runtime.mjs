@@ -1,4 +1,4 @@
-const M5_IMPORTS = "import { runtimeState as __stsRuntimeState } from './m5/app/state/runtime-state.js?v=1.3.6-m5.1';\nimport { diagnosticsState as __stsDiagnosticsState } from './m5/diagnostics/state.js?v=1.3.6-m5.2';\nimport * as __stsSessionPersistence from './m5/app/persistence/session-state.js?v=1.3.6-m5.2';\nimport * as __stsArenaState from './m5/features/arena/state-machine.js?v=1.3.6-m5.1';\n";
+const M5_IMPORTS = "import { runtimeState as __stsRuntimeState } from './m5/app/state/runtime-state.js?v=1.3.6-m5.1';\nimport { diagnosticsState as __stsDiagnosticsState } from './m5/diagnostics/state.js?v=1.3.6-m5.3';\nimport * as __stsSessionPersistence from './m5/app/persistence/session-state.js?v=1.3.6-m5.3';\nimport * as __stsArenaState from './m5/features/arena/state-machine.js?v=1.3.6-m5.1';\n";
 
 function replaceOnce(source, oldText, newText, label) {
   const first = source.indexOf(oldText);
@@ -126,8 +126,33 @@ export function applyM5StateTransform(source) {
     'let U=(0,b.useCallback)((e={})=>__stsSessionPersistence.createSessionSnapshot(ol.getState(),e,{snippet:Is,now:Date.now}),[])',
     "session snapshot owner", true);
 
+  code = replaceOnce(code,
+    '[e,i,o,s,l,c,u,d,h,p,m,g,f,y,v,x,_,w,k,S,C,E,N,T,U,H]',
+    '[e,i,o,s,l,c,u,d,h,p,m,g,f,y,v,_,w,k,S,C,E,N,U,H]',
+    "autosave excludes diagnostics dependencies");
+
+  code = replaceOnce(code,
+    'lastUpdated:Date.now(),initialDiagnosticLog:d};try{await Wt(S),e(a)}',
+    'lastUpdated:Date.now()};try{await Wt(S),__stsDiagnosticsState.drop(a),__stsDiagnosticsState.activate(a),d&&__stsDiagnosticsState.addSystem({level:"log",source:"regex",message:String(d),timestamp:Date.now()}),e(a)}',
+    "new session diagnostics lifecycle");
+
+  code = replaceOnce(code,
+    'D=async(e,t)=>{try{await Jt(e),n(t=>t.filter(t=>t.sessionId!==e))}',
+    'D=async(e,t)=>{try{await Jt(e),__stsDiagnosticsState.drop(e),n(t=>t.filter(t=>t.sessionId!==e))}',
+    "delete session diagnostics cache");
+
+  code = replaceOnce(code,
+    'return{sessionsCleaned:t}}catch(e){',
+    'return __stsDiagnosticsState.clearAll(),{sessionsCleaned:t}}catch(e){',
+    "cleanup diagnostics cache");
+
+  code = replaceOnce(code,
+    'a.characterFileName=n,a.lastUpdated=Date.now(),await Wt(a),a.sessionId',
+    'a.characterFileName=n,a.lastUpdated=Date.now(),a=__stsSessionPersistence.normalizeLoadedSession(a).record,__stsDiagnosticsState.drop(a.sessionId),await Wt(a),a.sessionId',
+    "normalize imported session before persistence");
+
   if (!code.startsWith(M5_IMPORTS)) code = M5_IMPORTS + code;
   return code;
 }
 
-export const M5_STATE_PATCH_COUNT = 28;
+export const M5_STATE_PATCH_COUNT = 33;
