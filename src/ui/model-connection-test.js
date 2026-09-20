@@ -1,5 +1,4 @@
 export function installModelConnectionTestEnhancer(deps = {}) {
-  'use strict';
 
   if (typeof window === 'undefined' || typeof document === 'undefined') return false;
   if (window.__STS_MODEL_TEST_UI__) return false;
