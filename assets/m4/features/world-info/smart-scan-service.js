@@ -140,7 +140,12 @@ export async function scanWorldInfo(input, deps) {
         }
       } catch (error) {
         console.error('[Smart Scan] Error:', error);
-        throw error;
+        deps.logSystemMessage?.(
+          'error',
+          'system',
+          `[Smart Scan] LLM selection failed; continuing with deterministic World Info fallback. Error: ${error instanceof Error ? error.message : String(error)}`,
+        );
+        deps.onLlmError?.(error);
       } finally {
         input.setScanning?.(false);
       }
