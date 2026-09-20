@@ -22,7 +22,7 @@ for (const oldArtifact of [
   'accessibility-performance-v1.3.6.css',
 ]) assert.ok(!index.includes(oldArtifact), 'index must not load legacy UI patch: ' + oldArtifact);
 
-assert.ok(index.includes('assets/m6/ui/accessibility.css?v=1.3.6-m6.1'));
+assert.ok(index.includes('assets/m6/ui/accessibility.css?v=1.3.6-m6.2'));
 assert.ok(production.includes('title:"Phiên bản ứng dụng 1.3.6"'));
 assert.ok(production.includes('children:"v1.3.6"'));
 assert.ok(!production.includes('Phiên bản ứng dụng 1.3.4'));
