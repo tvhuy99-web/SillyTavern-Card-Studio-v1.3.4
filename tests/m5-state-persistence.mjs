@@ -19,6 +19,7 @@ assert.equal(runtimeState.abortAll('test'), 1);
 assert.equal(runtimeState.size(), 0);
 assert.equal(b.signal.aborted, true);
 
+diagnosticsState.activate('s1');
 diagnosticsState.clear();
 diagnosticsState.addTurn({ id: 1 });
 diagnosticsState.addSystem({ message: 'x' });
@@ -27,6 +28,10 @@ const logs = diagnosticsState.snapshot();
 assert.equal(logs.turns.length, 1);
 assert.equal(logs.systemLog.length, 1);
 assert.equal(logs.networkLog.length, 1);
+diagnosticsState.activate('other');
+assert.equal(diagnosticsState.snapshot().turns.length, 0);
+diagnosticsState.activate('s1');
+assert.equal(diagnosticsState.snapshot().turns[0].id, 1, 'diagnostics must survive chat tab/session switches in memory');
 
 const state = {
   sessionId: 's1',
@@ -73,14 +78,22 @@ const legacy = {
   initialDiagnosticLog: 'old',
   isLoading: true,
   visualState: { bg: 'off', sound: 'wind.mp3' },
-  chatHistory: [{
-    role: 'model',
-    content: '',
-    arena: {
-      modelA: { name: 'a', content: 'done', completed: true },
-      modelB: { name: 'b', content: '', completed: false },
+  chatHistory: [
+    {
+      id: 'old',
+      role: 'model',
+      content: '<basic_confirmation>x</basic_confirmation><draft>draft</draft><revision_confirmation>rev</revision_confirmation><content>old final</content>',
     },
-  }],
+    {
+      id: 'latest',
+      role: 'model',
+      content: '<basic_confirmation>keep</basic_confirmation><content>latest final</content>',
+      arena: {
+        modelA: { name: 'a', content: 'done', completed: true },
+        modelB: { name: 'b', content: '', completed: false },
+      },
+    },
+  ],
 };
 const normalized = normalizeLoadedSession(legacy);
 assert.equal(normalized.needsRewrite, true);
@@ -88,9 +101,11 @@ assert.equal('logs' in normalized.record, false);
 assert.equal('initialDiagnosticLog' in normalized.record, false);
 assert.equal(normalized.record.visualState.backgroundImage, '');
 assert.equal(normalized.record.visualState.ambientSoundUrl, 'wind.mp3');
-assert.equal(normalized.record.chatHistory[0].arena.modelA.status, 'success');
-assert.equal(normalized.record.chatHistory[0].arena.modelB.status, 'stopped');
-assert.equal(normalized.record.chatHistory[0].arena.modelB.completed, true);
+assert.equal(normalized.record.chatHistory[0].content, 'old final');
+assert.match(normalized.record.chatHistory[1].content, /<basic_confirmation>keep<\/basic_confirmation>/);
+assert.equal(normalized.record.chatHistory[1].arena.modelA.status, 'success');
+assert.equal(normalized.record.chatHistory[1].arena.modelB.status, 'stopped');
+assert.equal(normalized.record.chatHistory[1].arena.modelB.completed, true);
 
 assert.ok(sessionStateContract.persistent.includes('chatHistory'));
 assert.ok(sessionStateContract.runtimeOnly.includes('abortControllers'));
