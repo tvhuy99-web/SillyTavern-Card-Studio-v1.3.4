@@ -9,7 +9,7 @@ import {
 import { applyCardRuntimeTransform } from './transforms/card-runtime.mjs';
 import { applyProxyPersistenceTransform, PROXY_PERSISTENCE_PATCH_COUNT } from './transforms/proxy-persistence.mjs';
 import { applyM4ChatGenerationTransform, M4_CHAT_GENERATION_PATCH_COUNT } from './transforms/m4-chat-generation.mjs';
-import { applyM5StateTransform, M5_STATE_PATCH_COUNT } from './transforms/m5-state-persistence-runtime -> m6-ui-accessibility.mjs';
+import { applyM5StateTransform, M5_STATE_PATCH_COUNT } from './transforms/m5-state-persistence-runtime.mjs';
 import { applyM6UiAccessibilityTransform, M6_UI_ACCESSIBILITY_PATCH_COUNT } from './transforms/m6-ui-accessibility.mjs';
 import { buildCardRuntimeAssets } from './build-card-runtime.mjs';
 
@@ -91,7 +91,7 @@ code = applyM6UiAccessibilityTransform(code);
 const banner = `/* GENERATED FILE. DO NOT EDIT DIRECTLY.
    Build source: assets/index-11db71a5-modeltest-v2-htmlmodes-v1.js
    Build pipeline: build/build-production-bundle.mjs
-   Patch order: arena-state -> core-reliability -> arena-cancellation -> preset-boundaries -> card-runtime-extraction -> proxy-persistence-boundary -> m4-chat-generation-domain -> m5-state-persistence-runtime
+   Patch order: arena-state -> core-reliability -> arena-cancellation -> preset-boundaries -> card-runtime-extraction -> proxy-persistence-boundary -> m4-chat-generation-domain -> m5-state-persistence-runtime -> m6-ui-accessibility
    Runtime source patching is not used on the normal boot path.
 */
 `;
