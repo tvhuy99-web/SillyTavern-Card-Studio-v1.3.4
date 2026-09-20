@@ -32,6 +32,13 @@ diagnosticsState.activate('other');
 assert.equal(diagnosticsState.snapshot().turns.length, 0);
 diagnosticsState.activate('s1');
 assert.equal(diagnosticsState.snapshot().turns[0].id, 1, 'diagnostics must survive chat tab/session switches in memory');
+diagnosticsState.drop('s1');
+diagnosticsState.activate('s1');
+assert.equal(diagnosticsState.snapshot().turns.length, 0, 'deleted sessions must not resurrect diagnostics');
+diagnosticsState.addTurn({ id: 2 });
+diagnosticsState.clearAll();
+diagnosticsState.activate('s1');
+assert.equal(diagnosticsState.snapshot().turns.length, 0, 'global cleanup must clear RAM diagnostics');
 
 const state = {
   sessionId: 's1',
@@ -71,6 +78,16 @@ assert.equal('logs' in snapshot, false);
 assert.equal('initialDiagnosticLog' in snapshot, false);
 assert.equal('isLoading' in snapshot, false);
 assert.equal('abortControllers' in snapshot, false);
+const persistedPipeline = createSessionSnapshot({
+  ...state,
+  messages: [
+    { id: 'old-pipeline', role: 'model', content: '<thinking>x</thinking><draft>d</draft><content>old persisted</content>' },
+    { id: 'u', role: 'user', content: 'next' },
+    { id: 'latest-pipeline', role: 'model', content: '<basic_confirmation>keep</basic_confirmation><content>latest persisted</content>' },
+  ],
+}, {}, { now: () => 100 });
+assert.equal(persistedPipeline.chatHistory[0].content, 'old persisted');
+assert.match(persistedPipeline.chatHistory[2].content, /<basic_confirmation>keep<\\/basic_confirmation>/);
 
 const legacy = {
   ...snapshot,
