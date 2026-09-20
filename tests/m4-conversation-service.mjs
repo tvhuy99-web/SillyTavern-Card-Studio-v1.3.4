@@ -168,4 +168,12 @@ assert.deepEqual(calls.sound, ['ai']);
 assert.equal(controllers.size, 0);
 assert.equal(state.loading, false);
 
+state.isArenaMode = false;
+state.arenaModelId = null;
+const originalScan = deps.scanWorldInfo;
+deps.scanWorldInfo = async () => { throw new Error('unexpected scan failure'); };
+assert.equal(await conversation.send('scan failure fallback'), true);
+assert.ok(calls.logs.some(args => String(args[2]).includes('[World Info] Scan failed unexpectedly')));
+deps.scanWorldInfo = originalScan;
+
 console.log('M4 conversation service tests: OK');
