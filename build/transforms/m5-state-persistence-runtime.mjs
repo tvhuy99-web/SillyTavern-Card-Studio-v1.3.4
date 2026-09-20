@@ -60,6 +60,7 @@ export function applyM5StateTransform(source) {
     ["addSelectionLog:t=>e(e=>{e.logs.selectionLog=[t]})","addSelectionLog:t=>e(e=>{e.logs=__stsDiagnosticsState.addSelection(t)})","selection log"],
     ["addNetworkLog:t=>e(e=>{e.logs.networkLog=[Bs(t)]})","addNetworkLog:t=>e(e=>{e.logs=__stsDiagnosticsState.addNetwork(Bs(t))})","network log"],
     ["clearLogs:()=>e(e=>{e.logs={turns:[],systemLog:[],smartScanLog:[],mythicLog:[],networkLog:[],selectionLog:[]}})","clearLogs:()=>e(e=>{e.logs=__stsDiagnosticsState.clear()})","clear logs"],
+    ["e.generatedLorebookEntries=t,e.logs.systemLog.unshift({level:\"state\",source:\"system\",message:\`[RPG Config Reload] Đã đồng bộ cấu trúc từ thẻ gốc. Dữ liệu hàng được giữ nguyên. Đã tạo ${t.length} mục Live-Link.\`,timestamp:Date.now()})","e.generatedLorebookEntries=t,e.logs=__stsDiagnosticsState.addSystem({level:\"state\",source:\"system\",message:\`[RPG Config Reload] Đã đồng bộ cấu trúc từ thẻ gốc. Dữ liệu hàng được giữ nguyên. Đã tạo ${t.length} mục Live-Link.\`,timestamp:Date.now()})","RPG reload diagnostic"],
   ];
   for (const [oldText, newText, label] of diagnosticReplacements) code = replaceOnce(code, oldText, newText, label);
 
@@ -129,4 +130,4 @@ export function applyM5StateTransform(source) {
   return code;
 }
 
-export const M5_STATE_PATCH_COUNT = 27;
+export const M5_STATE_PATCH_COUNT = 28;
