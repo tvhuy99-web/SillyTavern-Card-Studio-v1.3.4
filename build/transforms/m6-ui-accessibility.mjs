@@ -64,8 +64,14 @@ export function applyM6UiAccessibilityTransform(source) {
     'isStreaming:U,onArenaSelect:S,onArenaRetry:C,showPipeline:L})',
     'message renderer pass latest model flag',
   );
+  code = replaceExactlyOnce(
+    code,
+    '},[m,e.content,h,c,T]);return(0,b.useEffect)',
+    '},[m,e.content,h,c,T,__stsShowPipeline]);return(0,b.useEffect)',
+    'message renderer latest flag memo dependency',
+  );
 
   return code;
 }
 
-export const M6_UI_ACCESSIBILITY_PATCH_COUNT = REPLACEMENTS.length + 3;
+export const M6_UI_ACCESSIBILITY_PATCH_COUNT = REPLACEMENTS.length + 4;
