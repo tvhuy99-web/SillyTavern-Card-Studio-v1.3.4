@@ -17,14 +17,14 @@ const NON_PERSISTENT_KEYS = Object.freeze([
   'rpgNotification',
 ]);
 
-const INTERNAL_PIPELINE_RE = /<(basic_confirmation|draft|revision_confirmation)\b[^>]*>[\s\S]*?<\/\1>/gi;
+const INTERNAL_PIPELINE_RE = /<(thinking|thinking_requirements|step_outline|plan|inner_monologue|basic_confirmation|draft|revision_confirmation)\b[^>]*>[\s\S]*?<\/\1>/gi;
 const CONTENT_RE = /<content\b[^>]*>([\s\S]*?)<\/content>/i;
 
 function compactModelContent(value) {
   const text = String(value ?? '');
   const content = text.match(CONTENT_RE);
   if (content) return content[1].trim();
-  if (!/<(?:basic_confirmation|draft|revision_confirmation|content)\b/i.test(text)) return text;
+  if (!/<(?:thinking|thinking_requirements|step_outline|plan|inner_monologue|basic_confirmation|draft|revision_confirmation|content)\b/i.test(text)) return text;
   return text
     .replace(INTERNAL_PIPELINE_RE, '')
     .replace(/<\/?content\b[^>]*>/gi, '')
