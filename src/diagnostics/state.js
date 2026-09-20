@@ -93,8 +93,8 @@ export function drop(sessionId) {
 
 export function clearAll() {
   sessions.clear();
-  activeSessionId = null;
   state = clone(EMPTY);
+  if (activeSessionId) remember(activeSessionId, state);
   return snapshot();
 }
 
