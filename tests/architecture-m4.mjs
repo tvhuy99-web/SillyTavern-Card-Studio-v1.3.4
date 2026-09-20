@@ -8,14 +8,25 @@ const entry = read('assets/app-entry-v1.3.6.js');
 assert.ok(entry.includes("stage: 'M5-complete'"));
 assert.ok(entry.includes("chatDomain: 'owned-conversation-service'"));
 assert.ok(entry.includes("generationDomain: 'owned-provider-gateway'"));
+assert.ok(entry.includes("worldInfoDomain: 'owned-smart-scan-service'"));
+assert.ok(entry.includes("promptDomain: 'owned-prompt-service'"));
+assert.ok(entry.includes("responseDomain: 'owned-response-processor'"));
 
-assert.ok(production.includes('./m4/providers/common/generation-gateway.js?v=1.3.6-m4.1'));
-assert.ok(production.includes('./m4/features/chat/turn-policy.js?v=1.3.6-m4.1'));
-assert.ok(production.includes('./m4/features/chat/conversation-service.js?v=1.3.6-m4.2'));
-assert.ok(production.includes('__stsGenerationGateway.generateOnce'));
-assert.ok(production.includes('__stsGenerationGateway.stream'));
-assert.ok(production.includes('__stsCreateConversationService'));
-assert.ok(production.includes('__stsConversationService.send'));
+for (const token of [
+  './m4/providers/common/generation-gateway.js?v=1.3.6-m4.1',
+  './m4/features/chat/turn-policy.js?v=1.3.6-m4.1',
+  './m4/features/chat/conversation-service.js?v=1.3.6-m4.2',
+  './m4/features/world-info/smart-scan-service.js?v=1.3.6-m4.3',
+  './m4/features/prompts/prompt-service.js?v=1.3.6-m4.3',
+  './m4/features/chat/response-processor.js?v=1.3.6-m4.3',
+  '__stsGenerationGateway.generateOnce',
+  '__stsGenerationGateway.stream',
+  '__stsCreateConversationService',
+  '__stsConversationService.send',
+  '__stsScanWorldInfo',
+  '__stsBuildConversationPrompt',
+  '__stsProcessAIResponse',
+]) assert.ok(production.includes(token), 'missing M4 ownership token: ' + token);
 
 const generationStart = production.indexOf('const __stsGenerationGateway=');
 const generationEnd = production.indexOf('var Ed=', generationStart);
@@ -33,10 +44,26 @@ const sendBlock = production.slice(sendStart, sendEnd);
 for (const forbidden of [
   'scanWorldInfo', 'xd(', 'Cd(', 'Sd(', '__stsArenaState',
   'logSmartScan', 'logSelection', 'new AbortController',
-]) {
-  assert.ok(!sendBlock.includes(forbidden), 'React send adapter regained business logic: ' + forbidden);
-}
+]) assert.ok(!sendBlock.includes(forbidden), 'React send adapter regained business logic: ' + forbidden);
 
+const smartScanStart = production.indexOf('scanInput:(0,b.useCallback)(');
+const smartScanEnd = production.indexOf(',processOutput:', smartScanStart);
+assert.ok(smartScanStart >= 0 && smartScanEnd > smartScanStart);
+const smartScanAdapter = production.slice(smartScanStart, smartScanEnd);
+assert.ok(smartScanAdapter.includes('__stsScanWorldInfo'));
+assert.ok(!smartScanAdapter.includes('semantic_threshold||.7'));
+assert.ok(!smartScanAdapter.includes('[Smart Scan] Skipped API call'));
+
+const responseStart = production.indexOf('g=(0,b.useCallback)((n,r,i=!1)=>__stsProcessAIResponse');
+const responseEnd = production.indexOf(',f=(0,b.useCallback)(async(t,n)=>{', responseStart);
+assert.ok(responseStart >= 0 && responseEnd > responseStart);
+const responseAdapter = production.slice(responseStart, responseEnd);
+assert.ok(!responseAdapter.includes('[Integrated RPG] Detected'));
+assert.ok(!responseAdapter.includes('worldInfoRuntime:d'));
+
+assert.ok(!production.includes('stsSessionBook'));
+assert.ok(!production.includes('[Smart Scan] Skipped API call'));
+assert.ok(!production.includes('[Integrated RPG] Detected'));
 assert.ok(!production.includes(',Vs=async('), 'legacy Proxy chat generator must be removed from production');
 
 for (const [source, generated] of [
@@ -47,8 +74,9 @@ for (const [source, generated] of [
   ['src/providers/gemini/generation.js', 'assets/m4/providers/gemini/generation.js'],
   ['src/features/chat/turn-policy.js', 'assets/m4/features/chat/turn-policy.js'],
   ['src/features/chat/conversation-service.js', 'assets/m4/features/chat/conversation-service.js'],
-]) {
-  assert.equal(read(source), read(generated), generated + ' must match its source owner');
-}
+  ['src/features/world-info/smart-scan-service.js', 'assets/m4/features/world-info/smart-scan-service.js'],
+  ['src/features/prompts/prompt-service.js', 'assets/m4/features/prompts/prompt-service.js'],
+  ['src/features/chat/response-processor.js', 'assets/m4/features/chat/response-processor.js'],
+]) assert.equal(read(source), read(generated), generated + ' must match its source owner');
 
 console.log('M4 architecture boundary checks: OK');

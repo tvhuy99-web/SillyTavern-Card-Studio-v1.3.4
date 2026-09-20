@@ -54,6 +54,9 @@ jobs:
           node --check assets/m4/providers/gemini/generation.js
           node --check assets/m4/features/chat/turn-policy.js
           node --check assets/m4/features/chat/conversation-service.js
+          node --check assets/m4/features/world-info/smart-scan-service.js
+          node --check assets/m4/features/prompts/prompt-service.js
+          node --check assets/m4/features/chat/response-processor.js
           node --check assets/m5/app/state/runtime-state.js
           node --check assets/m5/app/persistence/session-state.js
           node --check assets/m5/diagnostics/state.js
@@ -69,6 +72,12 @@ jobs:
         run: node tests/m4-chat-turn-policy.mjs
       - name: Test M4 conversation service
         run: node tests/m4-conversation-service.mjs
+      - name: Test M4 Smart Scan service
+        run: node tests/m4-smart-scan-service.mjs
+      - name: Test M4 prompt service
+        run: node tests/m4-prompt-service.mjs
+      - name: Test M4 response processor
+        run: node tests/m4-response-processor.mjs
       - name: Test M5 architecture boundaries
         run: node tests/architecture-m5.mjs
       - name: Test M5 state and persistence

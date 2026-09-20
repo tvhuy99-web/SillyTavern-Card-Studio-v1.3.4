@@ -1,6 +1,6 @@
 import { installRuntimeUxGuard } from './m5/ui/runtime-guard.js?v=1.3.6-m5.1';
 
-const PRODUCTION_BUNDLE_URL = new URL('./app-production-v1.3.6.js?v=1.3.6-m5.1', import.meta.url).href;
+const PRODUCTION_BUNDLE_URL = new URL('./app-production-v1.3.6.js?v=1.3.6-m5.2', import.meta.url).href;
 
 function publish(status, extra = {}) {
   window.__STS_BUILD_PIPELINE__ = Object.freeze({
@@ -12,6 +12,9 @@ function publish(status, extra = {}) {
     proxyPersistence: 'owned-provider-service',
     chatDomain: 'owned-conversation-service',
     generationDomain: 'owned-provider-gateway',
+    worldInfoDomain: 'owned-smart-scan-service',
+    promptDomain: 'owned-prompt-service',
+    responseDomain: 'owned-response-processor',
     statePersistence: 'tiered-owned-state',
     arenaState: 'owned-state-machine',
     runtimeGuard: 'service-driven',
