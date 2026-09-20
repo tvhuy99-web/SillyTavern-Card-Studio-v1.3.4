@@ -10,10 +10,12 @@ Current owned areas:
 - `features/world-info/` + `features/prompts/`: Smart Scan selection and prompt orchestration;
 - `features/arena/`: Arena state-machine and retry/result invariants;
 - `app/state/` + `app/persistence/`: runtime-state and persistent-session ownership;
-- `diagnostics/`: diagnostics-only bounded state;
+- `diagnostics/`: diagnostics-only bounded state and source-owned Gemini model-list diagnostics;
 - `ui/runtime-guard.js`: service-driven runtime UI recovery;
 - `ui/model-connection-test.js`: source-owned model test control enhancer;
 - `ui/styles/accessibility.css`: accessibility/performance presentation policy;
 - `runtime/card-runtime/`: modular Card Runtime source and compatibility surface.
 
 Do not copy the whole legacy bundle into `src/`. Move a subsystem only after its ownership/state boundary is explicit and its old patch can be removed.
+
+M7 invariant: runtime logic must not be authored directly under `assets/`. Runtime assets are generated from `src/`/`build/` or are retained vendor/static files. The minified legacy bundle is build-only input under `legacy/` and is not shipped as a runtime asset.
