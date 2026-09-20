@@ -6,7 +6,7 @@ function clone(value) {
   return JSON.parse(JSON.stringify(value));
 }
 
-const INTERNAL_PIPELINE_RE = /<(basic_confirmation|draft|revision_confirmation)\b[^>]*>[\s\S]*?<\/\1>/gi;
+const INTERNAL_PIPELINE_RE = /<(thinking|thinking_requirements|step_outline|plan|inner_monologue|basic_confirmation|draft|revision_confirmation)\b[^>]*>[\s\S]*?<\/\1>/gi;
 const CONTENT_RE = /<content\b[^>]*>([\s\S]*?)<\/content>/i;
 
 export function modelContextContent(message) {
@@ -14,7 +14,7 @@ export function modelContextContent(message) {
   const content = String(message?.content ?? '');
   const match = content.match(CONTENT_RE);
   if (match) return match[1].trim();
-  if (!/<(?:basic_confirmation|draft|revision_confirmation|content)\b/i.test(content)) return content;
+  if (!/<(?:thinking|thinking_requirements|step_outline|plan|inner_monologue|basic_confirmation|draft|revision_confirmation|content)\b/i.test(content)) return content;
   return content
     .replace(INTERNAL_PIPELINE_RE, '')
     .replace(/<\/?content\b[^>]*>/gi, '')
