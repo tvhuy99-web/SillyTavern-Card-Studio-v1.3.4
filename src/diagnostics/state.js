@@ -7,6 +7,8 @@ const EMPTY = Object.freeze({
   selectionLog: [],
 });
 
+const sessions = new Map();
+let activeSessionId = null;
 let state = clone(EMPTY);
 
 function array(value) {
@@ -24,8 +26,27 @@ function clone(value) {
   };
 }
 
+function keyOf(sessionId) {
+  const key = String(sessionId ?? '').trim();
+  return key || null;
+}
+
+function saveActive() {
+  if (activeSessionId) sessions.set(activeSessionId, clone(state));
+}
+
 function publish(next) {
   state = clone(next);
+  if (activeSessionId) sessions.set(activeSessionId, clone(state));
+  return snapshot();
+}
+
+export function activate(sessionId) {
+  const nextId = keyOf(sessionId);
+  if (nextId === activeSessionId) return snapshot();
+  saveActive();
+  activeSessionId = nextId;
+  state = nextId && sessions.has(nextId) ? clone(sessions.get(nextId)) : clone(EMPTY);
   return snapshot();
 }
 
@@ -73,6 +94,7 @@ export function addNetwork(value) {
 }
 
 export const diagnosticsState = Object.freeze({
+  activate,
   snapshot,
   replace,
   clear,
