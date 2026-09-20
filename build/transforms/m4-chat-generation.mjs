@@ -1,4 +1,4 @@
-const M4_IMPORTS = "import { createGenerationGateway as __stsCreateGenerationGateway } from './m4/providers/common/generation-gateway.js?v=1.3.6-m4.1';\nimport { chatTurnPolicy as __stsChatTurnPolicy } from './m4/features/chat/turn-policy.js?v=1.3.6-m4.4';\nimport { createConversationService as __stsCreateConversationService } from './m4/features/chat/conversation-service.js?v=1.3.6-m4.4';\nimport { scanWorldInfo as __stsScanWorldInfo } from './m4/features/world-info/smart-scan-service.js?v=1.3.6-m4.3';\nimport { buildConversationPrompt as __stsBuildConversationPrompt } from './m4/features/prompts/prompt-service.js?v=1.3.6-m4.3';\nimport { processAIResponse as __stsProcessAIResponse } from './m4/features/chat/response-processor.js?v=1.3.6-m4.3';\n";
+const M4_IMPORTS = "import { createGenerationGateway as __stsCreateGenerationGateway } from './m4/providers/common/generation-gateway.js?v=1.3.6-m4.1';\nimport { chatTurnPolicy as __stsChatTurnPolicy } from './m4/features/chat/turn-policy.js?v=1.3.6-m4.5';\nimport { createConversationService as __stsCreateConversationService } from './m4/features/chat/conversation-service.js?v=1.3.6-m4.5';\nimport { scanWorldInfo as __stsScanWorldInfo } from './m4/features/world-info/smart-scan-service.js?v=1.3.6-m4.3';\nimport { buildConversationPrompt as __stsBuildConversationPrompt } from './m4/features/prompts/prompt-service.js?v=1.3.6-m4.3';\nimport { processAIResponse as __stsProcessAIResponse } from './m4/features/chat/response-processor.js?v=1.3.6-m4.3';\n";
 
 function findExactlyOnce(source, token, label, from = 0) {
   const first = source.indexOf(token, from);
@@ -99,8 +99,35 @@ export function applyM4ChatGenerationTransform(source) {
     'return{sendMessage:(0,b.useCallback)((t,o)=>__stsConversationService.send(t,o),[__stsConversationService])';
   code = code.slice(0, sendStart) + sendAdapter + code.slice(sendEnd);
 
+  const runtimeChatMutation =
+    'p=(0,b.useCallback)(async e=>{ol.getState().setMessages(e),await(n?.({messages:e}));let t=ol.getState();return Eh(e,t.persona?.name||"User",t.card?.name||"Character",!0)},[n])';
+  const runtimeChatMutationReplacement =
+    'p=(0,b.useCallback)(async e=>{let r=__stsChatTurnPolicy.compactModelMessages(e,{keepLatest:!0}).messages;ol.getState().setMessages(r),await(n?.({messages:r}));let t=ol.getState();return Eh(r,t.persona?.name||"User",t.card?.name||"Character",!0)},[n])';
+  let runtimeIndex = findExactlyOnce(code, runtimeChatMutation, 'card runtime chat mutation boundary');
+  code = code.slice(0, runtimeIndex) + runtimeChatMutationReplacement + code.slice(runtimeIndex + runtimeChatMutation.length);
+
+  const runtimeScanHistory =
+    '(n.messages||[]).slice(-Math.max(1,Math.trunc(Number(e?.strategy?.scan_depth||e?.scanDepth||2)))).map(e=>e.content).concat(a).join("\\n")';
+  const runtimeScanHistoryReplacement =
+    '(n.messages||[]).slice(-Math.max(1,Math.trunc(Number(e?.strategy?.scan_depth||e?.scanDepth||2)))).map(e=>__stsChatTurnPolicy.modelContextContent(e)).concat(a).join("\\n")';
+  runtimeIndex = findExactlyOnce(code, runtimeScanHistory, 'card runtime world info history');
+  code = code.slice(0, runtimeIndex) + runtimeScanHistoryReplacement + code.slice(runtimeIndex + runtimeScanHistory.length);
+
+  const runtimeRawHistory =
+    'chat_history:n.messages.map(e=>\`[\${e.role}] \${e.content}\`).join("\\n")';
+  const runtimeRawHistoryReplacement =
+    'chat_history:n.messages.map(e=>\`[\${e.role}] \${__stsChatTurnPolicy.modelContextContent(e)}\`).join("\\n")';
+  runtimeIndex = findExactlyOnce(code, runtimeRawHistory, 'card runtime raw chat history');
+  code = code.slice(0, runtimeIndex) + runtimeRawHistoryReplacement + code.slice(runtimeIndex + runtimeRawHistory.length);
+
+  const runtimePromptHistory = 'c=l?n.messages.slice(-l):[];';
+  const runtimePromptHistoryReplacement =
+    'c=l?n.messages.slice(-l).map(e=>"model"===e.role?{...e,content:__stsChatTurnPolicy.modelContextContent(e)}:e):[];';
+  runtimeIndex = findExactlyOnce(code, runtimePromptHistory, 'card runtime generated prompt history');
+  code = code.slice(0, runtimeIndex) + runtimePromptHistoryReplacement + code.slice(runtimeIndex + runtimePromptHistory.length);
+
   if (!code.startsWith(M4_IMPORTS)) code = M4_IMPORTS + code;
   return code;
 }
 
-export const M4_CHAT_GENERATION_PATCH_COUNT = 7;
+export const M4_CHAT_GENERATION_PATCH_COUNT = 11;
