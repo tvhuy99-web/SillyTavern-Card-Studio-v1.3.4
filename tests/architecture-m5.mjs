@@ -19,8 +19,8 @@ assert.ok(!index.includes('arena-runtime-ux-guard-v1.3.6.5.js'));
 
 for (const token of [
   './m5/app/state/runtime-state.js?v=1.3.6-m5.1',
-  './m5/app/persistence/session-state.js?v=1.3.6-m5.1',
-  './m5/diagnostics/state.js?v=1.3.6-m5.1',
+  './m5/app/persistence/session-state.js?v=1.3.6-m5.2',
+  './m5/diagnostics/state.js?v=1.3.6-m5.2',
   './m5/features/arena/state-machine.js?v=1.3.6-m5.1',
   '__stsSessionPersistence.createSessionSnapshot',
   '__stsSessionPersistence.normalizeLoadedSession',
