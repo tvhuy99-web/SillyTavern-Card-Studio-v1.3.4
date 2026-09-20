@@ -58,7 +58,7 @@ for (const [source, generated] of [
 assert.equal(exists('assets/chat-send-recovery-v1.3.6.5.js'), false);
 assert.equal(exists('assets/arena-runtime-ux-guard-v1.3.6.5.js'), false);
 assert.equal(read('src/app/entry.js'), read('assets/app-entry-v1.3.6.js'), 'generated app entry must match source owner');
-assert.ok(index.includes('app-entry-v1.3.6.js?v=1.3.6-m7.3'));
+assert.ok(index.includes('app-entry-v1.3.6.js?v=1.3.6-m7.4'));
 
 const runtimeGuard = read('src/ui/runtime-guard.js');
 assert.ok(!runtimeGuard.includes('window.fetch ='));
