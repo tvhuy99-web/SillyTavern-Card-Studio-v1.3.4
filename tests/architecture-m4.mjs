@@ -5,7 +5,7 @@ const read = path => fs.readFileSync(new URL('../' + path, import.meta.url), 'ut
 const production = read('assets/app-production-v1.3.6.js');
 const entry = read('assets/app-entry-v1.3.6.js');
 
-assert.ok(entry.includes("stage: 'M5-complete'"));
+assert.ok(entry.includes("stage: 'M6-complete'"));
 assert.ok(entry.includes("chatDomain: 'owned-conversation-service'"));
 assert.ok(entry.includes("generationDomain: 'owned-provider-gateway'"));
 assert.ok(entry.includes("worldInfoDomain: 'owned-smart-scan-service'"));
