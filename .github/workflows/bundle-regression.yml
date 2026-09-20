@@ -39,6 +39,7 @@ jobs:
           git diff --exit-code -- assets/card-runtime-renderer-v1.3.6.js
           git diff --exit-code -- assets/m4
           git diff --exit-code -- assets/m5
+          git diff --exit-code -- assets/m6
       - name: Parse generated runtime modules
         run: |
           node --check assets/app-entry-v1.3.6.js
@@ -62,6 +63,7 @@ jobs:
           node --check assets/m5/diagnostics/state.js
           node --check assets/m5/features/arena/state-machine.js
           node --check assets/m5/ui/runtime-guard.js
+          node --check assets/m6/ui/model-connection-test.js
       - name: Test M2/M3 architecture boundaries
         run: node tests/architecture-m2-m3.mjs
       - name: Test M4 architecture boundaries
@@ -84,6 +86,8 @@ jobs:
         run: node tests/m5-state-persistence.mjs
       - name: Test M5 Arena state machine
         run: node tests/m5-arena-state.mjs
+      - name: Test M6 UI/accessibility boundaries
+        run: node tests/architecture-m6.mjs
       - name: Test scoped preset normalizer
         run: node tests/prompt-normalizer.mjs
       - name: Test owned proxy persistence

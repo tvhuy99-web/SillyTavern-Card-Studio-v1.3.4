@@ -1,0 +1,105 @@
+/* Performance-first accessibility mode.
+   This installation is optimized for screen-reader use and low UI latency. */
+
+html,
+body,
+#root {
+  scroll-behavior: auto !important;
+}
+
+*,
+*::before,
+*::after {
+  animation: none !important;
+  animation-delay: 0s !important;
+  animation-duration: 0s !important;
+  transition: none !important;
+  transition-delay: 0s !important;
+  transition-duration: 0s !important;
+  scroll-behavior: auto !important;
+}
+
+[class*="backdrop-blur"],
+[class*="backdrop-filter"] {
+  -webkit-backdrop-filter: none !important;
+  backdrop-filter: none !important;
+}
+
+[class~="blur"],
+[class*="blur-"],
+[class~="grayscale"],
+[class*="grayscale-"],
+[class~="sepia"],
+[class*="sepia-"] {
+  filter: none !important;
+}
+
+[class~="shadow"],
+[class*="shadow-"] {
+  box-shadow: none !important;
+}
+
+[class*="hover:scale"]:hover,
+[class*="active:scale"]:active,
+[class*="group-hover:scale"] {
+  transform: none !important;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  html,
+  body,
+  #root {
+    scroll-behavior: auto !important;
+  }
+}
+
+
+/* M6 semantic controls */
+button[role="switch"] {
+  font: inherit;
+  text-align: inherit;
+}
+
+button[role="switch"]:focus-visible,
+.sts-model-test-button:focus-visible {
+  outline: 2px solid currentColor;
+  outline-offset: 2px;
+}
+
+[data-sts-model-test-enhanced="true"] {
+  width: calc(100% - 7.25rem) !important;
+  min-width: 0 !important;
+  vertical-align: middle;
+}
+
+.sts-model-test-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: .3rem;
+  min-width: 6.65rem;
+  min-height: 2.25rem;
+  margin-left: .55rem;
+  padding: .45rem .7rem;
+  border: 1px solid rgb(71 85 105);
+  border-radius: .45rem;
+  background: rgb(51 65 85);
+  color: rgb(226 232 240);
+  font-size: .75rem;
+  font-weight: 700;
+  line-height: 1rem;
+  vertical-align: middle;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.sts-model-test-button:hover:not(:disabled) { background: rgb(71 85 105); }
+.sts-model-test-button:disabled { cursor: wait; opacity: .72; }
+.sts-model-test-button[data-state="success"] { border-color: rgb(34 197 94 / .7); background: rgb(20 83 45 / .65); color: rgb(187 247 208); }
+.sts-model-test-button[data-state="error"] { border-color: rgb(239 68 68 / .7); background: rgb(127 29 29 / .5); color: rgb(254 202 202); }
+.sts-model-test-button[data-state="testing"] { border-color: rgb(14 165 233 / .65); background: rgb(12 74 110 / .55); color: rgb(186 230 253); }
+
+@media (max-width: 430px) {
+  [data-sts-model-test-enhanced="true"] { width: calc(100% - 6.45rem) !important; }
+  .sts-model-test-button { min-width: 5.85rem; padding-inline: .5rem; margin-left: .4rem; }
+}
