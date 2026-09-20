@@ -14,8 +14,8 @@ assert.ok(entry.includes("responseDomain: 'owned-response-processor'"));
 
 for (const token of [
   './m4/providers/common/generation-gateway.js?v=1.3.6-m4.1',
-  './m4/features/chat/turn-policy.js?v=1.3.6-m4.1',
-  './m4/features/chat/conversation-service.js?v=1.3.6-m4.2',
+  './m4/features/chat/turn-policy.js?v=1.3.6-m4.4',
+  './m4/features/chat/conversation-service.js?v=1.3.6-m4.4',
   './m4/features/world-info/smart-scan-service.js?v=1.3.6-m4.3',
   './m4/features/prompts/prompt-service.js?v=1.3.6-m4.3',
   './m4/features/chat/response-processor.js?v=1.3.6-m4.3',
