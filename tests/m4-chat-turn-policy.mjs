@@ -34,13 +34,14 @@ assert.deepEqual(context.promptHistory, [
   { role: 'user', content: 'u2' },
 ]);
 
-const pipeline = '<basic_confirmation>ok</basic_confirmation><draft>draft</draft><revision_confirmation>rev</revision_confirmation><content>final</content>';
+const pipeline = '<thinking>hidden</thinking><plan>plan</plan><basic_confirmation>ok</basic_confirmation><draft>draft</draft><revision_confirmation>rev</revision_confirmation><content>final</content>';
 const compacted = policy.compactModelMessages([
   { id: 'm1', role: 'model', content: pipeline },
   { id: 'u2', role: 'user', content: 'next' },
 ], { keepLatest: false });
 assert.equal(compacted.changed, true);
 assert.equal(compacted.messages[0].content, 'final');
+assert.equal(policy.modelContextContent({ role: 'model', content: '<thinking>x</thinking><plan>y</plan>visible' }), 'visible');
 
 const arena = policy.createArenaState({
   source: 'proxy',
