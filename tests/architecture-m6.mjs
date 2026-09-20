@@ -45,7 +45,15 @@ assert.ok(loreSource.includes('type:"button",onClick:()=>!o&&a(t),disabled:o'));
 assert.ok(!loreSource.includes('role:"button"'));
 assert.ok(!loreSource.includes('tabIndex:o?-1:0'));
 assert.equal((loreSource.match(/Chỉnh sửa mục/g) || []).length, 0);
-assert.ok(loreSource.includes('role:"img","aria-label":"Đã đồng bộ Semantic"'));
+assert.ok(loreSource.includes('ariaLabel:void 0,checked:!1!==e.enabled'));
+assert.ok(!loreSource.includes('role:"img"'));
+assert.ok(!production.includes('Chưa đồng bộ Semantic'));
+
+const promptStart = production.indexOf('pu=({prompt:e,index:t,onUpdate:n,onRemove:r,onEdit:a,movingPromptIndex:i,onSelectToMove:o,onMoveTo:s,onCancelMove:l})=>');
+const promptEnd = production.indexOf(',mu=', promptStart);
+assert.ok(promptStart >= 0 && promptEnd > promptStart);
+const promptSource = production.slice(promptStart, promptEnd);
+assert.ok(promptSource.includes('ariaLabel:void 0,checked:e.enabled??!1'));
 
 for (const [source, generated] of [
   ['src/ui/model-connection-test.js', 'assets/m6/ui/model-connection-test.js'],
