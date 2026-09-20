@@ -7,6 +7,7 @@ const EMPTY = Object.freeze({
   selectionLog: [],
 });
 
+const MAX_CACHED_SESSIONS = 20;
 const sessions = new Map();
 let activeSessionId = null;
 let state = clone(EMPTY);
@@ -31,13 +32,25 @@ function keyOf(sessionId) {
   return key || null;
 }
 
+function remember(sessionId, value) {
+  const key = keyOf(sessionId);
+  if (!key) return;
+  sessions.delete(key);
+  sessions.set(key, clone(value));
+  while (sessions.size > MAX_CACHED_SESSIONS) {
+    const oldest = sessions.keys().next().value;
+    if (oldest == null) break;
+    sessions.delete(oldest);
+  }
+}
+
 function saveActive() {
-  if (activeSessionId) sessions.set(activeSessionId, clone(state));
+  if (activeSessionId) remember(activeSessionId, state);
 }
 
 function publish(next) {
   state = clone(next);
-  if (activeSessionId) sessions.set(activeSessionId, clone(state));
+  if (activeSessionId) remember(activeSessionId, state);
   return snapshot();
 }
 
@@ -46,7 +59,12 @@ export function activate(sessionId) {
   if (nextId === activeSessionId) return snapshot();
   saveActive();
   activeSessionId = nextId;
-  state = nextId && sessions.has(nextId) ? clone(sessions.get(nextId)) : clone(EMPTY);
+  if (nextId && sessions.has(nextId)) {
+    state = clone(sessions.get(nextId));
+    remember(nextId, state);
+  } else {
+    state = clone(EMPTY);
+  }
   return snapshot();
 }
 
@@ -60,6 +78,24 @@ export function replace(value) {
 
 export function clear() {
   return publish(EMPTY);
+}
+
+export function drop(sessionId) {
+  const key = keyOf(sessionId);
+  if (!key) return snapshot();
+  sessions.delete(key);
+  if (activeSessionId === key) {
+    activeSessionId = null;
+    state = clone(EMPTY);
+  }
+  return snapshot();
+}
+
+export function clearAll() {
+  sessions.clear();
+  activeSessionId = null;
+  state = clone(EMPTY);
+  return snapshot();
 }
 
 export function addTurn(value) {
@@ -98,6 +134,8 @@ export const diagnosticsState = Object.freeze({
   snapshot,
   replace,
   clear,
+  drop,
+  clearAll,
   addTurn,
   updateCurrentTurn,
   addSystem,
