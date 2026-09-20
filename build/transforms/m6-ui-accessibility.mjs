@@ -45,7 +45,27 @@ export function applyM6UiAccessibilityTransform(source) {
   for (const replacement of REPLACEMENTS) {
     code = replaceExactlyOnce(code, replacement.oldText, replacement.newText, replacement.label);
   }
+
+  code = replaceExactlyOnce(
+    code,
+    'nf=(0,b.memo)(({message:e,avatarUrl:t,isEditing:n,editingContent:r,onContentChange:a,onSave:i,onCancel:o,menuActions:s,isImmersive:l,isStreaming:c=!1,onArenaSelect:u,onArenaRetry:d})=>{',
+    'nf=(0,b.memo)(({message:e,avatarUrl:t,isEditing:n,editingContent:r,onContentChange:a,onSave:i,onCancel:o,menuActions:s,isImmersive:l,isStreaming:c=!1,onArenaSelect:u,onArenaRetry:d,showPipeline:__stsShowPipeline=!1})=>{',
+    'message renderer latest pipeline flag',
+  );
+  code = replaceExactlyOnce(
+    code,
+    'n.push({label:a,content:t}),i=i.replace(r[0],"")',
+    '__stsShowPipeline&&n.push({label:a,content:t}),i=i.replace(r[0],"")',
+    'message renderer hide historical pipeline blocks',
+  );
+  code = replaceExactlyOnce(
+    code,
+    'isStreaming:U,onArenaSelect:S,onArenaRetry:C})',
+    'isStreaming:U,onArenaSelect:S,onArenaRetry:C,showPipeline:L})',
+    'message renderer pass latest model flag',
+  );
+
   return code;
 }
 
-export const M6_UI_ACCESSIBILITY_PATCH_COUNT = REPLACEMENTS.length;
+export const M6_UI_ACCESSIBILITY_PATCH_COUNT = REPLACEMENTS.length + 3;
