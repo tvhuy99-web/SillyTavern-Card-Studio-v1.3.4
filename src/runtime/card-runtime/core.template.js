@@ -229,6 +229,7 @@
         characterWrite: true,
         personaRead: true,
         personaWrite: true,
+        groupChat: false,
         extensionManagement: false,
         rawImport: OFFICIAL_LOCAL_ENGINE,
         scriptButtons: true,
