@@ -10,7 +10,7 @@ const PATCHES = [
   {
     label: 'gemini-nonstream-abort-signal',
     oldText: 'cl=async(e,t,n,r=[],a)=>{let i=sl(),o=ll(t,n,r),s=e||o.model;',
-    newText: 'cl=async(e,t,n,r=[],a)=>{let i=sl(),o=ll(t,n,r);a&&(o.config={...o.config,abortSignal:a});let s=e||o.model;',
+    newText: 'cl=async(e,t,n,r=[],a)=>{let i=sl(),o=ll(t,n,r),s=(a&&(o.config={...o.config,abortSignal:a}),e||o.model);',
   },
   {
     label: 'custom-model-list',
