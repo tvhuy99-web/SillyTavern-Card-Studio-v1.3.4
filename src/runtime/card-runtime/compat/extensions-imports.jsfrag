@@ -24,6 +24,26 @@ root.isAdmin = function () { return false; };
     root.importRawChat = async function (name, content) { return responseFromRpc(await rpc('raw.import.chat', { name: name, content: await readRawContent(content) }, 180000)); };
     root.importRawPreset = async function (name, content) { const result = await rpc('raw.import.preset', { name: name, content: await readRawContent(content) }, 180000); if (result && result.preset) updateCatalogRecord(catalog.presets, function (preset) { return presetNameOf(preset) === presetNameOf(result.preset); }, result.preset); return Boolean(result && result.ok !== false); };
     root.importRawWorldbook = async function (name, content) { const result = await rpc('raw.import.worldbook', { name: name, content: await readRawContent(content) }, 180000); if (result && result.name && !lorebookNames.includes(result.name)) lorebookNames.push(result.name); return Boolean(result && result.ok !== false); };
-    root.importRawTavernRegex = function (name, content) { try { const regex = JSON.parse(String(content)); const list = Array.isArray(regex) ? regex : [regex]; root.replaceTavernRegexes(root.getTavernRegexes().concat(list)); rpc('raw.import.regex', { name: name, content: String(content) }, 60000).catch(function () {}); return true; } catch (_) { return false; } };
+    root.importRawTavernRegex = function (name, content) {
+        try {
+            const parsed = JSON.parse(String(content));
+            let list = Array.isArray(parsed) ? parsed : [parsed];
+            list = list.filter(function (item) { return item && typeof item === 'object'; });
+            if (!list.length) return false;
+            const previous = clone(regexScopes.character);
+            const optimistic = previous.concat(list.map(normalizeRegex)).slice(0, 1000);
+            regexScopes.character = clone(optimistic);
+            rpc('raw.import.regex', { name: name, content: String(content) }, 60000).then(function (result) {
+                if (result && Array.isArray(result.regexes)) regexScopes.character = clone(result.regexes.map(normalizeRegex));
+            }).catch(function (error) {
+                regexScopes.character = previous;
+                log('error', 'Raw Tavern Regex import failed: ' + error.message);
+                diagnostic('CARD_RUNTIME_RPC_FAILED', 'raw-import', 'importRawTavernRegex', 'Raw Tavern Regex import failed: ' + error.message, { method: 'raw.import.regex', scriptId: activeScriptId });
+            });
+            return true;
+        } catch (_) {
+            return false;
+        }
+    };
 
     
