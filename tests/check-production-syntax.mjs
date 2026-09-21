@@ -8,6 +8,9 @@ const original = fs.readFileSync(target, 'utf8');
 const markers = [
   [',cl=async(e,t,n,r=[],a)=>', ',\ncl=async(e,t,n,r=[],a)=>', 'gemini-nonstream'],
   [',cc=e=>', ',\ncc=e=>', 'png-metadata'],
+  [',Xc=({initialEntries', ',\nXc=({initialEntries', 'worldbook-editor'],
+  [';var _i=je?Qo:yl;', ';\nvar _i=je?Qo:yl;', 'lodash-midpoint'],
+  [',yd=async(e,t,n,r)=>', ',\nyd=async(e,t,n,r)=>', 'ejs-worldinfo-render'],
   [',Qd=()=>', ',\nQd=()=>', 'ui-export-dialog'],
   ['case"chat.refresh"', '\ncase"chat.refresh"', 'chat-refresh'],
   ['case"generation.models"', '\ncase"generation.models"', 'generation-models'],
