@@ -13,9 +13,18 @@
         chat: buildLegacyChat(), characters: bootCharacters, characterId: currentCharacterIndex, groups: clone(BOOT.catalog && BOOT.catalog.groups || []), groupId: BOOT.context.groupId || null,
         name1: BOOT.context.name1, name2: BOOT.context.name2, chatId: BOOT.context.chatId, onlineStatus: BOOT.context.onlineStatus || 'Connected',
         eventSource: root.eventSource, event_types: root.tavern_events, extensionSettings: extensionSettings,
-        powerUserSettings: root.power_user, chatMetadata: clone(BOOT.chatMetadata || {}), worldInfo: worldInfo,
+        powerUserSettings: root.power_user, chatMetadata: clone(BOOT.chatMetadata || extensionSettings.__cardRuntimeChatMetadata || {}), worldInfo: worldInfo,
         getCurrentChatId: function () { return BOOT.context.chatId; },
-        saveMetadata: function () { return Promise.resolve(); }, saveSettingsDebounced: function () { return Promise.resolve(); },
+        saveMetadata: async function () {
+            extensionSettings.__cardRuntimeChatMetadata = clone(context.chatMetadata || {});
+            context.extensionSettings = extensionSettings;
+            await rpc('extension.settings.save', { settings: extensionSettings }, 30000);
+            return clone(context.chatMetadata);
+        },
+        saveSettingsDebounced: async function () {
+            await rpc('extension.settings.save', { settings: extensionSettings }, 30000);
+            return clone(extensionSettings);
+        },
         executeSlashCommands: root.executeSlashCommands, substituteParams: root.substitudeMacros,
         sendMessageAsUser: root.sendMessageAsUser, addOneMessage: function (message) { return root.createChatMessages([message]); },
         deleteLastMessage: function () { return root.deleteChatMessages(-1); },
@@ -54,11 +63,11 @@
         markdown: { render: root.formatAsDisplayedMessage }, files: { url: root.resolveCardAsset },
         commands: { registerCommand: function (name, callback) { root.eventOn('slash_' + name, callback); }, runCommand: root.executeSlashCommands },
         modules: { quickReply: {}, expression: {}, characterSelect: {} }, extensions: { quickReply: { enabled: true }, expression: { enabled: true }, characterSelect: { enabled: true } },
-        saveExtensionSettings: function (settings) {
+        saveExtensionSettings: async function (settings) {
             extensionSettings = Object.assign(extensionSettings, clone(settings || {}));
             context.extensionSettings = extensionSettings;
-            rpc('extension.settings.save', { settings: extensionSettings }, 30000).catch(function () {});
-            return Promise.resolve(clone(extensionSettings));
+            await rpc('extension.settings.save', { settings: extensionSettings }, 30000);
+            return clone(extensionSettings);
         },
         loadExtensionSettings: function () { return clone(extensionSettings); },
         loadCharacterData: function () { return rpc('character.data.get', {}, 30000); },

@@ -81,11 +81,11 @@ assert.ok(production.includes('__stsChatTurnPolicy.compactModelMessages(e,{keepL
 assert.ok(production.includes('chat_history:n.messages.map(e=>`[${e.role}] ${__stsChatTurnPolicy.modelContextContent(e)}`).join("\\n")'));
 assert.ok(!production.includes('chat_history:n.messages.map(e=>`[${e.role}] ${e.content}`).join("\\n")'));
 
-const smartStateStart = production.indexOf('F=__stsNormalizePromptVariableScopes(o,__stsReadGlobalVariables()),o=F.chat,G=F.global');
+const smartStateStart = production.indexOf('F=__stsNormalizePromptVariableScopes(o,__stsReadGlobalVariables()),G=(o=F.chat,F.global)');
 const smartStateEnd = production.indexOf('let z=', smartStateStart);
 assert.ok(smartStateStart >= 0 && smartStateEnd > smartStateStart);
 const smartStateAdapter = production.slice(smartStateStart, smartStateEnd);
-assert.ok(smartStateAdapter.includes('B=F.mythicDatabase'));
+assert.ok(smartStateAdapter.includes('B=(F=__stsBuildSmartStateBlock({variables:o,messages:t,card:r,legacyVisualState:s}),F.mythicDatabase)'));
 assert.ok(smartStateAdapter.includes('U=F.visualState'));
 assert.ok(smartStateAdapter.includes('let $=F.smartStateBlock;F=F.logicStore'));
 assert.ok(!smartStateAdapter.includes('G.push(`<MythicDatabase>'));
@@ -93,6 +93,8 @@ assert.ok(production.includes('.replace(/{{last_state}}/g,U)'));
 assert.ok(production.includes('Np=(e,t,n,r)=>__stsBuildSmartStateBlock({variables:e,card:t,messages:n.slice(0,Math.max(0,r))}).smartStateBlock'));
 assert.ok(smartStateAdapter.includes('F=__stsBuildSmartStateBlock({variables:o,messages:t,card:r,legacyVisualState:s})'));
 assert.ok(production.includes('G=Gu(G,"set",r,s)'), 'setglobalvar must mutate canonical global scope');
+assert.ok(!production.includes('F=__stsNormalizePromptVariableScopes(o,__stsReadGlobalVariables()),o=F.chat,G=F.global'), 'canonical chat scope must assign the existing parameter instead of redeclaring it');
+assert.ok(!production.includes('G=(o=F.chat,F.global),F=__stsBuildSmartStateBlock'), 'Smart State must reassign the existing F binding instead of redeclaring it');
 assert.ok(production.includes('r=Uu(G,n)'), 'getglobalvar must read canonical global scope');
 assert.ok(!production.includes('o=Gu(o,"set","globals."+r,s)'), 'legacy chat.globals mutation must be removed');
 assert.ok(production.includes('rpgSnapshot:y,updatedVariables:o,updatedGlobalVariables:G}'), 'prompt-side chat/global mutations must be returned for persistence');

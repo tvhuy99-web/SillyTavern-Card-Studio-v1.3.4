@@ -63,7 +63,7 @@
     root.setBackground = function (url) {
         const element = document.getElementById('sheld');
         if (element) element.style.backgroundImage = url ? 'url("' + root.resolveCardAsset(url).replace(/"/g, '') + '")' : 'none';
-        root.sendMessageToParent('SET_VISUAL_STATE', { type: 'bg', value: url || '' });
+        root.sendMessageToParent('SET_VISUAL_STATE', { bg: url || '' });
     };
     root.PlaySound = root.play_audio;
     root.ClickSound = function () {};
@@ -74,5 +74,5 @@
         return root.marked && root.marked.parse ? root.marked.parse(processed) : processed;
     };
     root.retrieveDisplayedMessage = function (messageId) { return document.querySelector('.mes[mesid="' + messageId + '"] .mes_text, #message-' + messageId + ' .mes_text'); };
-    root.refreshOneMessage = function () { return Promise.resolve(); };
+    root.refreshOneMessage = function (messageId) { return rpc('chat.refresh', { messageId: messageId }, 30000); };
 

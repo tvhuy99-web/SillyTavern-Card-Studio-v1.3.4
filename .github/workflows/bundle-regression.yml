@@ -47,7 +47,7 @@ jobs:
       - name: Parse generated runtime modules
         run: |
           node --check assets/app-entry-v1.3.6.js
-          node --check assets/app-production-v1.3.6.js
+          node tests/check-production-syntax.mjs
           node --check assets/prompt-normalizer-v1.3.6.js
           node --check assets/proxy-persistence-service-v1.3.6.js
           node --check assets/smart-state-service-v1.3.6.js
@@ -107,6 +107,8 @@ jobs:
         run: node tests/proxy-persistence.mjs
       - name: Test Card Runtime extraction
         run: node tests/card-runtime-extraction.mjs
+      - name: Test Card Runtime surface gaps
+        run: node tests/runtime-surface-gaps.mjs
       - name: Test Arena state transform
         run: node tests/arena-state-transform.mjs
       - name: Test Arena cancellation transform

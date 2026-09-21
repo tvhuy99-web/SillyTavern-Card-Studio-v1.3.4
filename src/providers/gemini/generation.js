@@ -19,7 +19,7 @@ export function createGeminiGenerationProvider(deps) {
       const stream = await client.models.generateContentStream({
         model: resolvedModel,
         contents: request.contents,
-        config: request.config,
+        config: { ...request.config, ...(signal ? { abortSignal: signal } : {}) },
       });
       for await (const chunk of stream) {
         if (signal?.aborted) break;

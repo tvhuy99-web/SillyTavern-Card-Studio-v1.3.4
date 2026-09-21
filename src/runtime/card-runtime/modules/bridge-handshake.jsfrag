@@ -1,5 +1,8 @@
     let readyResolve;
-    root.cardStudioReady = new Promise(function (resolve) { readyResolve = resolve; });
+    let readyReject;
+    let handshakeSettled = false;
+    let handshakeTimeout = 0;
+    root.cardStudioReady = new Promise(function (resolve, reject) { readyResolve = resolve; readyReject = reject; });
     root.addEventListener('message', function (event) {
         if (event.source !== root.parent || !event.data) return;
         const data = event.data;
@@ -59,7 +62,11 @@
             if (data.payload && data.payload.variableScopes) Object.entries(data.payload.variableScopes).forEach(function (entry) { scopeCache.set(entry[0], clone(asObject(entry[1]))); });
             if (data.payload && Array.isArray(data.payload.worldInfo)) worldInfo = clone(data.payload.worldInfo);
             syncContext();
-            readyResolve(true);
+            if (!handshakeSettled) {
+                handshakeSettled = true;
+                if (handshakeTimeout) { clearTimeout(handshakeTimeout); handshakeTimeout = 0; }
+                readyResolve(true);
+            }
             setTimeout(function () {
                 emitEvent(root.tavern_events.CHAT_CHANGED, BOOT.context.chatId);
                 emitEvent(root.tavern_events.EXTENSION_SETTINGS_LOADED);

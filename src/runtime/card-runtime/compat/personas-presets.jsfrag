@@ -32,15 +32,25 @@ root.getPersonaNames = function () { return catalog.personas.map(personaNameOf).
     root.updatePersonaWith = async function (id, updater, options) { updater = requireFunctionCallback('updatePersonaWith', updater); const next = await updater(root.getPersona(id)); await root.replacePersona(id, next, options); return next; };
 
     function presetNameOf(preset) { return String(preset && preset.name || ''); }
-    function currentPresetRecord() { return catalog.presets.find(function (preset) { return presetNameOf(preset) === BOOT.context.presetName; }) || catalog.presets[0] || {}; }
+    function currentPresetRecord() { return catalog.presets.find(function (preset) { return presetNameOf(preset) === BOOT.context.presetName; }) || catalog.presets[0] || null; }
     root.getPresetNames = function () { return catalog.presets.map(presetNameOf).filter(Boolean); };
-    root.getLoadedPresetName = function () { return BOOT.context.presetName || presetNameOf(currentPresetRecord()); };
+    root.getLoadedPresetName = function () { const current = currentPresetRecord(); return current ? presetNameOf(current) : ''; };
     root.getPreset = function (name) {
         const target = !name || name === 'in_use' ? currentPresetRecord() : catalog.presets.find(function (preset) { return presetNameOf(preset) === String(name); });
         if (!target) throw new Error("Preset '" + name + "' does not exist");
         return clone(target);
     };
-    root.loadPreset = function (name) { if (!root.getPresetNames().includes(String(name))) return false; BOOT.context.presetName = String(name); rpc('preset.load', { name: name }, 60000).catch(function (error) { log('error', error.message); }); return true; };
+    root.loadPreset = function (name) {
+        name = String(name);
+        if (!root.getPresetNames().includes(name)) return false;
+        const previous = BOOT.context.presetName;
+        BOOT.context.presetName = name;
+        rpc('preset.load', { name: name }, 60000).catch(function (error) {
+            BOOT.context.presetName = previous;
+            log('error', 'Could not load preset "' + name + '": ' + error.message);
+        });
+        return true;
+    };
     root.createPreset = async function (name, preset) { if (name === 'in_use' || root.getPresetNames().includes(String(name))) return false; const result = await rpc('preset.create', { name: name, preset: preset || root.default_preset }, 120000); catalog.presets.push(clone(result)); return true; };
     root.createOrReplacePreset = async function (name, preset, options) { const targetName = name === 'in_use' ? root.getLoadedPresetName() : String(name); const exists = root.getPresetNames().includes(targetName); if (exists) await root.replacePreset(targetName, preset, options); else await root.createPreset(targetName, preset); return !exists; };
     root.deletePreset = async function (name) { if (!root.getPresetNames().includes(String(name))) return false; await rpc('preset.delete', { name: name }, 120000); catalog.presets = catalog.presets.filter(function (preset) { return presetNameOf(preset) !== String(name); }); return true; };

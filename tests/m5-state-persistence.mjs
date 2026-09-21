@@ -91,7 +91,7 @@ const persistedPipeline = createSessionSnapshot({
   ],
 }, {}, { now: () => 100 });
 assert.equal(persistedPipeline.chatHistory[0].content, 'old persisted');
-assert.match(persistedPipeline.chatHistory[2].content, /<basic_confirmation>keep<\\/basic_confirmation>/);
+assert.match(persistedPipeline.chatHistory[2].content, /<basic_confirmation>keep<\/basic_confirmation>/);
 
 const legacy = {
   ...snapshot,

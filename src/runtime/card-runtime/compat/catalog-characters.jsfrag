@@ -4,6 +4,12 @@
     catalog.personas = Array.isArray(catalog.personas) ? catalog.personas : [];
     catalog.presets = Array.isArray(catalog.presets) ? catalog.presets : [];
     catalog.extensions = asObject(catalog.extensions);
+    if (!catalog.characters.length && BOOT.characterCard) {
+        catalog.characters.push({ fileName: BOOT.context.characterKey, name: BOOT.context.name2, avatar: BOOT.characterAvatar, card: clone(BOOT.characterCard), current: true });
+    }
+    if (!catalog.personas.length && BOOT.context.name1) {
+        catalog.personas.push({ id: BOOT.context.personaId || 'current', avatar_id: BOOT.context.personaId || 'current', name: BOOT.context.name1, avatar: BOOT.userAvatar, current: true });
+    }
 
     function responseFromRpc(result, status) {
         const responseStatus = Number(status || result && result.status || 200);
@@ -19,7 +25,8 @@
 
     function currentCharacterRecord() {
         return catalog.characters.find(function (entry) { return entry && (entry.current || entry.fileName === BOOT.context.characterKey || entry.name === BOOT.context.name2 || entry.card && entry.card.name === BOOT.context.name2); })
-            || { fileName: BOOT.context.characterKey, name: BOOT.context.name2, avatar: BOOT.characterAvatar, card: BOOT.characterCard, current: true };
+            || catalog.characters[0]
+            || null;
     }
     function characterNameOf(entry) { return String(entry && (entry.name || entry.card && entry.card.name) || ''); }
     function characterIdOf(entry) { return String(entry && (entry.avatar || entry.fileName || entry.id || characterNameOf(entry)) || ''); }
@@ -91,7 +98,8 @@
     function personaNameOf(persona) { return String(persona && persona.name || ''); }
     function currentPersonaRecord() {
         return catalog.personas.find(function (persona) { return persona && (persona.current || personaIdOf(persona) === BOOT.context.personaId || personaNameOf(persona) === BOOT.context.name1); })
-            || { id: BOOT.context.personaId || 'current', avatar_id: BOOT.context.personaId || 'current', name: BOOT.context.name1, description: '', avatar: BOOT.userAvatar, current: true };
+            || catalog.personas[0]
+            || null;
     }
     function toOfficialPersona(persona) {
         return Object.assign({
