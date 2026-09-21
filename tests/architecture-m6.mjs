@@ -50,7 +50,7 @@ assert.ok(!loreSource.includes('role:"img"'));
 assert.ok(!production.includes('Chưa đồng bộ Semantic'));
 assert.ok(production.includes('showPipeline:__stsShowPipeline=!1'));
 assert.ok(production.includes('__stsShowPipeline&&n.push({label:a,content:t})'));
-assert.ok(production.includes('isStreaming:U,onArenaSelect:S,onArenaRetry:C,showPipeline:L})');
+assert.ok(production.includes('isStreaming:U,onArenaSelect:S,onArenaRetry:C,showPipeline:L})'));
 assert.ok(production.includes('[m,e.content,h,c,T,__stsShowPipeline]'));
 
 const promptStart = production.indexOf('pu=({prompt:e,index:t,onUpdate:n,onRemove:r,onEdit:a,movingPromptIndex:i,onSelectToMove:o,onMoveTo:s,onCancelMove:l})=>');
