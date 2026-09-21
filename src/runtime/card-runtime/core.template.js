@@ -237,6 +237,7 @@
         hudMirror: true,
         streamingPreview: true,
         toolCalling: false,
+        popupResult: false,
         structuredOutput: false,
         providerParity: false,
         parentDomCompatibility: FULL_COMPATIBILITY_MODE,
