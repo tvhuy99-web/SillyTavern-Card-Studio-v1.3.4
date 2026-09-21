@@ -69,6 +69,7 @@ const allowedAssetRoots = new Set([
   'ejs.min-Cthf3_XD.js',
   'index-CsumjV7z.css',
   'index-yS4Vru8B.js',
+  'initial-variable-service-v1.3.6.js',
   'jszip.min-CF4xG0Dr.js',
   'lodash.min-xZXeUb-0.js',
   'm4',
