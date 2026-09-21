@@ -79,6 +79,7 @@ const deps = {
       fullPrompt: 'PROMPT',
       rpgSnapshot: { snapshot: true },
       structuredPrompt: ['PROMPT'],
+      updatedVariables: { hp: 11, promptPersisted: true },
     };
   },
   logPrompt: () => { calls.promptLog = (calls.promptLog || 0) + 1; },
@@ -145,6 +146,7 @@ assert.equal(state.messages[1].content, 'AI');
 assert.equal(state.messages[1].reasoning_content, 'WHY');
 assert.deepEqual(state.messages[1].activeLorebookUids, ['lore-1']);
 assert.equal(calls.prompt, 1);
+assert.deepEqual(state.variables, { hp: 11, promptPersisted: true });
 assert.equal(calls.processed.at(-1).forced, false);
 assert.equal(controllers.size, 0);
 assert.equal(state.loading, false);

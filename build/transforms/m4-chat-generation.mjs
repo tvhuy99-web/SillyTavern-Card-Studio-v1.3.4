@@ -1,4 +1,4 @@
-const M4_IMPORTS = "import { createGenerationGateway as __stsCreateGenerationGateway } from './m4/providers/common/generation-gateway.js?v=1.3.6-m4.1';\nimport { chatTurnPolicy as __stsChatTurnPolicy } from './m4/features/chat/turn-policy.js?v=1.3.6-m4.5';\nimport { createConversationService as __stsCreateConversationService } from './m4/features/chat/conversation-service.js?v=1.3.6-m4.6';\nimport { scanWorldInfo as __stsScanWorldInfo } from './m4/features/world-info/smart-scan-service.js?v=1.3.6-m4.8';\nimport { buildConversationPrompt as __stsBuildConversationPrompt } from './m4/features/prompts/prompt-service.js?v=1.3.6-m4.3';\nimport { processAIResponse as __stsProcessAIResponse } from './m4/features/chat/response-processor.js?v=1.3.6-m4.3';\n";
+const M4_IMPORTS = "import { createGenerationGateway as __stsCreateGenerationGateway } from './m4/providers/common/generation-gateway.js?v=1.3.6-m4.1';\nimport { chatTurnPolicy as __stsChatTurnPolicy } from './m4/features/chat/turn-policy.js?v=1.3.6-m4.5';\nimport { createConversationService as __stsCreateConversationService } from './m4/features/chat/conversation-service.js?v=1.3.6-m4.7';\nimport { scanWorldInfo as __stsScanWorldInfo } from './m4/features/world-info/smart-scan-service.js?v=1.3.6-m4.8';\nimport { buildConversationPrompt as __stsBuildConversationPrompt } from './m4/features/prompts/prompt-service.js?v=1.3.6-m4.3';\nimport { processAIResponse as __stsProcessAIResponse } from './m4/features/chat/response-processor.js?v=1.3.6-m4.3';\n";
 
 function findExactlyOnce(source, token, label, from = 0) {
   const first = source.indexOf(token, from);
@@ -119,6 +119,12 @@ export function applyM4ChatGenerationTransform(source) {
     + '.replace(/{{last_state}}/g,U)'
     + code.slice(legacyLastStateAt + legacyLastStateMacro.length);
 
+  const promptResult = 'return{fullPrompt:re.map(e=>e.content).join("\\n\\n").replace(/\\n{3,}/g,"\\n\\n").trim(),structuredPrompt:re,rpgSnapshot:y}';
+  const promptResultIndex = findExactlyOnce(code, promptResult, 'prompt result variable persistence');
+  code = code.slice(0, promptResultIndex)
+    + 'return{fullPrompt:re.map(e=>e.content).join("\\n\\n").replace(/\\n{3,}/g,"\\n\\n").trim(),structuredPrompt:re,rpgSnapshot:y,updatedVariables:o}'
+    + code.slice(promptResultIndex + promptResult.length);
+
   const plainTextVariableGate = 'g||(i=Xu(i),';
   const plainTextVariableGateIndex = findExactlyOnce(
     code,
@@ -181,4 +187,4 @@ export function applyM4ChatGenerationTransform(source) {
   return code;
 }
 
-export const M4_CHAT_GENERATION_PATCH_COUNT = 15;
+export const M4_CHAT_GENERATION_PATCH_COUNT = 16;

@@ -132,6 +132,11 @@ export function applyM5StateTransform(source) {
     "autosave excludes diagnostics dependencies");
 
   code = replaceOnce(code,
+    'k={id:\`msg-start-\${Date.now()}-\${Math.random().toString(36).substring(2,9)}\`,role:"model",content:l.trim()?l:"",originalRawContent:s,timestamp:Date.now()};',
+    'k={id:\`msg-start-\${Date.now()}-\${Math.random().toString(36).substring(2,9)}\`,role:"model",content:l.trim()?l:"",originalRawContent:s,contextState:JSON.parse(JSON.stringify(g)),timestamp:Date.now()};',
+    "opening message context state");
+
+  code = replaceOnce(code,
     'lastUpdated:Date.now(),initialDiagnosticLog:d};try{await Wt(S),e(a)}',
     'lastUpdated:Date.now()};try{await Wt(S),__stsDiagnosticsState.drop(a),__stsDiagnosticsState.activate(a),d&&__stsDiagnosticsState.addSystem({level:"log",source:"regex",message:String(d),timestamp:Date.now()}),e(a)}',
     "new session diagnostics lifecycle");
@@ -155,4 +160,4 @@ export function applyM5StateTransform(source) {
   return code;
 }
 
-export const M5_STATE_PATCH_COUNT = 33;
+export const M5_STATE_PATCH_COUNT = 34;

@@ -66,6 +66,9 @@ export function createConversationService(deps) {
       activeEntries: scan.activeEntries,
       generatedEntries,
     });
+    if (prompt?.updatedVariables && typeof prompt.updatedVariables === 'object') {
+      deps.setSessionData({ variables: prompt.updatedVariables });
+    }
     deps.logPrompt(prompt.structuredPrompt);
     return prompt;
   }

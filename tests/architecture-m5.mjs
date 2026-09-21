@@ -46,6 +46,10 @@ assert.ok(production.includes('__stsDiagnosticsState.drop(e)'));
 assert.ok(production.includes('__stsDiagnosticsState.clearAll()'));
 assert.ok(production.includes('__stsSessionPersistence.normalizeLoadedSession(a).record'));
 assert.ok(!production.includes('lastUpdated:Date.now(),initialDiagnosticLog:d}'));
+assert.ok(
+  production.includes('originalRawContent:s,contextState:JSON.parse(JSON.stringify(g)),timestamp:Date.now()'),
+  'opening message must persist the initialized variable snapshot',
+);
 
 for (const [source, generated] of [
   ['src/app/state/runtime-state.js', 'assets/m5/app/state/runtime-state.js'],
