@@ -30,7 +30,7 @@ assert.ok(geminiSource.includes("document.addEventListener('click', handleModelL
 const scriptTags = index.match(/<script\b[^>]*>/g) || [];
 assert.equal(scriptTags.length, 1, 'index must have one application script entry');
 assert.ok(scriptTags[0].includes('type="module"'));
-assert.ok(scriptTags[0].includes('app-entry-v1.3.6.js?v=1.3.6-m7.1'));
+assert.ok(scriptTags[0].includes('app-entry-v1.3.6.js?v=1.3.6-m7.5'));
 assert.ok(!index.includes('gemini-model-list-diagnostics-v1.3.6.js'));
 
 assert.ok(build.includes("../legacy/app-bundle-input-v1.3.6.js"));
@@ -77,6 +77,8 @@ const allowedAssetRoots = new Set([
   'm7',
   'prompt-normalizer-v1.3.6.js',
   'proxy-persistence-service-v1.3.6.js',
+  'smart-state-service-v1.3.6.js',
+  'variable-scope-service-v1.3.6.js',
   'ui-d8367f0f.css',
 ]);
 const assetRoots = fs.readdirSync(url('assets'));
