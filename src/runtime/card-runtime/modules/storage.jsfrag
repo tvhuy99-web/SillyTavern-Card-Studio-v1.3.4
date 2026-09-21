@@ -1,11 +1,16 @@
     const storageState = { local: new Map(Object.entries(BOOT.storage.local || {})), session: new Map(Object.entries(BOOT.storage.session || {})) };
+    function reportStoragePersistenceFailure(method, type, key, error) {
+        const message = 'Card Runtime storage persistence failed: ' + method + ' (' + type + ')' + (key === undefined ? '' : ' key=' + key) + ': ' + (error && error.message || error);
+        log('error', message);
+        diagnostic('CARD_RUNTIME_STORAGE_PERSIST_FAILED', 'storage', 'storageMock', message, { details: { method: method, storageType: type, key: key === undefined ? null : String(key) } });
+    }
     function storageMock(type) {
         const map = storageState[type];
         return {
             getItem: function (key) { key = String(key); return map.has(key) ? map.get(key) : null; },
-            setItem: function (key, value) { key = String(key); value = String(value); map.set(key, value); rpc('storage.set', { storageType: type, key: key, value: value }).catch(function () {}); },
-            removeItem: function (key) { key = String(key); map.delete(key); rpc('storage.remove', { storageType: type, key: key }).catch(function () {}); },
-            clear: function () { map.clear(); rpc('storage.clear', { storageType: type }).catch(function () {}); },
+            setItem: function (key, value) { key = String(key); value = String(value); map.set(key, value); rpc('storage.set', { storageType: type, key: key, value: value }).catch(function (error) { reportStoragePersistenceFailure('setItem', type, key, error); }); },
+            removeItem: function (key) { key = String(key); map.delete(key); rpc('storage.remove', { storageType: type, key: key }).catch(function (error) { reportStoragePersistenceFailure('removeItem', type, key, error); }); },
+            clear: function () { map.clear(); rpc('storage.clear', { storageType: type }).catch(function (error) { reportStoragePersistenceFailure('clear', type, undefined, error); }); },
             key: function (index) { return Array.from(map.keys())[index] || null; },
             get length() { return map.size; }
         };
@@ -19,8 +24,9 @@
     function createLocalForageInstance(config) {
         config = Object.assign({ name: 'card-studio', storeName: 'keyvaluepairs' }, config || {});
         let databasePromise = null;
+        let selectedDriver = root.indexedDB ? 'asyncStorage' : 'localStorageWrapper';
         function openDatabase() {
-            if (!root.indexedDB) return Promise.resolve(null);
+            if (selectedDriver !== 'asyncStorage' || !root.indexedDB) return Promise.resolve(null);
             if (databasePromise) return databasePromise;
             databasePromise = new Promise(function (resolve, reject) {
                 const request = root.indexedDB.open(String(config.name), 1);
@@ -56,9 +62,23 @@
             key: function (index) { return api.keys().then(function (keys) { return keys[index] === undefined ? null : keys[index]; }); },
             iterate: function (iterator) { return api.keys().then(async function (keys) { for (let i = 0; i < keys.length; i += 1) { const value = await api.getItem(keys[i]); const result = await iterator(value, keys[i], i + 1); if (result !== undefined) return result; } }); },
             createInstance: function (next) { return createLocalForageInstance(Object.assign({}, config, next || {})); },
-            driver: function () { return root.indexedDB ? 'asyncStorage' : 'localStorageWrapper'; },
-            setDriver: function () { return Promise.resolve(); },
-            defineDriver: function () { return Promise.resolve(); }
+            INDEXEDDB: 'asyncStorage',
+            LOCALSTORAGE: 'localStorageWrapper',
+            WEBSQL: 'webSQLStorage',
+            driver: function () { return selectedDriver; },
+            setDriver: function (driver) {
+                const requested = (Array.isArray(driver) ? driver : [driver]).filter(Boolean).map(String);
+                const nextDriver = requested.find(function (name) { return name === 'localStorageWrapper' || name === 'asyncStorage' && Boolean(root.indexedDB); });
+                if (!nextDriver) return Promise.reject(new Error('Requested localForage driver is unavailable in Card Runtime: ' + requested.join(', ')));
+                selectedDriver = nextDriver;
+                databasePromise = null;
+                return Promise.resolve();
+            },
+            defineDriver: function (driver) {
+                const name = String(driver && (driver._driver || driver.driver) || '');
+                if (name === 'asyncStorage' || name === 'localStorageWrapper') return Promise.resolve();
+                return Promise.reject(new Error('Custom localForage drivers are not supported in Card Runtime: ' + (name || 'unnamed')));
+            }
         };
         return api;
     }
