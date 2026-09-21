@@ -62,6 +62,44 @@ const baseInput = {
 }
 
 {
+  let resolvedEntries;
+  await scanWorldInfo({
+    ...baseInput,
+    card: {
+      ...baseInput.card,
+      attached_lorebooks: ['Global Lore'],
+      char_book: {
+        entries: [
+          ...baseInput.card.char_book.entries,
+          {
+            uid: 'hydrated-global-1',
+            source_lorebook: 'Global Lore',
+            keys: ['gate'],
+            content: 'HYDRATED GLOBAL',
+            enabled: true,
+          },
+        ],
+      },
+    },
+    lorebooks: [
+      {
+        name: 'Global Lore',
+        book: { entries: [{ uid: 'global-1', keys: ['gate'], content: 'GLOBAL', enabled: true }] },
+      },
+    ],
+  }, {
+    getSettings: () => ({ enabled: false, mode: 'keyword' }),
+    resolveWorldInfo: (...args) => {
+      resolvedEntries = args[1];
+      return { activeEntries: resolvedEntries };
+    },
+    logSystemMessage() {},
+  });
+  assert.ok(resolvedEntries.some(entry => entry.uid === 'hydrated-global-1'));
+  assert.ok(!resolvedEntries.some(entry => entry.uid === 'global-1'));
+}
+
+{
   let called = 0;
   let selected;
   const result = await scanWorldInfo({ ...baseInput, forceActiveUids: ['b'] }, {

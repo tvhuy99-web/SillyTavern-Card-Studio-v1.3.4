@@ -52,18 +52,26 @@ function buildVariableState(variables) {
 
 export async function scanWorldInfo(input, deps) {
   const settings = deps.getSettings() || {};
+  const cardEntries = input.card?.char_book?.entries || [];
   const attachedLorebookNames = new Set(
     Array.isArray(input.card?.attached_lorebooks)
       ? input.card.attached_lorebooks.map(String)
       : [],
   );
-  const attachedEntries = (input.lorebooks || []).flatMap(lorebook =>
-    attachedLorebookNames.has(String(lorebook?.name || ''))
-      ? (lorebook?.book?.entries || [])
-      : [],
+  const hydratedLorebookNames = new Set(
+    cardEntries
+      .map(entry => String(entry?.source_lorebook || ''))
+      .filter(Boolean),
   );
+  const attachedEntries = (input.lorebooks || []).flatMap(lorebook => {
+    const lorebookName = String(lorebook?.name || '');
+    return attachedLorebookNames.has(lorebookName)
+      && !hydratedLorebookNames.has(lorebookName)
+      ? (lorebook?.book?.entries || [])
+      : [];
+  });
   const entries = [
-    ...(input.card?.char_book?.entries || []),
+    ...cardEntries,
     ...attachedEntries,
     ...(input.generatedEntries || []),
   ].filter(entry => entry?.uid && input.worldInfoState?.[entry.uid] !== false);
