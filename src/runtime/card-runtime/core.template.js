@@ -294,7 +294,14 @@
     }
     
     root.parent.postMessage({ type: 'HANDSHAKE_INIT', payload: { messageId: BOOT.context.messageId } }, '*');
-    setTimeout(function () { readyResolve(true); }, 5000);
+    handshakeTimeout = setTimeout(function () {
+        if (handshakeSettled) return;
+        handshakeSettled = true;
+        handshakeTimeout = 0;
+        const message = 'Card Runtime handshake timed out before HANDSHAKE_ACK.';
+        diagnostic('CARD_RUNTIME_RPC_TIMEOUT', 'handshake', 'bridge', message, { method: 'HANDSHAKE_INIT' });
+        readyReject(new Error(message));
+    }, 5000);
 })();
     return window.cardStudioReady;
   };
