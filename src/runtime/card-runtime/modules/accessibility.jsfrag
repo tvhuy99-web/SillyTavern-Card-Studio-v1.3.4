@@ -55,7 +55,13 @@
         };
     }
     root.callPopup = root.showPopup = function (content, type, title) {
-        root.sendMessageToParent('SHOW_POPUP', { html: safeString(content, 500000), type: type || 'text', title: safeString(title || 'Thông báo Thẻ', 120) });
+        const popupType = String(type || 'text').toLowerCase();
+        if (popupType === 'input' || popupType === 'confirm') {
+            const message = 'Interactive popup results are unavailable in the isolated Card Runtime.';
+            diagnostic('CARD_RUNTIME_RPC_UNSUPPORTED', 'popup', 'callPopup', message, { method: 'callPopup', scriptId: activeScriptId, details: { popupType: popupType, capability: 'popupResult' } });
+            return Promise.reject(new Error(message));
+        }
+        root.sendMessageToParent('SHOW_POPUP', { html: safeString(content, 500000), type: popupType, title: safeString(title || 'Thông báo Thẻ', 120) });
         return Promise.resolve(true);
     };
     if (!navigator.clipboard) Object.defineProperty(navigator, 'clipboard', { value: { writeText: function (text) { root.sendMessageToParent('COPY_TO_CLIPBOARD', safeString(text, 1000000)); return Promise.resolve(); } } });
