@@ -1,4 +1,4 @@
-const M5_IMPORTS = "import { runtimeState as __stsRuntimeState } from './m5/app/state/runtime-state.js?v=1.3.6-m5.1';\nimport { diagnosticsState as __stsDiagnosticsState } from './m5/diagnostics/state.js?v=1.3.6-m5.3';\nimport * as __stsSessionPersistence from './m5/app/persistence/session-state.js?v=1.3.6-m5.3';\nimport * as __stsArenaState from './m5/features/arena/state-machine.js?v=1.3.6-m5.1';\n";
+const M5_IMPORTS = "import { mergeInitialVariableSources as __stsMergeInitialVariableSources } from './initial-variable-service-v1.3.6.js?v=1.3.6-initvar-1';\nimport { runtimeState as __stsRuntimeState } from './m5/app/state/runtime-state.js?v=1.3.6-m5.1';\nimport { diagnosticsState as __stsDiagnosticsState } from './m5/diagnostics/state.js?v=1.3.6-m5.3';\nimport * as __stsSessionPersistence from './m5/app/persistence/session-state.js?v=1.3.6-m5.3';\nimport * as __stsArenaState from './m5/features/arena/state-machine.js?v=1.3.6-m5.1';\n";
 
 function replaceOnce(source, oldText, newText, label) {
   const first = source.indexOf(oldText);
@@ -132,6 +132,11 @@ export function applyM5StateTransform(source) {
     "autosave excludes diagnostics dependencies");
 
   code = replaceOnce(code,
+    'if(n.card.char_book?.entries){let e=n.card.char_book.entries.find(e=>e.comment?.includes("[InitVar]"));if(e?.content)try{m={...m,...As(e.content)}}catch{}}let g=m;',
+    'let __stsInit=__stsMergeInitialVariableSources(m,n.card.char_book?.entries||[],s,e=>jt.default.parse(e));m=__stsInit.variables;let g=m;',
+    "canonical initvar seeding");
+
+  code = replaceOnce(code,
     'k={id:\`msg-start-\${Date.now()}-\${Math.random().toString(36).substring(2,9)}\`,role:"model",content:l.trim()?l:"",originalRawContent:s,timestamp:Date.now()};',
     'k={id:\`msg-start-\${Date.now()}-\${Math.random().toString(36).substring(2,9)}\`,role:"model",content:l.trim()?l:"",originalRawContent:s,contextState:JSON.parse(JSON.stringify(g)),timestamp:Date.now()};',
     "opening message context state");
@@ -140,6 +145,11 @@ export function applyM5StateTransform(source) {
     's&&_.push({id:\`msg-start-\${Date.now()}-\${Math.random().toString(36).substring(2,9)}\`,role:"model",content:s,timestamp:Date.now()})',
     's&&_.push({id:\`msg-start-\${Date.now()}-\${Math.random().toString(36).substring(2,9)}\`,role:"model",content:s,contextState:JSON.parse(JSON.stringify(g)),timestamp:Date.now()})',
     "opening fallback context state");
+
+  code = replaceOnce(code,
+    'if(!f&&t?.char_book?.entries){let e=t.char_book.entries.find(e=>e.comment?.includes("[InitVar]"));if(e?.content)try{g=As(e.content)}catch{}}let y,b=""',
+    'if(!f){g=__stsMergeInitialVariableSources({},t?.char_book?.entries||[],String(t?.first_mes||""),e=>jt.default.parse(e)).variables}let y,b=""',
+    "rewind initvar fallback");
 
   code = replaceOnce(code,
     'lastUpdated:Date.now(),initialDiagnosticLog:d};try{await Wt(S),e(a)}',
@@ -165,4 +175,4 @@ export function applyM5StateTransform(source) {
   return code;
 }
 
-export const M5_STATE_PATCH_COUNT = 35;
+export const M5_STATE_PATCH_COUNT = 37;
