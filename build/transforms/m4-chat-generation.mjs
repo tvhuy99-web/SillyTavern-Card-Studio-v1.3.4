@@ -1,4 +1,4 @@
-const M4_IMPORTS = "import { createGenerationGateway as __stsCreateGenerationGateway } from './m4/providers/common/generation-gateway.js?v=1.3.6-m4.1';\nimport { chatTurnPolicy as __stsChatTurnPolicy } from './m4/features/chat/turn-policy.js?v=1.3.6-m4.5';\nimport { createConversationService as __stsCreateConversationService } from './m4/features/chat/conversation-service.js?v=1.3.6-m4.7';\nimport { scanWorldInfo as __stsScanWorldInfo } from './m4/features/world-info/smart-scan-service.js?v=1.3.6-m4.8';\nimport { buildConversationPrompt as __stsBuildConversationPrompt } from './m4/features/prompts/prompt-service.js?v=1.3.6-m4.3';\nimport { processAIResponse as __stsProcessAIResponse } from './m4/features/chat/response-processor.js?v=1.3.6-m4.3';\n";
+const M4_IMPORTS = "import { normalizePromptVariableScopes as __stsNormalizePromptVariableScopes, readGlobalVariables as __stsReadGlobalVariables, writeGlobalVariables as __stsWriteGlobalVariables } from './variable-scope-service-v1.3.6.js?v=1.3.6-variable-scopes-1';\nimport { createGenerationGateway as __stsCreateGenerationGateway } from './m4/providers/common/generation-gateway.js?v=1.3.6-m4.1';\nimport { chatTurnPolicy as __stsChatTurnPolicy } from './m4/features/chat/turn-policy.js?v=1.3.6-m4.5';\nimport { createConversationService as __stsCreateConversationService } from './m4/features/chat/conversation-service.js?v=1.3.6-m4.8';\nimport { scanWorldInfo as __stsScanWorldInfo } from './m4/features/world-info/smart-scan-service.js?v=1.3.6-m4.8';\nimport { buildConversationPrompt as __stsBuildConversationPrompt } from './m4/features/prompts/prompt-service.js?v=1.3.6-m4.3';\nimport { processAIResponse as __stsProcessAIResponse } from './m4/features/chat/response-processor.js?v=1.3.6-m4.3';\n";
 
 function findExactlyOnce(source, token, label, from = 0) {
   const first = source.indexOf(token, from);
@@ -20,6 +20,7 @@ function conversationServiceBootstrap() {
     'getState:()=>ol.getState(),setError:e.setError,setLoading:e.setLoading,startTurn:a.startTurn,' +
     'addAbortController:e.addAbortController,removeAbortController:e.removeAbortController,' +
     'addMessage:e.addMessage,updateMessage:e.updateMessage,setMessages:e.setMessages,setSessionData:e.setSessionData,' +
+    'replaceGlobalVariables:e=>{let t=__stsWriteGlobalVariables(e);try{Wh({type:"CARD_RUNTIME_STATE_UPDATE",payload:{variableScopes:{global:t}}})}catch{}return t},' +
     'turnPolicy:__stsChatTurnPolicy,nextSequence:gh,' +
     'preprocessInput:(t,s)=>s.visualState.disableInteractiveMode?t:gd(t,s.card.extensions?.regex_scripts||[],[1],{isMarkdown:!1,isPrompt:!0,depth:0,...Zu(s.extensionSettings,s.preset),macros:{char:s.card.name,bot:s.card.name,user:s.persona?.name||"User"}}).displayContent,' +
     'scanWorldInfo:i,logSmartScan:a.logSmartScan,logSelection:a.logSelection,' +
@@ -86,7 +87,11 @@ export function applyM4ChatGenerationTransform(source) {
   );
 
   const retryPromptStart = 'let h,p=d.filter(e=>e.uid&&o.includes(e.uid)),m={name:"Session Generated",book:{entries:n.generatedLorebookEntries||[]}},g=[...r,m],{baseSections:f}=vd(n.card,n.preset,0,n.persona),y=os().summarization_chunk_size||12,b=await xd(f,i,n.authorNote,n.card,n.longTermSummaries,y,n.variables,n.lastStateBlock,g,n.preset.context_mode||"standard",n.persona?.name||"User",n.worldInfoState,p,n.worldInfoPlacement,n.preset,n.visualState.disableInteractiveMode,n.persona?.description||""),v=""';
-  const retryPromptReplacement = 'let h,p=d.filter(e=>e.uid&&o.includes(e.uid)),b=await __stsBuildConversationPrompt({state:n,messages:i,activeEntries:p,generatedEntries:n.generatedLorebookEntries||[]},{lorebooks:r,buildBaseSections:vd,getSummaryChunkSize:()=>os().summarization_chunk_size||12,buildPromptCore:xd}),v=""';
+  const retryPromptReplacement =
+    'let h,p=d.filter(e=>e.uid&&o.includes(e.uid)),b=await __stsBuildConversationPrompt({state:n,messages:i,activeEntries:p,generatedEntries:n.generatedLorebookEntries||[]},{lorebooks:r,buildBaseSections:vd,getSummaryChunkSize:()=>os().summarization_chunk_size||12,buildPromptCore:xd});' +
+    'b?.updatedVariables&&n.setSessionData({variables:b.updatedVariables});' +
+    'if(b?.updatedGlobalVariables){let e=__stsWriteGlobalVariables(b.updatedGlobalVariables);try{Wh({type:"CARD_RUNTIME_STATE_UPDATE",payload:{variableScopes:{global:e}}})}catch{}}' +
+    'let v=""';
   const retryPromptIndex = findExactlyOnce(code, retryPromptStart, 'arena retry prompt');
   code = code.slice(0, retryPromptIndex) + retryPromptReplacement + code.slice(retryPromptIndex + retryPromptStart.length);
 
@@ -107,7 +112,7 @@ export function applyM4ChatGenerationTransform(source) {
   const smartStateEnd = code.indexOf('let z=', smartStateStart);
   if (smartStateEnd < 0) throw new Error('[M4 chat/generation] canonical smart state/end token not found');
   const smartStateReplacement =
-    'F=__stsBuildSmartStateBlock({variables:o,messages:t,card:r,legacyVisualState:s}),' +
+    'F=__stsNormalizePromptVariableScopes(o,__stsReadGlobalVariables()),o=F.chat,G=F.global,F=__stsBuildSmartStateBlock({variables:o,messages:t,card:r,legacyVisualState:s}),' +
     'B=F.mythicDatabase,U=F.visualState,H="";' +
     'if("integrated"===r.rpg_data?.settings?.executionMode&&r.rpg_data){let e=el(r.rpg_data,h||[]),t=[...R].join("\\n");H=Zs(r.rpg_data.settings.customSystemPrompt||Js,e,"",t)}' +
     'let $=F.smartStateBlock;F=F.logicStore;';
@@ -119,10 +124,22 @@ export function applyM4ChatGenerationTransform(source) {
     + '.replace(/{{last_state}}/g,U)'
     + code.slice(legacyLastStateAt + legacyLastStateMacro.length);
 
+  const legacySetGlobalMacro = 'i=i.replace(/{{setglobalvar::([^:]+)::([\\s\\S]*?)}}/gi,(e,t,n)=>{let r=t.trim(),a=n.trim(),i=Number(a),s=""===a||isNaN(i)?a:i;return o=Gu(o,"set","globals."+r,s),""})';
+  const setGlobalAt = findExactlyOnce(code, legacySetGlobalMacro, 'global variable macro/set');
+  code = code.slice(0, setGlobalAt)
+    + 'i=i.replace(/{{setglobalvar::([^:]+)::([\\s\\S]*?)}}/gi,(e,t,n)=>{let r=t.trim(),a=n.trim(),i=Number(a),s=""===a||isNaN(i)?a:i;return G=Gu(G,"set",r,s),""})'
+    + code.slice(setGlobalAt + legacySetGlobalMacro.length);
+
+  const legacyGetGlobalMacro = 'i=i.replace(/{{getglobalvar::([^}]+)}}/gi,(e,t)=>{let n=t.trim(),r=Uu(o,"globals."+n);return void 0===r?"":String(r)})';
+  const getGlobalAt = findExactlyOnce(code, legacyGetGlobalMacro, 'global variable macro/get');
+  code = code.slice(0, getGlobalAt)
+    + 'i=i.replace(/{{getglobalvar::([^}]+)}}/gi,(e,t)=>{let n=t.trim(),r=Uu(G,n);return void 0===r?"":String(r)})'
+    + code.slice(getGlobalAt + legacyGetGlobalMacro.length);
+
   const promptResult = 'return{fullPrompt:re.map(e=>e.content).join("\\n\\n").replace(/\\n{3,}/g,"\\n\\n").trim(),structuredPrompt:re,rpgSnapshot:y}';
   const promptResultIndex = findExactlyOnce(code, promptResult, 'prompt result variable persistence');
   code = code.slice(0, promptResultIndex)
-    + 'return{fullPrompt:re.map(e=>e.content).join("\\n\\n").replace(/\\n{3,}/g,"\\n\\n").trim(),structuredPrompt:re,rpgSnapshot:y,updatedVariables:o}'
+    + 'return{fullPrompt:re.map(e=>e.content).join("\\n\\n").replace(/\\n{3,}/g,"\\n\\n").trim(),structuredPrompt:re,rpgSnapshot:y,updatedVariables:o,updatedGlobalVariables:G}'
     + code.slice(promptResultIndex + promptResult.length);
 
   const plainTextVariableGate = 'g||(i=Xu(i),';
@@ -183,8 +200,18 @@ export function applyM4ChatGenerationTransform(source) {
   runtimeIndex = findExactlyOnce(code, runtimePromptHistory, 'card runtime generated prompt history');
   code = code.slice(0, runtimeIndex) + runtimePromptHistoryReplacement + code.slice(runtimeIndex + runtimePromptHistory.length);
 
+  const runtimePromptBuild =
+    'p=os(),m=await xd(h,c,i.chat_history?.author_note??n.authorNote,d,n.longTermSummaries,p.summarization_chunk_size||10,n.variables,n.lastStateBlock,u,"standard",n.persona?.name||"User",n.worldInfoState,void 0,n.worldInfoPlacement,r,n.visualState.disableInteractiveMode,i.persona_description??n.persona?.description??""),g=t.json_schema?';
+  const runtimePromptBuildReplacement =
+    'p=os(),m=await xd(h,c,i.chat_history?.author_note??n.authorNote,d,n.longTermSummaries,p.summarization_chunk_size||10,n.variables,n.lastStateBlock,u,"standard",n.persona?.name||"User",n.worldInfoState,void 0,n.worldInfoPlacement,r,n.visualState.disableInteractiveMode,i.persona_description??n.persona?.description??"");' +
+    'm?.updatedVariables&&n.setSessionData({variables:m.updatedVariables});' +
+    'if(m?.updatedGlobalVariables){let e=__stsWriteGlobalVariables(m.updatedGlobalVariables);try{Wh({type:"CARD_RUNTIME_STATE_UPDATE",payload:{variableScopes:{global:e}}})}catch{}}' +
+    'let g=t.json_schema?';
+  runtimeIndex = findExactlyOnce(code, runtimePromptBuild, 'card runtime prompt variable persistence');
+  code = code.slice(0, runtimeIndex) + runtimePromptBuildReplacement + code.slice(runtimeIndex + runtimePromptBuild.length);
+
   if (!code.startsWith(M4_IMPORTS)) code = M4_IMPORTS + code;
   return code;
 }
 
-export const M4_CHAT_GENERATION_PATCH_COUNT = 16;
+export const M4_CHAT_GENERATION_PATCH_COUNT = 19;
