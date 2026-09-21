@@ -10,7 +10,7 @@
     const BOOT = boot;
     const HELPER_VERSION = '4.8.19';
     const TAVERN_VERSION = '1.18.0';
-    const IMPLEMENTATION_VERSION = '4.8.19-compat.11';
+    const IMPLEMENTATION_VERSION = '4.8.19-compat.12';
     const root = window;
     const FULL_COMPATIBILITY_MODE = BOOT.context.compatibilityMode !== 'safe';
     const OFFICIAL_LOCAL_ENGINE = BOOT.context.engineMode === 'official-local';
@@ -124,6 +124,10 @@
 
     root._cardStudio = { log: log, diagnostic: diagnostic, version: HELPER_VERSION, implementationVersion: IMPLEMENTATION_VERSION, engineMode: BOOT.context.engineMode || 'current', sandboxed: !FULL_COMPATIBILITY_MODE, fullCompatibility: FULL_COMPATIBILITY_MODE };
     root.__cardRuntimeDiagnosticsReady = true;
+    if (root.__cardRuntimeBootState) {
+        root.__cardRuntimeBootState.phase = 'diagnostics-ready';
+        root.__cardRuntimeBootState.diagnosticsReadyAt = Date.now();
+    }
 
     const missingDependencies = [];
     if (!root.Vue) missingDependencies.push('Vue');
@@ -206,6 +210,18 @@
     root.addEventListener('unhandledrejection', function (event) {
         const reason = event.reason;
         if (String(reason && reason.message || reason).includes('play() request was interrupted')) return;
+        if (reason && reason.__cardRuntimeBootstrapFailure) {
+            if (!reason.__cardRuntimeBootstrapReported) {
+                diagnostic('CARD_RUNTIME_BOOTSTRAP_FAILED', 'bootstrap-promise', 'runtime-bootstrap', safeString(reason.message || reason, 10000), {
+                    stack: reason.stack,
+                    details: {
+                        bootstrapCode: reason.cardRuntimeBootstrapCode || 'CARD_RUNTIME_BOOTSTRAP_FAILED',
+                        bootState: clone(reason.cardRuntimeBootState || root.__cardRuntimeBootState || {})
+                    }
+                });
+            }
+            return;
+        }
         const message = 'Unhandled promise rejection: ' + safeString(reason && reason.message || reason, 10000);
         log('script-error', message, { stack: reason && reason.stack });
         diagnostic('CARD_RUNTIME_PROMISE_REJECTION', 'async-execution', 'promise', message, { stack: reason && reason.stack, scriptId: activeScriptId });
@@ -300,10 +316,14 @@
         handshakeSettled = true;
         handshakeTimeout = 0;
         const message = 'Card Runtime handshake timed out before HANDSHAKE_ACK.';
+        if (root.__cardRuntimeBootState) {
+            root.__cardRuntimeBootState.phase = 'handshake-timeout';
+            root.__cardRuntimeBootState.handshakeTimeoutAt = Date.now();
+        }
         diagnostic('CARD_RUNTIME_RPC_TIMEOUT', 'handshake', 'bridge', message, { method: 'HANDSHAKE_INIT' });
         readyReject(new Error(message));
     }, 5000);
 })();
-    return window.cardStudioReady;
+    return root.__cardRuntimeHandshakeReady;
   };
 })(window);

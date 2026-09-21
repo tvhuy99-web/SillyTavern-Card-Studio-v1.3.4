@@ -2,7 +2,11 @@
     let readyReject;
     let handshakeSettled = false;
     let handshakeTimeout = 0;
-    root.cardStudioReady = new Promise(function (resolve, reject) { readyResolve = resolve; readyReject = reject; });
+    root.__cardRuntimeHandshakeReady = new Promise(function (resolve, reject) { readyResolve = resolve; readyReject = reject; });
+    if (root.__cardRuntimeBootState) {
+        root.__cardRuntimeBootState.phase = 'handshake-waiting';
+        root.__cardRuntimeBootState.handshakeStartedAt = Date.now();
+    }
     root.addEventListener('message', function (event) {
         if (event.source !== root.parent || !event.data) return;
         const data = event.data;
@@ -65,6 +69,10 @@
             if (!handshakeSettled) {
                 handshakeSettled = true;
                 if (handshakeTimeout) { clearTimeout(handshakeTimeout); handshakeTimeout = 0; }
+                if (root.__cardRuntimeBootState) {
+                    root.__cardRuntimeBootState.phase = 'handshake-ready';
+                    root.__cardRuntimeBootState.handshakeReadyAt = Date.now();
+                }
                 readyResolve(true);
             }
             setTimeout(function () {
