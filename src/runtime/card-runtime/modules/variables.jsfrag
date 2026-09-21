@@ -8,6 +8,89 @@
     let activeScriptInfo = '';
     let activeScriptButtons = [];
     const scriptRegistry = new Map();
+    const variableReadTrace = [];
+    const missingVariablePaths = [];
+    let variableHandshakeApplied = false;
+
+    function summarizeVariableObject(value) {
+        const object = asObject(value);
+        const keys = Object.keys(object);
+        const hasStatData = Object.prototype.hasOwnProperty.call(object, 'stat_data') && asObject(object.stat_data) === object.stat_data;
+        const stateObject = hasStatData ? asObject(object.stat_data) : object;
+        return {
+            keyCount: keys.length,
+            keys: keys.slice(0, 32),
+            hasStatData: hasStatData,
+            stateKeyCount: Object.keys(stateObject).length,
+            stateKeys: Object.keys(stateObject).slice(0, 32)
+        };
+    }
+    function recordVariableRead(api, scope, value, details) {
+        const summary = summarizeVariableObject(value);
+        const entry = Object.assign({
+            api: api,
+            scope: scope,
+            timestamp: Date.now(),
+            scriptId: activeScriptId,
+            scriptName: activeScriptName,
+            keyCount: summary.keyCount,
+            hasStatData: summary.hasStatData,
+            stateKeyCount: summary.stateKeyCount
+        }, details || {});
+        variableReadTrace.push(entry);
+        if (variableReadTrace.length > 40) variableReadTrace.splice(0, variableReadTrace.length - 40);
+        if (entry.missing === true && entry.path) {
+            const path = String(entry.path);
+            if (!missingVariablePaths.includes(path)) missingVariablePaths.push(path);
+            if (missingVariablePaths.length > 24) missingVariablePaths.splice(0, missingVariablePaths.length - 24);
+        }
+    }
+    function variableReadinessSnapshot() {
+        const scopes = {};
+        let totalKeyCount = 0;
+        let populatedScopeCount = 0;
+        scopeCache.forEach(function (value, key) {
+            const summary = summarizeVariableObject(value);
+            scopes[key] = summary;
+            totalKeyCount += summary.keyCount;
+            if (summary.keyCount > 0) populatedScopeCount += 1;
+        });
+        const chatSummary = summarizeVariableObject(scopeCache.get('chat') || {});
+        return {
+            handshakeApplied: variableHandshakeApplied,
+            scopeCount: scopeCache.size,
+            populatedScopeCount: populatedScopeCount,
+            totalKeyCount: totalKeyCount,
+            chat: chatSummary,
+            scopes: scopes,
+            missingPaths: missingVariablePaths.slice(),
+            recentReads: variableReadTrace.slice(-20)
+        };
+    }
+    root.__cardRuntimeVariableReadinessSnapshot = variableReadinessSnapshot;
+
+    function syncLiveChatVariables(source) {
+        root.__st_live_data = scopeCache.get('chat') || {};
+        root.stat_data = root.__st_live_data && root.__st_live_data.stat_data ? root.__st_live_data.stat_data : root.__st_live_data;
+        if (root.__cardRuntimeBootState) {
+            root.__cardRuntimeBootState.variableSyncSource = source || 'unknown';
+            root.__cardRuntimeBootState.chatVariableKeyCount = Object.keys(asObject(root.__st_live_data)).length;
+            root.__cardRuntimeBootState.statDataKeyCount = Object.keys(asObject(root.stat_data)).length;
+        }
+        return root.__st_live_data;
+    }
+    function applyVariableScopesPayload(variableScopes, source, emitUpdate) {
+        if (source === 'handshake') variableHandshakeApplied = true;
+        if (!variableScopes || typeof variableScopes !== 'object') return false;
+        Object.entries(variableScopes).forEach(function (entry) {
+            scopeCache.set(entry[0], clone(asObject(entry[1])));
+        });
+        if (Object.prototype.hasOwnProperty.call(variableScopes, 'chat')) {
+            const live = syncLiveChatVariables(source || 'scope-payload');
+            if (emitUpdate) emitEvent('mvu-variable-update-ended', { stat_data: root.stat_data, variables: live, source: source || 'scope-payload' });
+        }
+        return true;
+    }
 
     function resolveIndex(messageId) {
         if (!chatHistory.length) return -1;
@@ -52,25 +135,24 @@
         const previous = clone(scopeValue(normalized));
         const clean = validateScopeValue(key, variables);
         scopeCache.set(key, clean);
-        if (normalized.type === 'chat') {
-            root.__st_live_data = clean;
-            root.stat_data = clean && clean.stat_data ? clean.stat_data : clean;
-        }
+        if (normalized.type === 'chat') syncLiveChatVariables('persist');
         emitEvent('mvu-variable-update-started', { scope: normalized, variables: clone(clean) });
         rpc('variables.replace', { option: normalized, variables: clean }, 30000).then(function () {
             emitEvent('mvu-variable-update-ended', { scope: normalized, variables: clone(clean), stat_data: root.stat_data });
         }).catch(function (error) {
             scopeCache.set(key, previous);
-            if (normalized.type === 'chat') {
-                root.__st_live_data = previous;
-                root.stat_data = previous && previous.stat_data ? previous.stat_data : previous;
-            }
+            if (normalized.type === 'chat') syncLiveChatVariables('rollback');
             emitEvent('mvu-variable-update-ended', { scope: normalized, variables: clone(previous), error: error && error.message });
             log('warn', 'Could not persist ' + key + ' variables; local state was rolled back: ' + error.message);
         });
         return clone(clean);
     }
-    root.getVariables = function (option) { return clone(scopeValue(option)); };
+    root.getVariables = function (option) {
+        const key = scopeKey(option);
+        const value = clone(scopeValue(option));
+        recordVariableRead('getVariables', key, value);
+        return value;
+    };
     function getNearestMessageVariables(messageId) {
         let index = resolveIndex(messageId === undefined ? BOOT.context.messageId : messageId);
         if (index < 0) return {};
@@ -97,6 +179,7 @@
                 deepMerge(merged, root.getVariables({ type: 'message', message_id: index }), false);
             }
         }
+        recordVariableRead('getAllVariables', 'merged', merged);
         return clone(merged);
     };
     root.replaceVariables = function (variables, option) { return persistScope(option, variables); };
@@ -203,7 +286,10 @@
     root.registerVariableSchema = function (schema, option) { schemaCache.set(scopeKey(option), schema); };
     root.getvar = function (path) {
         const chat = root.getVariables({ type: 'chat' });
-        return deepGet(chat && chat.stat_data ? chat.stat_data : chat, String(path || '').replace(/^stat_data\./, ''));
+        const normalizedPath = String(path || '').replace(/^stat_data\./, '');
+        const value = deepGet(chat && chat.stat_data ? chat.stat_data : chat, normalizedPath);
+        recordVariableRead('getvar', 'chat', chat, { path: normalizedPath, missing: value === undefined });
+        return value;
     };
     root.setvar = function (path, value) {
         const variables = root.getVariables({ type: 'chat' });
@@ -211,6 +297,5 @@
         deepSet(target, String(path || '').replace(/^stat_data\./, ''), value);
         return persistScope({ type: 'chat' }, variables);
     };
-    root.__st_live_data = scopeValue({ type: 'chat' });
-    root.stat_data = root.__st_live_data && root.__st_live_data.stat_data ? root.__st_live_data.stat_data : root.__st_live_data;
+    syncLiveChatVariables('initial');
 
