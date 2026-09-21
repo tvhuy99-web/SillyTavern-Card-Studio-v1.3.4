@@ -10,8 +10,8 @@ const bundle = fs.readFileSync(
 const transformed = applyCardRuntimeTransform(bundle);
 
 assert.ok(transformed.includes('smart-state-service-v1.3.6.js?v=1.3.6-smartstate-2'));
-assert.ok(transformed.includes('card-runtime-core-builder-v1.3.6.js?v=1.3.6-m3.8'));
-assert.ok(transformed.includes('card-runtime-renderer-v1.3.6.js?v=1.3.6-m3.7'));
+assert.ok(transformed.includes('card-runtime-core-builder-v1.3.6.js?v=1.3.6-m3.9'));
+assert.ok(transformed.includes('card-runtime-renderer-v1.3.6.js?v=1.3.6-m3.8'));
 assert.ok(transformed.includes('__stsBuildCardRuntimeCoreScript'));
 assert.ok(transformed.includes('__stsBuildCardRuntimeRendererScript'));
 assert.ok(transformed.includes('__stsNormalizeCardRuntimeMarkup'));
@@ -58,6 +58,8 @@ assert.ok(injected.includes('__STS_START_CARD_RUNTIME__(window.__CARD_STUDIO_BOO
 assert.ok(injected.includes('window.cardStudioReady = Promise.resolve().then'));
 assert.ok(injected.includes('CARD_RUNTIME_START_FUNCTION_MISSING'));
 assert.ok(injected.includes('CARD_RUNTIME_EVENT_BRIDGE_NOT_READY'));
+assert.ok(injected.includes('CARD_RUNTIME_OPTIONAL_RESOURCE_LOAD_FAILED'));
+assert.ok(injected.includes('__cardRuntimeVariableReadinessSnapshot'));
 assert.ok(!injected.includes('Promise.resolve(window.__STS_START_CARD_RUNTIME__('));
 
 console.log('card runtime extraction tests: OK');
