@@ -97,6 +97,14 @@
         STREAM_TOKEN_RECEIVED_INCREMENTALLY: 'js_stream_token_received_incrementally',
         GENERATION_ENDED: 'js_generation_ended'
     });
+    if (root.__cardRuntimeBootState) {
+        root.__cardRuntimeBootState.phase = 'events-ready';
+        root.__cardRuntimeBootState.eventsReadyAt = Date.now();
+        root.__cardRuntimeBootState.hasEventEmit = typeof root.eventEmit === 'function';
+        root.__cardRuntimeBootState.hasIframeEvents = true;
+        root.__cardRuntimeBootState.hasRenderStartedEvent = true;
+        root.__cardRuntimeBootState.hasRenderEndedEvent = true;
+    }
     root.tavern_events = Object.freeze({
         APP_READY: 'app_ready', EXTRAS_CONNECTED: 'extras_connected', MESSAGE_SWIPED: 'message_swiped',
         MESSAGE_SENT: 'message_sent', MESSAGE_RECEIVED: 'message_received', MESSAGE_EDITED: 'message_edited',
