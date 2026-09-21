@@ -44,6 +44,20 @@ const renderer = read('src/runtime/card-runtime/renderer.js');
 assert.ok(renderer.includes("data-st-keyboard-button"));
 assert.ok(renderer.includes("event.key !== 'Enter' && event.key !== ' '"));
 assert.ok(renderer.includes("target.removeEventListener('keydown', accessibilityKeyHandler)"));
+assert.ok(renderer.includes('CARD_RUNTIME_VARIABLES_NOT_READY'));
+assert.ok(renderer.includes('__cardRuntimeVariableReadinessSnapshot'));
+assert.ok(renderer.includes('buildVariableDependencyProfile'));
+
+const variables = read('src/runtime/card-runtime/modules/variables.jsfrag');
+assert.ok(variables.includes('function syncLiveChatVariables'));
+assert.ok(variables.includes('function applyVariableScopesPayload'));
+assert.ok(variables.includes('__cardRuntimeVariableReadinessSnapshot'));
+assert.ok(variables.includes("recordVariableRead('getvar'"));
+
+assert.ok(handshake.includes("applyVariableScopesPayload(data.payload.variableScopes, 'state-update', true)"));
+assert.ok(handshake.includes("applyVariableScopesPayload(data.payload && data.payload.variableScopes, 'handshake', true)"));
+assert.ok(coreTemplate.includes('CARD_RUNTIME_OPTIONAL_RESOURCE_LOAD_FAILED'));
+assert.ok(coreTemplate.includes('fontsapi\\.zeoseven\\.com'));
 
 const production = read('assets/app-production-v1.3.6.js');
 assert.ok(production.includes('case"chat.refresh"'));

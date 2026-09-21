@@ -260,6 +260,58 @@ export function buildCardRuntimeRendererScript(html, descriptors, options = {}) 
     const descriptors = dynamicDescriptors.concat(${descriptorsJson});
     if (typeof window.__registerCardRuntimeScripts === 'function') window.__registerCardRuntimeScripts(descriptors);
 
+    function buildVariableDependencyProfile(items) {
+        const profile = {
+            usesVariables: false,
+            usesVariableApi: false,
+            requiresChatState: false,
+            scripts: []
+        };
+        items.forEach(function (info) {
+            const content = String(info && info.content || '');
+            if (!content) return;
+            const usesVariableApi = /\b(?:getVariables|getAllVariables|replaceVariables|updateVariablesWith|insertVariables|insertOrAssignVariables|deleteVariable|registerVariableSchema)\b/.test(content);
+            const requiresChatState = /\b(?:stat_data|__st_live_data|getvar|setvar)\b/.test(content);
+            if (!usesVariableApi && !requiresChatState) return;
+            profile.usesVariables = true;
+            profile.usesVariableApi = profile.usesVariableApi || usesVariableApi;
+            profile.requiresChatState = profile.requiresChatState || requiresChatState;
+            profile.scripts.push(String(info.name || info.id || 'script').slice(0, 120));
+        });
+        return profile;
+    }
+
+    const variableDependencyProfile = buildVariableDependencyProfile(descriptors);
+
+    function reportVariableReadinessIfNeeded() {
+        if (!variableDependencyProfile.usesVariables) return;
+        if (typeof window.__cardRuntimeVariableReadinessSnapshot !== 'function') return;
+        const snapshot = window.__cardRuntimeVariableReadinessSnapshot();
+        const chat = snapshot && snapshot.chat || {};
+        const missingReads = Array.isArray(snapshot && snapshot.missingPaths) ? snapshot.missingPaths : [];
+        const missingChatState = variableDependencyProfile.requiresChatState && Number(chat.stateKeyCount || 0) === 0;
+        const missingAllVariables = variableDependencyProfile.usesVariableApi && Number(snapshot && snapshot.totalKeyCount || 0) === 0;
+        if (!missingChatState && !missingAllVariables && missingReads.length === 0) return;
+
+        window._cardStudio.diagnostic(
+            'CARD_RUNTIME_VARIABLES_NOT_READY',
+            'post-script-readiness',
+            'variables',
+            'Thẻ đã chạy nhưng dữ liệu biến mà script cần vẫn chưa sẵn sàng.',
+            {
+                severity: 'warning',
+                scriptId: window.getScriptId ? window.getScriptId() : undefined,
+                scriptName: window.getScriptName ? window.getScriptName() : undefined,
+                details: {
+                    dependencyProfile: variableDependencyProfile,
+                    missingChatState: missingChatState,
+                    missingAllVariables: missingAllVariables,
+                    variableState: snapshot
+                }
+            }
+        );
+    }
+
     async function runScript(info) {
         window.__setActiveCardScript(info.id, info.name, info.info, info.buttons);
         let scriptContent = String(info.content || '');
@@ -318,8 +370,9 @@ export function buildCardRuntimeRendererScript(html, descriptors, options = {}) 
             }
         }
         for (const descriptor of deferred) await runScript(descriptor);
-        Promise.allSettled(asyncTasks);
+        Promise.allSettled(asyncTasks).then(reportVariableReadinessIfNeeded);
     }
+    reportVariableReadinessIfNeeded();
 
     window.this_mes = document.querySelector('.mes[mesid="' + window.getMessageId() + '"]') || document.querySelector('.mes') || target;
     window.dispatchEvent(new Event('load'));

@@ -48,12 +48,7 @@
             if (data.payload && Array.isArray(data.payload.worldInfo)) worldInfo = clone(data.payload.worldInfo);
             if (data.payload && Array.isArray(data.payload.lorebookNames)) lorebookNames = Array.from(new Set(data.payload.lorebookNames.map(String)));
             if (data.payload && data.payload.variableScopes) {
-                Object.entries(data.payload.variableScopes).forEach(function (entry) { scopeCache.set(entry[0], clone(asObject(entry[1]))); });
-                if (Object.prototype.hasOwnProperty.call(data.payload.variableScopes, 'chat')) {
-                    root.__st_live_data = scopeCache.get('chat') || {};
-                    root.stat_data = root.__st_live_data && root.__st_live_data.stat_data ? root.__st_live_data.stat_data : root.__st_live_data;
-                    emitEvent('mvu-variable-update-ended', { stat_data: root.stat_data, variables: root.__st_live_data });
-                }
+                applyVariableScopesPayload(data.payload.variableScopes, 'state-update', true);
             }
             syncContext();
             return;
@@ -63,7 +58,7 @@
             if (data.payload && data.payload.extensionSettings) extensionSettings = clone(data.payload.extensionSettings);
             if (data.payload && Array.isArray(data.payload.worldInfo)) worldInfo = clone(data.payload.worldInfo);
             if (data.payload && Array.isArray(data.payload.lorebookNames)) lorebookNames = Array.from(new Set(data.payload.lorebookNames.map(String)));
-            if (data.payload && data.payload.variableScopes) Object.entries(data.payload.variableScopes).forEach(function (entry) { scopeCache.set(entry[0], clone(asObject(entry[1]))); });
+            applyVariableScopesPayload(data.payload && data.payload.variableScopes, 'handshake', true);
             if (data.payload && Array.isArray(data.payload.worldInfo)) worldInfo = clone(data.payload.worldInfo);
             syncContext();
             if (!handshakeSettled) {
