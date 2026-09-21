@@ -50,11 +50,71 @@ function makeCoreBuilderModule(classicCoreSource) {
   const safeCoreSource = classicCoreSource
     .replaceAll('</script', '<\\/script')
     .replaceAll('<!--', '<\\!--');
+  const runtimeBootstrapSource = `
+(function bootstrapCardRuntime() {
+  var state = window.__cardRuntimeBootState = {
+    phase: 'core-script-loaded',
+    startedAt: Date.now(),
+    hasStartFunction: typeof window.__STS_START_CARD_RUNTIME__ === 'function',
+    hasEventEmit: false,
+    hasIframeEvents: false,
+    hasRenderStartedEvent: false,
+    hasRenderEndedEvent: false
+  };
+  function snapshot() {
+    return Object.assign({}, state);
+  }
+  function failure(code, message, cause) {
+    var suffix = cause && cause.message ? ': ' + String(cause.message) : '';
+    var error = new Error(code + ': ' + message + suffix);
+    error.cardRuntimeBootstrapCode = code;
+    error.cardRuntimeBootState = snapshot();
+    error.__cardRuntimeBootstrapFailure = true;
+    if (cause && cause.stack) error.causeStack = String(cause.stack);
+    return error;
+  }
+  window.cardStudioReady = Promise.resolve().then(function () {
+    state.hasStartFunction = typeof window.__STS_START_CARD_RUNTIME__ === 'function';
+    if (!state.hasStartFunction) {
+      state.phase = 'start-function-missing';
+      throw failure('CARD_RUNTIME_START_FUNCTION_MISSING', '__STS_START_CARD_RUNTIME__ is unavailable.');
+    }
+    state.phase = 'start-entered';
+    state.startEnteredAt = Date.now();
+    return window.__STS_START_CARD_RUNTIME__(window.__CARD_STUDIO_BOOT__);
+  }).then(function (result) {
+    state.hasEventEmit = typeof window.eventEmit === 'function';
+    state.hasIframeEvents = Boolean(window.iframe_events);
+    state.hasRenderStartedEvent = Boolean(window.iframe_events && window.iframe_events.MESSAGE_IFRAME_RENDER_STARTED);
+    state.hasRenderEndedEvent = Boolean(window.iframe_events && window.iframe_events.MESSAGE_IFRAME_RENDER_ENDED);
+    if (!state.hasEventEmit || !state.hasRenderStartedEvent || !state.hasRenderEndedEvent) {
+      state.phase = 'event-bridge-missing';
+      throw failure('CARD_RUNTIME_EVENT_BRIDGE_NOT_READY', 'Runtime core resolved without a complete iframe event bridge.');
+    }
+    state.phase = 'runtime-ready';
+    state.readyAt = Date.now();
+    return result;
+  }).catch(function (error) {
+    if (!(error && error.__cardRuntimeBootstrapFailure)) {
+      var code = state.phase === 'handshake-timeout'
+        ? 'CARD_RUNTIME_HANDSHAKE_FAILED'
+        : 'CARD_RUNTIME_CORE_START_REJECTED';
+      if (state.phase !== 'handshake-timeout') state.phase = 'core-start-rejected';
+      error = failure(code, 'Card Runtime core failed before readiness.', error);
+    }
+    state.errorCode = error.cardRuntimeBootstrapCode || 'CARD_RUNTIME_BOOTSTRAP_FAILED';
+    state.errorMessage = String(error.message || error);
+    error.cardRuntimeBootState = snapshot();
+    throw error;
+  });
+})();
+`;
 
   // String.raw is intentional: generated source must retain two backslashes
   // in '\\\\u003c' so the generated module emits a literal \\u003c sequence
   // into the inline script instead of reconstructing a raw '<'.
   return String.raw`const CARD_RUNTIME_CORE_SOURCE = ${JSON.stringify(safeCoreSource)};
+const CARD_RUNTIME_BOOTSTRAP_SOURCE = ${JSON.stringify(runtimeBootstrapSource)};
 
 function serializeScriptValue(value) {
   return JSON.stringify(value)
@@ -67,7 +127,7 @@ export function buildCardRuntimeCoreScript(boot) {
   if (!boot || typeof boot !== 'object') {
     throw new TypeError('Card Runtime BOOT payload must be an object.');
   }
-  return 'window.__CARD_STUDIO_BOOT__ = ' + serializeScriptValue(boot) + ';\\n' + CARD_RUNTIME_CORE_SOURCE + '\\nwindow.cardStudioReady = Promise.resolve(window.__STS_START_CARD_RUNTIME__(window.__CARD_STUDIO_BOOT__));\\n';
+  return 'window.__CARD_STUDIO_BOOT__ = ' + serializeScriptValue(boot) + ';\\n' + CARD_RUNTIME_CORE_SOURCE + '\\n' + CARD_RUNTIME_BOOTSTRAP_SOURCE + '\\n';
 }
 
 export const CARD_RUNTIME_CORE_SOURCE_BYTES = CARD_RUNTIME_CORE_SOURCE.length;
