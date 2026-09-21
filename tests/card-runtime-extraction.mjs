@@ -9,6 +9,7 @@ const bundle = fs.readFileSync(
 );
 const transformed = applyCardRuntimeTransform(bundle);
 
+assert.ok(transformed.includes('initial-variable-service-v1.3.6.js?v=1.3.6-initvar-1'));
 assert.ok(transformed.includes('smart-state-service-v1.3.6.js?v=1.3.6-smartstate-2'));
 assert.ok(transformed.includes('card-runtime-core-builder-v1.3.6.js?v=1.3.6-m3.9'));
 assert.ok(transformed.includes('card-runtime-renderer-v1.3.6.js?v=1.3.6-m3.8'));
@@ -16,6 +17,9 @@ assert.ok(transformed.includes('__stsBuildCardRuntimeCoreScript'));
 assert.ok(transformed.includes('__stsBuildCardRuntimeRendererScript'));
 assert.ok(transformed.includes('__stsNormalizeCardRuntimeMarkup'));
 assert.ok(transformed.includes('__stsBuildSmartStateBlock'));
+assert.ok(transformed.includes('__stsSeedInitialVariablesFromCard'));
+assert.ok(transformed.includes('variableScopes:Ap(r||{},v,M,t,m)'));
+assert.ok(transformed.includes('e&&Object.keys(e).length?e:__stsSeedInitialVariablesFromCard'));
 assert.ok(transformed.includes('Np=(e,t,n,r)=>__stsBuildSmartStateBlock({variables:e,card:t,messages:n.slice(0,Math.max(0,r))}).smartStateBlock'));
 assert.ok(!transformed.includes('Np=(e,t,n,r)=>{let a=[]'));
 assert.ok(transformed.includes('srcDoc:__stsNormalizeCardRuntimeMarkup(U),style:'));
