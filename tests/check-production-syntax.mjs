@@ -7,6 +7,8 @@ const target = new URL('../assets/app-production-v1.3.6.js', import.meta.url);
 const original = fs.readFileSync(target, 'utf8');
 const markers = [
   [',cl=async(e,t,n,r=[],a)=>', ',\ncl=async(e,t,n,r=[],a)=>', 'gemini-nonstream'],
+  [',cc=e=>', ',\ncc=e=>', 'png-metadata'],
+  [',Qd=()=>', ',\nQd=()=>', 'ui-export-dialog'],
   ['case"chat.refresh"', '\ncase"chat.refresh"', 'chat-refresh'],
   ['case"generation.models"', '\ncase"generation.models"', 'generation-models'],
   ['else if("SET_VISUAL_STATE"', '\nelse if("SET_VISUAL_STATE"', 'visual-state'],
