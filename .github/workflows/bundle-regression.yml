@@ -38,6 +38,7 @@ jobs:
           git diff --exit-code -- assets/proxy-persistence-service-v1.3.6.js
           git diff --exit-code -- assets/smart-state-service-v1.3.6.js
           git diff --exit-code -- assets/variable-scope-service-v1.3.6.js
+          git diff --exit-code -- assets/initial-variable-service-v1.3.6.js
           git diff --exit-code -- assets/card-runtime-core-builder-v1.3.6.js
           git diff --exit-code -- assets/card-runtime-renderer-v1.3.6.js
           git diff --exit-code -- assets/m4
@@ -52,6 +53,7 @@ jobs:
           node --check assets/proxy-persistence-service-v1.3.6.js
           node --check assets/smart-state-service-v1.3.6.js
           node --check assets/variable-scope-service-v1.3.6.js
+          node --check assets/initial-variable-service-v1.3.6.js
           node --check assets/card-runtime-core-builder-v1.3.6.js
           node --check assets/card-runtime-renderer-v1.3.6.js
           node --check assets/m4/providers/common/generation-utils.js
@@ -77,6 +79,8 @@ jobs:
         run: node tests/smart-state-service.mjs
       - name: Test Variable Scope service
         run: node tests/variable-scope-service.mjs
+      - name: Test Initial Variable service
+        run: node tests/initial-variable-service.mjs
       - name: Test M4 architecture boundaries
         run: node tests/architecture-m4.mjs
       - name: Test M4 generation gateway
