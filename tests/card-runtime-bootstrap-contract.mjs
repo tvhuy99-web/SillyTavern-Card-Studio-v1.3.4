@@ -26,16 +26,14 @@ async function runCoreWith(startValue) {
 }
 
 {
-  let window;
-  const start = function () {
-    window.eventEmit = function () {};
-    window.iframe_events = {
+  const window = await runCoreWith(function () {
+    this.eventEmit = function () {};
+    this.iframe_events = {
       MESSAGE_IFRAME_RENDER_STARTED: 'message_iframe_render_started',
       MESSAGE_IFRAME_RENDER_ENDED: 'message_iframe_render_ended',
     };
     return Promise.resolve(true);
-  };
-  window = await runCoreWith(start);
+  });
   await window.cardStudioReady;
   assert.equal(window.__cardRuntimeBootState.phase, 'runtime-ready');
   assert.equal(window.__cardRuntimeBootState.hasEventEmit, true);
