@@ -9,6 +9,7 @@ import {
 import { applyCardRuntimeTransform } from './transforms/card-runtime.mjs';
 import { applyProxyPersistenceTransform, PROXY_PERSISTENCE_PATCH_COUNT } from './transforms/proxy-persistence.mjs';
 import { applyM4ChatGenerationTransform, M4_CHAT_GENERATION_PATCH_COUNT } from './transforms/m4-chat-generation.mjs';
+import { applyRuntimeSurfaceGapsTransform, RUNTIME_SURFACE_GAP_PATCH_COUNT } from './transforms/runtime-surface-gaps.mjs';
 import { applyM5StateTransform, M5_STATE_PATCH_COUNT } from './transforms/m5-state-persistence-runtime.mjs';
 import { applyM6UiAccessibilityTransform, M6_UI_ACCESSIBILITY_PATCH_COUNT } from './transforms/m6-ui-accessibility.mjs';
 import { buildCardRuntimeAssets } from './build-card-runtime.mjs';
@@ -104,13 +105,14 @@ code = applyPresetBoundaryTransform(code);
 code = applyCardRuntimeTransform(code);
 code = applyProxyPersistenceTransform(code);
 code = applyM4ChatGenerationTransform(code);
+code = applyRuntimeSurfaceGapsTransform(code);
 code = applyM5StateTransform(code);
 code = applyM6UiAccessibilityTransform(code);
 
 const banner = `/* GENERATED FILE. DO NOT EDIT DIRECTLY.
    Build source: legacy/app-bundle-input-v1.3.6.js
    Build pipeline: build/build-production-bundle.mjs
-   Patch order: arena-state -> core-reliability -> arena-cancellation -> preset-boundaries -> card-runtime-extraction -> proxy-persistence-boundary -> m4-chat-generation-domain -> m5-state-persistence-runtime -> m6-ui-accessibility
+   Patch order: arena-state -> core-reliability -> arena-cancellation -> preset-boundaries -> card-runtime-extraction -> proxy-persistence-boundary -> m4-chat-generation-domain -> runtime-surface-gaps -> m5-state-persistence-runtime -> m6-ui-accessibility
    Runtime source patching is not used on the normal boot path.
 */
 `;
@@ -127,6 +129,7 @@ console.log(JSON.stringify({
     presetBoundaries: PRESET_BOUNDARY_PATCH_COUNT,
     proxyPersistence: PROXY_PERSISTENCE_PATCH_COUNT,
     m4ChatGeneration: M4_CHAT_GENERATION_PATCH_COUNT,
+    runtimeSurfaceGaps: RUNTIME_SURFACE_GAP_PATCH_COUNT,
     m5StatePersistenceRuntime: M5_STATE_PATCH_COUNT,
     m6UiAccessibility: M6_UI_ACCESSIBILITY_PATCH_COUNT,
   },
