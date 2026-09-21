@@ -1,3 +1,4 @@
+const INITIAL_VARIABLE_IMPORT = "import { seedInitialVariablesFromCard as __stsSeedInitialVariablesFromCard } from './initial-variable-service-v1.3.6.js?v=1.3.6-initvar-1';\n";
 const SMART_STATE_IMPORT = "import { buildSmartStateBlock as __stsBuildSmartStateBlock } from './smart-state-service-v1.3.6.js?v=1.3.6-smartstate-2';\n";
 const CORE_BUILDER_IMPORT = "import { buildCardRuntimeCoreScript as __stsBuildCardRuntimeCoreScript } from './card-runtime-core-builder-v1.3.6.js?v=1.3.6-m3.9';\n";
 const RENDERER_IMPORT = "import { buildCardRuntimeRendererScript as __stsBuildCardRuntimeRendererScript, normalizeCardRuntimeMarkup as __stsNormalizeCardRuntimeMarkup } from './card-runtime-renderer-v1.3.6.js?v=1.3.6-m3.8';\n";
@@ -42,6 +43,19 @@ export function applyCardRuntimeTransform(source) {
   if (rendererArgs < 0) throw new Error('[card runtime] renderer call boundary not found');
   code = code.slice(0, rendererStart) + 'q=__stsBuildCardRuntimeRendererScript' + code.slice(rendererArgs);
 
+  const legacyVariableScopes = 'Ap=(e,t,n,r)=>{let a=Math.max(0,Math.min(t.length-1,n.messageId||0)),i={chat:e,global:Tp({type:"global"},n),preset:Tp({type:"preset"},n),character:Tp({type:"character"},n),[\`message:\${a}\`]:t[a]?.contextState||Tp({type:"message",message_id:a},n),"script:default":Tp({type:"script",script_id:"default"},n),"extension:third-party/JS-Slash-Runner":Tp({type:"extension",extension_id:"third-party/JS-Slash-Runner"},n)};return t.forEach((e,t)=>{e.contextState?i[\`message:\${t}\`]=e.contextState:\`message:\${t}\`in i||(i[\`message:\${t}\`]={})}),r.forEach(e=>{let t=e.value?.id||"default";i[\`script:\${t}\`]=Tp({type:"script",script_id:t},{...n,scriptId:t})}),i}';
+  const recoveredVariableScopes = 'Ap=(e,t,n,r,a)=>{let i=e&&Object.keys(e).length?e:__stsSeedInitialVariablesFromCard({},a,String(a?.first_mes||""),e=>jt.default.parse(e)).variables,o=Math.max(0,Math.min(t.length-1,n.messageId||0)),s={chat:i,global:Tp({type:"global"},n),preset:Tp({type:"preset"},n),character:Tp({type:"character"},n),[\`message:\${o}\`]:t[o]?.contextState||Tp({type:"message",message_id:o},n),"script:default":Tp({type:"script",script_id:"default"},n),"extension:third-party/JS-Slash-Runner":Tp({type:"extension",extension_id:"third-party/JS-Slash-Runner"},n)};return t.forEach((e,t)=>{e.contextState?s[\`message:\${t}\`]=e.contextState:\`message:\${t}\`in s||(s[\`message:\${t}\`]={})}),r.forEach(e=>{let t=e.value?.id||"default";s[\`script:\${t}\`]=Tp({type:"script",script_id:t},{...n,scriptId:t})}),s}';
+  const variableScopesAt = findExactlyOnce(code, legacyVariableScopes, 'legacy variable scope snapshot');
+  code = code.slice(0, variableScopesAt)
+    + recoveredVariableScopes
+    + code.slice(variableScopesAt + legacyVariableScopes.length);
+
+  const variableScopeCall = 'variableScopes:Ap(r||{},v,M,t)';
+  const variableScopeCallAt = findExactlyOnce(code, variableScopeCall, 'Card Runtime variable scope card context');
+  code = code.slice(0, variableScopeCallAt)
+    + 'variableScopes:Ap(r||{},v,M,t,m)'
+    + code.slice(variableScopeCallAt + variableScopeCall.length);
+
   // Preserve the old dependency-compat behavior at the iframe boundary,
   // without patching Element/HTMLIFrameElement prototypes globally.
   // Smart State is owned by the shared service. The runtime receives a canonical
@@ -59,7 +73,7 @@ export function applyCardRuntimeTransform(source) {
     + 'srcDoc:__stsNormalizeCardRuntimeMarkup(U),style:'
     + code.slice(srcDocAt + srcDocToken.length);
 
-  const imports = SMART_STATE_IMPORT + CORE_BUILDER_IMPORT + RENDERER_IMPORT;
+  const imports = INITIAL_VARIABLE_IMPORT + SMART_STATE_IMPORT + CORE_BUILDER_IMPORT + RENDERER_IMPORT;
   if (!code.startsWith(imports)) code = imports + code;
   return code;
 }
