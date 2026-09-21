@@ -101,9 +101,10 @@ export function buildCardRuntimeRendererScript(html, descriptors, options = {}) 
                         element.setAttribute('aria-label', 'Nút tương tác ' + accessibilitySequence);
                     }
                 }
-                if (element.matches('[onclick]') && !element.hasAttribute('tabindex') && !/^(BUTTON|A|INPUT|SELECT|TEXTAREA)$/.test(element.tagName)) {
-                    element.setAttribute('tabindex', '0');
+                if (element.matches('[onclick]') && !/^(BUTTON|A|INPUT|SELECT|TEXTAREA)$/.test(element.tagName)) {
+                    if (!element.hasAttribute('tabindex')) element.setAttribute('tabindex', '0');
                     if (!element.hasAttribute('role')) element.setAttribute('role', 'button');
+                    element.setAttribute('data-st-keyboard-button', 'true');
                 }
             });
             const images = [];
@@ -229,6 +230,14 @@ export function buildCardRuntimeRendererScript(html, descriptors, options = {}) 
     let accessibilityObserver = null;
     let accessibilityTimer = 0;
     const pendingAccessibilityNodes = new Set();
+    const accessibilityKeyHandler = function (event) {
+        if (event.key !== 'Enter' && event.key !== ' ') return;
+        const element = event.target && typeof event.target.closest === 'function' ? event.target.closest('[data-st-keyboard-button="true"]') : null;
+        if (!element || !target.contains(element)) return;
+        event.preventDefault();
+        element.click();
+    };
+    target.addEventListener('keydown', accessibilityKeyHandler);
     if (window.MutationObserver) {
         accessibilityObserver = new MutationObserver(function (mutations) {
             mutations.forEach(function (mutation) {
@@ -268,6 +277,7 @@ export function buildCardRuntimeRendererScript(html, descriptors, options = {}) 
         if (heightObserver) heightObserver.disconnect();
         if (accessibilityTimer) clearTimeout(accessibilityTimer);
         if (accessibilityObserver) accessibilityObserver.disconnect();
+        target.removeEventListener('keydown', accessibilityKeyHandler);
         pendingAccessibilityNodes.clear();
         if (typeof window.eventClearAll === 'function') window.eventClearAll();
     }, { once: true });
