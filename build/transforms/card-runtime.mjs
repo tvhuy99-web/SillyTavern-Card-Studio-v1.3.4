@@ -1,4 +1,5 @@
-const CORE_BUILDER_IMPORT = "import { buildCardRuntimeCoreScript as __stsBuildCardRuntimeCoreScript } from './card-runtime-core-builder-v1.3.6.js?v=1.3.6-m3.5';\n";
+const SMART_STATE_IMPORT = "import { buildSmartStateBlock as __stsBuildSmartStateBlock } from './smart-state-service-v1.3.6.js?v=1.3.6-smartstate-1';\n";
+const CORE_BUILDER_IMPORT = "import { buildCardRuntimeCoreScript as __stsBuildCardRuntimeCoreScript } from './card-runtime-core-builder-v1.3.6.js?v=1.3.6-m3.6';\n";
 const RENDERER_IMPORT = "import { buildCardRuntimeRendererScript as __stsBuildCardRuntimeRendererScript, normalizeCardRuntimeMarkup as __stsNormalizeCardRuntimeMarkup } from './card-runtime-renderer-v1.3.6.js?v=1.3.6-m3.5';\n";
 
 function findExactlyOnce(source, token, label) {
@@ -43,13 +44,22 @@ export function applyCardRuntimeTransform(source) {
 
   // Preserve the old dependency-compat behavior at the iframe boundary,
   // without patching Element/HTMLIFrameElement prototypes globally.
+  // Smart State is owned by the shared service. The runtime receives a canonical
+  // LogicStore + VisualInterface block, never MythicDatabase.
+  const smartStateStart = findExactlyOnce(code, 'Np=(e,t,n,r)=>{', 'legacy smart-state builder start');
+  const smartStateEnd = code.indexOf(',Tp=', smartStateStart);
+  if (smartStateEnd < 0) throw new Error('[card runtime] legacy smart-state builder end token not found');
+  code = code.slice(0, smartStateStart)
+    + 'Np=(e,t,n,r)=>__stsBuildSmartStateBlock({variables:e,card:t,messages:n.slice(0,Math.max(0,r))}).smartStateBlock'
+    + code.slice(smartStateEnd);
+
   const srcDocToken = 'srcDoc:U,style:';
   const srcDocAt = findExactlyOnce(code, srcDocToken, 'Card Runtime iframe srcDoc');
   code = code.slice(0, srcDocAt)
     + 'srcDoc:__stsNormalizeCardRuntimeMarkup(U),style:'
     + code.slice(srcDocAt + srcDocToken.length);
 
-  const imports = CORE_BUILDER_IMPORT + RENDERER_IMPORT;
+  const imports = SMART_STATE_IMPORT + CORE_BUILDER_IMPORT + RENDERER_IMPORT;
   if (!code.startsWith(imports)) code = imports + code;
   return code;
 }

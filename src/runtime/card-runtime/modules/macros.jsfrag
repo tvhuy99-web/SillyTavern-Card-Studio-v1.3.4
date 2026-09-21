@@ -19,26 +19,45 @@
                 const mainValue = value[0];
                 return Array.isArray(mainValue)
                     ? mainValue.filter(function (item) { return item !== '$__META_EXTENSIBLE__$'; }).map(normalizeSmartStateVariables)
-                    : [normalizeSmartStateVariables(mainValue)];
+                    : normalizeSmartStateVariables(mainValue);
             }
-            return value.map(normalizeSmartStateVariables);
+            return value.filter(function (item) { return item !== '$__META_EXTENSIBLE__$'; }).map(normalizeSmartStateVariables);
         }
         if (!value || typeof value !== 'object') return value;
         const result = {};
         Object.keys(value).forEach(function (key) {
-            if (key === '$meta' || String(key).startsWith('$')) return;
+            if (String(key).startsWith('$')) return;
             result[key] = normalizeSmartStateVariables(value[key]);
         });
         return result;
+    }
+    function stringifyRuntimeLogicStore(value) {
+        let text = '';
+        try { text = JSON.stringify(value, null, 2); } catch (_) { return ''; }
+        if (text.length <= 65536) return text;
+        const result = {};
+        const omitted = [];
+        Object.keys(asObject(value)).forEach(function (key) {
+            const candidate = Object.assign({}, result, { [key]: value[key], __smart_state_meta: { truncated: true, omittedKeys: [] } });
+            let candidateText = '';
+            try { candidateText = JSON.stringify(candidate, null, 2); } catch (_) {}
+            if (candidateText && candidateText.length <= 65024) result[key] = value[key]; else omitted.push(key);
+        });
+        result.__smart_state_meta = { truncated: true, omittedKeys: omitted.slice(0, 128) };
+        try { return JSON.stringify(result, null, 2); } catch (_) { return ''; }
     }
     function buildRuntimeSmartStateBlock() {
         const base = safeString(BOOT.smartStateBlock || '');
         const cleanVariables = normalizeSmartStateVariables(root.getVariables({ type: 'chat' }));
         let logicStore = '';
-        try {
-            if (cleanVariables && Object.keys(asObject(cleanVariables)).length) logicStore = '<LogicStore>\n' + JSON.stringify(cleanVariables, null, 2) + '\n</LogicStore>';
-        } catch (_) {}
-        const remainder = base.replace(/<LogicStore>[\s\S]*?<\/LogicStore>\s*/i, '').trim();
+        if (cleanVariables && Object.keys(asObject(cleanVariables)).length) {
+            const serialized = stringifyRuntimeLogicStore(cleanVariables);
+            if (serialized) logicStore = '<LogicStore>\n' + serialized + '\n</LogicStore>';
+        }
+        const remainder = base
+            .replace(/<LogicStore>[\s\S]*?<\/LogicStore>\s*/i, '')
+            .replace(/<MythicDatabase>[\s\S]*?<\/MythicDatabase>\s*/i, '')
+            .trim();
         return [logicStore, remainder].filter(Boolean).join('\n\n');
     }
     function stringifyVariableMacro(value, format) {

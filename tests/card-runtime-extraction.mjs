@@ -9,11 +9,15 @@ const bundle = fs.readFileSync(
 );
 const transformed = applyCardRuntimeTransform(bundle);
 
-assert.ok(transformed.includes('card-runtime-core-builder-v1.3.6.js?v=1.3.6-m3.5'));
+assert.ok(transformed.includes('smart-state-service-v1.3.6.js?v=1.3.6-smartstate-1'));
+assert.ok(transformed.includes('card-runtime-core-builder-v1.3.6.js?v=1.3.6-m3.6'));
 assert.ok(transformed.includes('card-runtime-renderer-v1.3.6.js?v=1.3.6-m3.5'));
 assert.ok(transformed.includes('__stsBuildCardRuntimeCoreScript'));
 assert.ok(transformed.includes('__stsBuildCardRuntimeRendererScript'));
 assert.ok(transformed.includes('__stsNormalizeCardRuntimeMarkup'));
+assert.ok(transformed.includes('__stsBuildSmartStateBlock'));
+assert.ok(transformed.includes('Np=(e,t,n,r)=>__stsBuildSmartStateBlock({variables:e,card:t,messages:n.slice(0,Math.max(0,r))}).smartStateBlock'));
+assert.ok(!transformed.includes('Np=(e,t,n,r)=>{let a=[]'));
 assert.ok(transformed.includes('srcDoc:__stsNormalizeCardRuntimeMarkup(U),style:'));
 assert.ok(!transformed.includes('card-runtime-core-v1.3.6.js?v='));
 assert.ok(!transformed.includes('const BOOT = ${t};'), 'inline Card Runtime core must be removed');

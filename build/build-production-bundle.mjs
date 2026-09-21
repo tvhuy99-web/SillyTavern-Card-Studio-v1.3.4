@@ -21,6 +21,8 @@ const PROMPT_NORMALIZER_SOURCE_URL = new URL('../src/features/presets/prompt-nor
 const PROMPT_NORMALIZER_OUTPUT_URL = new URL('../assets/prompt-normalizer-v1.3.6.js', import.meta.url);
 const PROXY_PERSISTENCE_SOURCE_URL = new URL('../src/providers/proxy/persistence.js', import.meta.url);
 const PROXY_PERSISTENCE_OUTPUT_URL = new URL('../assets/proxy-persistence-service-v1.3.6.js', import.meta.url);
+const SMART_STATE_SOURCE_URL = new URL('../src/features/state/smart-state-service.js', import.meta.url);
+const SMART_STATE_OUTPUT_URL = new URL('../assets/smart-state-service-v1.3.6.js', import.meta.url);
 
 
 const M7_DOMAIN_ASSETS = [
@@ -84,6 +86,7 @@ function applyGroup(source, replacements, groupName) {
 const runtimeReport = await buildCardRuntimeAssets();
 await copyFile(PROMPT_NORMALIZER_SOURCE_URL, PROMPT_NORMALIZER_OUTPUT_URL);
 await copyFile(PROXY_PERSISTENCE_SOURCE_URL, PROXY_PERSISTENCE_OUTPUT_URL);
+await copyFile(SMART_STATE_SOURCE_URL, SMART_STATE_OUTPUT_URL);
 await copyFile(APP_ENTRY_SOURCE_URL, APP_ENTRY_OUTPUT_URL);
 for (const asset of [...M4_DOMAIN_ASSETS, ...M5_DOMAIN_ASSETS, ...M6_DOMAIN_ASSETS, ...M7_DOMAIN_ASSETS]) {
   await mkdir(new URL('./', asset.output), { recursive: true });

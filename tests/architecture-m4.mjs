@@ -13,6 +13,7 @@ assert.ok(entry.includes("promptDomain: 'owned-prompt-service'"));
 assert.ok(entry.includes("responseDomain: 'owned-response-processor'"));
 
 for (const token of [
+  './smart-state-service-v1.3.6.js?v=1.3.6-smartstate-1',
   './m4/providers/common/generation-gateway.js?v=1.3.6-m4.1',
   './m4/features/chat/turn-policy.js?v=1.3.6-m4.5',
   './m4/features/chat/conversation-service.js?v=1.3.6-m4.6',
@@ -78,6 +79,23 @@ assert.ok(production.includes('i=i.replace(/{{worldInfo_before}}/g,P).replace(/{
 assert.ok(production.includes('__stsChatTurnPolicy.compactModelMessages(e,{keepLatest:!0})'));
 assert.ok(production.includes('chat_history:n.messages.map(e=>`[${e.role}] ${__stsChatTurnPolicy.modelContextContent(e)}`).join("\\n")'));
 assert.ok(!production.includes('chat_history:n.messages.map(e=>`[${e.role}] ${e.content}`).join("\\n")'));
+
+const smartStateStart = production.indexOf('F=__stsBuildSmartStateBlock({variables:o,messages:t,card:r,legacyVisualState:s})');
+const smartStateEnd = production.indexOf('let z=', smartStateStart);
+assert.ok(smartStateStart >= 0 && smartStateEnd > smartStateStart);
+const smartStateAdapter = production.slice(smartStateStart, smartStateEnd);
+assert.ok(smartStateAdapter.includes('B=F.mythicDatabase'));
+assert.ok(smartStateAdapter.includes('U=F.visualState'));
+assert.ok(smartStateAdapter.includes('let $=F.smartStateBlock;F=F.logicStore'));
+assert.ok(!smartStateAdapter.includes('G.push(`<MythicDatabase>'));
+assert.ok(production.includes('.replace(/{{last_state}}/g,U)'));
+assert.ok(production.includes('Np=(e,t,n,r)=>__stsBuildSmartStateBlock({variables:e,card:t,messages:n.slice(0,Math.max(0,r))}).smartStateBlock'));
+
+assert.equal(
+  read('src/features/state/smart-state-service.js'),
+  read('assets/smart-state-service-v1.3.6.js'),
+  'Smart State generated asset must match its source owner',
+);
 
 for (const [source, generated] of [
   ['src/providers/common/generation-utils.js', 'assets/m4/providers/common/generation-utils.js'],

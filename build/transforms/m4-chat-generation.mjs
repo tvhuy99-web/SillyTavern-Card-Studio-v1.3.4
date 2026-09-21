@@ -99,6 +99,26 @@ export function applyM4ChatGenerationTransform(source) {
     'return{sendMessage:(0,b.useCallback)((t,o)=>__stsConversationService.send(t,o),[__stsConversationService])';
   code = code.slice(0, sendStart) + sendAdapter + code.slice(sendEnd);
 
+  const smartStateStart = findExactlyOnce(
+    code,
+    'F=(e=>{if(!e||0===Object.keys(e).length)return"";let t={};',
+    'canonical smart state/start',
+  );
+  const smartStateEnd = code.indexOf('let z=', smartStateStart);
+  if (smartStateEnd < 0) throw new Error('[M4 chat/generation] canonical smart state/end token not found');
+  const smartStateReplacement =
+    'F=__stsBuildSmartStateBlock({variables:o,messages:t,card:r,legacyVisualState:s}),' +
+    'B=F.mythicDatabase,U=F.visualState,H="";' +
+    'if("integrated"===r.rpg_data?.settings?.executionMode&&r.rpg_data){let e=el(r.rpg_data,h||[]),t=[...R].join("\\n");H=Zs(r.rpg_data.settings.customSystemPrompt||Js,e,"",t)}' +
+    'let $=F.smartStateBlock;F=F.logicStore;';
+  code = code.slice(0, smartStateStart) + smartStateReplacement + code.slice(smartStateEnd);
+
+  const legacyLastStateMacro = '.replace(/{{last_state}}/g,s)';
+  const legacyLastStateAt = findExactlyOnce(code, legacyLastStateMacro, 'legacy last_state macro');
+  code = code.slice(0, legacyLastStateAt)
+    + '.replace(/{{last_state}}/g,U)'
+    + code.slice(legacyLastStateAt + legacyLastStateMacro.length);
+
   const plainTextVariableGate = 'g||(i=Xu(i),';
   const plainTextVariableGateIndex = findExactlyOnce(
     code,
@@ -161,4 +181,4 @@ export function applyM4ChatGenerationTransform(source) {
   return code;
 }
 
-export const M4_CHAT_GENERATION_PATCH_COUNT = 13;
+export const M4_CHAT_GENERATION_PATCH_COUNT = 15;

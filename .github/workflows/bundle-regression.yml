@@ -36,6 +36,7 @@ jobs:
           git diff --exit-code -- assets/app-production-v1.3.6.js
           git diff --exit-code -- assets/prompt-normalizer-v1.3.6.js
           git diff --exit-code -- assets/proxy-persistence-service-v1.3.6.js
+          git diff --exit-code -- assets/smart-state-service-v1.3.6.js
           git diff --exit-code -- assets/card-runtime-core-builder-v1.3.6.js
           git diff --exit-code -- assets/card-runtime-renderer-v1.3.6.js
           git diff --exit-code -- assets/m4
@@ -48,6 +49,7 @@ jobs:
           node --check assets/app-production-v1.3.6.js
           node --check assets/prompt-normalizer-v1.3.6.js
           node --check assets/proxy-persistence-service-v1.3.6.js
+          node --check assets/smart-state-service-v1.3.6.js
           node --check assets/card-runtime-core-builder-v1.3.6.js
           node --check assets/card-runtime-renderer-v1.3.6.js
           node --check assets/m4/providers/common/generation-utils.js
@@ -69,6 +71,8 @@ jobs:
           node --check assets/m7/diagnostics/gemini-model-list.js
       - name: Test M2/M3 architecture boundaries
         run: node tests/architecture-m2-m3.mjs
+      - name: Test Smart State service
+        run: node tests/smart-state-service.mjs
       - name: Test M4 architecture boundaries
         run: node tests/architecture-m4.mjs
       - name: Test M4 generation gateway
