@@ -4,6 +4,7 @@ import {
   findInitVariableEntry,
   hasInitialVariables,
   mergeInitialVariableSources,
+  seedInitialVariablesFromCard,
 } from '../src/features/state/initial-variable-service.js';
 
 const entries = [
@@ -46,6 +47,28 @@ const yamlish = mergeInitialVariableSources(
   },
 );
 assert.deepEqual(yamlish.variables, { hp: 12, mp: 7 });
+
+const seededCard = seedInitialVariablesFromCard(
+  {},
+  {
+    first_mes: '<initvar>{"fromOpening":3}</initvar>',
+    extensions: {
+      TavernHelper_variables: '{"fromExtension":1}',
+      tavern_helper: [['variables', '{"fromArray":2}']],
+    },
+    char_book: {
+      entries: [{ comment: '[INITVAR] seed', content: '{"fromWorldbook":4}' }],
+    },
+  },
+  undefined,
+  JSON.parse,
+);
+assert.deepEqual(seededCard.variables, {
+  fromExtension: 1,
+  fromArray: 2,
+  fromWorldbook: 4,
+  fromOpening: 3,
+});
 
 const invalid = mergeInitialVariableSources({}, [{ comment: '[initvar]', content: 'not structured' }], '', () => null);
 assert.deepEqual(invalid.variables, {});
