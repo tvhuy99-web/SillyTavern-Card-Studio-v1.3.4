@@ -15,6 +15,8 @@ const rendererSource = read('src/runtime/card-runtime/renderer.js');
 const rendererGenerated = read('assets/card-runtime-renderer-v1.3.6.js');
 const coreTemplate = read('src/runtime/card-runtime/core.template.js');
 const coreBuilder = read('assets/card-runtime-core-builder-v1.3.6.js');
+const initialVariableSource = read('src/features/state/initial-variable-service.js');
+const initialVariableGenerated = read('assets/initial-variable-service-v1.3.6.js');
 
 for (const forbidden of [
   'prompt-order-identifier-fix-v1.3.6.js',
@@ -48,6 +50,7 @@ assert.ok(production.includes('prompt-normalizer-v1.3.6.js'));
 assert.ok(production.includes('proxy-persistence-service-v1.3.6.js?v=1.3.6-m2-final'));
 assert.ok(production.includes('card-runtime-core-builder-v1.3.6.js?v=1.3.6-m3.9'));
 assert.ok(production.includes('card-runtime-renderer-v1.3.6.js?v=1.3.6-m3.8'));
+assert.ok(production.includes('initial-variable-service-v1.3.6.js?v=1.3.6-initvar-1'));
 assert.ok(production.includes('smart-state-service-v1.3.6.js?v=1.3.6-smartstate-2'));
 assert.ok(production.includes('__stsBuildSmartStateBlock'));
 assert.ok(production.includes('__stsBuildCardRuntimeCoreScript'));
@@ -59,6 +62,7 @@ assert.ok(!production.includes('root.__STS_START_CARD_RUNTIME__ = function start
 assert.equal(promptGenerated, promptSource);
 assert.equal(proxyGenerated, proxySource);
 assert.equal(rendererGenerated, rendererSource);
+assert.equal(initialVariableGenerated, initialVariableSource);
 assert.ok(coreBuilder.includes('__STS_START_CARD_RUNTIME__'));
 assert.ok(!coreBuilder.includes('/*__STS_COMPATIBILITY_API__*/'));
 assert.ok(coreTemplate.length < 30000, 'Card Runtime core template must stay small');
