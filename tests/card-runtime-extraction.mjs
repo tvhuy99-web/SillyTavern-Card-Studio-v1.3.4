@@ -52,6 +52,8 @@ const injected = runtimeModule.buildCardRuntimeCoreScript({
 });
 assert.ok(!injected.includes('</script'), 'inline runtime payload must escape closing script tags');
 assert.ok(!injected.includes('<!--'), 'inline runtime payload must escape HTML comment openers');
+assert.doesNotThrow(() => new Function(injected), 'generated inline Card Runtime must be valid JavaScript');
+assert.ok(injected.includes('\n(function registerCardRuntimeCore'), 'BOOT payload must be followed by a real newline before core source');
 assert.ok(injected.includes('__STS_START_CARD_RUNTIME__(window.__CARD_STUDIO_BOOT__)'));
 assert.ok(injected.includes('window.cardStudioReady = Promise.resolve().then'));
 assert.ok(injected.includes('CARD_RUNTIME_START_FUNCTION_MISSING'));
