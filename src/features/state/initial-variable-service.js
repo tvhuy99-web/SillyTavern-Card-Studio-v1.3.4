@@ -53,6 +53,42 @@ function parseRecord(value, parseStructured) {
   return null;
 }
 
+export function extractCardExtensionVariables(card, parseStructured) {
+  const extensions = isRecord(card?.extensions) ? card.extensions : {};
+  const variables = {};
+
+  function mergeCandidate(value) {
+    const parsed = parseRecord(value, parseStructured);
+    if (parsed) mergeRecords(variables, parsed);
+  }
+
+  mergeCandidate(extensions.TavernHelper_variables);
+  mergeCandidate(extensions.tavern_helper_variables);
+
+  if (Array.isArray(extensions.tavern_helper)) {
+    extensions.tavern_helper.forEach(entry => {
+      if (!Array.isArray(entry)) return;
+      if (!/^(variables|variable)$/i.test(String(entry[0] || ''))) return;
+      mergeCandidate(entry[1]);
+    });
+  } else if (isRecord(extensions.tavern_helper)) {
+    mergeCandidate(extensions.tavern_helper.variables);
+  }
+
+  return variables;
+}
+
+export function seedInitialVariablesFromCard(baseVariables, card, openingText, parseStructured) {
+  const extensionVariables = extractCardExtensionVariables(card, parseStructured);
+  const base = mergeRecords(extensionVariables, isRecord(baseVariables) ? baseVariables : {});
+  return mergeInitialVariableSources(
+    base,
+    card?.char_book?.entries || [],
+    openingText == null ? card?.first_mes || '' : openingText,
+    parseStructured,
+  );
+}
+
 export function findInitVariableEntry(entries) {
   const list = Array.isArray(entries) ? entries : [];
   return list.find(entry => {
