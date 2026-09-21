@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import {
   buildSmartStateBlock,
+  deriveSemanticVisualState,
   findLatestVisualState,
   normalizeSmartStateVariables,
   sanitizeVisualInterface,
@@ -30,16 +31,24 @@ const recent = findLatestVisualState([
   { role: 'user', content: 'next' },
   { role: 'model', interactiveHtml: '<div class="new" style="color:red" data-state="open">NEW<script>bad()</script></div>' },
 ], { legacyVisualState: '<div>LEGACY</div>' });
-assert.equal(recent.source, 'message-html');
-assert.ok(recent.value.includes('NEW'));
-assert.ok(recent.value.includes('data-state="open"'));
+assert.equal(recent.source, 'derived-html');
+const recentState = JSON.parse(recent.value);
+assert.ok(recentState.text.includes('NEW'));
+assert.ok(recentState.elements.some(item => item.attributes?.['data-state'] === 'open'));
 assert.ok(!recent.value.includes('bad()'));
+assert.ok(!recent.value.includes('<div'));
 assert.ok(!recent.value.includes('style='));
 assert.ok(!recent.value.includes('class='));
 
 const legacy = findLatestVisualState([], { legacyVisualState: '<div>LEGACY</div>' });
-assert.equal(legacy.source, 'legacy-fallback');
-assert.ok(legacy.value.includes('LEGACY'));
+assert.equal(legacy.source, 'legacy-derived-html');
+assert.ok(JSON.parse(legacy.value).text.includes('LEGACY'));
+
+const semantic = deriveSemanticVisualState('<section data-screen="inventory"><button aria-label="Use sword">Use</button><span>Iron Sword</span></section>');
+const semanticState = JSON.parse(semantic);
+assert.ok(semanticState.text.includes('Iron Sword'));
+assert.ok(semanticState.elements.some(item => item.attributes?.['data-screen'] === 'inventory'));
+assert.ok(semanticState.elements.some(item => item.attributes?.['aria-label'] === 'Use sword'));
 
 const sanitized = sanitizeVisualInterface('<div onclick="x()" class="x">A</div><iframe>bad</iframe>');
 assert.ok(sanitized.includes('A'));

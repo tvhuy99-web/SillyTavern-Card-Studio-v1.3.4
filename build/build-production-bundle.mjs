@@ -23,6 +23,8 @@ const PROXY_PERSISTENCE_SOURCE_URL = new URL('../src/providers/proxy/persistence
 const PROXY_PERSISTENCE_OUTPUT_URL = new URL('../assets/proxy-persistence-service-v1.3.6.js', import.meta.url);
 const SMART_STATE_SOURCE_URL = new URL('../src/features/state/smart-state-service.js', import.meta.url);
 const SMART_STATE_OUTPUT_URL = new URL('../assets/smart-state-service-v1.3.6.js', import.meta.url);
+const VARIABLE_SCOPE_SOURCE_URL = new URL('../src/features/state/variable-scope-service.js', import.meta.url);
+const VARIABLE_SCOPE_OUTPUT_URL = new URL('../assets/variable-scope-service-v1.3.6.js', import.meta.url);
 
 
 const M7_DOMAIN_ASSETS = [
@@ -87,6 +89,7 @@ const runtimeReport = await buildCardRuntimeAssets();
 await copyFile(PROMPT_NORMALIZER_SOURCE_URL, PROMPT_NORMALIZER_OUTPUT_URL);
 await copyFile(PROXY_PERSISTENCE_SOURCE_URL, PROXY_PERSISTENCE_OUTPUT_URL);
 await copyFile(SMART_STATE_SOURCE_URL, SMART_STATE_OUTPUT_URL);
+await copyFile(VARIABLE_SCOPE_SOURCE_URL, VARIABLE_SCOPE_OUTPUT_URL);
 await copyFile(APP_ENTRY_SOURCE_URL, APP_ENTRY_OUTPUT_URL);
 for (const asset of [...M4_DOMAIN_ASSETS, ...M5_DOMAIN_ASSETS, ...M6_DOMAIN_ASSETS, ...M7_DOMAIN_ASSETS]) {
   await mkdir(new URL('./', asset.output), { recursive: true });

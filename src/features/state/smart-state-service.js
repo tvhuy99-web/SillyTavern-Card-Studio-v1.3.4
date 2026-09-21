@@ -149,12 +149,105 @@ export function sanitizeVisualInterface(value, options = {}) {
 }
 
 function serializeStructuredVisual(value, maxChars) {
-  const normalized = normalizeSmartStateVariables(value);
-  const text = stringifyJson(normalized);
-  if (!text) return '';
-  return text.length <= maxChars
-    ? text
-    : truncateString(text, maxChars) + '\n[Structured visual state truncated]';
+  return serializeSmartStateVariables(value, { maxChars });
+}
+
+function cleanSemanticText(value, limit = 8192) {
+  return truncateString(String(value || '').replace(/\s+/g, ' ').trim(), limit);
+}
+
+function semanticAttributeName(name) {
+  const value = String(name || '').toLowerCase();
+  return value.startsWith('data-')
+    || value.startsWith('aria-')
+    || ['role', 'name', 'value', 'title', 'alt', 'checked', 'selected', 'disabled', 'open'].includes(value);
+}
+
+function semanticAttributeValue(value) {
+  if (value === '' || value === true) return true;
+  return truncateString(String(value), 256);
+}
+
+function buildSemanticVisualObjectFromDom(source) {
+  const document = new DOMParser().parseFromString(source, 'text/html');
+  document.querySelectorAll('script,style,iframe,object,embed,svg,canvas,link,meta').forEach(node => node.remove());
+  const text = cleanSemanticText(document.body?.textContent || '');
+  const elements = [];
+  for (const node of Array.from(document.body?.querySelectorAll('*') || [])) {
+    if (elements.length >= 128) break;
+    const attrs = {};
+    for (const attribute of Array.from(node.attributes || [])) {
+      if (!semanticAttributeName(attribute.name)) continue;
+      attrs[attribute.name] = semanticAttributeValue(attribute.value);
+    }
+    const tag = String(node.tagName || '').toLowerCase();
+    const isControl = ['button', 'input', 'select', 'option', 'textarea', 'progress', 'meter', 'details', 'summary'].includes(tag);
+    if (!isControl && Object.keys(attrs).length === 0) continue;
+    const item = { tag };
+    if (Object.keys(attrs).length) item.attributes = attrs;
+    const label = cleanSemanticText(node.textContent || '', 512);
+    if (label) item.text = label;
+    elements.push(item);
+  }
+  return { text, elements };
+}
+
+function buildSemanticVisualObjectWithRegex(source) {
+  const sanitized = sanitizeVisualWithRegex(source);
+  const text = cleanSemanticText(
+    sanitized.replace(/<br\s*\/?\s*>/gi, '\n').replace(/<[^>]+>/g, ' '),
+  );
+  const elements = [];
+  const tagPattern = /<([a-z][\w:-]*)\b([^>]*)>/gi;
+  let match;
+  while ((match = tagPattern.exec(sanitized)) && elements.length < 128) {
+    const tag = String(match[1] || '').toLowerCase();
+    const attrs = {};
+    const attrPattern = /([:@\w-]+)(?:\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s>]+)))?/g;
+    let attr;
+    while ((attr = attrPattern.exec(match[2] || ''))) {
+      const name = String(attr[1] || '').toLowerCase();
+      if (!semanticAttributeName(name)) continue;
+      attrs[name] = semanticAttributeValue(attr[2] ?? attr[3] ?? attr[4] ?? true);
+    }
+    const isControl = ['button', 'input', 'select', 'option', 'textarea', 'progress', 'meter', 'details', 'summary'].includes(tag);
+    if (isControl || Object.keys(attrs).length) {
+      elements.push({ tag, ...(Object.keys(attrs).length ? { attributes: attrs } : {}) });
+    }
+  }
+  return { text, elements };
+}
+
+function serializeSemanticVisualObject(value, maxChars) {
+  const normalized = {
+    text: cleanSemanticText(value?.text || ''),
+    elements: Array.isArray(value?.elements) ? value.elements : [],
+  };
+  for (const count of [128, 96, 64, 32, 16, 8, 0]) {
+    const candidate = stringifyJson({
+      ...(normalized.text ? { text: normalized.text } : {}),
+      ...(count > 0 && normalized.elements.length ? { elements: normalized.elements.slice(0, count) } : {}),
+      ...(normalized.elements.length > count ? { meta: { omittedElements: normalized.elements.length - count } } : {}),
+    });
+    if (candidate && candidate.length <= maxChars) return candidate;
+  }
+  const textOnly = stringifyJson({ text: cleanSemanticText(normalized.text, Math.max(512, maxChars - 128)) });
+  return textOnly && textOnly.length <= maxChars ? textOnly : '';
+}
+
+export function deriveSemanticVisualState(value, options = {}) {
+  const maxChars = Math.max(1024, Number(options.maxChars) || DEFAULT_VISUAL_STATE_MAX_CHARS);
+  const source = String(value || '').trim();
+  if (!source) return '';
+  try {
+    const semantic = typeof DOMParser !== 'undefined'
+      ? buildSemanticVisualObjectFromDom(source)
+      : buildSemanticVisualObjectWithRegex(source);
+    if (!semantic.text && (!semantic.elements || semantic.elements.length === 0)) return '';
+    return serializeSemanticVisualObject(semantic, maxChars);
+  } catch {
+    return '';
+  }
 }
 
 export function findLatestVisualState(messages, options = {}) {
@@ -172,12 +265,17 @@ export function findLatestVisualState(messages, options = {}) {
     const html = message.interactiveHtml
       || (Array.isArray(message.interactiveHtmlBlocks) ? message.interactiveHtmlBlocks.join('\n') : '');
     if (html) {
+      const semantic = deriveSemanticVisualState(html, { maxChars });
+      if (semantic) return { value: semantic, source: 'derived-html', messageIndex: index };
       const value = sanitizeVisualInterface(html, { maxChars });
-      if (value) return { value, source: 'message-html', messageIndex: index };
+      if (value) return { value, source: 'message-html-fallback', messageIndex: index };
     }
   }
 
-  const legacy = sanitizeVisualInterface(options.legacyVisualState || '', { maxChars });
+  const legacySource = options.legacyVisualState || '';
+  const semanticLegacy = deriveSemanticVisualState(legacySource, { maxChars });
+  if (semanticLegacy) return { value: semanticLegacy, source: 'legacy-derived-html', messageIndex: -1 };
+  const legacy = sanitizeVisualInterface(legacySource, { maxChars });
   return legacy
     ? { value: legacy, source: 'legacy-fallback', messageIndex: -1 }
     : { value: '', source: 'none', messageIndex: -1 };

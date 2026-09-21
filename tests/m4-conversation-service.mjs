@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import { createConversationService } from '../src/features/chat/conversation-service.js';
 
 const controllers = new Set();
-const calls = { prompt: 0, processed: [], sound: [], errors: [], logs: [] };
+const calls = { prompt: 0, processed: [], sound: [], errors: [], logs: [], globalWrites: [] };
 let messageCounter = 0;
 const state = {
   card: { name: 'Card' },
@@ -29,6 +29,7 @@ const deps = {
   ),
   setMessages: messages => { state.messages = messages; },
   setSessionData: patch => Object.assign(state, patch),
+  replaceGlobalVariables: value => { calls.globalWrites.push(value); return value; },
   turnPolicy: {
     beginTurn({ content, sequence }) {
       return {
@@ -80,6 +81,7 @@ const deps = {
       rpgSnapshot: { snapshot: true },
       structuredPrompt: ['PROMPT'],
       updatedVariables: { hp: 11, promptPersisted: true },
+      updatedGlobalVariables: { campaign: 'persisted' },
     };
   },
   logPrompt: () => { calls.promptLog = (calls.promptLog || 0) + 1; },
@@ -147,6 +149,7 @@ assert.equal(state.messages[1].reasoning_content, 'WHY');
 assert.deepEqual(state.messages[1].activeLorebookUids, ['lore-1']);
 assert.equal(calls.prompt, 1);
 assert.deepEqual(state.variables, { hp: 11, promptPersisted: true });
+assert.deepEqual(calls.globalWrites, [{ campaign: 'persisted' }]);
 assert.equal(calls.processed.at(-1).forced, false);
 assert.equal(controllers.size, 0);
 assert.equal(state.loading, false);
