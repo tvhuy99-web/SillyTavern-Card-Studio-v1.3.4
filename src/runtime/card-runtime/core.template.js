@@ -10,7 +10,7 @@
     const BOOT = boot;
     const HELPER_VERSION = '4.8.19';
     const TAVERN_VERSION = '1.18.0';
-    const IMPLEMENTATION_VERSION = '4.8.19-compat.12';
+    const IMPLEMENTATION_VERSION = '4.8.19-compat.13';
     const root = window;
     const FULL_COMPATIBILITY_MODE = BOOT.context.compatibilityMode !== 'safe';
     const OFFICIAL_LOCAL_ENGINE = BOOT.context.engineMode === 'official-local';
@@ -91,6 +91,8 @@
         CARD_RUNTIME_SCRIPT_FAILED: 'Kiểm tra scriptId, scriptName và stack trace để tìm dòng lỗi trong card-runtime-*.js.',
         CARD_RUNTIME_CALLBACK_EXPECTED_FUNCTION: 'Một API hoặc callback mà script truyền vào không phải hàm. Xem lodashMethod, argumentTypes, scriptId và scriptName để xác định chính xác callback hoặc API tương thích bị thiếu.',
         CARD_RUNTIME_RESOURCE_LOAD_FAILED: 'Kiểm tra URL tài nguyên, <base href>, kết nối mạng, CORS và tài nguyên nhúng của CHARX.',
+        CARD_RUNTIME_OPTIONAL_RESOURCE_LOAD_FAILED: 'Tài nguyên trang trí tùy chọn không tải được. Runtime tiếp tục chạy bằng fallback; chỉ cần xử lý nếu giao diện hiển thị sai.',
+        CARD_RUNTIME_VARIABLES_NOT_READY: 'Kiểm tra variableScopes của HANDSHAKE_ACK, chat/stat_data và recentReads để biết thẻ đang chờ scope hoặc đường dẫn biến nào.',
         CARD_RUNTIME_PROMISE_REJECTION: 'Kiểm tra promise không có catch trong script thẻ.',
         CARD_RUNTIME_RPC_TIMEOUT: 'Kiểm tra phương thức RPC và xem luồng xử lý phía ứng dụng có bị treo hay không.',
         CARD_RUNTIME_RPC_FAILED: 'Kiểm tra tên phương thức RPC, tham số và lỗi gốc phía ứng dụng.',
@@ -172,6 +174,30 @@
         return function () { root.removeEventListener('message', wrapped); };
     };
 
+    function optionalResourceFailureDetails(target, resourceUrl) {
+        if (!target || !target.tagName) return null;
+        const tagName = String(target.tagName).toUpperCase();
+        const href = String(resourceUrl || '');
+        const rel = String(target.getAttribute && target.getAttribute('rel') || target.rel || '').toLowerCase();
+        const explicitlyOptional = String(target.getAttribute && target.getAttribute('data-card-runtime-optional') || '').toLowerCase() === 'true';
+        const optionalFontStylesheet = tagName === 'LINK'
+            && rel.split(/\s+/).includes('stylesheet')
+            && (
+                explicitlyOptional
+                || /^https:\/\/fontsapi\.zeoseven\.com\//i.test(href)
+                || /^https:\/\/fonts\.googleapis\.com\//i.test(href)
+                || /^https:\/\/fonts\.bunny\.net\//i.test(href)
+                || /^https:\/\/use\.typekit\.net\//i.test(href)
+            );
+        if (!optionalFontStylesheet) return null;
+        return {
+            tagName: tagName,
+            rel: rel,
+            resourceKind: 'optional-font-stylesheet',
+            optional: true
+        };
+    }
+
     root.addEventListener('error', function (event) {
         const target = event.target;
         if (target && target.tagName && !target.getAttribute('data-card-runtime-fallback')) {
@@ -186,7 +212,22 @@
         }
         const resourceUrl = target && (target.src || target.href) || undefined;
         if (target && target.tagName && resourceUrl) {
-            diagnostic('CARD_RUNTIME_RESOURCE_LOAD_FAILED', 'resource-load', String(target.tagName).toLowerCase(), 'Không thể tải tài nguyên của thẻ.', { resourceUrl: resourceUrl, details: { tagName: String(target.tagName) } });
+            const optionalResource = optionalResourceFailureDetails(target, resourceUrl);
+            if (optionalResource) {
+                diagnostic(
+                    'CARD_RUNTIME_OPTIONAL_RESOURCE_LOAD_FAILED',
+                    'resource-load',
+                    String(target.tagName).toLowerCase(),
+                    'Không thể tải stylesheet font tùy chọn; thẻ tiếp tục dùng font fallback.',
+                    {
+                        severity: 'warning',
+                        resourceUrl: resourceUrl,
+                        details: optionalResource
+                    }
+                );
+            } else {
+                diagnostic('CARD_RUNTIME_RESOURCE_LOAD_FAILED', 'resource-load', String(target.tagName).toLowerCase(), 'Không thể tải tài nguyên của thẻ.', { resourceUrl: resourceUrl, details: { tagName: String(target.tagName) } });
+            }
         }
         if (event.error || event.message) {
             const stack = event.error && event.error.stack;
