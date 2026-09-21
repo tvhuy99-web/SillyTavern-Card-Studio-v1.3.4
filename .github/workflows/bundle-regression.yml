@@ -107,6 +107,8 @@ jobs:
         run: node tests/proxy-persistence.mjs
       - name: Test Card Runtime extraction
         run: node tests/card-runtime-extraction.mjs
+      - name: Test Card Runtime surface gaps
+        run: node tests/runtime-surface-gaps.mjs
       - name: Test Arena state transform
         run: node tests/arena-state-transform.mjs
       - name: Test Arena cancellation transform
