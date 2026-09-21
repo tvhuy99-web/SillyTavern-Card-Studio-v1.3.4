@@ -48,6 +48,10 @@ assert.ok(production.includes('__stsDiagnosticsState.clearAll()'));
 assert.ok(production.includes('__stsSessionPersistence.normalizeLoadedSession(a).record'));
 assert.ok(!production.includes('lastUpdated:Date.now(),initialDiagnosticLog:d}'));
 assert.ok(production.includes('__stsMergeInitialVariableSources(m,n.card.char_book?.entries||[],s,e=>jt.default.parse(e))'));
+assert.ok(production.includes('__stsSeedInitialVariablesFromCard({},l,String(l?.first_mes||""),e=>jt.default.parse(e))'));
+assert.ok(production.includes('__stsVariablesHealed'));
+assert.ok(production.includes('n.chatHistory[0]={...n.chatHistory[0],contextState:JSON.parse(JSON.stringify(n.variables))}'));
+assert.ok(production.includes('let arenaStateHealed=__stsLoaded.needsRewrite||__stsVariablesHealed'));
 assert.ok(production.includes('__stsMergeInitialVariableSources({},t?.char_book?.entries||[],String(t?.first_mes||""),e=>jt.default.parse(e))'));
 assert.ok(!production.includes('e.comment?.includes("[InitVar]")'));
 
