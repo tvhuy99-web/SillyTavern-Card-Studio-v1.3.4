@@ -10,7 +10,7 @@ const bundle = fs.readFileSync(
 const transformed = applyCardRuntimeTransform(bundle);
 
 assert.ok(transformed.includes('smart-state-service-v1.3.6.js?v=1.3.6-smartstate-2'));
-assert.ok(transformed.includes('card-runtime-core-builder-v1.3.6.js?v=1.3.6-m3.7'));
+assert.ok(transformed.includes('card-runtime-core-builder-v1.3.6.js?v=1.3.6-m3.8'));
 assert.ok(transformed.includes('card-runtime-renderer-v1.3.6.js?v=1.3.6-m3.6'));
 assert.ok(transformed.includes('__stsBuildCardRuntimeCoreScript'));
 assert.ok(transformed.includes('__stsBuildCardRuntimeRendererScript'));
