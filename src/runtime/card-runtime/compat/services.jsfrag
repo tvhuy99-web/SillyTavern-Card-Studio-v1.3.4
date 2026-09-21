@@ -58,11 +58,11 @@ root.audioEnable = function (_args, value) { const settings = root.getAudioSetti
     const compatContext = {
         accountStorage: root.localStorage || {},
         characters: catalog.characters,
-        groups: [],
+        groups: clone(BOOT.catalog && BOOT.catalog.groups || []),
         getRequestHeaders: function (options) { return options && options.omitContentType ? {} : { 'Content-Type': 'application/json' }; },
         reloadCurrentChat: function () { return rpc('chat.reload', {}, 60000); },
         renameChat: function (name) { return rpc('chat.rename', { name: name }, 60000); },
-        maxContext: Number(currentPresetRecord().truncation_length || currentPresetRecord().max_context || 0),
+        maxContext: Number((currentPresetRecord() || {}).truncation_length || (currentPresetRecord() || {}).max_context || 0),
         saveMetadataDebounced: function () { return context.saveMetadata(); },
         streamingProcessor: null,
         eventTypes: root.tavern_events,
@@ -80,7 +80,11 @@ root.audioEnable = function (_args, value) { const settings = root.getAudioSetti
         updateChatMetadata: function (value) { Object.assign(context.chatMetadata, clone(value || {})); return context.saveMetadata(); },
         saveChat: function () { return rpc('chat.save', {}, 60000); },
         openCharacterChat: function (id) { return rpc('character.select', { id: id }, 60000); },
-        openGroupChat: function (id) { return rpc('group.select', { id: id }, 60000); },
+        openGroupChat: function () {
+            const message = 'Group chat selection is unavailable in Card Studio because the parent application has no group-chat session model.';
+            diagnostic('CARD_RUNTIME_RPC_UNSUPPORTED', 'api-call', 'openGroupChat', message, { method: 'openGroupChat', scriptId: activeScriptId, details: { capability: 'groupChat' } });
+            return Promise.reject(new Error(message));
+        },
         sendSystemMessage: function (type, text) { return root.createChatMessages([{ role: 'system', message: text || type || '' }]); },
         activateSendButtons: function () { root.sendMessageToParent('SET_INPUT_LOCKED', false); },
         deactivateSendButtons: function () { root.sendMessageToParent('SET_INPUT_LOCKED', true); },
@@ -100,8 +104,8 @@ root.audioEnable = function (_args, value) { const settings = root.getAudioSetti
         unregisterMacro: root.unregisterMacroLike,
         registerFunctionTool: function (tool) { const name = String(tool && (tool.name || tool.function && tool.function.name) || uuid()); toolRegistry.set(name, tool); return name; },
         unregisterFunctionTool: function (name) { return toolRegistry.delete(String(name)); },
-        isToolCallingSupported: function () { return true; },
-        canPerformToolCalls: function () { return true; },
+        isToolCallingSupported: function () { return Boolean(CAPABILITIES.toolCalling); },
+        canPerformToolCalls: function () { return Boolean(CAPABILITIES.toolCalling); },
         ToolManager: { tools: toolRegistry, registerFunctionTool: function (tool) { return compatContext.registerFunctionTool(tool); }, unregisterFunctionTool: function (name) { return toolRegistry.delete(String(name)); } },
         registerDebugFunction: function (name, fn) { root[String(name)] = fn; return fn; },
         renderExtensionTemplate: function (_extension, templateId, data) { const template = typeof templateId === 'string' && templateId.includes('<') ? templateId : ''; return root.ejs && template ? root.ejs.render(template, data || {}) : template; },
@@ -132,8 +136,8 @@ root.audioEnable = function (_args, value) { const settings = root.getAudioSetti
         Popup: Popup,
         POPUP_TYPE: Object.freeze({ TEXT: 'text', HTML: 'html', INPUT: 'input', CONFIRM: 'confirm', DISPLAY: 'display' }),
         POPUP_RESULT: Object.freeze({ AFFIRMATIVE: 1, NEGATIVE: 0, CANCELLED: null }),
-        chatCompletionSettings: currentPresetRecord(),
-        textCompletionSettings: currentPresetRecord(),
+        chatCompletionSettings: currentPresetRecord() || {},
+        textCompletionSettings: currentPresetRecord() || {},
         getCharacters: function () { return Promise.resolve(clone(catalog.characters)); },
         getOneCharacter: function (id) { return root.getCharacter(id); },
         getCharacterCardFields: function (card) { return clone(card && card.raw || card || BOOT.characterCard); },
