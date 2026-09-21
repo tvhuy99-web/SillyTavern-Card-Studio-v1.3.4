@@ -112,7 +112,7 @@ export function applyM4ChatGenerationTransform(source) {
   const smartStateEnd = code.indexOf('let z=', smartStateStart);
   if (smartStateEnd < 0) throw new Error('[M4 chat/generation] canonical smart state/end token not found');
   const smartStateReplacement =
-    'F=__stsNormalizePromptVariableScopes(o,__stsReadGlobalVariables()),o=F.chat,G=F.global,F=__stsBuildSmartStateBlock({variables:o,messages:t,card:r,legacyVisualState:s}),' +
+    'F=__stsNormalizePromptVariableScopes(o,__stsReadGlobalVariables()),G=(o=F.chat,F.global),F=__stsBuildSmartStateBlock({variables:o,messages:t,card:r,legacyVisualState:s}),' +
     'B=F.mythicDatabase,U=F.visualState,H="";' +
     'if("integrated"===r.rpg_data?.settings?.executionMode&&r.rpg_data){let e=el(r.rpg_data,h||[]),t=[...R].join("\\n");H=Zs(r.rpg_data.settings.customSystemPrompt||Js,e,"",t)}' +
     'let $=F.smartStateBlock;F=F.logicStore;';
