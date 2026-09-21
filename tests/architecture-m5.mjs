@@ -50,6 +50,10 @@ assert.ok(
   production.includes('originalRawContent:s,contextState:JSON.parse(JSON.stringify(g)),timestamp:Date.now()'),
   'opening message must persist the initialized variable snapshot',
 );
+assert.ok(
+  production.includes('content:s,contextState:JSON.parse(JSON.stringify(g)),timestamp:Date.now()}'),
+  'raw first-message fallback must persist the initialized variable snapshot',
+);
 
 for (const [source, generated] of [
   ['src/app/state/runtime-state.js', 'assets/m5/app/state/runtime-state.js'],
