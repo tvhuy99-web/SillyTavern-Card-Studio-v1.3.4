@@ -2,7 +2,7 @@ import fs from 'node:fs';
 import { spawnSync } from 'node:child_process';
 
 const target = new URL('../assets/app-production-v1.3.6.js', import.meta.url);
-const result = spawnSync(process.execPath, ['--check', target.pathname], { encoding: 'utf8' });
+const result = spawnSync(process.execPath, ['--check', target.pathname], { encoding: 'utf8', maxBuffer: 16 * 1024 * 1024 });
 if (result.status === 0) {
   console.log('production bundle syntax: OK');
   process.exit(0);
