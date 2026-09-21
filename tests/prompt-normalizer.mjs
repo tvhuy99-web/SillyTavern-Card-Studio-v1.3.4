@@ -26,9 +26,11 @@ const normalized = normalizePresetConfig(source);
 assert.equal(source.prompts.length, 3, 'normalization must not mutate frozen source arrays');
 assert.equal(normalized.prompts.length, 2);
 assert.equal(normalized.prompts[1].identifier, 'custom-a');
-assert.deepEqual(normalized.prompt_order.map(entry => entry.identifier), ['main', 'custom-a']);
+assert.deepEqual(normalized.prompts.map(entry => entry.identifier), ['main', 'custom-a']);
+assert.equal(normalized.prompts[1].enabled, true);
+assert.equal('prompt_order' in normalized, false);
 
-const grouped = normalizePresetConfig({
+const groupedSource = {
   prompts: [{ identifier: 'custom-b', content: 'B' }, undefined],
   prompt_order: [
     {
@@ -42,18 +44,49 @@ const grouped = normalizePresetConfig({
     },
     undefined,
   ],
-});
+};
+const grouped = normalizePresetConfig(groupedSource);
 assert.equal(grouped.prompts.length, 1);
-assert.equal(grouped.prompt_order.length, 1);
-assert.deepEqual(grouped.prompt_order[0].order.map(entry => entry.identifier), ['main', 'custom-b']);
+assert.equal(grouped.prompts[0].enabled, true);
+assert.equal('prompt_order' in grouped, false);
 
 const list = normalizePresetList([source, null, grouped]);
 assert.equal(list.length, 2);
 
-assert.deepEqual(getPromptOrderIntegrity(grouped), {
+assert.deepEqual(getPromptOrderIntegrity(groupedSource), {
   promptCount: 1,
   orderCount: 2,
 });
+
+const worldInfoPreset = normalizePresetConfig({
+  prompts: [
+    { identifier: 'worldInfoBefore', name: 'World Info before', marker: true },
+    { identifier: 'custom-world', name: 'World compatibility', content: '{{worldInfo}}' },
+    { identifier: 'detached', name: 'Detached', content: 'MUST NOT SEND', enabled: true },
+  ],
+  prompt_order: [
+    {
+      character_id: 100001,
+      order: [{ identifier: 'custom-world', enabled: false }],
+    },
+    {
+      character_id: 100000,
+      order: [
+        { identifier: 'worldInfoBefore', enabled: true },
+        { identifier: 'custom-world', enabled: true },
+      ],
+    },
+  ],
+});
+assert.deepEqual(
+  worldInfoPreset.prompts.map(entry => entry.identifier),
+  ['worldInfoBefore', 'custom-world', 'detached'],
+);
+assert.equal(worldInfoPreset.prompts[0].content, '{{worldInfo_before}}');
+assert.equal(worldInfoPreset.prompts[0].enabled, true);
+assert.equal(worldInfoPreset.prompts[1].enabled, true);
+assert.equal(worldInfoPreset.prompts[2].enabled, false);
+assert.equal('prompt_order' in worldInfoPreset, false);
 
 const unrelated = { name: 'No prompt payload', temperature: 1 };
 assert.deepEqual(normalizePresetConfig(unrelated), unrelated);

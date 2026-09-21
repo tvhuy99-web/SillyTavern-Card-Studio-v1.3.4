@@ -13,6 +13,11 @@ const BUILT_IN_PROMPT_IDS = new Set([
   'personaDescription',
 ]);
 
+const WORLD_INFO_MARKER_CONTENT = Object.freeze({
+  worldInfoBefore: '{{worldInfo_before}}',
+  worldInfoAfter: '{{worldInfo_after}}',
+});
+
 function isRecord(value) {
   return value !== null && typeof value === 'object' && !Array.isArray(value);
 }
@@ -36,11 +41,80 @@ function normalizeOrderArray(order, knownPromptIds) {
   return result;
 }
 
+function normalizePromptOrder(promptOrder, knownPromptIds) {
+  if (!Array.isArray(promptOrder)) return promptOrder;
+
+  const grouped = promptOrder.some(entry => isRecord(entry) && Array.isArray(entry.order));
+  if (!grouped) return normalizeOrderArray(promptOrder, knownPromptIds);
+
+  return promptOrder
+    .filter(entry => isRecord(entry) && Array.isArray(entry.order))
+    .map(entry => ({
+      ...entry,
+      order: normalizeOrderArray(entry.order, knownPromptIds),
+    }));
+}
+
+function getEffectivePromptOrder(promptOrder) {
+  if (!Array.isArray(promptOrder)) return [];
+
+  const grouped = promptOrder.filter(entry => isRecord(entry) && Array.isArray(entry.order));
+  if (grouped.length > 0) {
+    const globalOrder = grouped.find(entry => String(entry.character_id ?? '') === '100000');
+    return (globalOrder || grouped[0]).order;
+  }
+
+  return promptOrder;
+}
+
+function materializePromptOrder(prompts, promptOrder) {
+  const effectiveOrder = getEffectivePromptOrder(promptOrder);
+  if (effectiveOrder.length === 0) return prompts;
+
+  const byIdentifier = new Map();
+  for (const prompt of prompts) {
+    const identifier = normalizedIdentifier(prompt);
+    if (identifier && !byIdentifier.has(identifier)) {
+      byIdentifier.set(identifier, prompt);
+    }
+  }
+
+  const ordered = [];
+  const consumed = new Set();
+
+  for (const orderEntry of effectiveOrder) {
+    const identifier = normalizedIdentifier(orderEntry);
+    const prompt = byIdentifier.get(identifier);
+    if (!identifier || !prompt || consumed.has(identifier)) continue;
+
+    const markerContent = WORLD_INFO_MARKER_CONTENT[identifier];
+    const content = markerContent && !String(prompt.content || '').trim()
+      ? markerContent
+      : prompt.content;
+    const enabled = typeof orderEntry.enabled === 'boolean'
+      ? orderEntry.enabled
+      : typeof prompt.enabled === 'boolean'
+        ? prompt.enabled
+        : true;
+
+    ordered.push({ ...prompt, content, enabled });
+    consumed.add(identifier);
+  }
+
+  for (const prompt of prompts) {
+    const identifier = normalizedIdentifier(prompt);
+    if (identifier && consumed.has(identifier)) continue;
+    ordered.push({ ...prompt, enabled: false });
+  }
+
+  return ordered;
+}
+
 export function normalizePresetConfig(value) {
   if (!isRecord(value)) return value;
 
   const sourcePrompts = Array.isArray(value.prompts) ? value.prompts : [];
-  const prompts = sourcePrompts
+  let prompts = sourcePrompts
     .filter(isRecord)
     .map(prompt => {
       const identifier = normalizedIdentifier(prompt);
@@ -53,27 +127,21 @@ export function normalizePresetConfig(value) {
     prompts.map(normalizedIdentifier).filter(Boolean),
   );
 
-  let promptOrder = value.prompt_order;
-  if (Array.isArray(promptOrder)) {
-    const grouped = promptOrder.some(entry => isRecord(entry) && Array.isArray(entry.order));
-
-    if (grouped) {
-      promptOrder = promptOrder
-        .filter(entry => isRecord(entry) && Array.isArray(entry.order))
-        .map(entry => ({
-          ...entry,
-          order: normalizeOrderArray(entry.order, knownPromptIds),
-        }));
-    } else {
-      promptOrder = normalizeOrderArray(promptOrder, knownPromptIds);
-    }
+  const promptOrder = normalizePromptOrder(value.prompt_order, knownPromptIds);
+  if (Array.isArray(value.prompt_order)) {
+    prompts = materializePromptOrder(prompts, promptOrder);
   }
 
-  return {
+  const normalized = {
     ...value,
     ...(Object.prototype.hasOwnProperty.call(value, 'prompts') ? { prompts } : {}),
-    ...(Array.isArray(value.prompt_order) ? { prompt_order: promptOrder } : {}),
   };
+
+  // Card Studio owns runtime prompt ordering and enablement in preset.prompts.
+  // SillyTavern prompt_order is converted once at the import/read boundary.
+  if (Array.isArray(value.prompt_order)) delete normalized.prompt_order;
+
+  return normalized;
 }
 
 export function normalizePresetList(values) {
@@ -84,12 +152,13 @@ export function normalizePresetList(values) {
 }
 
 export function getPromptOrderIntegrity(value) {
-  const normalized = normalizePresetConfig(value);
-  if (!isRecord(normalized)) return { promptCount: 0, orderCount: 0 };
+  if (!isRecord(value)) return { promptCount: 0, orderCount: 0 };
 
-  const order = Array.isArray(normalized.prompt_order)
-    ? normalized.prompt_order
-    : [];
+  const normalized = normalizePresetConfig(value);
+  const prompts = Array.isArray(normalized.prompts) ? normalized.prompts : [];
+  const knownPromptIds = new Set(prompts.map(normalizedIdentifier).filter(Boolean));
+  const promptOrder = normalizePromptOrder(value.prompt_order, knownPromptIds);
+  const order = Array.isArray(promptOrder) ? promptOrder : [];
 
   const grouped = order.some(entry => isRecord(entry) && Array.isArray(entry.order));
   const orderCount = grouped
@@ -97,7 +166,7 @@ export function getPromptOrderIntegrity(value) {
     : order.length;
 
   return {
-    promptCount: Array.isArray(normalized.prompts) ? normalized.prompts.length : 0,
+    promptCount: prompts.length,
     orderCount,
   };
 }

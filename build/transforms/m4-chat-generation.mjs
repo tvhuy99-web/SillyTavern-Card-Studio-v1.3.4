@@ -1,4 +1,4 @@
-const M4_IMPORTS = "import { createGenerationGateway as __stsCreateGenerationGateway } from './m4/providers/common/generation-gateway.js?v=1.3.6-m4.1';\nimport { chatTurnPolicy as __stsChatTurnPolicy } from './m4/features/chat/turn-policy.js?v=1.3.6-m4.5';\nimport { createConversationService as __stsCreateConversationService } from './m4/features/chat/conversation-service.js?v=1.3.6-m4.6';\nimport { scanWorldInfo as __stsScanWorldInfo } from './m4/features/world-info/smart-scan-service.js?v=1.3.6-m4.6';\nimport { buildConversationPrompt as __stsBuildConversationPrompt } from './m4/features/prompts/prompt-service.js?v=1.3.6-m4.3';\nimport { processAIResponse as __stsProcessAIResponse } from './m4/features/chat/response-processor.js?v=1.3.6-m4.3';\n";
+const M4_IMPORTS = "import { createGenerationGateway as __stsCreateGenerationGateway } from './m4/providers/common/generation-gateway.js?v=1.3.6-m4.1';\nimport { chatTurnPolicy as __stsChatTurnPolicy } from './m4/features/chat/turn-policy.js?v=1.3.6-m4.5';\nimport { createConversationService as __stsCreateConversationService } from './m4/features/chat/conversation-service.js?v=1.3.6-m4.6';\nimport { scanWorldInfo as __stsScanWorldInfo } from './m4/features/world-info/smart-scan-service.js?v=1.3.6-m4.7';\nimport { buildConversationPrompt as __stsBuildConversationPrompt } from './m4/features/prompts/prompt-service.js?v=1.3.6-m4.3';\nimport { processAIResponse as __stsProcessAIResponse } from './m4/features/chat/response-processor.js?v=1.3.6-m4.3';\n";
 
 function findExactlyOnce(source, token, label, from = 0) {
   const first = source.indexOf(token, from);
@@ -30,8 +30,8 @@ function conversationServiceBootstrap() {
 }
 
 function smartScanAdapter() {
-  return 'scanInput:(0,b.useCallback)((t,r,a,i,o,s=[],l="",c={},u=[],d=0,h)=>__stsScanWorldInfo({' +
-    'scanInput:t,worldInfoState:r,worldInfoRuntime:a,worldInfoPinned:i,preset:o,promptHistory:s,content:l,variables:c,generatedEntries:u,sequence:d,forceActiveUids:h,card:e,setScanning:n' +
+  return 'scanInput:(0,b.useCallback)(t=>__stsScanWorldInfo({' +
+    'scanInput:t?.scanInput??"",worldInfoState:t?.state?.worldInfoState??{},worldInfoRuntime:t?.state?.worldInfoRuntime??{},worldInfoPinned:t?.state?.worldInfoPinned??{},preset:t?.state?.preset??{},promptHistory:t?.promptHistory??[],content:t?.content??"",variables:t?.state?.variables??{},generatedEntries:t?.generatedEntries??[],sequence:t?.sequence??0,forceActiveUids:t?.forceActiveUids,card:t?.state?.card??e,lorebooks:r,setScanning:n' +
     '},{getSettings:as,embed:$c,loadIndex:Lc,getIndex:Fc,cosine:Gc,logSystemMessage:qu,' +
     'onSemanticError:e=>{e.message?.includes("API Key")?window.dispatchEvent(new CustomEvent("toast",{detail:{message:"Vui lòng cấu hình Gemini API Key trong phần Cài đặt để sử dụng Semantic Search.",type:"error"}})):window.dispatchEvent(new CustomEvent("toast",{detail:{message:"Lỗi Semantic Search, chuyển sang quét từ khóa.",type:"error"}}))},' +
     'callSelectionModel:async(e,t)=>{if(Cs()){let o=ns();return Ks(e,o.proxy_tool_model||o.proxy_model||t,o.proxy_protocol)}return(await cl(t,e,{temp:0},_d)).text||"[]"},parseJson:As,resolveWorldInfo:ch}),[e,r])';

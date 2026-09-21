@@ -1,4 +1,4 @@
-const NORMALIZER_IMPORT = "import { normalizePresetConfig as __stsNormalizePresetConfig, normalizePresetList as __stsNormalizePresetList } from './prompt-normalizer-v1.3.6.js';\n";
+const NORMALIZER_IMPORT = "import { normalizePresetConfig as __stsNormalizePresetConfig, normalizePresetList as __stsNormalizePresetList } from './prompt-normalizer-v1.3.6.js?v=1.3.6-worldinfo-1';\n";
 
 function replaceExactlyOnce(source, oldText, newText, label) {
   const first = source.indexOf(oldText);
