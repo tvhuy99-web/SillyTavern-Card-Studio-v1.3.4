@@ -127,7 +127,7 @@ export function buildCardRuntimeCoreScript(boot) {
   if (!boot || typeof boot !== 'object') {
     throw new TypeError('Card Runtime BOOT payload must be an object.');
   }
-  return 'window.__CARD_STUDIO_BOOT__ = ' + serializeScriptValue(boot) + ';\\n' + CARD_RUNTIME_CORE_SOURCE + '\\n' + CARD_RUNTIME_BOOTSTRAP_SOURCE + '\\n';
+  return 'window.__CARD_STUDIO_BOOT__ = ' + serializeScriptValue(boot) + ';\n' + CARD_RUNTIME_CORE_SOURCE + '\n' + CARD_RUNTIME_BOOTSTRAP_SOURCE + '\n';
 }
 
 export const CARD_RUNTIME_CORE_SOURCE_BYTES = CARD_RUNTIME_CORE_SOURCE.length;
