@@ -5,7 +5,9 @@ import {
   hasInitialVariables,
   inspectInitialVariablePipeline,
   mergeInitialVariableSources,
+  parseInitialVariableDocument,
   seedInitialVariablesFromCard,
+  selectInitialVariableOpening,
 } from '../src/features/state/initial-variable-service.js';
 
 const entries = [
@@ -30,24 +32,58 @@ const merged = mergeInitialVariableSources(
 );
 assert.deepEqual(merged.variables, {
   stat_data: { base: true, hp: 20, mp: 5 },
-  world: { day: 1 },
   inline: true,
 });
-assert.deepEqual(merged.sources, ['worldbook:initvar', 'opening:initvar:0']);
+assert.deepEqual(merged.sources, ['opening:initvar:0']);
 assert.equal(merged.worldbookEntryFound, true);
+assert.equal(merged.worldbookSuppressedByInline, true);
 assert.equal(merged.inlineBlockCount, 1);
 assert.equal(hasInitialVariables(merged.variables), true);
 
-const yamlish = mergeInitialVariableSources(
+const yamlDocument = `'Hệ Thống Tu Luyện':
+  cảnh_giới: Luyện Khí
+  tầng: 3
+  hoạt_động: true
+  mô_tả: "Ổn định: có thể tu luyện"
+  vật_phẩm:
+    - Kiếm Gỗ
+    - tên: Đan Dược
+      số_lượng: 2
+Nhân Vật:
+  linh_thạch: 100
+  thuộc_tính: [Kim, Mộc, "Hỏa"]
+`;
+assert.deepEqual(parseInitialVariableDocument(yamlDocument, () => { throw new Error('JSON5 rejected YAML'); }), {
+  'Hệ Thống Tu Luyện': {
+    cảnh_giới: 'Luyện Khí',
+    tầng: 3,
+    hoạt_động: true,
+    mô_tả: 'Ổn định: có thể tu luyện',
+    vật_phẩm: ['Kiếm Gỗ', { tên: 'Đan Dược', số_lượng: 2 }],
+  },
+  'Nhân Vật': {
+    linh_thạch: 100,
+    thuộc_tính: ['Kim', 'Mộc', 'Hỏa'],
+  },
+});
+
+const yamlWorldbook = mergeInitialVariableSources(
+  {},
+  [{ comment: '[initvar] Khởi Tạo Biến Không Bật', enabled: false, content: yamlDocument }],
+  '',
+  () => { throw new Error('JSON5 rejected YAML'); },
+);
+assert.equal(yamlWorldbook.sources[0], 'worldbook:initvar');
+assert.equal(yamlWorldbook.variables['Hệ Thống Tu Luyện'].tầng, 3);
+
+const yamlInline = mergeInitialVariableSources(
   {},
   [{ comment: '[initvar] yaml', content: 'hp: 12' }],
-  '<initvar>mp: 7</initvar>',
-  text => {
-    const [key, raw] = text.split(':').map(value => value.trim());
-    return { [key]: Number(raw) };
-  },
+  '<initvar>mp: 7\nlist:\n  - one\n  - two</initvar>',
+  () => { throw new Error('JSON5 rejected YAML'); },
 );
-assert.deepEqual(yamlish.variables, { hp: 12, mp: 7 });
+assert.deepEqual(yamlInline.variables, { mp: 7, list: ['one', 'two'] });
+assert.equal(yamlInline.worldbookSuppressedByInline, true);
 
 const seededCard = seedInitialVariablesFromCard(
   {},
@@ -67,7 +103,6 @@ const seededCard = seedInitialVariablesFromCard(
 assert.deepEqual(seededCard.variables, {
   fromExtension: 1,
   fromArray: 2,
-  fromWorldbook: 4,
   fromOpening: 3,
 });
 
@@ -84,10 +119,19 @@ const mismatchDiagnostic = inspectInitialVariablePipeline({
   worldInfo: [],
   parseStructured: JSON.parse,
 });
-assert.equal(mismatchDiagnostic.classification, 'runtime-opening-source-mismatch');
+assert.equal(mismatchDiagnostic.classification, 'seed-produced-but-final-chat-empty');
 assert.equal(mismatchDiagnostic.openings[1].inlineInitvarCount, 1);
 assert.equal(mismatchDiagnostic.openings[1].seedResult.keyCount, 1);
-assert.equal(mismatchDiagnostic.actualRuntimeSeed.result.keyCount, 0);
+assert.equal(mismatchDiagnostic.actualRuntimeSeed.openingSource, 'message0.originalRawContent');
+assert.equal(mismatchDiagnostic.actualRuntimeSeed.result.keyCount, 1);
+
+const selectedOpening = selectInitialVariableOpening(
+  { first_mes: 'short opening without variables' },
+  [{ originalRawContent: 'story<initvar>Hệ Thống: true</initvar>', content: 'story' }],
+  'runtime content',
+);
+assert.equal(selectedOpening.source, 'message0.originalRawContent');
+assert.equal(selectedOpening.hasInlineInitvar, true);
 
 const worldInfoOnlyDiagnostic = inspectInitialVariablePipeline({
   baseVariables: {},
@@ -113,5 +157,27 @@ const parseFailureDiagnostic = inspectInitialVariablePipeline({
 assert.equal(parseFailureDiagnostic.classification, 'sources-detected-but-seed-empty');
 assert.equal(parseFailureDiagnostic.cardWorldbook.matches[0].parse.parsed.keyCount, 0);
 assert.equal(parseFailureDiagnostic.cardWorldbook.matches[0].parse.json.ok, false);
+assert.equal(parseFailureDiagnostic.cardWorldbook.matches[0].parse.yaml.attempted, true);
+assert.equal(parseFailureDiagnostic.cardWorldbook.matches[0].parse.yaml.ok, false);
+
+const yamlDiagnostic = inspectInitialVariablePipeline({
+  baseVariables: {},
+  card: {
+    first_mes: 'short',
+    char_book: { entries: [{ comment: '[initvar] Khởi Tạo Biến Không Bật', enabled: false, content: yamlDocument }] },
+  },
+  messages: [{
+    role: 'model',
+    originalRawContent: 'story<initvar>Hệ Thống Tu Luyện:\n  tầng: 9</initvar>',
+    content: 'story',
+  }],
+  messageId: 0,
+  variableScopes: { chat: { 'Hệ Thống Tu Luyện': { tầng: 9 } }, 'message:0': { 'Hệ Thống Tu Luyện': { tầng: 9 } } },
+  worldInfo: [],
+  parseStructured: () => { throw new Error('JSON5 rejected YAML'); },
+});
+assert.equal(yamlDiagnostic.classification, 'final-chat-populated');
+assert.equal(yamlDiagnostic.actualRuntimeSeed.openingSource, 'message0.originalRawContent');
+assert.equal(yamlDiagnostic.openings[1].inlineBlocks[0].parse.parserUsed, 'yaml');
 
 console.log('initial variable service tests: OK');
