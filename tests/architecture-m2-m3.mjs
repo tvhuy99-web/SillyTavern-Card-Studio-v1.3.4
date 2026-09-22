@@ -49,10 +49,12 @@ for (const forbiddenCode of [
 assert.ok(production.includes('prompt-normalizer-v1.3.6.js'));
 assert.ok(production.includes('proxy-persistence-service-v1.3.6.js?v=1.3.6-m2-final'));
 assert.ok(production.includes('card-runtime-core-builder-v1.3.6.js?v=1.3.6-m3.9'));
-assert.ok(production.includes('card-runtime-renderer-v1.3.6.js?v=1.3.6-m3.8'));
-assert.ok(production.includes('initial-variable-service-v1.3.6.js?v=1.3.6-initvar-1'));
+assert.ok(production.includes('card-runtime-renderer-v1.3.6.js?v=1.3.6-m3.9'));
+assert.ok(production.includes('initial-variable-service-v1.3.6.js?v=1.3.6-initvar-2'));
 assert.ok(production.includes('smart-state-service-v1.3.6.js?v=1.3.6-smartstate-2'));
 assert.ok(production.includes('__stsBuildSmartStateBlock'));
+assert.ok(production.includes('__stsInspectInitialVariablePipeline'));
+assert.ok(production.includes('variableDiagnostics:a.snapshot.variableDiagnostics'));
 assert.ok(production.includes('__stsBuildCardRuntimeCoreScript'));
 assert.ok(production.includes('__stsBuildCardRuntimeRendererScript'));
 assert.ok(production.includes('__stsNormalizeCardRuntimeMarkup'));
