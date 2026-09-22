@@ -79,4 +79,21 @@ assert.ok(injected.includes('registeredSchemas'));
 assert.ok(injected.includes('variableSchemaTrace'));
 assert.ok(!injected.includes('Promise.resolve(window.__STS_START_CARD_RUNTIME__('));
 
+const rendererModule = await import('../assets/card-runtime-renderer-v1.3.6.js?test=' + Date.now());
+const rendererInjected = rendererModule.buildCardRuntimeRendererScript(
+  '<div id="state">Biến chưa sẵn sàng</div>',
+  [{
+    id: 'html-script-0',
+    name: 'Inline HTML script 1',
+    type: 'classic',
+    content: 'const state = getVariables({ type: "chat" }); const hp = stat_data.hp; if (!hp) document.getElementById("state").textContent = "Biến chưa sẵn sàng";',
+  }],
+  { executeScripts: true, runtimeMode: 'active' },
+);
+assert.doesNotThrow(() => new Function(rendererInjected), 'generated renderer must be valid JavaScript');
+assert.ok(rendererInjected.includes('uiReportedNotReady'));
+assert.ok(rendererInjected.includes('literalPathProbes'));
+assert.ok(rendererInjected.includes('stat_data.hp'));
+assert.ok(rendererInjected.includes('post-script-settle-1200ms'));
+
 console.log('card runtime extraction tests: OK');
