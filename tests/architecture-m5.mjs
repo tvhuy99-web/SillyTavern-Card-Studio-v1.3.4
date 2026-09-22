@@ -18,7 +18,7 @@ assert.ok(!index.includes('chat-send-recovery-v1.3.6.5.js'));
 assert.ok(!index.includes('arena-runtime-ux-guard-v1.3.6.5.js'));
 
 for (const token of [
-  './initial-variable-service-v1.3.6.js?v=1.3.6-initvar-1',
+  './initial-variable-service-v1.3.6.js?v=1.3.6-initvar-3',
   './m5/app/state/runtime-state.js?v=1.3.6-m5.1',
   './m5/app/persistence/session-state.js?v=1.3.6-m5.3',
   './m5/diagnostics/state.js?v=1.3.6-m5.3',
@@ -48,7 +48,7 @@ assert.ok(production.includes('__stsDiagnosticsState.clearAll()'));
 assert.ok(production.includes('__stsSessionPersistence.normalizeLoadedSession(a).record'));
 assert.ok(!production.includes('lastUpdated:Date.now(),initialDiagnosticLog:d}'));
 assert.ok(production.includes('__stsMergeInitialVariableSources(m,n.card.char_book?.entries||[],s,e=>jt.default.parse(e))'));
-assert.ok(production.includes('__stsSeedSessionInitialVariablesFromCard({},l,String(l?.first_mes||""),e=>jt.default.parse(e))'));
+assert.ok(production.includes('__stsSeedSessionInitialVariablesFromCard({},l,String(n.chatHistory?.[0]?.originalRawContent||n.chatHistory?.[0]?.content||l?.first_mes||""),e=>jt.default.parse(e))'));
 assert.ok(production.includes('__stsVariablesHealed'));
 assert.ok(production.includes('n.chatHistory[0]={...n.chatHistory[0],contextState:JSON.parse(JSON.stringify(n.variables))}'));
 assert.ok(production.includes('let arenaStateHealed=__stsLoaded.needsRewrite||__stsVariablesHealed'));
