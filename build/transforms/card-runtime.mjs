@@ -1,4 +1,4 @@
-const INITIAL_VARIABLE_IMPORT = "import { seedInitialVariablesFromCard as __stsSeedInitialVariablesFromCard } from './initial-variable-service-v1.3.6.js?v=1.3.6-initvar-1';\n";
+const INITIAL_VARIABLE_IMPORT = "import { inspectInitialVariablePipeline as __stsInspectInitialVariablePipeline, seedInitialVariablesFromCard as __stsSeedInitialVariablesFromCard } from './initial-variable-service-v1.3.6.js?v=1.3.6-initvar-2';\n";
 const SMART_STATE_IMPORT = "import { buildSmartStateBlock as __stsBuildSmartStateBlock } from './smart-state-service-v1.3.6.js?v=1.3.6-smartstate-2';\n";
 const CORE_BUILDER_IMPORT = "import { buildCardRuntimeCoreScript as __stsBuildCardRuntimeCoreScript } from './card-runtime-core-builder-v1.3.6.js?v=1.3.6-m3.9';\n";
 const RENDERER_IMPORT = "import { buildCardRuntimeRendererScript as __stsBuildCardRuntimeRendererScript, normalizeCardRuntimeMarkup as __stsNormalizeCardRuntimeMarkup } from './card-runtime-renderer-v1.3.6.js?v=1.3.6-m3.8';\n";
@@ -55,6 +55,17 @@ export function applyCardRuntimeTransform(source) {
   code = code.slice(0, variableScopeCallAt)
     + 'variableScopes:Ap(r||{},v,M,t,m)'
     + code.slice(variableScopeCallAt + variableScopeCall.length);
+
+  const snapshotToken = 'L=(0,b.useMemo)(()=>({chatHistory:Eh(v,s,o,!0),variableScopes:Ap(r||{},v,M,t,m),extensionSettings:a||{},worldInfo:g||m?.char_book?.entries||[]}),[v,s,o,r,M,t,a,g,m])';
+  const snapshotAt = findExactlyOnce(code, snapshotToken, 'Card Runtime variable provenance snapshot');
+  const snapshotReplacement = 'L=(0,b.useMemo)(()=>{let __stsScopes=Ap(r||{},v,M,t,m),__stsVariableDiagnostics=__stsInspectInitialVariablePipeline({baseVariables:r||{},card:m,messages:v,messageId:j,variableScopes:__stsScopes,worldInfo:g||m?.char_book?.entries||[],originalContent:n,parseStructured:e=>jt.default.parse(e)});return{chatHistory:Eh(v,s,o,!0),variableScopes:__stsScopes,variableDiagnostics:__stsVariableDiagnostics,extensionSettings:a||{},worldInfo:g||m?.char_book?.entries||[]}},[v,s,o,r,M,t,a,g,m,j,n])';
+  code = code.slice(0, snapshotAt) + snapshotReplacement + code.slice(snapshotAt + snapshotToken.length);
+
+  const bootVariableToken = 'variableScopes:a.snapshot.variableScopes,extensionSettings:a.snapshot.extensionSettings';
+  const bootVariableAt = findExactlyOnce(code, bootVariableToken, 'Card Runtime BOOT variable diagnostics');
+  code = code.slice(0, bootVariableAt)
+    + 'variableScopes:a.snapshot.variableScopes,variableDiagnostics:a.snapshot.variableDiagnostics,extensionSettings:a.snapshot.extensionSettings'
+    + code.slice(bootVariableAt + bootVariableToken.length);
 
   // Preserve the old dependency-compat behavior at the iframe boundary,
   // without patching Element/HTMLIFrameElement prototypes globally.
