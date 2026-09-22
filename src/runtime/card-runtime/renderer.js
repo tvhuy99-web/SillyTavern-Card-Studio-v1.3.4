@@ -333,7 +333,7 @@ export function buildCardRuntimeRendererScript(html, descriptors, options = {}) 
                 profile.accessSnippets.push({ script: scriptName, token: match[0], snippet: snippet });
             }
 
-            const readinessPattern = /(['"`])([^\n\r'"`]{0,140}(?:Biến\s+chưa\s+sẵn\s+sàng|variables?\s+(?:are\s+)?not\s+ready|waiting\s+for\s+variables?)[^\n\r'"`]{0,140})\1/gi;
+            const readinessPattern = /(['"])([^\n\r'"]{0,140}(?:Biến\s+chưa\s+sẵn\s+sàng|variables?\s+(?:are\s+)?not\s+ready|waiting\s+for\s+variables?)[^\n\r'"]{0,140})\1/gi;
             while ((match = readinessPattern.exec(content)) !== null && profile.readinessTextLiterals.length < 12) {
                 const marker = String(match[2] || '').replace(/\s+/g, ' ').trim().slice(0, 280);
                 if (!marker || readinessSeen.has(marker)) continue;
