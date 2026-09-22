@@ -462,12 +462,15 @@ function inspectStructuredCandidate(source, value, parseStructured) {
     textLength: typeof value === 'string' ? value.length : 0,
     json: { attempted: false, ok: false, error: '' },
     structured: { attempted: false, ok: false, error: '' },
+    yaml: { attempted: false, ok: false, error: '' },
+    parserUsed: '',
     parsed: summarizeRecordForDiagnostics(null),
   };
   if (!result.present) return result;
   if (isRecord(value)) {
     result.parsed = summarizeRecordForDiagnostics(value);
     result.json.ok = true;
+    result.parserUsed = 'object';
     return result;
   }
   const text = cleanStructuredText(value);
@@ -477,6 +480,7 @@ function inspectStructuredCandidate(source, value, parseStructured) {
     const parsed = JSON.parse(text);
     if (isRecord(parsed)) {
       result.json.ok = true;
+      result.parserUsed = 'json';
       result.parsed = summarizeRecordForDiagnostics(parsed);
       return result;
     }
@@ -484,18 +488,33 @@ function inspectStructuredCandidate(source, value, parseStructured) {
   } catch (error) {
     result.json.error = compactError(error);
   }
-  if (typeof parseStructured !== 'function') return result;
-  result.structured.attempted = true;
+  if (typeof parseStructured === 'function') {
+    result.structured.attempted = true;
+    try {
+      const parsed = parseStructured(text);
+      if (isRecord(parsed)) {
+        result.structured.ok = true;
+        result.parserUsed = 'structured-json5';
+        result.parsed = summarizeRecordForDiagnostics(parsed);
+        return result;
+      }
+      result.structured.error = 'parsed-non-record:' + (Array.isArray(parsed) ? 'array' : typeof parsed);
+    } catch (error) {
+      result.structured.error = compactError(error);
+    }
+  }
+  result.yaml.attempted = true;
   try {
-    const parsed = parseStructured(text);
+    const parsed = parseYamlDocument(text, parseStructured);
     if (isRecord(parsed)) {
-      result.structured.ok = true;
+      result.yaml.ok = true;
+      result.parserUsed = 'yaml';
       result.parsed = summarizeRecordForDiagnostics(parsed);
     } else {
-      result.structured.error = 'parsed-non-record:' + (Array.isArray(parsed) ? 'array' : typeof parsed);
+      result.yaml.error = 'parsed-non-record:' + (Array.isArray(parsed) ? 'array' : typeof parsed);
     }
   } catch (error) {
-    result.structured.error = compactError(error);
+    result.yaml.error = compactError(error);
   }
   return result;
 }
@@ -587,7 +606,8 @@ export function inspectInitialVariablePipeline(options = {}) {
     inspectOpeningSource('runtime.originalContent', options.originalContent, baseVariables, card, parseStructured),
   ];
 
-  const runtimeSeed = seedInitialVariablesFromCard(baseVariables, card, String(card.first_mes || ''), parseStructured);
+  const selectedOpening = selectInitialVariableOpening(card, messages, options.originalContent);
+  const runtimeSeed = seedInitialVariablesFromCard(baseVariables, card, selectedOpening.text, parseStructured);
   const scopeSummaries = {};
   Object.entries(variableScopes).forEach(([key, value]) => {
     scopeSummaries[key] = summarizeRecordForDiagnostics(value);
@@ -639,7 +659,9 @@ export function inspectInitialVariablePipeline(options = {}) {
     runtimeWorldInfo,
     openings,
     actualRuntimeSeed: {
-      openingSource: 'card.first_mes',
+      openingSource: selectedOpening.source,
+      openingLength: selectedOpening.text.length,
+      hasInlineInitvar: selectedOpening.hasInlineInitvar,
       sources: Array.from(runtimeSeed.sources || []),
       result: seedSummary,
     },
