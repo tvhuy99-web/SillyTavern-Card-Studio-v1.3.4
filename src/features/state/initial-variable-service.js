@@ -350,6 +350,26 @@ export function extractCardExtensionVariables(card, parseStructured) {
   return variables;
 }
 
+export function selectInitialVariableOpening(card, messages, originalContent, explicitOpening) {
+  const firstMessage = Array.isArray(messages) && messages.length ? messages[0] || {} : {};
+  const candidates = [
+    { source: 'message0.originalRawContent', text: firstMessage.originalRawContent },
+    { source: 'message0.content', text: firstMessage.content },
+    { source: 'runtime.originalContent', text: originalContent },
+    { source: 'explicitOpening', text: explicitOpening },
+    { source: 'card.first_mes', text: card?.first_mes },
+  ];
+  const inlineCandidate = candidates.find(candidate =>
+    extractInlineInitVariableBlocks(String(candidate.text == null ? '' : candidate.text)).length > 0
+  );
+  const selected = inlineCandidate || candidates.find(candidate => String(candidate.text == null ? '' : candidate.text).trim()) || candidates[candidates.length - 1];
+  return Object.freeze({
+    source: selected?.source || 'card.first_mes',
+    text: String(selected?.text == null ? '' : selected.text),
+    hasInlineInitvar: Boolean(inlineCandidate),
+  });
+}
+
 export function seedInitialVariablesFromCard(baseVariables, card, openingText, parseStructured) {
   const extensionVariables = extractCardExtensionVariables(card, parseStructured);
   const base = mergeRecords(extensionVariables, isRecord(baseVariables) ? baseVariables : {});
@@ -383,9 +403,17 @@ export function extractInlineInitVariableBlocks(openingText) {
 export function mergeInitialVariableSources(baseVariables, entries, openingText, parseStructured) {
   const variables = isRecord(baseVariables) ? cloneValue(baseVariables) : {};
   const sources = [];
-
   const entry = findInitVariableEntry(entries);
-  if (entry?.content) {
+  const inlineBlocks = extractInlineInitVariableBlocks(openingText);
+
+  if (inlineBlocks.length > 0) {
+    inlineBlocks.forEach((block, index) => {
+      const parsed = parseRecord(block, parseStructured);
+      if (!parsed) return;
+      mergeRecords(variables, parsed);
+      sources.push('opening:initvar:' + index);
+    });
+  } else if (entry?.content) {
     const parsed = parseRecord(entry.content, parseStructured);
     if (parsed) {
       mergeRecords(variables, parsed);
@@ -393,18 +421,11 @@ export function mergeInitialVariableSources(baseVariables, entries, openingText,
     }
   }
 
-  const inlineBlocks = extractInlineInitVariableBlocks(openingText);
-  inlineBlocks.forEach((block, index) => {
-    const parsed = parseRecord(block, parseStructured);
-    if (!parsed) return;
-    mergeRecords(variables, parsed);
-    sources.push('opening:initvar:' + index);
-  });
-
   return Object.freeze({
     variables,
     sources: Object.freeze(sources),
     worldbookEntryFound: Boolean(entry),
+    worldbookSuppressedByInline: inlineBlocks.length > 0 && Boolean(entry),
     inlineBlockCount: inlineBlocks.length,
   });
 }
