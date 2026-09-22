@@ -160,6 +160,97 @@ assert.equal(parseFailureDiagnostic.cardWorldbook.matches[0].parse.json.ok, fals
 assert.equal(parseFailureDiagnostic.cardWorldbook.matches[0].parse.yaml.attempted, true);
 assert.equal(parseFailureDiagnostic.cardWorldbook.matches[0].parse.yaml.ok, false);
 
+
+const diagnosticShapeCard = {
+  name: 'Ly Hỏa Tiên Ma Lục',
+  first_mes: 'Lời mở đầu ngắn không chứa biến.',
+  extensions: {
+    tavern_helper: { variables: {} },
+  },
+  char_book: {
+    entries: Array.from({ length: 117 }, (_, index) => index === 41
+      ? {
+          comment: '[initvar] Khởi Tạo Biến Không Bật',
+          enabled: false,
+          content: `'Hệ Thống Tu Luyện':
+  cảnh_giới: Luyện Khí
+  tầng: 1
+  linh_căn:
+    - Hỏa
+  trạng_thái: bình thường
+Nhân Vật:
+  tên: Lý Hỏa
+  linh_thạch: 50
+`,
+        }
+      : { comment: 'entry-' + index, enabled: true, content: '' }),
+  },
+};
+const diagnosticShapeMessages = [{
+  role: 'model',
+  content: 'Nội dung hiển thị đã qua xử lý.',
+  originalRawContent: `Phần mở đầu
+<initvar>
+Hệ Thống Tu Luyện:
+  cảnh_giới: Trúc Cơ
+  tầng: 2
+  linh_căn: [Hỏa, Mộc]
+Nhân Vật:
+  tên: Lý Hỏa
+  linh_thạch: 88
+</initvar>
+Phần HTML tiếp theo
+`,
+}];
+const diagnosticOpening = selectInitialVariableOpening(
+  diagnosticShapeCard,
+  diagnosticShapeMessages,
+  diagnosticShapeMessages[0].originalRawContent,
+);
+assert.equal(diagnosticOpening.source, 'message0.originalRawContent');
+assert.equal(diagnosticOpening.hasInlineInitvar, true);
+
+const diagnosticSeed = seedInitialVariablesFromCard(
+  {},
+  diagnosticShapeCard,
+  diagnosticOpening.text,
+  JSON.parse,
+);
+assert.deepEqual(diagnosticSeed.variables, {
+  'Hệ Thống Tu Luyện': {
+    cảnh_giới: 'Trúc Cơ',
+    tầng: 2,
+    linh_căn: ['Hỏa', 'Mộc'],
+  },
+  'Nhân Vật': {
+    tên: 'Lý Hỏa',
+    linh_thạch: 88,
+  },
+});
+assert.deepEqual(diagnosticSeed.sources, ['opening:initvar:0']);
+assert.equal(diagnosticSeed.worldbookEntryFound, true);
+assert.equal(diagnosticSeed.worldbookSuppressedByInline, true);
+
+const diagnosticShapeReport = inspectInitialVariablePipeline({
+  baseVariables: {},
+  card: diagnosticShapeCard,
+  messages: diagnosticShapeMessages,
+  messageId: 0,
+  variableScopes: {
+    chat: diagnosticSeed.variables,
+    'message:0': diagnosticSeed.variables,
+  },
+  worldInfo: diagnosticShapeCard.char_book.entries,
+  originalContent: diagnosticShapeMessages[0].originalRawContent,
+  parseStructured: JSON.parse,
+});
+assert.equal(diagnosticShapeReport.classification, 'final-chat-populated');
+assert.equal(diagnosticShapeReport.cardWorldbook.matches[0].enabled, false);
+assert.equal(diagnosticShapeReport.cardWorldbook.matches[0].parse.parserUsed, 'yaml');
+assert.equal(diagnosticShapeReport.openings[1].inlineBlocks[0].parse.parserUsed, 'yaml');
+assert.equal(diagnosticShapeReport.actualRuntimeSeed.openingSource, 'message0.originalRawContent');
+assert.equal(diagnosticShapeReport.actualRuntimeSeed.result.keyCount, 2);
+
 const yamlDiagnostic = inspectInitialVariablePipeline({
   baseVariables: {},
   card: {
