@@ -9,16 +9,20 @@ const bundle = fs.readFileSync(
 );
 const transformed = applyCardRuntimeTransform(bundle);
 
-assert.ok(transformed.includes('initial-variable-service-v1.3.6.js?v=1.3.6-initvar-1'));
+assert.ok(transformed.includes('initial-variable-service-v1.3.6.js?v=1.3.6-initvar-2'));
 assert.ok(transformed.includes('smart-state-service-v1.3.6.js?v=1.3.6-smartstate-2'));
 assert.ok(transformed.includes('card-runtime-core-builder-v1.3.6.js?v=1.3.6-m3.9'));
-assert.ok(transformed.includes('card-runtime-renderer-v1.3.6.js?v=1.3.6-m3.8'));
+assert.ok(transformed.includes('card-runtime-renderer-v1.3.6.js?v=1.3.6-m3.9'));
 assert.ok(transformed.includes('__stsBuildCardRuntimeCoreScript'));
 assert.ok(transformed.includes('__stsBuildCardRuntimeRendererScript'));
 assert.ok(transformed.includes('__stsNormalizeCardRuntimeMarkup'));
 assert.ok(transformed.includes('__stsBuildSmartStateBlock'));
 assert.ok(transformed.includes('__stsSeedInitialVariablesFromCard'));
-assert.ok(transformed.includes('variableScopes:Ap(r||{},v,M,t,m)'));
+assert.ok(transformed.includes('__stsInspectInitialVariablePipeline'));
+assert.ok(transformed.includes('variableDiagnostics:__stsVariableDiagnostics'));
+assert.ok(transformed.includes('variableDiagnostics:a.snapshot.variableDiagnostics'));
+assert.ok(transformed.includes('let __stsScopes=Ap(r||{},v,M,t,m)'));
+assert.ok(transformed.includes('variableScopes:__stsScopes'));
 assert.ok(transformed.includes('e&&Object.keys(e).length?e:__stsSeedInitialVariablesFromCard'));
 assert.ok(transformed.includes('Np=(e,t,n,r)=>__stsBuildSmartStateBlock({variables:e,card:t,messages:n.slice(0,Math.max(0,r))}).smartStateBlock'));
 assert.ok(!transformed.includes('Np=(e,t,n,r)=>{let a=[]'));
@@ -48,6 +52,8 @@ assert.ok(coreBuilder.includes('buildCardRuntimeCoreScript'));
 assert.ok(coreBuilder.includes('__STS_START_CARD_RUNTIME__'));
 assert.ok(!coreBuilder.includes('/*__STS_COMPATIBILITY_API__*/'));
 assert.ok(renderer.includes('buildCardRuntimeRendererScript'));
+assert.ok(renderer.includes('parentVariableDiagnostics'));
+assert.ok(renderer.includes('bootVariableScopeNames'));
 
 const runtimeModule = await import('../assets/card-runtime-core-builder-v1.3.6.js?test=' + Date.now());
 const injected = runtimeModule.buildCardRuntimeCoreScript({

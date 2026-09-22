@@ -306,7 +306,14 @@ export function buildCardRuntimeRendererScript(html, descriptors, options = {}) 
                     dependencyProfile: variableDependencyProfile,
                     missingChatState: missingChatState,
                     missingAllVariables: missingAllVariables,
-                    variableState: snapshot
+                    variableState: snapshot,
+                    parentVariableDiagnostics: window.__CARD_STUDIO_BOOT__ && window.__CARD_STUDIO_BOOT__.variableDiagnostics
+                        ? window.__CARD_STUDIO_BOOT__.variableDiagnostics
+                        : null,
+                    bootVariableScopesPresent: Boolean(window.__CARD_STUDIO_BOOT__ && window.__CARD_STUDIO_BOOT__.variableScopes),
+                    bootVariableScopeNames: window.__CARD_STUDIO_BOOT__ && window.__CARD_STUDIO_BOOT__.variableScopes
+                        ? Object.keys(window.__CARD_STUDIO_BOOT__.variableScopes)
+                        : []
                 }
             }
         );

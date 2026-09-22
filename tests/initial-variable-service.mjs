@@ -3,6 +3,7 @@ import {
   extractInlineInitVariableBlocks,
   findInitVariableEntry,
   hasInitialVariables,
+  inspectInitialVariablePipeline,
   mergeInitialVariableSources,
   seedInitialVariablesFromCard,
 } from '../src/features/state/initial-variable-service.js';
@@ -73,5 +74,44 @@ assert.deepEqual(seededCard.variables, {
 const invalid = mergeInitialVariableSources({}, [{ comment: '[initvar]', content: 'not structured' }], '', () => null);
 assert.deepEqual(invalid.variables, {});
 assert.equal(invalid.worldbookEntryFound, true);
+
+const mismatchDiagnostic = inspectInitialVariablePipeline({
+  baseVariables: {},
+  card: { first_mes: '', char_book: { entries: [] } },
+  messages: [{ role: 'model', originalRawContent: '<initvar>{"fromMessage":7}</initvar>', content: 'hello' }],
+  messageId: 0,
+  variableScopes: { chat: {}, 'message:0': {} },
+  worldInfo: [],
+  parseStructured: JSON.parse,
+});
+assert.equal(mismatchDiagnostic.classification, 'runtime-opening-source-mismatch');
+assert.equal(mismatchDiagnostic.openings[1].inlineInitvarCount, 1);
+assert.equal(mismatchDiagnostic.openings[1].seedResult.keyCount, 1);
+assert.equal(mismatchDiagnostic.actualRuntimeSeed.result.keyCount, 0);
+
+const worldInfoOnlyDiagnostic = inspectInitialVariablePipeline({
+  baseVariables: {},
+  card: { first_mes: '', char_book: { entries: [] } },
+  messages: [{ role: 'model', content: 'hello' }],
+  messageId: 0,
+  variableScopes: { chat: {}, 'message:0': {} },
+  worldInfo: [{ comment: '[initvar] external', content: '{"outside":1}' }],
+  parseStructured: JSON.parse,
+});
+assert.equal(worldInfoOnlyDiagnostic.classification, 'initvar-only-in-runtime-worldinfo');
+assert.equal(worldInfoOnlyDiagnostic.runtimeWorldInfo.exactMarkerCount, 1);
+
+const parseFailureDiagnostic = inspectInitialVariablePipeline({
+  baseVariables: {},
+  card: { first_mes: '', char_book: { entries: [{ comment: '[initvar]', content: 'not structured' }] } },
+  messages: [],
+  messageId: 0,
+  variableScopes: { chat: {}, 'message:0': {} },
+  worldInfo: [],
+  parseStructured: () => null,
+});
+assert.equal(parseFailureDiagnostic.classification, 'sources-detected-but-seed-empty');
+assert.equal(parseFailureDiagnostic.cardWorldbook.matches[0].parse.parsed.keyCount, 0);
+assert.equal(parseFailureDiagnostic.cardWorldbook.matches[0].parse.json.ok, false);
 
 console.log('initial variable service tests: OK');
