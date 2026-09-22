@@ -11,8 +11,8 @@ const transformed = applyCardRuntimeTransform(bundle);
 
 assert.ok(transformed.includes('initial-variable-service-v1.3.6.js?v=1.3.6-initvar-3'));
 assert.ok(transformed.includes('smart-state-service-v1.3.6.js?v=1.3.6-smartstate-2'));
-assert.ok(transformed.includes('card-runtime-core-builder-v1.3.6.js?v=1.3.6-m3.9'));
-assert.ok(transformed.includes('card-runtime-renderer-v1.3.6.js?v=1.3.6-m3.9'));
+assert.ok(transformed.includes('card-runtime-core-builder-v1.3.6.js?v=1.3.6-m3.10'));
+assert.ok(transformed.includes('card-runtime-renderer-v1.3.6.js?v=1.3.6-m3.10'));
 assert.ok(transformed.includes('__stsBuildCardRuntimeCoreScript'));
 assert.ok(transformed.includes('__stsBuildCardRuntimeRendererScript'));
 assert.ok(transformed.includes('__stsNormalizeCardRuntimeMarkup'));
@@ -55,6 +55,10 @@ assert.ok(!coreBuilder.includes('/*__STS_COMPATIBILITY_API__*/'));
 assert.ok(renderer.includes('buildCardRuntimeRendererScript'));
 assert.ok(renderer.includes('parentVariableDiagnostics'));
 assert.ok(renderer.includes('bootVariableScopeNames'));
+assert.ok(renderer.includes('uiReportedNotReady'));
+assert.ok(renderer.includes('literalPathProbes'));
+assert.ok(renderer.includes('accessSnippets'));
+assert.ok(renderer.includes('readinessTextLiterals'));
 
 const runtimeModule = await import('../assets/card-runtime-core-builder-v1.3.6.js?test=' + Date.now());
 const injected = runtimeModule.buildCardRuntimeCoreScript({
@@ -71,6 +75,8 @@ assert.ok(injected.includes('CARD_RUNTIME_START_FUNCTION_MISSING'));
 assert.ok(injected.includes('CARD_RUNTIME_EVENT_BRIDGE_NOT_READY'));
 assert.ok(injected.includes('CARD_RUNTIME_OPTIONAL_RESOURCE_LOAD_FAILED'));
 assert.ok(injected.includes('__cardRuntimeVariableReadinessSnapshot'));
+assert.ok(injected.includes('registeredSchemas'));
+assert.ok(injected.includes('variableSchemaTrace'));
 assert.ok(!injected.includes('Promise.resolve(window.__STS_START_CARD_RUNTIME__('));
 
 console.log('card runtime extraction tests: OK');
