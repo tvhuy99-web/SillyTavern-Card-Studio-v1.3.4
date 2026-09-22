@@ -47,12 +47,19 @@ assert.ok(renderer.includes("target.removeEventListener('keydown', accessibility
 assert.ok(renderer.includes('CARD_RUNTIME_VARIABLES_NOT_READY'));
 assert.ok(renderer.includes('__cardRuntimeVariableReadinessSnapshot'));
 assert.ok(renderer.includes('buildVariableDependencyProfile'));
+assert.ok(renderer.includes('collectLiteralVariablePaths'));
+assert.ok(renderer.includes('probeLiteralVariablePaths'));
+assert.ok(renderer.includes('detectVariableReadinessUi'));
+assert.ok(renderer.includes('uiReportedNotReady'));
+assert.ok(renderer.includes('accessSnippets'));
 
 const variables = read('src/runtime/card-runtime/modules/variables.jsfrag');
 assert.ok(variables.includes('function syncLiveChatVariables'));
 assert.ok(variables.includes('function applyVariableScopesPayload'));
 assert.ok(variables.includes('__cardRuntimeVariableReadinessSnapshot'));
 assert.ok(variables.includes("recordVariableRead('getvar'"));
+assert.ok(variables.includes('variableSchemaTrace'));
+assert.ok(variables.includes('registeredSchemas'));
 
 assert.ok(handshake.includes("applyVariableScopesPayload(data.payload.variableScopes, 'state-update', true)"));
 assert.ok(handshake.includes("applyVariableScopesPayload(data.payload && data.payload.variableScopes, 'handshake', true)"));
