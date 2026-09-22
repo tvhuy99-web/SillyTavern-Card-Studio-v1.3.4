@@ -10,6 +10,7 @@
     const scriptRegistry = new Map();
     const variableReadTrace = [];
     const missingVariablePaths = [];
+    const variableSchemaTrace = [];
     let variableHandshakeApplied = false;
 
     function summarizeVariableObject(value) {
@@ -64,7 +65,8 @@
             chat: chatSummary,
             scopes: scopes,
             missingPaths: missingVariablePaths.slice(),
-            recentReads: variableReadTrace.slice(-20)
+            recentReads: variableReadTrace.slice(-20),
+            registeredSchemas: variableSchemaTrace.slice(-20)
         };
     }
     root.__cardRuntimeVariableReadinessSnapshot = variableReadinessSnapshot;
@@ -283,7 +285,28 @@
         persistScope(option, variables);
         return { variables: variables, delete_occurred: occurred };
     };
-    root.registerVariableSchema = function (schema, option) { schemaCache.set(scopeKey(option), schema); };
+    root.registerVariableSchema = function (schema, option) {
+        const key = scopeKey(option);
+        schemaCache.set(key, schema);
+        let shapeKeys = [];
+        try {
+            let shape = schema && schema.shape;
+            if (!shape && schema && schema._def) shape = schema._def.shape;
+            if (typeof shape === 'function') shape = shape();
+            if (shape && typeof shape === 'object' && !Array.isArray(shape)) shapeKeys = Object.keys(shape).slice(0, 48);
+        } catch (_) {}
+        variableSchemaTrace.push({
+            scope: key,
+            scriptId: activeScriptId,
+            scriptName: activeScriptName,
+            schemaType: schema && schema.constructor && schema.constructor.name ? String(schema.constructor.name) : typeof schema,
+            hasParse: Boolean(schema && typeof schema.parse === 'function'),
+            hasSafeParse: Boolean(schema && typeof schema.safeParse === 'function'),
+            shapeKeys: shapeKeys,
+            timestamp: Date.now()
+        });
+        if (variableSchemaTrace.length > 40) variableSchemaTrace.splice(0, variableSchemaTrace.length - 40);
+    };
     root.getvar = function (path) {
         const chat = root.getVariables({ type: 'chat' });
         const normalizedPath = String(path || '').replace(/^stat_data\./, '');
