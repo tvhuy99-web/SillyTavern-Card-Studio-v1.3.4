@@ -6,15 +6,29 @@ function clone(value) {
   return JSON.parse(JSON.stringify(value));
 }
 
-const INTERNAL_PIPELINE_RE = /<(thinking|thinking_requirements|step_outline|plan|inner_monologue|basic_confirmation|draft|revision_confirmation)\b[^>]*>[\s\S]*?<\/\1>/gi;
-const CONTENT_RE = /<content\b[^>]*>([\s\S]*?)<\/content>/i;
+const INTERNAL_PIPELINE_RE = /<(thinking|thinking_requirements|step_outline|plan|inner_monologue|basic_confirmation|draft|revision_confirmation|draft_unit_plan)\b[^>]*>[\s\S]*?<\/\1>/gi;
+const CONTENT_RE = /<content\b[^>]*>([\s\S]*?)<\/content>/gi;
+const INTERNAL_PIPELINE_OR_CONTENT_RE = /<(?:thinking|thinking_requirements|step_outline|plan|inner_monologue|basic_confirmation|draft|revision_confirmation|draft_unit_plan|content)\b/i;
+
+function stripInternalPipeline(content) {
+  return String(content ?? '')
+    .replace(INTERNAL_PIPELINE_RE, '')
+    .trim();
+}
+
+function extractContentBlocks(content) {
+  return Array.from(
+    String(content ?? '').matchAll(CONTENT_RE),
+    match => stripInternalPipeline(match[1]),
+  ).filter(Boolean);
+}
 
 export function modelContextContent(message) {
   if (message?.role !== 'model') return String(message?.content ?? '');
   const content = String(message?.content ?? '');
-  const match = content.match(CONTENT_RE);
-  if (match) return match[1].trim();
-  if (!/<(?:thinking|thinking_requirements|step_outline|plan|inner_monologue|basic_confirmation|draft|revision_confirmation|content)\b/i.test(content)) return content;
+  const blocks = extractContentBlocks(content);
+  if (blocks.length) return blocks.join('\n\n').trim();
+  if (!INTERNAL_PIPELINE_OR_CONTENT_RE.test(content)) return content;
   return content
     .replace(INTERNAL_PIPELINE_RE, '')
     .replace(/<\/?content\b[^>]*>/gi, '')
