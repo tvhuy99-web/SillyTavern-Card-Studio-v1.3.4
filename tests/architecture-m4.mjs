@@ -81,11 +81,11 @@ assert.ok(production.includes('__stsChatTurnPolicy.compactModelMessages(e,{keepL
 assert.ok(production.includes('chat_history:n.messages.map(e=>`[${e.role}] ${__stsChatTurnPolicy.modelContextContent(e)}`).join("\\n")'));
 assert.ok(!production.includes('chat_history:n.messages.map(e=>`[${e.role}] ${e.content}`).join("\\n")'));
 assert.ok(
-  production.includes('let X=V.map(e=>{let t=K(e,W||g),n=Y(e,t),r=bd(n),a=S(r);'),
+  production.includes('X=V.map(e=>{let t=K(e,W||g),n=Y(e,t),r=bd(n),a=S(r);'),
   'current_page_history must always sanitize model content to story text',
 );
 assert.ok(
-  !production.includes('let X=V.map(e=>{let t=K(e,W||g),n=Y(e,t),r=g?n:bd(n),a=S(r);'),
+  !production.includes('X=V.map(e=>{let t=K(e,W||g),n=Y(e,t),r=g?n:bd(n),a=S(r);'),
   'current_page_history must never bypass story sanitization in plain/interactive-disabled mode',
 );
 assert.ok(
