@@ -49,9 +49,15 @@ function responseProcessorAdapter() {
 export function applyM4ChatGenerationTransform(source) {
   let code = source;
   const legacyHistorySanitizer = 'bd=e=>e?e.replace(/<(thinking|inner_monologue)>[\\s\\S]*?<\\/\\1>/gi,"").replace(/<UpdateVariable(?:variable)?>[\\s\\S]*?<\\/UpdateVariable(?:variable)?>/gi,"").replace(/<LogicStore>[\\s\\S]*?<\\/LogicStore>/gi,"").replace(/<VisualInterface>[\\s\\S]*?<\\/VisualInterface>/gi,"").replace(/<StatusPlaceHolderImpl\\s*\\/?>/gi,"").replace(/\\[CHOICE:[\\s\\S]*?\\]/gi,"").replace(/\`\`\`[\\s\\S]*?\`\`\`/g,"").replace(/<tableThink>[\\s\\S]*?<\\/tableEdit>/gi,"").replace(/\\n\\s*\\n/g,"\\n").trim():""';
-  const compactHistorySanitizer = 'bd=e=>{if(!e)return"";let t=String(e),n=t.match(/<content\\b[^>]*>([\\s\\S]*?)<\\/content>/i),r=n?n[1]:t;return r.replace(/<(thinking|thinking_requirements|step_outline|plan|inner_monologue|basic_confirmation|draft|revision_confirmation)\\b[^>]*>[\\s\\S]*?<\\/\\1>/gi,"").replace(/<UpdateVariable(?:variable)?>[\\s\\S]*?<\\/UpdateVariable(?:variable)?>/gi,"").replace(/<LogicStore>[\\s\\S]*?<\\/LogicStore>/gi,"").replace(/<VisualInterface>[\\s\\S]*?<\\/VisualInterface>/gi,"").replace(/<StatusPlaceHolderImpl\\s*\\/?>/gi,"").replace(/\\[CHOICE:[\\s\\S]*?\\]/gi,"").replace(/\`\`\`[\\s\\S]*?\`\`\`/g,"").replace(/<tableThink>[\\s\\S]*?<\\/tableEdit>/gi,"").replace(/<\\/?content\\b[^>]*>/gi,"").replace(/\\n\\s*\\n/g,"\\n").trim()}';
+  const compactHistorySanitizer = 'bd=e=>{if(!e)return"";let t=String(e),n=[...t.matchAll(/<content\\b[^>]*>([\\s\\S]*?)<\\/content>/gi)],r=n.length?n.map(e=>e[1]).join("\\n\\n"):t;return r.replace(/<(thinking|thinking_requirements|step_outline|plan|inner_monologue|basic_confirmation|draft|revision_confirmation|draft_unit_plan)\\b[^>]*>[\\s\\S]*?<\\/\\1>/gi,"").replace(/<UpdateVariable(?:variable)?>[\\s\\S]*?<\\/UpdateVariable(?:variable)?>/gi,"").replace(/<LogicStore>[\\s\\S]*?<\\/LogicStore>/gi,"").replace(/<VisualInterface>[\\s\\S]*?<\\/VisualInterface>/gi,"").replace(/<StatusPlaceHolderImpl\\s*\\/?>/gi,"").replace(/\\[CHOICE:[\\s\\S]*?\\]/gi,"").replace(/\`\`\`[\\s\\S]*?\`\`\`/g,"").replace(/<tableThink>[\\s\\S]*?<\\/tableEdit>/gi,"").replace(/<\\/?content\\b[^>]*>/gi,"").replace(/\\n\\s*\\n/g,"\\n").trim()}';
   const sanitizerIndex = findExactlyOnce(code, legacyHistorySanitizer, 'history pipeline sanitizer');
   code = code.slice(0, sanitizerIndex) + compactHistorySanitizer + code.slice(sanitizerIndex + legacyHistorySanitizer.length);
+
+  const legacyTtsPipelineTags = 'thinking|thinking_requirements|step_outline|plan|inner_monologue|basic_confirmation|draft|revision_confirmation|UpdateVariable(?:variable)?|LogicStore|VisualInterface';
+  const expandedTtsPipelineTags = 'thinking|thinking_requirements|step_outline|plan|inner_monologue|basic_confirmation|draft|revision_confirmation|draft_unit_plan|UpdateVariable(?:variable)?|LogicStore|VisualInterface';
+  const ttsPipelineIndex = findExactlyOnce(code, legacyTtsPipelineTags, 'tts internal pipeline tags');
+  code = code.slice(0, ttsPipelineIndex) + expandedTtsPipelineTags + code.slice(ttsPipelineIndex + legacyTtsPipelineTags.length);
+
   code = replaceRange(code, ',Vs=async(', ',Ks=async(', '', 'remove legacy proxy chat generator');
 
   const generationBootstrap =
@@ -214,4 +220,4 @@ export function applyM4ChatGenerationTransform(source) {
   return code;
 }
 
-export const M4_CHAT_GENERATION_PATCH_COUNT = 19;
+export const M4_CHAT_GENERATION_PATCH_COUNT = 20;
