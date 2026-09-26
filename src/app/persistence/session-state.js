@@ -2,6 +2,7 @@ import {
   needsMessageNormalization,
   normalizeMessagesOnLoad,
 } from '../../features/arena/state-machine.js';
+import { modelContextContent } from '../../features/chat/turn-policy.js';
 
 const NON_PERSISTENT_KEYS = Object.freeze([
   'logs',
@@ -17,20 +18,9 @@ const NON_PERSISTENT_KEYS = Object.freeze([
   'rpgNotification',
 ]);
 
-const INTERNAL_PIPELINE_RE = /<(thinking|thinking_requirements|step_outline|plan|inner_monologue|basic_confirmation|draft|revision_confirmation)\b[^>]*>[\s\S]*?<\/\1>/gi;
-const CONTENT_RE = /<content\b[^>]*>([\s\S]*?)<\/content>/i;
-
 function compactModelContent(value) {
-  const text = String(value ?? '');
-  const content = text.match(CONTENT_RE);
-  if (content) return content[1].trim();
-  if (!/<(?:thinking|thinking_requirements|step_outline|plan|inner_monologue|basic_confirmation|draft|revision_confirmation|content)\b/i.test(text)) return text;
-  return text
-    .replace(INTERNAL_PIPELINE_RE, '')
-    .replace(/<\/?content\b[^>]*>/gi, '')
-    .trim();
+  return modelContextContent({ role: 'model', content: value });
 }
-
 function compactArenaSide(side) {
   if (!side || typeof side !== 'object') return side;
   const compacted = compactModelContent(side.content);
