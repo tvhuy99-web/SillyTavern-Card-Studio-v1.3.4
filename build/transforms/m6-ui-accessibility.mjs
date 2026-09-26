@@ -48,6 +48,31 @@ export function applyM6UiAccessibilityTransform(source) {
 
   code = replaceExactlyOnce(
     code,
+    'r=/<(thinking|thinking_requirements|step_outline|plan|inner_monologue|basic_confirmation|draft|revision_confirmation)>([\\s\\S]*?)<\\/\\1>/gi',
+    'r=/<(thinking|thinking_requirements|step_outline|plan|inner_monologue|basic_confirmation|draft|revision_confirmation|draft_unit_plan)>([\\s\\S]*?)<\\/\\1>/gi',
+    'arena renderer draft unit pipeline tag',
+  );
+  code = replaceExactlyOnce(
+    code,
+    '"revision_confirmation"===e&&(i="Xác nhận chỉnh sửa"),n.push({label:i,content:r}),a=a.replace(t[0],"")',
+    '"revision_confirmation"===e&&(i="Xác nhận chỉnh sửa"),"draft_unit_plan"===e&&(i="Kế hoạch đơn vị"),n.push({label:i,content:r}),a=a.replace(t[0],"")',
+    'arena renderer draft unit pipeline label',
+  );
+  code = replaceExactlyOnce(
+    code,
+    'a=/<(thinking|thinking_requirements|step_outline|plan|inner_monologue|basic_confirmation|draft|revision_confirmation)>([\\s\\S]*?)<\\/\\1>/gi',
+    'a=/<(thinking|thinking_requirements|step_outline|plan|inner_monologue|basic_confirmation|draft|revision_confirmation|draft_unit_plan)>([\\s\\S]*?)<\\/\\1>/gi',
+    'message renderer draft unit pipeline tag',
+  );
+  code = replaceExactlyOnce(
+    code,
+    '"revision_confirmation"===e&&(a="Xác nhận chỉnh sửa"),n.push({label:a,content:t}),i=i.replace(r[0],"")',
+    '"revision_confirmation"===e&&(a="Xác nhận chỉnh sửa"),"draft_unit_plan"===e&&(a="Kế hoạch đơn vị"),n.push({label:a,content:t}),i=i.replace(r[0],"")',
+    'message renderer draft unit pipeline label',
+  );
+
+  code = replaceExactlyOnce(
+    code,
     'nf=(0,b.memo)(({message:e,avatarUrl:t,isEditing:n,editingContent:r,onContentChange:a,onSave:i,onCancel:o,menuActions:s,isImmersive:l,isStreaming:c=!1,onArenaSelect:u,onArenaRetry:d})=>{',
     'nf=(0,b.memo)(({message:e,avatarUrl:t,isEditing:n,editingContent:r,onContentChange:a,onSave:i,onCancel:o,menuActions:s,isImmersive:l,isStreaming:c=!1,onArenaSelect:u,onArenaRetry:d,showPipeline:__stsShowPipeline=!1})=>{',
     'message renderer latest pipeline flag',
@@ -74,4 +99,4 @@ export function applyM6UiAccessibilityTransform(source) {
   return code;
 }
 
-export const M6_UI_ACCESSIBILITY_PATCH_COUNT = REPLACEMENTS.length + 4;
+export const M6_UI_ACCESSIBILITY_PATCH_COUNT = REPLACEMENTS.length + 8;
