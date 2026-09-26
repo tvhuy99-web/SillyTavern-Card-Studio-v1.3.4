@@ -22,14 +22,14 @@ const INTERNAL_PIPELINE_OR_CONTENT_RE = /<(?:think|thinking|thinking_requirement
 
 function compactModelContent(value) {
   const text = String(value ?? '');
+  if (!INTERNAL_PIPELINE_OR_CONTENT_RE.test(text)) return text;
+  const cleaned = text.replace(INTERNAL_PIPELINE_RE, '').trim();
   const blocks = Array.from(
-    text.matchAll(CONTENT_RE),
-    match => String(match[1] ?? '').replace(INTERNAL_PIPELINE_RE, '').trim(),
+    cleaned.matchAll(CONTENT_RE),
+    match => String(match[1] ?? '').trim(),
   ).filter(Boolean);
   if (blocks.length) return blocks.join('\n\n').trim();
-  if (!INTERNAL_PIPELINE_OR_CONTENT_RE.test(text)) return text;
-  return text
-    .replace(INTERNAL_PIPELINE_RE, '')
+  return cleaned
     .replace(/<\/?content\b[^>]*>/gi, '')
     .trim();
 }

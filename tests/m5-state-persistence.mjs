@@ -93,6 +93,22 @@ const persistedPipeline = createSessionSnapshot({
 assert.equal(persistedPipeline.chatHistory[0].content, 'old persisted');
 assert.match(persistedPipeline.chatHistory[2].content, /<basic_confirmation>keep<\/basic_confirmation>/);
 
+const referencedContentTagSnapshot = createSessionSnapshot({
+  ...state,
+  messages: [
+    {
+      id: 'reasoning-mentions-content',
+      role: 'model',
+      content: '<inner_monologue>STEP_1: <content> means Vietnamese. SECRET STEP_2</inner_monologue><draft_unit_plan>plan</draft_unit_plan><content>clean story</content>',
+    },
+    { id: 'u-after', role: 'user', content: 'next' },
+    { id: 'latest-model', role: 'model', content: '<content>latest stays raw for UI</content>' },
+  ],
+}, {}, { now: () => 101 });
+assert.equal(referencedContentTagSnapshot.chatHistory[0].content, 'clean story');
+assert.ok(!referencedContentTagSnapshot.chatHistory[0].content.includes('SECRET STEP_2'));
+assert.match(referencedContentTagSnapshot.chatHistory[2].content, /<content>latest stays raw for UI<\/content>/);
+
 const legacy = {
   ...snapshot,
   logs,

@@ -61,6 +61,24 @@ assert.equal(
   'draft_unit_plan must not leak even when a malformed preset places it inside content',
 );
 
+const referencedContentTagPipeline = [
+  '<inner_monologue>',
+  '[STEP_1: INIT_CALIBRATION]',
+  '• 语言协议：<inner_monologue> 为中文，<content> 为 Tiếng Việt。',
+  '[/STEP_1]',
+  '[STEP_2: USER_INTENT_DECODING]',
+  'SECRET REASONING MUST NOT LEAK',
+  '[/STEP_2]',
+  '</inner_monologue>',
+  '<draft_unit_plan>internal unit plan</draft_unit_plan>',
+  '<content>story only</content>',
+].join('\n');
+assert.equal(
+  policy.modelContextContent({ role: 'model', content: referencedContentTagPipeline }),
+  'story only',
+  'a literal <content> mention inside reasoning must not be mistaken for the real story block',
+);
+
 const arena = policy.createArenaState({
   source: 'proxy',
   proxy_model: 'main-proxy',
