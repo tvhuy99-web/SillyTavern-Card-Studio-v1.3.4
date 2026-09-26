@@ -179,6 +179,19 @@ export function applyM4ChatGenerationTransform(source) {
     'i=' + normalMacroExpression +
     code.slice(macroBranchEnd);
 
+  const currentPageHistoryRawBranch =
+    'let X=V.map(e=>{let t=K(e,W||g),n=Y(e,t),r=g?n:bd(n),a=S(r);';
+  const currentPageHistoryStoryOnly =
+    'let X=V.map(e=>{let t=K(e,W||g),n=Y(e,t),r=bd(n),a=S(r);';
+  const currentPageHistoryIndex = findExactlyOnce(
+    code,
+    currentPageHistoryRawBranch,
+    'current page history keeps story content only',
+  );
+  code = code.slice(0, currentPageHistoryIndex) +
+    currentPageHistoryStoryOnly +
+    code.slice(currentPageHistoryIndex + currentPageHistoryRawBranch.length);
+
   const runtimeChatMutation =
     'p=(0,b.useCallback)(async e=>{ol.getState().setMessages(e),await(n?.({messages:e}));let t=ol.getState();return Eh(e,t.persona?.name||"User",t.card?.name||"Character",!0)},[n])';
   const runtimeChatMutationReplacement =
@@ -220,4 +233,4 @@ export function applyM4ChatGenerationTransform(source) {
   return code;
 }
 
-export const M4_CHAT_GENERATION_PATCH_COUNT = 20;
+export const M4_CHAT_GENERATION_PATCH_COUNT = 21;
