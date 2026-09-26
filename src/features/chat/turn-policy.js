@@ -19,18 +19,22 @@ function stripInternalPipeline(content) {
 function extractContentBlocks(content) {
   return Array.from(
     String(content ?? '').matchAll(CONTENT_RE),
-    match => stripInternalPipeline(match[1]),
+    match => String(match[1] ?? '').trim(),
   ).filter(Boolean);
 }
 
 export function modelContextContent(message) {
   if (message?.role !== 'model') return String(message?.content ?? '');
   const content = String(message?.content ?? '');
-  const blocks = extractContentBlocks(content);
-  if (blocks.length) return blocks.join('\n\n').trim();
   if (!INTERNAL_PIPELINE_OR_CONTENT_RE.test(content)) return content;
-  return content
-    .replace(INTERNAL_PIPELINE_RE, '')
+
+  // Remove internal blocks first. Internal reasoning may literally mention tags such as
+  // "<content>" while describing the output contract; extracting content before this
+  // cleanup would mistake that mention for the start of the real story block.
+  const cleaned = stripInternalPipeline(content);
+  const blocks = extractContentBlocks(cleaned);
+  if (blocks.length) return blocks.join('\n\n').trim();
+  return cleaned
     .replace(/<\/?content\b[^>]*>/gi, '')
     .trim();
 }
