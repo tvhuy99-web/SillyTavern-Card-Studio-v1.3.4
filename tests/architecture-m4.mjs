@@ -80,6 +80,18 @@ assert.ok(production.includes('i=i.replace(/{{worldInfo_before}}/g,P).replace(/{
 assert.ok(production.includes('__stsChatTurnPolicy.compactModelMessages(e,{keepLatest:!0})'));
 assert.ok(production.includes('chat_history:n.messages.map(e=>`[${e.role}] ${__stsChatTurnPolicy.modelContextContent(e)}`).join("\\n")'));
 assert.ok(!production.includes('chat_history:n.messages.map(e=>`[${e.role}] ${e.content}`).join("\\n")'));
+assert.ok(
+  production.includes('X=V.map(e=>{let t=K(e,W||g),n=Y(e,t),r=bd(n),a=S(r);'),
+  'current_page_history must always sanitize model content to story text',
+);
+assert.ok(
+  !production.includes('X=V.map(e=>{let t=K(e,W||g),n=Y(e,t),r=g?n:bd(n),a=S(r);'),
+  'current_page_history must never bypass story sanitization in plain/interactive-disabled mode',
+);
+assert.ok(
+  production.includes('ee.slice(e,te+1).forEach(e=>{let t=K(e,!0),n=S(Y(e,t));'),
+  'last_turn must keep the immediate previous model response raw',
+);
 
 const smartStateStart = production.indexOf('F=__stsNormalizePromptVariableScopes(o,__stsReadGlobalVariables()),G=(o=F.chat,F.global)');
 const smartStateEnd = production.indexOf('let z=', smartStateStart);
