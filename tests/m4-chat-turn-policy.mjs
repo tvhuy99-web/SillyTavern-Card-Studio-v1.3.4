@@ -34,7 +34,7 @@ assert.deepEqual(context.promptHistory, [
   { role: 'user', content: 'u2' },
 ]);
 
-const pipeline = '<thinking>hidden</thinking><plan>plan</plan><basic_confirmation>ok</basic_confirmation><draft>draft</draft><revision_confirmation>rev</revision_confirmation><content>final</content>';
+const pipeline = '<think>legacy hidden</think><thinking>hidden</thinking><plan>plan</plan><basic_confirmation>ok</basic_confirmation><draft>draft</draft><revision_confirmation>rev</revision_confirmation><content>final</content>';
 const compacted = policy.compactModelMessages([
   { id: 'm1', role: 'model', content: pipeline },
   { id: 'u2', role: 'user', content: 'next' },
@@ -42,6 +42,7 @@ const compacted = policy.compactModelMessages([
 assert.equal(compacted.changed, true);
 assert.equal(compacted.messages[0].content, 'final');
 assert.equal(policy.modelContextContent({ role: 'model', content: '<thinking>x</thinking><plan>y</plan>visible' }), 'visible');
+assert.equal(policy.modelContextContent({ role: 'model', content: '<think>x</think><inner_monologue>y</inner_monologue>visible' }), 'visible');
 
 const unitPipeline = '<draft_unit_plan>unit 1</draft_unit_plan><content>part 1</content><draft_unit_plan>unit 2</draft_unit_plan><content>part 2</content>';
 assert.equal(
