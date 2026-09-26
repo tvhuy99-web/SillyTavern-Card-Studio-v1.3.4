@@ -43,6 +43,23 @@ assert.equal(compacted.changed, true);
 assert.equal(compacted.messages[0].content, 'final');
 assert.equal(policy.modelContextContent({ role: 'model', content: '<thinking>x</thinking><plan>y</plan>visible' }), 'visible');
 
+const unitPipeline = '<draft_unit_plan>unit 1</draft_unit_plan><content>part 1</content><draft_unit_plan>unit 2</draft_unit_plan><content>part 2</content>';
+assert.equal(
+  policy.modelContextContent({ role: 'model', content: unitPipeline }),
+  'part 1\n\npart 2',
+  'all content blocks must be joined in order while draft_unit_plan stays internal',
+);
+assert.equal(
+  policy.modelContextContent({ role: 'model', content: '<draft_unit_plan>hidden</draft_unit_plan>visible' }),
+  'visible',
+  'draft_unit_plan must be stripped when content wrappers are absent',
+);
+assert.equal(
+  policy.modelContextContent({ role: 'model', content: '<content>before<draft_unit_plan>hidden</draft_unit_plan>after</content>' }),
+  'beforeafter',
+  'draft_unit_plan must not leak even when a malformed preset places it inside content',
+);
+
 const arena = policy.createArenaState({
   source: 'proxy',
   proxy_model: 'main-proxy',
