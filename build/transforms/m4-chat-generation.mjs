@@ -180,9 +180,9 @@ export function applyM4ChatGenerationTransform(source) {
     code.slice(macroBranchEnd);
 
   const currentPageHistoryRawBranch =
-    'let X=V.map(e=>{let t=K(e,W||g),n=Y(e,t),r=g?n:bd(n),a=S(r);';
+    'X=V.map(e=>{let t=K(e,W||g),n=Y(e,t),r=g?n:bd(n),a=S(r);';
   const currentPageHistoryStoryOnly =
-    'let X=V.map(e=>{let t=K(e,W||g),n=Y(e,t),r=bd(n),a=S(r);';
+    'X=V.map(e=>{let t=K(e,W||g),n=Y(e,t),r=bd(n),a=S(r);';
   const currentPageHistoryIndex = findExactlyOnce(
     code,
     currentPageHistoryRawBranch,
