@@ -7,6 +7,8 @@ const exists = path => fs.existsSync(new URL('../' + path, import.meta.url));
 const index = read('index.html');
 const entry = read('assets/app-entry-v1.3.6.js');
 const production = read('assets/app-production-v1.3.6.js');
+const sessionPersistenceAsset = read('assets/m5/app/persistence/session-state.js');
+assert.ok(!sessionPersistenceAsset.includes("../../features/chat/turn-policy.js"), 'M5 persistence must not import M4 chat modules via a broken relative path');
 
 assert.ok(entry.includes("stage: 'M7-complete'"));
 assert.ok(entry.includes("statePersistence: 'tiered-owned-state'"));

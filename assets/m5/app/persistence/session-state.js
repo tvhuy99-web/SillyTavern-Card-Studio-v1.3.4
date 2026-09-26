@@ -2,8 +2,6 @@ import {
   needsMessageNormalization,
   normalizeMessagesOnLoad,
 } from '../../features/arena/state-machine.js';
-import { modelContextContent } from '../../features/chat/turn-policy.js';
-
 const NON_PERSISTENT_KEYS = Object.freeze([
   'logs',
   'initialDiagnosticLog',
@@ -18,8 +16,22 @@ const NON_PERSISTENT_KEYS = Object.freeze([
   'rpgNotification',
 ]);
 
+const INTERNAL_PIPELINE_RE = /<(think|thinking|thinking_requirements|step_outline|plan|inner_monologue|basic_confirmation|draft|revision_confirmation|draft_unit_plan)\b[^>]*>[\s\S]*?<\/\1>/gi;
+const CONTENT_RE = /<content\b[^>]*>([\s\S]*?)<\/content>/gi;
+const INTERNAL_PIPELINE_OR_CONTENT_RE = /<(?:think|thinking|thinking_requirements|step_outline|plan|inner_monologue|basic_confirmation|draft|revision_confirmation|draft_unit_plan|content)\b/i;
+
 function compactModelContent(value) {
-  return modelContextContent({ role: 'model', content: value });
+  const text = String(value ?? '');
+  const blocks = Array.from(
+    text.matchAll(CONTENT_RE),
+    match => String(match[1] ?? '').replace(INTERNAL_PIPELINE_RE, '').trim(),
+  ).filter(Boolean);
+  if (blocks.length) return blocks.join('\n\n').trim();
+  if (!INTERNAL_PIPELINE_OR_CONTENT_RE.test(text)) return text;
+  return text
+    .replace(INTERNAL_PIPELINE_RE, '')
+    .replace(/<\/?content\b[^>]*>/gi, '')
+    .trim();
 }
 function compactArenaSide(side) {
   if (!side || typeof side !== 'object') return side;
