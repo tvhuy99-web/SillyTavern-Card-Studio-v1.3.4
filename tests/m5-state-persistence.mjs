@@ -85,7 +85,7 @@ assert.equal('abortControllers' in snapshot, false);
 const persistedPipeline = createSessionSnapshot({
   ...state,
   messages: [
-    { id: 'old-pipeline', role: 'model', content: '<thinking>x</thinking><draft>d</draft><content>old persisted</content>' },
+    { id: 'old-pipeline', role: 'model', content: '<think>legacy</think><thinking>x</thinking><draft>d</draft><draft_unit_plan>unit</draft_unit_plan><content>old persisted</content>' },
     { id: 'u', role: 'user', content: 'next' },
     { id: 'latest-pipeline', role: 'model', content: '<basic_confirmation>keep</basic_confirmation><content>latest persisted</content>' },
   ],
@@ -103,7 +103,7 @@ const legacy = {
     {
       id: 'old',
       role: 'model',
-      content: '<basic_confirmation>x</basic_confirmation><draft>draft</draft><revision_confirmation>rev</revision_confirmation><content>old final</content>',
+      content: '<think>legacy</think><basic_confirmation>x</basic_confirmation><draft>draft</draft><draft_unit_plan>unit</draft_unit_plan><revision_confirmation>rev</revision_confirmation><content>old final</content>',
     },
     {
       id: 'latest',

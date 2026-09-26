@@ -4,7 +4,10 @@ import { buildConversationPrompt } from '../src/features/prompts/prompt-service.
 let args;
 const state = {
   card: { name: 'Card' }, preset: { context_mode: 'standard' }, persona: { name: 'User', description: 'Persona' },
-  messages: [{ role: 'user', content: 'old' }], authorNote: 'note', longTermSummaries: ['sum'], variables: { hp: 1 },
+  messages: [
+    { role: 'model', content: '<inner_monologue>secret</inner_monologue><draft_unit_plan>plan</draft_unit_plan><content>old story</content>' },
+    { role: 'user', content: 'old' },
+  ], authorNote: 'note', longTermSummaries: ['sum'], variables: { hp: 1 },
   lastStateBlock: 'state', worldInfoState: { a: true }, worldInfoPlacement: { a: 'before' }, visualState: { disableInteractiveMode: false },
 };
 const result = await buildConversationPrompt({
@@ -20,7 +23,12 @@ const result = await buildConversationPrompt({
 });
 assert.equal(result.fullPrompt, 'ok');
 assert.deepEqual(args[0], ['base']);
-assert.equal(args[1].length, 2);
+assert.equal(args[1].length, 3);
+assert.equal(args[1][0].content, 'old story');
+assert.equal(args[1][1].content, 'old');
+assert.equal(args[1][2].content, 'new');
+assert.ok(!args[1][0].content.includes('inner_monologue'));
+assert.ok(!args[1][0].content.includes('draft_unit_plan'));
 assert.equal(args[5], 9);
 assert.equal(args[8].at(-1).name, 'Session Generated');
 assert.deepEqual(args[12], [{ uid: 'a' }]);

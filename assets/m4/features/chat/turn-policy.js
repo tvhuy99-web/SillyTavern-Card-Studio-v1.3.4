@@ -6,9 +6,9 @@ function clone(value) {
   return JSON.parse(JSON.stringify(value));
 }
 
-const INTERNAL_PIPELINE_RE = /<(thinking|thinking_requirements|step_outline|plan|inner_monologue|basic_confirmation|draft|revision_confirmation|draft_unit_plan)\b[^>]*>[\s\S]*?<\/\1>/gi;
+const INTERNAL_PIPELINE_RE = /<(think|thinking|thinking_requirements|step_outline|plan|inner_monologue|basic_confirmation|draft|revision_confirmation|draft_unit_plan)\b[^>]*>[\s\S]*?<\/\1>/gi;
 const CONTENT_RE = /<content\b[^>]*>([\s\S]*?)<\/content>/gi;
-const INTERNAL_PIPELINE_OR_CONTENT_RE = /<(?:thinking|thinking_requirements|step_outline|plan|inner_monologue|basic_confirmation|draft|revision_confirmation|draft_unit_plan|content)\b/i;
+const INTERNAL_PIPELINE_OR_CONTENT_RE = /<(?:think|thinking|thinking_requirements|step_outline|plan|inner_monologue|basic_confirmation|draft|revision_confirmation|draft_unit_plan|content)\b/i;
 
 function stripInternalPipeline(content) {
   return String(content ?? '')
