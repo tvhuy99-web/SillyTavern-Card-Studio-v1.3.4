@@ -101,8 +101,8 @@ assert.ok(
   'current_page_history preprocessing must use cooperative scheduling',
 );
 assert.ok(
-  production.includes('r=g?n:bd(n),a=S(r),i=a.trim()?'),
-  'current_page_history preprocessing must preserve the existing plain-mode/story-mode behavior',
+  production.includes('r=bd(n),a=S(r),i=a.trim()?'),
+  'current_page_history preprocessing must keep story-only sanitization while yielding cooperatively',
 );
 assert.ok(
   production.includes('__stsPromptRegexCache=new WeakMap'),
