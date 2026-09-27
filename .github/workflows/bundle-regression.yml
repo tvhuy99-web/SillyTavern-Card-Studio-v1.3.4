@@ -63,6 +63,7 @@ jobs:
           node --check assets/m4/providers/gemini/generation.js
           node --check assets/m4/features/chat/turn-policy.js
           node --check assets/m4/features/chat/conversation-service.js
+          node --check assets/m4/features/chat/live-stream-store.js
           node --check assets/m4/features/world-info/embedding-service.js
           node --check assets/m4/features/world-info/smart-scan-service.js
           node --check assets/m4/features/prompts/prompt-service.js
@@ -90,6 +91,8 @@ jobs:
         run: node tests/m4-chat-turn-policy.mjs
       - name: Test M4 conversation service
         run: node tests/m4-conversation-service.mjs
+      - name: Test M4 live stream store
+        run: node tests/m4-live-stream-store.mjs
       - name: Test M4 Smart Scan service
         run: node tests/m4-smart-scan-service.mjs
       - name: Test M4 embedding service

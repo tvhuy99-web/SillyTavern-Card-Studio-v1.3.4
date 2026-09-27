@@ -1,7 +1,6 @@
 export function createConversationService(deps) {
   const now = deps.now || (() => Date.now());
   const createAbortController = deps.createAbortController || (() => new AbortController());
-  const streamUpdateInterval = deps.streamUpdateInterval ?? 100;
   const yieldToBrowser = deps.yieldToBrowser || (() => new Promise(resolve => {
     if (typeof requestAnimationFrame === 'function') requestAnimationFrame(() => resolve());
     else setTimeout(resolve, 0);
@@ -88,16 +87,10 @@ export function createConversationService(deps) {
       const stream = deps.generationGateway.stream({
         prompt, preset, signal, model, source: provider, proxyConfig,
       });
-      let lastPaint = now();
       for await (const chunk of stream) {
         if (signal.aborted) break;
         content += chunk.text || '';
-        const timestamp = now();
-        if (timestamp - lastPaint > streamUpdateInterval) {
-          updateArena(messageId, slot, (arena, side) =>
-            deps.arenaState.withContent(arena, side, content));
-          lastPaint = timestamp;
-        }
+        deps.liveStream.publish(messageId, slot, content);
       }
       updateArena(messageId, slot, (arena, side) =>
         deps.arenaState.withResult(arena, side, content, signal));
@@ -107,6 +100,7 @@ export function createConversationService(deps) {
     } finally {
       updateArena(messageId, slot, (arena, side) =>
         deps.arenaState.complete(arena, side));
+      deps.liveStream.clear(messageId, slot);
     }
   }
 
@@ -161,24 +155,20 @@ export function createConversationService(deps) {
         prompt, preset: state.preset, signal: controller.signal,
       });
       let reasoning = '';
-      let lastPaint = now();
-      for await (const chunk of stream) {
-        if (controller.signal.aborted) break;
-        content += chunk.text || '';
-        if (chunk.reasoning) reasoning += chunk.reasoning;
-        const timestamp = now();
-        if (timestamp - lastPaint > streamUpdateInterval) {
-          deps.updateMessage(message.id, {
-            content,
-            reasoning_content: reasoning || undefined,
-          });
-          lastPaint = timestamp;
+      try {
+        for await (const chunk of stream) {
+          if (controller.signal.aborted) break;
+          content += chunk.text || '';
+          if (chunk.reasoning) reasoning += chunk.reasoning;
+          deps.liveStream.publish(message.id, 'main', content, reasoning || undefined);
         }
+      } finally {
+        deps.updateMessage(message.id, {
+          content,
+          reasoning_content: reasoning || undefined,
+        });
+        deps.liveStream.clear(message.id, 'main');
       }
-      deps.updateMessage(message.id, {
-        content,
-        reasoning_content: reasoning || undefined,
-      });
     } else {
       deps.updateMessage(message.id, { content: '...' });
       const result = await deps.generationGateway.generateOnce({

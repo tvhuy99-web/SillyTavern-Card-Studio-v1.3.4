@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import { createConversationService } from '../src/features/chat/conversation-service.js';
 
 const controllers = new Set();
-const calls = { prompt: 0, processed: [], sound: [], errors: [], logs: [], globalWrites: [] };
+const calls = { prompt: 0, processed: [], sound: [], errors: [], logs: [], globalWrites: [], live: [], clears: [], updates: 0 };
 let messageCounter = 0;
 const state = {
   card: { name: 'Card' },
@@ -24,9 +24,10 @@ const deps = {
   addAbortController: value => controllers.add(value),
   removeAbortController: value => controllers.delete(value),
   addMessage: message => state.messages.push(message),
-  updateMessage: (id, patch) => Object.assign(
-    state.messages.find(item => item.id === id), patch,
-  ),
+  updateMessage: (id, patch) => {
+    calls.updates += 1;
+    Object.assign(state.messages.find(item => item.id === id), patch);
+  },
   setMessages: messages => { state.messages = messages; },
   setSessionData: patch => Object.assign(state, patch),
   replaceGlobalVariables: value => { calls.globalWrites.push(value); return value; },
@@ -131,7 +132,17 @@ const deps = {
       return { response: { text: 'AI' }, reasoning: 'WHY' };
     },
     async *stream({ source }) {
-      yield { text: source === 'openrouter' ? 'B' : 'A' };
+      const prefix = source === 'openrouter' ? 'B' : 'A';
+      yield { text: prefix + '1' };
+      yield { text: prefix + '2' };
+    },
+  },
+  liveStream: {
+    publish(messageId, slot, content, reasoning) {
+      calls.live.push({ messageId, slot, content, reasoning });
+    },
+    clear(messageId, slot) {
+      calls.clears.push({ messageId, slot });
     },
   },
   async processAIResponse(content, id, forced) {
@@ -140,7 +151,6 @@ const deps = {
   playSound: kind => calls.sound.push(kind),
   logSystemMessage: (...args) => calls.logs.push(args),
   runtimeSize: () => controllers.size,
-  streamUpdateInterval: 0,
 };
 
 const conversation = createConversationService(deps);
@@ -178,16 +188,39 @@ assert.equal(calls.prompt, 2);
 assert.equal(calls.processed.at(-1).content, 'FORCED');
 assert.equal(calls.processed.at(-1).forced, true);
 
+state.preset.stream_response = true;
+const updatesBeforeStream = calls.updates;
+const liveBeforeStream = calls.live.length;
+assert.equal(await conversation.send('streaming input'), true);
+const streamingMessage = state.messages.at(-1);
+assert.equal(streamingMessage.content, 'A1A2');
+assert.equal(
+  calls.updates - updatesBeforeStream,
+  1,
+  'normal streaming must commit to global messages only once at the end',
+);
+assert.deepEqual(
+  calls.live.slice(liveBeforeStream).map(item => item.content),
+  ['A1', 'A1A2'],
+);
+assert.deepEqual(calls.clears.at(-1), { messageId: streamingMessage.id, slot: 'main' });
+assert.equal(calls.processed.at(-1).content, 'A1A2');
+state.preset.stream_response = false;
+
 state.isArenaMode = true;
 state.arenaModelId = 'challenger';
 assert.equal(await conversation.send('arena input'), true);
 const arenaMessage = state.messages.at(-1);
-assert.equal(arenaMessage.arena.modelA.content, 'A');
-assert.equal(arenaMessage.arena.modelB.content, 'B');
+assert.equal(arenaMessage.arena.modelA.content, 'A1A2');
+assert.equal(arenaMessage.arena.modelB.content, 'B1B2');
 assert.equal(arenaMessage.arena.modelA.completed, true);
 assert.equal(arenaMessage.arena.modelB.completed, true);
 assert.equal(arenaMessage.arena.modelA.status, 'success');
 assert.equal(arenaMessage.arena.modelB.status, 'success');
+assert.ok(calls.live.some(item => item.messageId === arenaMessage.id && item.slot === 'modelA' && item.content === 'A1A2'));
+assert.ok(calls.live.some(item => item.messageId === arenaMessage.id && item.slot === 'modelB' && item.content === 'B1B2'));
+assert.ok(calls.clears.some(item => item.messageId === arenaMessage.id && item.slot === 'modelA'));
+assert.ok(calls.clears.some(item => item.messageId === arenaMessage.id && item.slot === 'modelB'));
 assert.deepEqual(calls.sound, ['ai']);
 assert.equal(controllers.size, 0);
 assert.equal(state.loading, false);

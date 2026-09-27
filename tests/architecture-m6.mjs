@@ -52,6 +52,11 @@ assert.ok(production.includes('showPipeline:__stsShowPipeline=!1'));
 assert.ok(production.includes('__stsShowPipeline&&n.push({label:a,content:t})'));
 assert.ok(production.includes('isStreaming:U,onArenaSelect:S,onArenaRetry:C,showPipeline:L})'));
 assert.ok(production.includes('[m,e.content,h,c,T,__stsShowPipeline]'));
+assert.ok(production.includes('__stsLiveStreamText=({messageId:e,slot:t="main",fallback:n=""})=>'));
+assert.ok(production.includes('__stsLiveStreamStore.subscribe'));
+assert.ok(production.includes('__stsLiveStreamStore.getSnapshot'));
+assert.ok(production.includes('messageId:e.id,slot:"main",fallback:e.content'));
+assert.ok(production.includes('messageId:e.id})'), 'Arena stream sides must receive the parent message id');
 assert.ok(
   production.includes('U=t&&M&&"model"===b.role,K=null,W=null'),
   'streaming messages must render raw text without interactive regex parsing',
