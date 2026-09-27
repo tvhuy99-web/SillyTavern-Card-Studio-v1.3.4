@@ -90,14 +90,20 @@ export function createConversationService(deps) {
         prompt, preset, signal, model, source: provider, proxyConfig,
       });
       let lastPaint = now();
+      let lastPaintLength = 0;
       for await (const chunk of stream) {
         if (signal.aborted) break;
         content += chunk.text || '';
         const timestamp = now();
-        if (timestamp - lastPaint > streamUpdateInterval) {
+        const charDelta = content.length - lastPaintLength;
+        if (
+          timestamp - lastPaint >= streamUpdateInterval &&
+          charDelta >= streamMinChars
+        ) {
           updateArena(messageId, slot, (arena, side) =>
             deps.arenaState.withContent(arena, side, content));
           lastPaint = timestamp;
+          lastPaintLength = content.length;
         }
       }
       updateArena(messageId, slot, (arena, side) =>
