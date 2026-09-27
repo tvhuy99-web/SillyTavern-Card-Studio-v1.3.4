@@ -96,7 +96,14 @@ export function applyM6UiAccessibilityTransform(source) {
     'message renderer latest flag memo dependency',
   );
 
+  code = replaceExactlyOnce(
+    code,
+    'K=!U||b.interactiveHtml||b.interactiveHtmlBlocks?.length?null:gd(b.content,I?.extensions?.regex_scripts||[],[2],{engineMode:Z,isMarkdown:!0,isPrompt:!1,depth:0,...Zu(A,j),macros:{char:a,bot:a,user:l}}),W=K?.interactiveHtml||null',
+    'K=null,W=null',
+    'streaming message skips interactive regex pipeline',
+  );
+
   return code;
 }
 
-export const M6_UI_ACCESSIBILITY_PATCH_COUNT = REPLACEMENTS.length + 8;
+export const M6_UI_ACCESSIBILITY_PATCH_COUNT = REPLACEMENTS.length + 9;

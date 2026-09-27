@@ -52,6 +52,14 @@ assert.ok(production.includes('showPipeline:__stsShowPipeline=!1'));
 assert.ok(production.includes('__stsShowPipeline&&n.push({label:a,content:t})'));
 assert.ok(production.includes('isStreaming:U,onArenaSelect:S,onArenaRetry:C,showPipeline:L})'));
 assert.ok(production.includes('[m,e.content,h,c,T,__stsShowPipeline]'));
+assert.ok(
+  production.includes('U=t&&M&&"model"===b.role,K=null,W=null'),
+  'streaming messages must render raw text without interactive regex parsing',
+);
+assert.ok(
+  !production.includes('K=!U||b.interactiveHtml||b.interactiveHtmlBlocks?.length?null:gd(b.content'),
+  'interactive regex pipeline must never run on the active streaming message',
+);
 
 const promptStart = production.indexOf('pu=({prompt:e,index:t,onUpdate:n,onRemove:r,onEdit:a,movingPromptIndex:i,onSelectToMove:o,onMoveTo:s,onCancelMove:l})=>');
 const promptEnd = production.indexOf(',mu=', promptStart);
