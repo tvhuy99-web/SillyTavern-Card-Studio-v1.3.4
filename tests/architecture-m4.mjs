@@ -18,6 +18,7 @@ for (const token of [
   './m4/providers/common/generation-gateway.js?v=1.3.6-m4.1',
   './m4/features/chat/turn-policy.js?v=1.3.6-m4.5',
   './m4/features/chat/conversation-service.js?v=1.3.6-m4.8',
+  './m4/features/chat/live-stream-store.js?v=1.3.6-m4.10',
   './m4/features/world-info/embedding-service.js?v=1.3.6-m4.9',
   './m4/features/world-info/smart-scan-service.js?v=1.3.6-m4.8',
   './m4/features/prompts/prompt-service.js?v=1.3.6-m4.3',
@@ -83,6 +84,12 @@ assert.ok(promptService.includes('const modelContextCache = new WeakMap()'), 'pr
 const conversationService = read('src/features/chat/conversation-service.js');
 assert.ok(conversationService.includes('await yieldToBrowser()'), 'send must yield so the busy UI can paint before heavy preparation');
 assert.ok(conversationService.includes("typeof options.beforeTurn === 'function'"), 'send must support retry preparation after entering busy state');
+assert.ok(conversationService.includes("deps.liveStream.publish"), 'stream chunks must publish outside the global conversation store');
+assert.ok(conversationService.includes("deps.liveStream.clear"), 'live stream state must be cleared after completion');
+assert.ok(!conversationService.includes("streamUpdateInterval"), 'conversation service must not throttle by mutating global messages');
+const liveStreamStore = read('src/features/chat/live-stream-store.js');
+assert.ok(liveStreamStore.includes('const snapshots = new Map()'), 'live stream store must own ephemeral snapshots');
+assert.ok(liveStreamStore.includes('setTimeout(flushPending, 60)'), 'live stream rendering must coalesce subscriber notifications');
 assert.ok(conversationService.indexOf('deps.setLoading(true)') < conversationService.indexOf('deps.preprocessInput(rawContent, state)'), 'loading must be set before input preprocessing');
 assert.ok(!production.includes('[Integrated RPG] Detected'));
 assert.ok(!production.includes(',Vs=async('), 'legacy Proxy chat generator must be removed from production');
@@ -163,6 +170,7 @@ for (const [source, generated] of [
   ['src/providers/gemini/generation.js', 'assets/m4/providers/gemini/generation.js'],
   ['src/features/chat/turn-policy.js', 'assets/m4/features/chat/turn-policy.js'],
   ['src/features/chat/conversation-service.js', 'assets/m4/features/chat/conversation-service.js'],
+  ['src/features/chat/live-stream-store.js', 'assets/m4/features/chat/live-stream-store.js'],
   ['src/features/world-info/embedding-service.js', 'assets/m4/features/world-info/embedding-service.js'],
   ['src/features/world-info/smart-scan-service.js', 'assets/m4/features/world-info/smart-scan-service.js'],
   ['src/features/prompts/prompt-service.js', 'assets/m4/features/prompts/prompt-service.js'],
