@@ -1,23 +1,28 @@
 import {
+  buildSamplerSettings,
   clampNumber,
   networkLogId,
-  optionalPositiveInt,
   readSseResponse,
 } from '../common/generation-utils.js';
 
 const ENDPOINT = 'https://openrouter.ai/api/v1/chat/completions';
 
 export function createOpenRouterGenerationProvider(deps) {
-  async function generate({ model, prompt, preset, signal }) {
-    const body = {
+  function payload(model, prompt, preset, stream) {
+    return {
       model,
       messages: [{ role: 'user', content: prompt }],
-      temperature: preset.temp,
-      top_p: preset.top_p,
-      max_tokens: preset.max_tokens,
+      temperature: clampNumber(preset.temp, 1, { min: 0, max: 2 }),
+      ...buildSamplerSettings(preset, { includeTypicalP: false }),
+      max_tokens: Math.trunc(clampNumber(preset.max_tokens, 4096, { min: 1 })),
       stop: preset.stopping_strings,
       include_reasoning: true,
+      stream,
     };
+  }
+
+  async function generate({ model, prompt, preset, signal }) {
+    const body = payload(model, prompt, preset, false);
     const headers = deps.getHeaders();
     deps.addNetworkLog({
       id: networkLogId('or'),
@@ -43,19 +48,7 @@ export function createOpenRouterGenerationProvider(deps) {
   }
 
   async function* stream({ model, prompt, preset, signal }) {
-    const body = {
-      model,
-      messages: [{ role: 'user', content: prompt }],
-      temperature: clampNumber(preset.temp, 1, { min: 0, max: 2 }),
-      max_tokens: Math.trunc(clampNumber(preset.max_tokens, 4096, { min: 1 })),
-      stop: preset.stopping_strings,
-      include_reasoning: true,
-      stream: true,
-    };
-    if (preset.top_p !== undefined) body.top_p = Number(preset.top_p);
-    const topK = optionalPositiveInt(preset.top_k);
-    if (topK !== undefined) body.top_k = topK;
-
+    const body = payload(model, prompt, preset, true);
     const headers = deps.getHeaders();
     deps.addNetworkLog({
       id: networkLogId('or-stream'),
