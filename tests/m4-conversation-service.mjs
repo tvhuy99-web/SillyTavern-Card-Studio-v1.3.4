@@ -168,11 +168,13 @@ assert.equal(await conversation.send('prepared input', {
   },
 }), true);
 assert.equal(beforeTurnSawLoading, true, 'retry preparation must run under the visible busy state');
+assert.equal(calls.yields, 2, 'each send must yield before heavy preparation');
 assert.equal(state.messages.at(-1).content, 'AI');
 assert.equal(state.loading, false);
+assert.equal(calls.prompt, 2);
 
 assert.equal(await conversation.send('forced input', { forcedContent: 'FORCED' }), true);
-assert.equal(calls.prompt, 1);
+assert.equal(calls.prompt, 2);
 assert.equal(calls.processed.at(-1).content, 'FORCED');
 assert.equal(calls.processed.at(-1).forced, true);
 
