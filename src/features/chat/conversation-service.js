@@ -212,8 +212,8 @@ export function createConversationService(deps) {
       if (controller.signal.aborted) return false;
 
       if (typeof options.beforeTurn === 'function') {
-        await options.beforeTurn({ signal: controller.signal });
-        if (controller.signal.aborted) return false;
+        const prepared = await options.beforeTurn({ signal: controller.signal });
+        if (prepared === false || controller.signal.aborted) return false;
       }
 
       const state = deps.getState();
