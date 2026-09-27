@@ -18,12 +18,15 @@ for (const token of [
   './m4/providers/common/generation-gateway.js?v=1.3.6-m4.1',
   './m4/features/chat/turn-policy.js?v=1.3.6-m4.5',
   './m4/features/chat/conversation-service.js?v=1.3.6-m4.8',
+  './m4/features/world-info/embedding-service.js?v=1.3.6-m4.9',
   './m4/features/world-info/smart-scan-service.js?v=1.3.6-m4.8',
   './m4/features/prompts/prompt-service.js?v=1.3.6-m4.3',
   './m4/features/chat/response-processor.js?v=1.3.6-m4.3',
   '__stsGenerationGateway.generateOnce',
   '__stsGenerationGateway.stream',
   '__stsCreateConversationService',
+  '__stsCreateEmbeddingService',
+  '__stsEmbeddingService',
   '__stsConversationService.send',
   '__stsScanWorldInfo',
   '__stsBuildConversationPrompt',
@@ -68,6 +71,12 @@ assert.ok(!responseAdapter.includes('worldInfoRuntime:d'));
 
 assert.ok(!production.includes('stsSessionBook'));
 assert.ok(!production.includes('[Smart Scan] Skipped API call'));
+assert.ok(production.includes('embedding_provider:"gemini"'), 'Smart Scan defaults must retain Gemini as the initial embedding provider');
+const embeddingService = read('src/features/world-info/embedding-service.js');
+assert.ok(embeddingService.includes('EmbeddingGemma 300M Q4 - Offline'), 'EmbeddingGemma option must be owned by embedding service');
+assert.ok(embeddingService.includes('Qwen3-Embedding 0.6B Q4 - Offline'), 'Qwen3 embedding option must be owned by embedding service');
+assert.ok(production.includes('__stsEmbeddingService.embedQuery'), 'semantic query embedding must route through the owned service');
+assert.ok(production.includes('__stsEmbeddingService.syncIndex'), 'semantic sync must route through the owned service');
 assert.ok(!production.includes('[Integrated RPG] Detected'));
 assert.ok(!production.includes(',Vs=async('), 'legacy Proxy chat generator must be removed from production');
 assert.ok(!production.includes('.replace(/{{worldInfo}}/g,"")'), 'plain-text mode must not erase {{worldInfo}}');
@@ -135,6 +144,7 @@ for (const [source, generated] of [
   ['src/providers/gemini/generation.js', 'assets/m4/providers/gemini/generation.js'],
   ['src/features/chat/turn-policy.js', 'assets/m4/features/chat/turn-policy.js'],
   ['src/features/chat/conversation-service.js', 'assets/m4/features/chat/conversation-service.js'],
+  ['src/features/world-info/embedding-service.js', 'assets/m4/features/world-info/embedding-service.js'],
   ['src/features/world-info/smart-scan-service.js', 'assets/m4/features/world-info/smart-scan-service.js'],
   ['src/features/prompts/prompt-service.js', 'assets/m4/features/prompts/prompt-service.js'],
   ['src/features/chat/response-processor.js', 'assets/m4/features/chat/response-processor.js'],

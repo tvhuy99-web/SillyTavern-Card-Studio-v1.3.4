@@ -10,6 +10,7 @@
 - `src/features/chat/conversation-service.js`
 - `src/features/chat/response-processor.js`
 - `src/features/world-info/smart-scan-service.js`
+- `src/features/world-info/embedding-service.js`
 - `src/features/prompts/prompt-service.js`
 - `src/providers/common/generation-gateway.js`
 - `src/providers/common/generation-utils.js`
@@ -23,7 +24,7 @@
 The React bundle is now an adapter layer for the affected paths:
 
 - `sendMessage` delegates to `conversationService.send()`;
-- the World Info hook delegates Smart Scan selection to `smart-scan-service` and retains only React scanning-state wiring plus legacy output rendering;
+- the World Info hook delegates Smart Scan selection to `smart-scan-service`; semantic text-to-vector, provider selection, local-model lifecycle, and provider-scoped indexes are owned by `embedding-service`; React retains only scanning/status UI wiring plus legacy output rendering;
 - prompt construction for normal sends and Arena retries delegates to `prompt-service`;
 - AI response post-processing delegates to `response-processor`;
 - provider request construction, routing and streaming live under the generation gateway/providers.
@@ -34,6 +35,7 @@ The legacy low-level prompt primitives (`vd`/`xd`), regex/output renderer, World
 
 - no provider streaming parser lives inside React callbacks;
 - no Smart Scan semantic/LLM selection algorithm lives inside the React hook;
+- semantic vectors from different embedding providers are never mixed in the same active index;
 - no prompt assembly recipe lives inside send or Arena retry callbacks;
 - no integrated RPG response state transition lives inside the React hook;
 - no chat-turn snapshot cloning lives inside `sendMessage`;
@@ -47,5 +49,6 @@ The legacy low-level prompt primitives (`vd`/`xd`), regex/output renderer, World
 - `tests/m4-chat-turn-policy.mjs`
 - `tests/m4-conversation-service.mjs`
 - `tests/m4-smart-scan-service.mjs`
+- `tests/m4-embedding-service.mjs`
 - `tests/m4-prompt-service.mjs`
 - `tests/m4-response-processor.mjs`
