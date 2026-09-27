@@ -127,6 +127,16 @@ export function applyM5StateTransform(source) {
     "session snapshot owner", true);
 
   code = replaceOnce(code,
+    'M.current&&clearTimeout(M.current),L.current=U(),M.current=setTimeout(()=>{let e=L.current;L.current=null,M.current=null,e&&H(e).catch(e=>console.error("Auto-save failed:",e))},500)',
+    'M.current&&clearTimeout(M.current),L.current=!0,M.current=setTimeout(()=>{M.current=null;if(!L.current)return;L.current=null;let e=U();e&&H(e).catch(e=>console.error("Auto-save failed:",e))},500)',
+    "autosave defers snapshot creation");
+
+  code = replaceOnce(code,
+    '(0,b.useEffect)(()=>()=>{M.current&&clearTimeout(M.current),M.current=null;let e=L.current;L.current=null,e&&H(e).catch(e=>console.error("Final session save failed:",e))},[e,H])',
+    '(0,b.useEffect)(()=>()=>{let t=!!L.current;M.current&&clearTimeout(M.current),M.current=null,L.current=null;if(t){let t=U();t&&H(t).catch(e=>console.error("Final session save failed:",e))}},[e,U,H])',
+    "autosave final dirty flush");
+
+  code = replaceOnce(code,
     '[e,i,o,s,l,c,u,d,h,p,m,g,f,y,v,x,_,w,k,S,C,E,N,T,U,H]',
     '[e,i,o,s,l,c,u,d,h,p,m,g,f,y,v,_,w,k,S,C,E,N,U,H]',
     "autosave excludes diagnostics dependencies");
@@ -175,4 +185,4 @@ export function applyM5StateTransform(source) {
   return code;
 }
 
-export const M5_STATE_PATCH_COUNT = 37;
+export const M5_STATE_PATCH_COUNT = 39;
