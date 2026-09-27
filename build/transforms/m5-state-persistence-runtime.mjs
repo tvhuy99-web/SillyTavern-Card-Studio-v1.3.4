@@ -181,8 +181,22 @@ export function applyM5StateTransform(source) {
     'a.characterFileName=n,a.lastUpdated=Date.now(),a=__stsSessionPersistence.normalizeLoadedSession(a).record,__stsDiagnosticsState.drop(a.sessionId),await Wt(a),a.sessionId',
     "normalize imported session before persistence");
 
+  code = replaceOnce(code,
+    'h=(0,b.useCallback)(async n=>{let a=ol.getState();if(a.isLoading||a.isSummarizing)return console.warn("deleteMessage ignored because system is busy"),void r("error","system","Cannot delete message: System is busy (Loading or Summarizing).");try{',
+    'h=(0,b.useCallback)(async(n,__stsDeleteOptions={})=>{let a=ol.getState();if(a.isSummarizing||a.isLoading&&!__stsDeleteOptions.allowBusy)return console.warn("deleteMessage ignored because system is busy"),r("error","system","Cannot delete message: System is busy (Loading or Summarizing)."),!1;try{',
+    "rewind options and busy gate");
+
+  code = replaceOnce(code,
+    '),await e({messages:m,variables:g,lastStateBlock:b,longTermSummaries:w,summaryQueue:[],generatedLorebookEntries:y?rl(y):[]})}catch(e){',
+    '),!1!==__stsDeleteOptions.persist&&await e({messages:m,variables:g,lastStateBlock:b,longTermSummaries:w,summaryQueue:[],generatedLorebookEntries:y?rl(y):[]});return!0}catch(e){',
+    "rewind optional persistence");
+
+  code = replaceOnce(code,
+    'a&&i?(await w(a),await s(i,{forceActiveUids:r})):console.warn("Could not find a valid user message to regenerate from.")',
+    'a&&i?await s(i,{forceActiveUids:r,beforeTurn:async()=>!0===await w(a,{persist:!1,allowBusy:!0})}):console.warn("Could not find a valid user message to regenerate from.")',
+    "regenerate enters send busy state before rewind");
   if (!code.startsWith(M5_IMPORTS)) code = M5_IMPORTS + code;
   return code;
 }
 
-export const M5_STATE_PATCH_COUNT = 39;
+export const M5_STATE_PATCH_COUNT = 42;
