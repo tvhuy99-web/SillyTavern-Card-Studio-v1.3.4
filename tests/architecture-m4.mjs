@@ -77,6 +77,10 @@ assert.ok(embeddingService.includes('EmbeddingGemma 300M Q4 - Offline'), 'Embedd
 assert.ok(embeddingService.includes('Qwen3-Embedding 0.6B Q4 - Offline'), 'Qwen3 embedding option must be owned by embedding service');
 assert.ok(production.includes('__stsEmbeddingService.embedQuery'), 'semantic query embedding must route through the owned service');
 assert.ok(production.includes('__stsEmbeddingService.syncIndex'), 'semantic sync must route through the owned service');
+const conversationService = read('src/features/chat/conversation-service.js');
+assert.ok(conversationService.includes('await yieldToBrowser()'), 'send must yield so the busy UI can paint before heavy preparation');
+assert.ok(conversationService.includes("typeof options.beforeTurn === 'function'"), 'send must support retry preparation after entering busy state');
+assert.ok(conversationService.indexOf('deps.setLoading(true)') < conversationService.indexOf('deps.preprocessInput(rawContent, state)'), 'loading must be set before input preprocessing');
 assert.ok(!production.includes('[Integrated RPG] Detected'));
 assert.ok(!production.includes(',Vs=async('), 'legacy Proxy chat generator must be removed from production');
 assert.ok(!production.includes('.replace(/{{worldInfo}}/g,"")'), 'plain-text mode must not erase {{worldInfo}}');
