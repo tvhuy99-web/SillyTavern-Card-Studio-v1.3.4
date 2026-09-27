@@ -103,7 +103,49 @@ export function applyM6UiAccessibilityTransform(source) {
     'streaming message skips interactive regex pipeline',
   );
 
+  code = replaceExactlyOnce(
+    code,
+    'Zg=({content:e,isStreaming:t})=>{if(t)return(0,wt.jsxs)("div",{className:"whitespace-pre-wrap font-sans text-sm leading-relaxed",children:[e,(0,wt.jsx)("span",{className:" text-sky-400",children:"▍"})]});',
+    '__stsLiveStreamText=({messageId:e,slot:t="main",fallback:n=""})=>{let[r,a]=(0,b.useState)(()=>__stsLiveStreamStore.getSnapshot(e,t));return(0,b.useEffect)(()=>__stsLiveStreamStore.subscribe(e,t,()=>a(__stsLiveStreamStore.getSnapshot(e,t))),[e,t]),(0,wt.jsxs)("div",{className:"whitespace-pre-wrap font-sans text-sm leading-relaxed",children:[r.content||n,(0,wt.jsx)("span",{className:" text-sky-400",children:"▍"})]})},Zg=({content:e,isStreaming:t,messageId:n,slot:r="main"})=>{if(t)return(0,wt.jsx)(__stsLiveStreamText,{messageId:n,slot:r,fallback:e});',
+    'live stream text component',
+  );
+
+  code = replaceExactlyOnce(
+    code,
+    'ef=(0,b.memo)(({modelData:e,selection:t,colorClass:n,onSelect:r,onRetry:a})=>',
+    'ef=(0,b.memo)(({modelData:e,selection:t,colorClass:n,onSelect:r,onRetry:a,messageId:__stsMessageId})=>',
+    'arena renderer accepts live message id',
+  );
+
+  code = replaceExactlyOnce(
+    code,
+    '(0,wt.jsx)(Zg,{content:e.content,isStreaming:o})',
+    '(0,wt.jsx)(Zg,{content:e.content,isStreaming:o,messageId:__stsMessageId,slot:t})',
+    'arena renderer uses live stream store',
+  );
+
+  code = replaceExactlyOnce(
+    code,
+    '(0,wt.jsx)(ef,{modelData:e.arena.modelA,selection:"A",colorClass:"bg-sky-600 text-white",onSelect:t,onRetry:n})',
+    '(0,wt.jsx)(ef,{modelData:e.arena.modelA,selection:"A",colorClass:"bg-sky-600 text-white",onSelect:t,onRetry:n,messageId:e.id})',
+    'arena model A live key',
+  );
+
+  code = replaceExactlyOnce(
+    code,
+    '(0,wt.jsx)(ef,{modelData:e.arena.modelB,selection:"B",colorClass:"bg-purple-600 text-white",onSelect:t,onRetry:n})',
+    '(0,wt.jsx)(ef,{modelData:e.arena.modelB,selection:"B",colorClass:"bg-purple-600 text-white",onSelect:t,onRetry:n,messageId:e.id})',
+    'arena model B live key',
+  );
+
+  code = replaceExactlyOnce(
+    code,
+    'c?(0,wt.jsxs)("div",{className:"mes_text whitespace-pre-wrap font-sans text-sm leading-relaxed",children:[e.content,(0,wt.jsx)("span",{className:" text-sky-400",children:"▍"})]})',
+    'c?(0,wt.jsx)(__stsLiveStreamText,{messageId:e.id,slot:"main",fallback:e.content})',
+    'normal message uses isolated live stream store',
+  );
+
   return code;
 }
 
-export const M6_UI_ACCESSIBILITY_PATCH_COUNT = REPLACEMENTS.length + 9;
+export const M6_UI_ACCESSIBILITY_PATCH_COUNT = REPLACEMENTS.length + 15;
