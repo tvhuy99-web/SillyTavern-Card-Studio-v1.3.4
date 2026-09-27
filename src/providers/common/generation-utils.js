@@ -15,6 +15,70 @@ export function optionalPositiveInt(value, options = {}) {
   return Math.min(options.max ?? Infinity, integer);
 }
 
+export function optionalFiniteNumber(value, options = {}) {
+  if (value === null || value === undefined || value === '') return undefined;
+  const number = typeof value === 'number' ? value : Number(value);
+  if (!Number.isFinite(number)) return undefined;
+  if (number < (options.min ?? -Infinity)) return undefined;
+  if (number > (options.max ?? Infinity)) return undefined;
+  return number;
+}
+
+export function optionalNonNegativeInt(value, options = {}) {
+  if (value === null || value === undefined || value === '') return undefined;
+  const number = typeof value === 'number' ? value : Number(value);
+  if (!Number.isFinite(number)) return undefined;
+  const integer = Math.trunc(number);
+  const min = Math.max(0, Math.trunc(options.min ?? 0));
+  if (integer < min) return undefined;
+  return Math.min(options.max ?? Infinity, integer);
+}
+
+export function buildSamplerSettings(preset = {}, options = {}) {
+  const settings = {};
+  const topP = optionalFiniteNumber(preset.top_p, { min: 0, max: 1 });
+  const topK = optionalNonNegativeInt(preset.top_k);
+  const typicalP = optionalFiniteNumber(preset.typical_p, { min: 0, max: 1 });
+  const minP = optionalFiniteNumber(preset.min_p, { min: 0, max: 1 });
+  const repetitionPenalty = optionalFiniteNumber(
+    preset.repetition_penalty ?? preset.rep_pen,
+    { min: 0 },
+  );
+  const frequencyPenalty = optionalFiniteNumber(
+    preset.frequency_penalty,
+    { min: -2, max: 2 },
+  );
+  const presencePenalty = optionalFiniteNumber(
+    preset.presence_penalty,
+    { min: -2, max: 2 },
+  );
+
+  if (topP !== undefined) settings.top_p = topP;
+  if (options.includeTopK !== false && topK !== undefined) settings.top_k = topK;
+  if (options.includeTypicalP !== false && typicalP !== undefined) settings.typical_p = typicalP;
+  if (options.includeMinP !== false && minP !== undefined) settings.min_p = minP;
+  if (options.includeRepetitionPenalty !== false && repetitionPenalty !== undefined) {
+    settings.repetition_penalty = repetitionPenalty;
+  }
+  if (options.includeFrequencyPenalty !== false && frequencyPenalty !== undefined) {
+    settings.frequency_penalty = frequencyPenalty;
+  }
+  if (options.includePresencePenalty !== false && presencePenalty !== undefined) {
+    settings.presence_penalty = presencePenalty;
+  }
+  return settings;
+}
+
+export function buildGeminiSamplerSettings(preset = {}) {
+  const settings = buildSamplerSettings(preset);
+  const gemini = {};
+  if (settings.top_p !== undefined) gemini.topP = settings.top_p;
+  if (settings.top_k !== undefined && settings.top_k > 0) gemini.topK = settings.top_k;
+  if (settings.frequency_penalty !== undefined) gemini.frequencyPenalty = settings.frequency_penalty;
+  if (settings.presence_penalty !== undefined) gemini.presencePenalty = settings.presence_penalty;
+  return gemini;
+}
+
 export class SseDataBuffer {
   constructor() {
     this.buffer = '';
