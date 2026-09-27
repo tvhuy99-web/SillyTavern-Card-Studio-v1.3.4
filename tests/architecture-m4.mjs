@@ -101,11 +101,15 @@ assert.ok(
   'current_page_history preprocessing must use cooperative scheduling',
 );
 assert.ok(
-  production.includes('r=bd(n),a=S(r);a.trim()&&X.push('),
-  'current_page_history must always sanitize model content to story text',
+  production.includes('r=g?n:bd(n),a=S(r),i=a.trim()?'),
+  'current_page_history preprocessing must preserve the existing plain-mode/story-mode behavior',
 );
 assert.ok(
-  production.includes('(__stsPromptIndex&3)===3&&await new Promise(e=>setTimeout(e,0))'),
+  production.includes('__stsPromptRegexCache=new WeakMap'),
+  'prompt regex results must be cached within a prompt build',
+);
+assert.ok(
+  production.includes('__stsPromptIndex>0&&0===__stsPromptIndex%4&&await new Promise(e=>setTimeout(e,0))'),
   'prompt preprocessing must periodically yield to the browser',
 );
 assert.ok(
