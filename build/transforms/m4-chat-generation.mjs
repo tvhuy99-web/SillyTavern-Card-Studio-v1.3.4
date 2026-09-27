@@ -15,6 +15,11 @@ function replaceRange(source, startToken, endToken, replacement, label, keepEnd 
   return source.slice(0, start) + replacement + source.slice(keepEnd ? end : end + endToken.length);
 }
 
+function replaceOnce(source, oldText, newText, label) {
+  const index = findExactlyOnce(source, oldText, label);
+  return source.slice(0, index) + newText + source.slice(index + oldText.length);
+}
+
 function conversationServiceBootstrap() {
   return 'const __stsConversationService=__stsCreateConversationService({' +
     'getState:()=>ol.getState(),setError:e.setError,setLoading:e.setLoading,startTurn:a.startTurn,' +
@@ -77,7 +82,7 @@ export function applyM4ChatGenerationTransform(source) {
 
   code = replaceOnce(code,
     'j=async e=>{let t=[];for(let n of e){let e={...o,user:u},a=await fd(n.content,e,r,l);if(a=await yd(a,o,r,l),!a||!a.trim()&&!a.includes("[SYSTEM ERROR"))continue;a=S(a);let i=N.replace(/{{keys}}/g,(n.keys||[]).join(", ")).replace(/{{content}}/g,a.trim());t.push(i)}return t}',
-    'j=async e=>{let t=[],__stsWiIndex=0;for(let n of e){let e={...o,user:u},a=await fd(n.content,e,r,l);if(a=await yd(a,o,r,l),a&&(!a.trim()&&!a.includes("[SYSTEM ERROR")||(__stsWiIndex++,0===__stsWiIndex%4&&await new Promise(e=>setTimeout(e,0)),!1)))continue;if(!a)continue;a=S(a);let i=N.replace(/{{keys}}/g,(n.keys||[]).join(", ")).replace(/{{content}}/g,a.trim());t.push(i),__stsWiIndex++,0===__stsWiIndex%4&&await new Promise(e=>setTimeout(e,0))}return t}',
+    'j=async e=>{let t=[],__stsWiIndex=0;for(let n of e){let e={...o,user:u},a=await fd(n.content,e,r,l);a=await yd(a,o,r,l);if(a&&(!a.trim()&&!a.includes("[SYSTEM ERROR"))){__stsWiIndex++,0===__stsWiIndex%4&&await new Promise(e=>setTimeout(e,0));continue}if(!a){__stsWiIndex++,0===__stsWiIndex%4&&await new Promise(e=>setTimeout(e,0));continue}a=S(a);let i=N.replace(/{{keys}}/g,(n.keys||[]).join(", ")).replace(/{{content}}/g,a.trim());t.push(i),__stsWiIndex++,0===__stsWiIndex%4&&await new Promise(e=>setTimeout(e,0))}return t}',
     "prompt builder yields World Info entries");
 
   code = replaceOnce(code,
