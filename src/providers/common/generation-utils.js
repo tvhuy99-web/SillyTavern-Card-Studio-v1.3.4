@@ -149,6 +149,9 @@ export async function* readSseResponse(response, { signal, parseEvent }) {
   } catch (error) {
     if (signal?.aborted) return;
     throw error;
+  } finally {
+    try { await reader.cancel(); } catch {}
+    try { reader.releaseLock(); } catch {}
   }
 }
 

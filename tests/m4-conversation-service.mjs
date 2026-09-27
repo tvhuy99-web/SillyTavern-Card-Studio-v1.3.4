@@ -233,4 +233,43 @@ assert.equal(await conversation.send('scan failure fallback'), true);
 assert.ok(calls.logs.some(args => String(args[2]).includes('[World Info] Scan failed unexpectedly')));
 deps.scanWorldInfo = originalScan;
 
+state.messages = [];
+state.preset = { stream_response: true };
+state.isArenaMode = false;
+state.arenaModelId = null;
+state.loading = false;
+const originalGateway = deps.generationGateway;
+deps.generationGateway = {
+  async generateOnce() {
+    return { response: { text: 'unused' } };
+  },
+  async *stream() {
+    yield { text: 'FIRST' };
+    await new Promise(() => {});
+  },
+};
+const watchdogConversation = createConversationService({
+  ...deps,
+  streamFirstChunkTimeoutMs: 50,
+  streamIdleTimeoutMs: 20,
+  streamGapWarningMs: 5,
+});
+const errorsBeforeWatchdog = calls.errors.length;
+const logsBeforeWatchdog = calls.logs.length;
+assert.equal(await watchdogConversation.send('watchdog input'), false);
+assert.equal(state.messages.at(-1).content, 'FIRST');
+assert.equal(state.loading, false, 'stream timeout must unlock the UI');
+assert.equal(controllers.size, 0, 'stream timeout must release its abort controller');
+assert.ok(
+  calls.errors.slice(errorsBeforeWatchdog).some(value =>
+    String(value).includes('không nhận dữ liệu mới')),
+  'stream timeout must surface a useful error',
+);
+assert.ok(
+  calls.logs.slice(logsBeforeWatchdog).some(args =>
+    String(args[2]).includes('[STREAM]') && String(args[2]).includes('timeout')),
+  'stream timeout must be diagnosable from exported logs',
+);
+deps.generationGateway = originalGateway;
+
 console.log('M4 conversation service tests: OK');

@@ -89,7 +89,7 @@ assert.ok(conversationService.includes("deps.liveStream.clear"), 'live stream st
 assert.ok(!conversationService.includes("streamUpdateInterval"), 'conversation service must not throttle by mutating global messages');
 const liveStreamStore = read('src/features/chat/live-stream-store.js');
 assert.ok(liveStreamStore.includes('const snapshots = new Map()'), 'live stream store must own ephemeral snapshots');
-assert.ok(liveStreamStore.includes('setTimeout(flushPending, 60)'), 'live stream rendering must coalesce subscriber notifications');
+assert.ok(liveStreamStore.includes('setTimeout(flushPending, 100)'), 'live stream rendering must coalesce subscriber notifications at a mobile-safe paint cadence');
 assert.ok(conversationService.indexOf('deps.setLoading(true)') < conversationService.indexOf('deps.preprocessInput(rawContent, state)'), 'loading must be set before input preprocessing');
 assert.ok(!production.includes('[Integrated RPG] Detected'));
 assert.ok(!production.includes(',Vs=async('), 'legacy Proxy chat generator must be removed from production');
