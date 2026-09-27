@@ -106,7 +106,7 @@ export function applyM6UiAccessibilityTransform(source) {
   code = replaceExactlyOnce(
     code,
     'Zg=({content:e,isStreaming:t})=>{if(t)return(0,wt.jsxs)("div",{className:"whitespace-pre-wrap font-sans text-sm leading-relaxed",children:[e,(0,wt.jsx)("span",{className:" text-sky-400",children:"▍"})]});',
-    '__stsLiveStreamText=({messageId:e,slot:t="main",fallback:n=""})=>{let[r,a]=(0,b.useState)(()=>__stsLiveStreamStore.getSnapshot(e,t));return(0,b.useEffect)(()=>__stsLiveStreamStore.subscribe(e,t,()=>a(__stsLiveStreamStore.getSnapshot(e,t))),[e,t]),(0,wt.jsxs)("div",{className:"whitespace-pre-wrap font-sans text-sm leading-relaxed",children:[r.content||n,(0,wt.jsx)("span",{className:" text-sky-400",children:"▍"})]})},Zg=({content:e,isStreaming:t,messageId:n,slot:r="main"})=>{if(t)return(0,wt.jsx)(__stsLiveStreamText,{messageId:n,slot:r,fallback:e});',
+    '__stsLiveStreamText=({messageId:e,slot:t="main",fallback:n=""})=>{let[r,a]=(0,b.useState)(()=>__stsLiveStreamStore.getSnapshot(e,t));return(0,b.useEffect)(()=>__stsLiveStreamStore.subscribe(e,t,()=>a(__stsLiveStreamStore.getSnapshot(e,t))),[e,t]),(0,wt.jsxs)("div",{className:"whitespace-pre-wrap font-sans text-sm leading-relaxed",children:[r.content||n,(0,wt.jsx)("span",{className:" text-sky-400",children:"▍"})]})},Zg=({content:e,isStreaming:t,messageId:__stsMsgId,slot:__stsSlot="main"})=>{if(t)return(0,wt.jsx)(__stsLiveStreamText,{messageId:__stsMsgId,slot:__stsSlot,fallback:e});',
     'live stream text component',
   );
 
