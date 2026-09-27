@@ -64,6 +64,7 @@ const M4_DOMAIN_ASSETS = [
   ['../src/providers/gemini/generation.js', '../assets/m4/providers/gemini/generation.js'],
   ['../src/features/chat/turn-policy.js', '../assets/m4/features/chat/turn-policy.js'],
   ['../src/features/chat/conversation-service.js', '../assets/m4/features/chat/conversation-service.js'],
+  ['../src/features/chat/live-stream-store.js', '../assets/m4/features/chat/live-stream-store.js'],
   ['../src/features/world-info/embedding-service.js', '../assets/m4/features/world-info/embedding-service.js'],
   ['../src/features/world-info/smart-scan-service.js', '../assets/m4/features/world-info/smart-scan-service.js'],
   ['../src/features/prompts/prompt-service.js', '../assets/m4/features/prompts/prompt-service.js'],
