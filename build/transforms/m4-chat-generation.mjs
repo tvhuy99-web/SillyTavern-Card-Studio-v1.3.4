@@ -270,32 +270,6 @@ export function applyM4ChatGenerationTransform(source) {
     currentPageHistoryStoryOnly +
     code.slice(currentPageHistoryIndex + currentPageHistoryRawBranch.length);
 
-  const promptHistoryBlockingLoop =
-    'X=V.map(e=>{let t=K(e,W||g),n=Y(e,t),r=bd(n),a=S(r);return a.trim()?"user"===e.role?\`${u}: ${a}\`:"system"===e.role?\`System: ${a}\`:\`${x}: ${a}\`:null}).filter(Boolean);';
-  const promptHistoryCooperativeLoop =
-    'X=[];for(let __stsPromptIndex=0;__stsPromptIndex<V.length;__stsPromptIndex++){let e=V[__stsPromptIndex],t=K(e,W||g),n=Y(e,t),r=bd(n),a=S(r);a.trim()&&X.push("user"===e.role?\`${u}: ${a}\`:"system"===e.role?\`System: ${a}\`:\`${x}: ${a}\`);(__stsPromptIndex&3)===3&&await new Promise(e=>setTimeout(e,0))};';
-  const promptHistoryLoopIndex = findExactlyOnce(
-    code,
-    promptHistoryBlockingLoop,
-    'prompt history cooperative scheduling',
-  );
-  code = code.slice(0, promptHistoryLoopIndex) +
-    promptHistoryCooperativeLoop +
-    code.slice(promptHistoryLoopIndex + promptHistoryBlockingLoop.length);
-
-  const worldInfoBlockingLoop =
-    'j=async e=>{let t=[];for(let n of e){let e={...o,user:u},a=await fd(n.content,e,r,l);if(a=await yd(a,o,r,l),!a||!a.trim()&&!a.includes("[SYSTEM ERROR"))continue;a=S(a);let i=N.replace(/{{keys}}/g,(n.keys||[]).join(", ")).replace(/{{content}}/g,a.trim());t.push(i)}return t}';
-  const worldInfoCooperativeLoop =
-    'j=async e=>{let t=[],__stsWiIndex=0;for(let n of e){let e={...o,user:u},a=await fd(n.content,e,r,l);if(a=await yd(a,o,r,l),a&&(!a.trim()&&a.includes("[SYSTEM ERROR")||a.trim())){a=S(a);let i=N.replace(/{{keys}}/g,(n.keys||[]).join(", ")).replace(/{{content}}/g,a.trim());t.push(i)}(++__stsWiIndex&7)===0&&await new Promise(e=>setTimeout(e,0))}return t}';
-  const worldInfoLoopIndex = findExactlyOnce(
-    code,
-    worldInfoBlockingLoop,
-    'world info cooperative scheduling',
-  );
-  code = code.slice(0, worldInfoLoopIndex) +
-    worldInfoCooperativeLoop +
-    code.slice(worldInfoLoopIndex + worldInfoBlockingLoop.length);
-
   const runtimeChatMutation =
     'p=(0,b.useCallback)(async e=>{ol.getState().setMessages(e),await(n?.({messages:e}));let t=ol.getState();return Eh(e,t.persona?.name||"User",t.card?.name||"Character",!0)},[n])';
   const runtimeChatMutationReplacement =
@@ -337,4 +311,4 @@ export function applyM4ChatGenerationTransform(source) {
   return code;
 }
 
-export const M4_CHAT_GENERATION_PATCH_COUNT = 35;
+export const M4_CHAT_GENERATION_PATCH_COUNT = 33;
