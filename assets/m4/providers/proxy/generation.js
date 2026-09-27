@@ -1,8 +1,8 @@
 import {
+  buildSamplerSettings,
   clampNumber,
   networkLogId,
   openAiCompatibleError,
-  optionalPositiveInt,
   readSseResponse,
 } from '../common/generation-utils.js';
 
@@ -16,19 +16,15 @@ export function createProxyGenerationProvider(deps) {
   }
 
   function payload(model, prompt, preset, stream) {
-    const body = {
+    return {
       model,
       messages: [{ role: 'user', content: prompt }],
       temperature: clampNumber(preset.temp, 1, { min: 0, max: 2 }),
+      ...buildSamplerSettings(preset),
       max_tokens: Math.trunc(clampNumber(preset.max_tokens, 4096, { min: 1 })),
+      stop: preset.stopping_strings,
       stream,
     };
-    if (preset.top_p !== undefined) body.top_p = Number(preset.top_p);
-    if (preset.frequency_penalty !== undefined) body.frequency_penalty = Number(preset.frequency_penalty);
-    if (preset.presence_penalty !== undefined) body.presence_penalty = Number(preset.presence_penalty);
-    const topK = optionalPositiveInt(preset.top_k);
-    if (topK !== undefined) body.top_k = topK;
-    return body;
   }
 
   function requestInfo(model, prompt, preset, stream, override) {
