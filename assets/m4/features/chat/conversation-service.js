@@ -1,7 +1,8 @@
 export function createConversationService(deps) {
   const now = deps.now || (() => Date.now());
   const createAbortController = deps.createAbortController || (() => new AbortController());
-  const streamUpdateInterval = deps.streamUpdateInterval ?? 100;
+  const streamUpdateInterval = deps.streamUpdateInterval ?? 300;
+  const streamMinChars = deps.streamMinChars ?? 24;
   const yieldToBrowser = deps.yieldToBrowser || (() => new Promise(resolve => {
     if (typeof requestAnimationFrame === 'function') requestAnimationFrame(() => resolve());
     else setTimeout(resolve, 0);
@@ -89,14 +90,20 @@ export function createConversationService(deps) {
         prompt, preset, signal, model, source: provider, proxyConfig,
       });
       let lastPaint = now();
+      let lastPaintLength = 0;
       for await (const chunk of stream) {
         if (signal.aborted) break;
         content += chunk.text || '';
         const timestamp = now();
-        if (timestamp - lastPaint > streamUpdateInterval) {
+        const charDelta = content.length - lastPaintLength;
+        if (
+          timestamp - lastPaint >= streamUpdateInterval &&
+          charDelta >= streamMinChars
+        ) {
           updateArena(messageId, slot, (arena, side) =>
             deps.arenaState.withContent(arena, side, content));
           lastPaint = timestamp;
+          lastPaintLength = content.length;
         }
       }
       updateArena(messageId, slot, (arena, side) =>
