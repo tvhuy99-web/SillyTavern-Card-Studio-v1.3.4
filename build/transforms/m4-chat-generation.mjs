@@ -85,10 +85,7 @@ export function applyM4ChatGenerationTransform(source) {
     'j=async e=>{let t=[],__stsWiIndex=0;for(let n of e){let e={...o,user:u},a=await fd(n.content,e,r,l);a=await yd(a,o,r,l);if(a&&(!a.trim()&&!a.includes("[SYSTEM ERROR"))){__stsWiIndex++,0===__stsWiIndex%4&&await new Promise(e=>setTimeout(e,0));continue}if(!a){__stsWiIndex++,0===__stsWiIndex%4&&await new Promise(e=>setTimeout(e,0));continue}a=S(a);let i=N.replace(/{{keys}}/g,(n.keys||[]).join(", ")).replace(/{{content}}/g,a.trim());t.push(i),__stsWiIndex++,0===__stsWiIndex%4&&await new Promise(e=>setTimeout(e,0))}return t}',
     "prompt builder yields World Info entries");
 
-  code = replaceOnce(code,
-    'let K=(e,t=!1)=>t&&e.originalRawContent?e.originalRawContent:e.content&&e.content.trim()?e.content:e.originalRawContent||"",W="official-local"===Co()&&!g,J={user:u,char:x,bot:x,first_mes:r.first_mes||"",persona:f,persona_description:f},Y=(e,t)=>{if(!W)return t;let n=b.indexOf(e),a=n>=0?Math.max(0,b.length-1-n):void 0,i="user"===e.role?[1]:[2];return gd(t,r.extensions?.regex_scripts||[],i,{engineMode:"official-local",isMarkdown:!1,isPrompt:!0,depth:a,...Zu(void 0,m),macros:J}).displayContent},X=V.map(e=>{let t=K(e,W||g),n=Y(e,t),r=g?n:bd(n),a=S(r);return a.trim()?"user"===e.role?`${u}: ${a}`:"system"===e.role?`System: ${a}`:`${x}: ${a}`:null}).filter(Boolean)',
-    'let K=(e,t=!1)=>t&&e.originalRawContent?e.originalRawContent:e.content&&e.content.trim()?e.content:e.originalRawContent||"",W="official-local"===Co()&&!g,J={user:u,char:x,bot:x,first_mes:r.first_mes||"",persona:f,persona_description:f},__stsPromptRegexCache=new WeakMap,Y=(e,t)=>{if(!W)return t;let n=b.indexOf(e),a=n>=0?Math.max(0,b.length-1-n):void 0,i=__stsPromptRegexCache.get(e);if(i&&i.source===t&&i.depth===a)return i.value;let o="user"===e.role?[1]:[2],s=gd(t,r.extensions?.regex_scripts||[],o,{engineMode:"official-local",isMarkdown:!1,isPrompt:!0,depth:a,...Zu(void 0,m),macros:J}).displayContent;return __stsPromptRegexCache.set(e,{source:t,depth:a,value:s}),s},X=[];for(let __stsPromptIndex=0;__stsPromptIndex<V.length;__stsPromptIndex++){let e=V[__stsPromptIndex],t=K(e,W||g),n=Y(e,t),r=g?n:bd(n),a=S(r),i=a.trim()?"user"===e.role?`${u}: ${a}`:"system"===e.role?`System: ${a}`:`${x}: ${a}`:null;i&&X.push(i),__stsPromptIndex>0&&0===__stsPromptIndex%4&&await new Promise(e=>setTimeout(e,0))}',
-    "prompt builder yields history chunks");
+
 
   const legacySmartScanDefaults = 'Jo={enabled:!0,mode:"hybrid_fast",model:"gemini-3-flash-preview",depth:6,max_entries:20,aiStickyDuration:5,system_prompt:"",scan_strategy:"efficient",semantic_threshold:.7,max_semantic_entries:20,embedding_batch_size:30}';
   const embeddingSmartScanDefaults = 'Jo={enabled:!0,mode:"hybrid_fast",model:"gemini-3-flash-preview",depth:6,max_entries:20,aiStickyDuration:5,system_prompt:"",scan_strategy:"efficient",embedding_provider:"gemini",semantic_threshold:.7,max_semantic_entries:20,embedding_batch_size:30}';
@@ -270,6 +267,18 @@ export function applyM4ChatGenerationTransform(source) {
     currentPageHistoryStoryOnly +
     code.slice(currentPageHistoryIndex + currentPageHistoryRawBranch.length);
 
+  const promptRegexUncached =
+    'Y=(e,t)=>{if(!W)return t;let n=b.indexOf(e),a=n>=0?Math.max(0,b.length-1-n):void 0,i="user"===e.role?[1]:[2];return gd(t,r.extensions?.regex_scripts||[],i,{engineMode:"official-local",isMarkdown:!1,isPrompt:!0,depth:a,...Zu(void 0,m),macros:J}).displayContent}';
+  const promptRegexCached =
+    '__stsPromptRegexCache=new WeakMap,Y=(e,t)=>{if(!W)return t;let n=b.indexOf(e),a=n>=0?Math.max(0,b.length-1-n):void 0,i=__stsPromptRegexCache.get(e);if(i&&i.source===t&&i.depth===a)return i.value;let o="user"===e.role?[1]:[2],s=gd(t,r.extensions?.regex_scripts||[],o,{engineMode:"official-local",isMarkdown:!1,isPrompt:!0,depth:a,...Zu(void 0,m),macros:J}).displayContent;return __stsPromptRegexCache.set(e,{source:t,depth:a,value:s}),s}';
+  code = replaceOnce(code, promptRegexUncached, promptRegexCached, 'prompt regex per-build cache');
+
+  const promptHistoryBlockingLoop =
+    'X=V.map(e=>{let t=K(e,W||g),n=Y(e,t),r=bd(n),a=S(r);return a.trim()?"user"===e.role?\`${u}: ${a}\`:"system"===e.role?\`System: ${a}\`:\`${x}: ${a}\`:null}).filter(Boolean)';
+  const promptHistoryCooperativeLoop =
+    'X=[];for(let __stsPromptIndex=0;__stsPromptIndex<V.length;__stsPromptIndex++){let e=V[__stsPromptIndex],t=K(e,W||g),n=Y(e,t),r=bd(n),a=S(r),i=a.trim()?"user"===e.role?\`${u}: ${a}\`:"system"===e.role?\`System: ${a}\`:\`${x}: ${a}\`:null;i&&X.push(i),__stsPromptIndex>0&&0===__stsPromptIndex%4&&await new Promise(e=>setTimeout(e,0))}';
+  code = replaceOnce(code, promptHistoryBlockingLoop, promptHistoryCooperativeLoop, 'prompt history cooperative scheduling');
+
   const runtimeChatMutation =
     'p=(0,b.useCallback)(async e=>{ol.getState().setMessages(e),await(n?.({messages:e}));let t=ol.getState();return Eh(e,t.persona?.name||"User",t.card?.name||"Character",!0)},[n])';
   const runtimeChatMutationReplacement =
@@ -311,4 +320,4 @@ export function applyM4ChatGenerationTransform(source) {
   return code;
 }
 
-export const M4_CHAT_GENERATION_PATCH_COUNT = 33;
+export const M4_CHAT_GENERATION_PATCH_COUNT = 34;
