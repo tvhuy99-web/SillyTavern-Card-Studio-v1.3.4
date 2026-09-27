@@ -547,7 +547,12 @@ export function createEmbeddingService(deps) {
 
     let complete = searchable.length - pending.length;
     onProgress?.(complete, searchable.length);
-    const batchSize = config.embedding_batch_size || 30;
+    const requestedBatchSize = config.embedding_batch_size || 30;
+    const batchSize = provider.id === 'qwen3'
+      ? Math.min(requestedBatchSize, 4)
+      : provider.id === 'embeddinggemma'
+        ? Math.min(requestedBatchSize, 8)
+        : requestedBatchSize;
 
     for (let offset = 0; offset < pending.length; offset += batchSize) {
       const group = pending.slice(offset, offset + batchSize);
