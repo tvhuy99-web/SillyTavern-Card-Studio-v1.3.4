@@ -128,7 +128,7 @@ export function applyM5StateTransform(source) {
 
   code = replaceOnce(code,
     'M.current&&clearTimeout(M.current),L.current=U(),M.current=setTimeout(()=>{let e=L.current;L.current=null,M.current=null,e&&H(e).catch(e=>console.error("Auto-save failed:",e))},500)',
-    'M.current&&clearTimeout(M.current),L.current=!0,M.current=setTimeout(()=>{M.current=null;if(!L.current)return;L.current=null;let e=U();e&&H(e).catch(e=>console.error("Auto-save failed:",e))},500)',
+    'M.current&&clearTimeout(M.current),L.current=!0,M.current=setTimeout(function __stsFlushAutosave(){if(__stsRuntimeState.isBusy()||ol.getState().isLoading){M.current=setTimeout(__stsFlushAutosave,750);return}M.current=null;if(!L.current)return;L.current=null;let e=U();e&&H(e).catch(e=>console.error("Auto-save failed:",e))},500)',
     "autosave defers snapshot creation");
 
   code = replaceOnce(code,
