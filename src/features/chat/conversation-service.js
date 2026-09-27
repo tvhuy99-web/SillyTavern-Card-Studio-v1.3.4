@@ -2,6 +2,10 @@ export function createConversationService(deps) {
   const now = deps.now || (() => Date.now());
   const createAbortController = deps.createAbortController || (() => new AbortController());
   const streamUpdateInterval = deps.streamUpdateInterval ?? 100;
+  const yieldToBrowser = deps.yieldToBrowser || (() => new Promise(resolve => {
+    if (typeof requestAnimationFrame === 'function') requestAnimationFrame(() => resolve());
+    else setTimeout(resolve, 0);
+  }));
 
   function updateArena(messageId, slot, updater) {
     const message = deps.getState().messages.find(item => item.id === messageId);
@@ -192,26 +196,38 @@ export function createConversationService(deps) {
   }
 
   async function send(rawContent, options = {}) {
-    const state = deps.getState();
-    if (!state.card || !state.preset || !String(rawContent ?? '').trim()) return;
-    const content = deps.preprocessInput(rawContent, state);
-    if (!String(content ?? '').trim()) return;
+    const initialState = deps.getState();
+    if (!initialState.card || !initialState.preset || !String(rawContent ?? '').trim()) return;
 
     deps.setError(null);
     deps.setLoading(true);
-    deps.startTurn();
     const controller = createAbortController();
     deps.addAbortController(controller);
 
-    const turn = deps.turnPolicy.beginTurn({
-      state,
-      content,
-      sequence: deps.nextSequence(state.messages),
-    });
-    deps.addMessage(turn.userMessage);
-
     let succeeded = true;
     try {
+      // Let React/Zustand paint the busy state before preprocessing, rewind work,
+      // state snapshots, Smart Scan, or prompt construction can occupy the main thread.
+      await yieldToBrowser();
+      if (controller.signal.aborted) return false;
+
+      if (typeof options.beforeTurn === 'function') {
+        await options.beforeTurn({ signal: controller.signal });
+        if (controller.signal.aborted) return false;
+      }
+
+      const state = deps.getState();
+      const content = deps.preprocessInput(rawContent, state);
+      if (!String(content ?? '').trim()) return false;
+
+      deps.startTurn();
+      const turn = deps.turnPolicy.beginTurn({
+        state,
+        content,
+        sequence: deps.nextSequence(state.messages),
+      });
+      deps.addMessage(turn.userMessage);
+
       const { scan, generatedEntries } = await scanWorldInfo(
         state, content, options, turn,
       );
@@ -228,6 +244,7 @@ export function createConversationService(deps) {
       const message = deps.createPlaceholderMessage('model');
       message.rpgState = turn.rpgState;
       message.worldInfoRuntime = scan.updatedRuntimeState;
+      message.worldInfoState = turn.worldInfoState;
       message.rpgSnapshot = prompt.rpgSnapshot;
       message.activeLorebookUids = scan.activeEntries
         .map(entry => entry.uid)
