@@ -56,6 +56,13 @@ assert.ok(production.includes('n.chatHistory[0]={...n.chatHistory[0],contextStat
 assert.ok(production.includes('let arenaStateHealed=__stsLoaded.needsRewrite||__stsVariablesHealed'));
 assert.ok(production.includes('__stsMergeInitialVariableSources({},t?.char_book?.entries||[],String(t?.first_mes||""),e=>jt.default.parse(e))'));
 assert.ok(!production.includes('e.comment?.includes("[InitVar]")'));
+assert.ok(!production.includes('L.current=U(),M.current=setTimeout'), 'autosave must not build snapshots eagerly on every state change');
+assert.ok(production.includes('L.current=!0,M.current=setTimeout(function __stsFlushAutosave()'), 'autosave must mark dirty and defer snapshot creation');
+assert.ok(production.includes('__stsRuntimeState.isBusy()||ol.getState().isLoading'), 'autosave must not serialize the full session while generation is busy');
+assert.ok(production.includes('arenaRetry.arena}),n.setLoading(!0);await new Promise'), 'Arena retry must paint its busy state before rebuilding the prompt');
+assert.ok(production.includes('let e=U();e&&H(e).catch(e=>console.error("Auto-save failed:",e))'), 'debounced autosave must build one fresh snapshot at flush time');
+assert.ok(production.includes('beforeTurn:async()=>!0===await w(a,{persist:!1,allowBusy:!0})'), 'regenerate must rewind inside the visible send busy state without an intermediate DB save');
+assert.ok(production.includes('__stsDeleteOptions.persist'), 'rewind must support skipping the intermediate persistence write');
 
 assert.ok(
   production.includes('originalRawContent:s,contextState:JSON.parse(JSON.stringify(g)),timestamp:Date.now()'),

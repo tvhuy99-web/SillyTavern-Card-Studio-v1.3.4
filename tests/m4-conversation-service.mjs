@@ -63,7 +63,11 @@ const deps = {
     },
   },
   nextSequence: messages => messages.filter(message => message.role === 'user').length + 1,
-  preprocessInput: value => value.trim(),
+  yieldToBrowser: async () => { calls.yields = (calls.yields || 0) + 1; },
+  preprocessInput: value => {
+    calls.preprocessSawLoading = state.loading;
+    return value.trim();
+  },
   async scanWorldInfo() {
     return {
       activeEntries: [{ uid: 'lore-1' }],
@@ -142,6 +146,8 @@ const deps = {
 const conversation = createConversationService(deps);
 
 assert.equal(await conversation.send(' hello '), true);
+assert.equal(calls.preprocessSawLoading, true, 'busy state must be set before preprocessing');
+assert.equal(calls.yields, 1, 'send must yield once so the busy state can paint');
 assert.equal(state.messages.length, 2);
 assert.equal(state.messages[0].content, 'hello');
 assert.equal(state.messages[1].content, 'AI');
@@ -154,8 +160,21 @@ assert.equal(calls.processed.at(-1).forced, false);
 assert.equal(controllers.size, 0);
 assert.equal(state.loading, false);
 
+let beforeTurnSawLoading = false;
+assert.equal(await conversation.send('prepared input', {
+  beforeTurn: async ({ signal }) => {
+    beforeTurnSawLoading = state.loading;
+    assert.equal(signal.aborted, false);
+  },
+}), true);
+assert.equal(beforeTurnSawLoading, true, 'retry preparation must run under the visible busy state');
+assert.equal(calls.yields, 2, 'each send must yield before heavy preparation');
+assert.equal(state.messages.at(-1).content, 'AI');
+assert.equal(state.loading, false);
+assert.equal(calls.prompt, 2);
+
 assert.equal(await conversation.send('forced input', { forcedContent: 'FORCED' }), true);
-assert.equal(calls.prompt, 1);
+assert.equal(calls.prompt, 2);
 assert.equal(calls.processed.at(-1).content, 'FORCED');
 assert.equal(calls.processed.at(-1).forced, true);
 

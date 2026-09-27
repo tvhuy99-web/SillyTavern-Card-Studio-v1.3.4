@@ -15,6 +15,11 @@ function replaceRange(source, startToken, endToken, replacement, label, keepEnd 
   return source.slice(0, start) + replacement + source.slice(keepEnd ? end : end + endToken.length);
 }
 
+function replaceOnce(source, oldText, newText, label) {
+  const index = findExactlyOnce(source, oldText, label);
+  return source.slice(0, index) + newText + source.slice(index + oldText.length);
+}
+
 function conversationServiceBootstrap() {
   return 'const __stsConversationService=__stsCreateConversationService({' +
     'getState:()=>ol.getState(),setError:e.setError,setLoading:e.setLoading,startTurn:a.startTurn,' +
@@ -24,7 +29,7 @@ function conversationServiceBootstrap() {
     'turnPolicy:__stsChatTurnPolicy,nextSequence:gh,' +
     'preprocessInput:(t,s)=>s.visualState.disableInteractiveMode?t:gd(t,s.card.extensions?.regex_scripts||[],[1],{isMarkdown:!1,isPrompt:!0,depth:0,...Zu(s.extensionSettings,s.preset),macros:{char:s.card.name,bot:s.card.name,user:s.persona?.name||"User"}}).displayContent,' +
     'scanWorldInfo:i,logSmartScan:a.logSmartScan,logSelection:a.logSelection,' +
-    'buildPrompt:sts=>__stsBuildConversationPrompt(sts,{lorebooks:r,buildBaseSections:vd,getSummaryChunkSize:()=>os().summarization_chunk_size||12,buildPromptCore:xd}),' +
+    'buildPrompt:sts=>__stsBuildConversationPrompt(sts,{lorebooks:r,buildBaseSections:vd,getSummaryChunkSize:()=>os().summarization_chunk_size||12,buildPromptCore:xd,onTiming:e=>{e.totalMs>=500&&a.logSystemMessage("warn","performance",\`[PERF] Prompt build ${Math.round(e.totalMs)}ms (core ${Math.round(e.coreMs)}ms, ${e.messageCount} messages, ${e.characterCount} chars).\`)}}),' +
     'logPrompt:a.logPrompt,createPlaceholderMessage:n,getConnectionSettings:ns,getProxyProfiles:cs,' +
     'arenaState:__stsArenaState,generationGateway:__stsGenerationGateway,processAIResponse:g,playSound:u,' +
     'logSystemMessage:a.logSystemMessage,runtimeSize:()=>__stsRuntimeState.size()});';
@@ -73,6 +78,13 @@ export function applyM4ChatGenerationTransform(source) {
   const generationEnd = code.indexOf('}var Ed=', generationStart);
   if (generationEnd < 0) throw new Error('[M4 chat/generation] generation gateway/end token not found');
   code = code.slice(0, generationStart) + generationBootstrap + code.slice(generationEnd + 1);
+
+
+  code = replaceOnce(code,
+    'j=async e=>{let t=[];for(let n of e){let e={...o,user:u},a=await fd(n.content,e,r,l);if(a=await yd(a,o,r,l),!a||!a.trim()&&!a.includes("[SYSTEM ERROR"))continue;a=S(a);let i=N.replace(/{{keys}}/g,(n.keys||[]).join(", ")).replace(/{{content}}/g,a.trim());t.push(i)}return t}',
+    'j=async e=>{let t=[],__stsWiIndex=0;for(let n of e){let e={...o,user:u},a=await fd(n.content,e,r,l);a=await yd(a,o,r,l);if(a&&(!a.trim()&&!a.includes("[SYSTEM ERROR"))){__stsWiIndex++,0===__stsWiIndex%4&&await new Promise(e=>setTimeout(e,0));continue}if(!a){__stsWiIndex++,0===__stsWiIndex%4&&await new Promise(e=>setTimeout(e,0));continue}a=S(a);let i=N.replace(/{{keys}}/g,(n.keys||[]).join(", ")).replace(/{{content}}/g,a.trim());t.push(i),__stsWiIndex++,0===__stsWiIndex%4&&await new Promise(e=>setTimeout(e,0))}return t}',
+    "prompt builder yields World Info entries");
+
 
 
   const legacySmartScanDefaults = 'Jo={enabled:!0,mode:"hybrid_fast",model:"gemini-3-flash-preview",depth:6,max_entries:20,aiStickyDuration:5,system_prompt:"",scan_strategy:"efficient",semantic_threshold:.7,max_semantic_entries:20,embedding_batch_size:30}';
@@ -157,7 +169,7 @@ export function applyM4ChatGenerationTransform(source) {
 
   const retryPromptStart = 'let h,p=d.filter(e=>e.uid&&o.includes(e.uid)),m={name:"Session Generated",book:{entries:n.generatedLorebookEntries||[]}},g=[...r,m],{baseSections:f}=vd(n.card,n.preset,0,n.persona),y=os().summarization_chunk_size||12,b=await xd(f,i,n.authorNote,n.card,n.longTermSummaries,y,n.variables,n.lastStateBlock,g,n.preset.context_mode||"standard",n.persona?.name||"User",n.worldInfoState,p,n.worldInfoPlacement,n.preset,n.visualState.disableInteractiveMode,n.persona?.description||""),v=""';
   const retryPromptReplacement =
-    'let h,p=d.filter(e=>e.uid&&o.includes(e.uid)),b=await __stsBuildConversationPrompt({state:n,messages:i,activeEntries:p,generatedEntries:n.generatedLorebookEntries||[]},{lorebooks:r,buildBaseSections:vd,getSummaryChunkSize:()=>os().summarization_chunk_size||12,buildPromptCore:xd});' +
+    'let h,p=d.filter(e=>e.uid&&o.includes(e.uid)),b=await __stsBuildConversationPrompt({state:n,messages:i,activeEntries:p,generatedEntries:n.generatedLorebookEntries||[]},{lorebooks:r,buildBaseSections:vd,getSummaryChunkSize:()=>os().summarization_chunk_size||12,buildPromptCore:xd,onTiming:e=>{e.totalMs>=500&&qu("warn","performance",\`[PERF] Arena retry prompt build ${Math.round(e.totalMs)}ms (core ${Math.round(e.coreMs)}ms, ${e.messageCount} messages, ${e.characterCount} chars).\`)}});' +
     'b?.updatedVariables&&n.setSessionData({variables:b.updatedVariables});' +
     'if(b?.updatedGlobalVariables){let e=__stsWriteGlobalVariables(b.updatedGlobalVariables);try{Wh({type:"CARD_RUNTIME_STATE_UPDATE",payload:{variableScopes:{global:e}}})}catch{}}' +
     'let v=""';
@@ -255,6 +267,18 @@ export function applyM4ChatGenerationTransform(source) {
     currentPageHistoryStoryOnly +
     code.slice(currentPageHistoryIndex + currentPageHistoryRawBranch.length);
 
+  const promptRegexUncached =
+    'Y=(e,t)=>{if(!W)return t;let n=b.indexOf(e),a=n>=0?Math.max(0,b.length-1-n):void 0,i="user"===e.role?[1]:[2];return gd(t,r.extensions?.regex_scripts||[],i,{engineMode:"official-local",isMarkdown:!1,isPrompt:!0,depth:a,...Zu(void 0,m),macros:J}).displayContent}';
+  const promptRegexCached =
+    '__stsPromptRegexCache=new WeakMap,Y=(e,t)=>{if(!W)return t;let n=b.indexOf(e),a=n>=0?Math.max(0,b.length-1-n):void 0,i=__stsPromptRegexCache.get(e);if(i&&i.source===t&&i.depth===a)return i.value;let o="user"===e.role?[1]:[2],s=gd(t,r.extensions?.regex_scripts||[],o,{engineMode:"official-local",isMarkdown:!1,isPrompt:!0,depth:a,...Zu(void 0,m),macros:J}).displayContent;return __stsPromptRegexCache.set(e,{source:t,depth:a,value:s}),s}';
+  code = replaceOnce(code, promptRegexUncached, promptRegexCached, 'prompt regex per-build cache');
+
+  const promptHistoryBlockingLoop =
+    'X=V.map(e=>{let t=K(e,W||g),n=Y(e,t),r=bd(n),a=S(r);return a.trim()?"user"===e.role?\`${u}: ${a}\`:"system"===e.role?\`System: ${a}\`:\`${x}: ${a}\`:null}).filter(Boolean)';
+  const promptHistoryCooperativeLoop =
+    'X=[];for(let __stsPromptIndex=0;__stsPromptIndex<V.length;__stsPromptIndex++){let e=V[__stsPromptIndex],t=K(e,W||g),n=Y(e,t),r=bd(n),a=S(r),i=a.trim()?"user"===e.role?\`${u}: ${a}\`:"system"===e.role?\`System: ${a}\`:\`${x}: ${a}\`:null;i&&X.push(i),__stsPromptIndex>0&&0===__stsPromptIndex%4&&await new Promise(e=>setTimeout(e,0))}';
+  code = replaceOnce(code, promptHistoryBlockingLoop, promptHistoryCooperativeLoop, 'prompt history cooperative scheduling');
+
   const runtimeChatMutation =
     'p=(0,b.useCallback)(async e=>{ol.getState().setMessages(e),await(n?.({messages:e}));let t=ol.getState();return Eh(e,t.persona?.name||"User",t.card?.name||"Character",!0)},[n])';
   const runtimeChatMutationReplacement =
@@ -296,4 +320,4 @@ export function applyM4ChatGenerationTransform(source) {
   return code;
 }
 
-export const M4_CHAT_GENERATION_PATCH_COUNT = 31;
+export const M4_CHAT_GENERATION_PATCH_COUNT = 34;

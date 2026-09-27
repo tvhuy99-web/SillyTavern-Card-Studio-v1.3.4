@@ -77,6 +77,13 @@ assert.ok(embeddingService.includes('EmbeddingGemma 300M Q4 - Offline'), 'Embedd
 assert.ok(embeddingService.includes('Qwen3-Embedding 0.6B Q4 - Offline'), 'Qwen3 embedding option must be owned by embedding service');
 assert.ok(production.includes('__stsEmbeddingService.embedQuery'), 'semantic query embedding must route through the owned service');
 assert.ok(production.includes('__stsEmbeddingService.syncIndex'), 'semantic sync must route through the owned service');
+const promptService = read('src/features/prompts/prompt-service.js');
+assert.ok(promptService.includes('await yieldToBrowser()'), 'prompt service must yield before legacy prompt-core preprocessing');
+assert.ok(promptService.includes('const modelContextCache = new WeakMap()'), 'prompt service must cache sanitized model history by message identity');
+const conversationService = read('src/features/chat/conversation-service.js');
+assert.ok(conversationService.includes('await yieldToBrowser()'), 'send must yield so the busy UI can paint before heavy preparation');
+assert.ok(conversationService.includes("typeof options.beforeTurn === 'function'"), 'send must support retry preparation after entering busy state');
+assert.ok(conversationService.indexOf('deps.setLoading(true)') < conversationService.indexOf('deps.preprocessInput(rawContent, state)'), 'loading must be set before input preprocessing');
 assert.ok(!production.includes('[Integrated RPG] Detected'));
 assert.ok(!production.includes(',Vs=async('), 'legacy Proxy chat generator must be removed from production');
 assert.ok(!production.includes('.replace(/{{worldInfo}}/g,"")'), 'plain-text mode must not erase {{worldInfo}}');
@@ -90,8 +97,20 @@ assert.ok(production.includes('__stsChatTurnPolicy.compactModelMessages(e,{keepL
 assert.ok(production.includes('chat_history:n.messages.map(e=>`[${e.role}] ${__stsChatTurnPolicy.modelContextContent(e)}`).join("\\n")'));
 assert.ok(!production.includes('chat_history:n.messages.map(e=>`[${e.role}] ${e.content}`).join("\\n")'));
 assert.ok(
-  production.includes('X=V.map(e=>{let t=K(e,W||g),n=Y(e,t),r=bd(n),a=S(r);'),
-  'current_page_history must always sanitize model content to story text',
+  production.includes('X=[];for(let __stsPromptIndex=0;__stsPromptIndex<V.length;__stsPromptIndex++)'),
+  'current_page_history preprocessing must use cooperative scheduling',
+);
+assert.ok(
+  production.includes('r=bd(n),a=S(r),i=a.trim()?'),
+  'current_page_history preprocessing must keep story-only sanitization while yielding cooperatively',
+);
+assert.ok(
+  production.includes('__stsPromptRegexCache=new WeakMap'),
+  'prompt regex results must be cached within a prompt build',
+);
+assert.ok(
+  production.includes('__stsPromptIndex>0&&0===__stsPromptIndex%4&&await new Promise(e=>setTimeout(e,0))'),
+  'prompt preprocessing must periodically yield to the browser',
 );
 assert.ok(
   !production.includes('X=V.map(e=>{let t=K(e,W||g),n=Y(e,t),r=g?n:bd(n),a=S(r);'),
