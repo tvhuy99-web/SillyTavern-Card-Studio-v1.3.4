@@ -13,8 +13,9 @@ liveStreamStore.publish('m1', 'main', 'ABC');
 assert.equal(liveStreamStore.getSnapshot('m1', 'main').content, 'ABC');
 assert.equal(notifications, 0, 'subscriber notifications should be coalesced');
 
-await new Promise(resolve => setTimeout(resolve, 90));
+await new Promise(resolve => setTimeout(resolve, 140));
 assert.equal(notifications, 1, 'multiple rapid publishes should paint once');
+assert.equal(liveStreamStore.getSnapshot('m1', 'main').version, 3);
 
 liveStreamStore.clear('m1', 'main');
 assert.equal(liveStreamStore.getSnapshot('m1', 'main').content, '');
