@@ -1,7 +1,8 @@
 export function createConversationService(deps) {
   const now = deps.now || (() => Date.now());
   const createAbortController = deps.createAbortController || (() => new AbortController());
-  const streamUpdateInterval = deps.streamUpdateInterval ?? 100;
+  const streamUpdateInterval = deps.streamUpdateInterval ?? 300;
+  const streamMinChars = deps.streamMinChars ?? 24;
   const yieldToBrowser = deps.yieldToBrowser || (() => new Promise(resolve => {
     if (typeof requestAnimationFrame === 'function') requestAnimationFrame(() => resolve());
     else setTimeout(resolve, 0);
