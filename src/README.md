@@ -7,7 +7,7 @@ Current owned areas:
 - `providers/proxy/`: proxy metadata/credential persistence and chat generation;
 - `providers/openrouter/` + `providers/gemini/` + `providers/common/`: source-owned chat generation gateway;
 - `features/chat/`: chat-turn policy, conversation orchestration and AI/RPG response processing;
-- `features/world-info/` + `features/prompts/`: Smart Scan selection and prompt orchestration;
+- `features/world-info/` + `features/prompts/`: Smart Scan selection, multi-provider semantic embedding/index ownership, and prompt orchestration;
 - `features/arena/`: Arena state-machine and retry/result invariants;
 - `app/state/` + `app/persistence/`: runtime-state and persistent-session ownership;
 - `diagnostics/`: diagnostics-only bounded state and source-owned Gemini model-list diagnostics;
