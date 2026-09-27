@@ -82,6 +82,11 @@ export function applyM5StateTransform(source) {
     "arena retry descriptor", false);
 
   code = replaceOnce(code,
+    'n.updateMessage(e,{arena:arenaRetry.arena}),n.setLoading(!0);let u=new AbortController;n.addAbortController(u);',
+    'n.updateMessage(e,{arena:arenaRetry.arena}),n.setLoading(!0);await new Promise(e=>"function"==typeof requestAnimationFrame?requestAnimationFrame(()=>e()):setTimeout(e,0));let u=new AbortController;n.addAbortController(u);',
+    "arena retry paint busy state");
+
+  code = replaceOnce(code,
     'if("proxy"===l&&arenaProfileId){let e=cs().find(e=>e.id===arenaProfileId);if(!e)throw Error(\`Cấu hình Proxy Arena không còn tồn tại: ${arenaProfileId}\`);h={url:e.url,password:e.password,legacyMode:e.legacyMode}}',
     'h=__stsArenaState.resolveProxyConfig(l,arenaProfileId,cs());',
     "arena retry proxy");
@@ -101,6 +106,26 @@ export function applyM5StateTransform(source) {
     'let r={...t.arena,[c]:{...t.arena[c],completed:!0}};n.updateMessage(e,{arena:r})',
     'n.updateMessage(e,{arena:__stsArenaState.complete(t.arena,c)})',
     "arena retry complete");
+
+  code = replaceOnce(code,
+    'g=JSON.parse(JSON.stringify(m[e].contextState)),f=!0',
+    'g="function"==typeof structuredClone?structuredClone(m[e].contextState):JSON.parse(JSON.stringify(m[e].contextState)),f=!0',
+    "rewind variable snapshot clone");
+
+  code = replaceOnce(code,
+    'e.rpgState&&(y=JSON.parse(JSON.stringify(e.rpgState)))',
+    'e.rpgState&&(y="function"==typeof structuredClone?structuredClone(e.rpgState):JSON.parse(JSON.stringify(e.rpgState)))',
+    "rewind RPG snapshot clone");
+
+  code = replaceOnce(code,
+    'v=JSON.parse(JSON.stringify(m[e].worldInfoRuntime))',
+    'v="function"==typeof structuredClone?structuredClone(m[e].worldInfoRuntime):JSON.parse(JSON.stringify(m[e].worldInfoRuntime))',
+    "rewind World Info runtime clone");
+
+  code = replaceOnce(code,
+    'm[e].worldInfoState&&(x=JSON.parse(JSON.stringify(m[e].worldInfoState)))',
+    'm[e].worldInfoState&&(x="function"==typeof structuredClone?structuredClone(m[e].worldInfoState):JSON.parse(JSON.stringify(m[e].worldInfoState)))',
+    "rewind World Info state clone");
 
   code = replaceRange(code, 'arenaNormalizeSideOnLoad=e=>', 'lp=e=>', 'lp=e=>', "arena inline normalizers", false);
 
