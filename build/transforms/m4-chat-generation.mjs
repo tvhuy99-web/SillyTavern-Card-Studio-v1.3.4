@@ -34,7 +34,7 @@ function smartScanAdapter() {
   return 'scanInput:(0,b.useCallback)(t=>__stsScanWorldInfo({' +
     'scanInput:t?.scanInput??"",worldInfoState:t?.state?.worldInfoState??{},worldInfoRuntime:t?.state?.worldInfoRuntime??{},worldInfoPinned:t?.state?.worldInfoPinned??{},preset:t?.state?.preset??{},promptHistory:t?.promptHistory??[],content:t?.content??"",variables:t?.state?.variables??{},generatedEntries:t?.generatedEntries??[],sequence:t?.sequence??0,forceActiveUids:t?.forceActiveUids,card:t?.state?.card??e,lorebooks:r,setScanning:n' +
     '},{getSettings:as,embed:$c,loadIndex:Lc,getIndex:Fc,cosine:Gc,logSystemMessage:qu,' +
-    'onSemanticError:e=>{e.message?.includes("API Key")?window.dispatchEvent(new CustomEvent("toast",{detail:{message:"Vui lòng cấu hình Gemini API Key trong phần Cài đặt để sử dụng Semantic Search.",type:"error"}})):window.dispatchEvent(new CustomEvent("toast",{detail:{message:"Lỗi Semantic Search, chuyển sang quét từ khóa.",type:"error"}}))},' +
+    'onSemanticError:e=>{e.message?.includes("API Key")?window.dispatchEvent(new CustomEvent("toast",{detail:{message:"Vui lòng cấu hình Gemini API Key trong phần Cài đặt để sử dụng Semantic Search.",type:"error"}})):e.message?.includes("chưa được tải")?window.dispatchEvent(new CustomEvent("toast",{detail:{message:e.message,type:"error"}})):window.dispatchEvent(new CustomEvent("toast",{detail:{message:"Lỗi Semantic Search, chuyển sang quét từ khóa.",type:"error"}}))},' +
     'callSelectionModel:async(e,t)=>{if(Cs()){let o=ns();return Ks(e,o.proxy_tool_model||o.proxy_model||t,o.proxy_protocol)}return(await cl(t,e,{temp:0},_d)).text||"[]"},parseJson:As,resolveWorldInfo:ch}),[e,r])';
 }
 
@@ -73,6 +73,45 @@ export function applyM4ChatGenerationTransform(source) {
   const generationEnd = code.indexOf('}var Ed=', generationStart);
   if (generationEnd < 0) throw new Error('[M4 chat/generation] generation gateway/end token not found');
   code = code.slice(0, generationStart) + generationBootstrap + code.slice(generationEnd + 1);
+
+
+  const legacySmartScanDefaults = 'Jo={enabled:!0,mode:"hybrid_fast",model:"gemini-3-flash-preview",depth:6,max_entries:20,aiStickyDuration:5,system_prompt:"",scan_strategy:"efficient",semantic_threshold:.7,max_semantic_entries:20,embedding_batch_size:30}';
+  const embeddingSmartScanDefaults = 'Jo={enabled:!0,mode:"hybrid_fast",model:"gemini-3-flash-preview",depth:6,max_entries:20,aiStickyDuration:5,system_prompt:"",scan_strategy:"efficient",embedding_provider:"gemini",semantic_threshold:.7,max_semantic_entries:20,embedding_batch_size:30}';
+  const smartScanDefaultsIndex = findExactlyOnce(code, legacySmartScanDefaults, 'embedding UI/default provider');
+  code = code.slice(0, smartScanDefaultsIndex) + embeddingSmartScanDefaults + code.slice(smartScanDefaultsIndex + legacySmartScanDefaults.length);
+
+  const embeddingProviderStatusComponent =
+    '__stsEmbeddingProviderStatus=({providerId:e,showToast:t})=>{let[n,r]=(0,b.useState)({status:"checking",progress:0}),a=__stsEmbeddingService.getProviderInfo(e),i="local"===a.kind;' +
+    '(0,b.useEffect)(()=>{let t=!1;r({status:"checking",progress:0});__stsEmbeddingService.getProviderStatus(e).then(e=>{t||r(e)}).catch(e=>{t||r({status:"error",progress:0,error:e?.message||String(e)})});return()=>{t=!0}},[e]);' +
+    'let o=async()=>{try{r({status:"loading",progress:0}),await __stsEmbeddingService.prepareProvider(e,e=>r({status:"loading",progress:Math.max(0,Math.min(100,Number(e?.progress)||0))})),r(await __stsEmbeddingService.getProviderStatus(e)),t("Mô hình "+a.shortLabel+" đã sẵn sàng.","success")}catch(e){r({status:"error",progress:0,error:e?.message||String(e)}),t("Không thể tải mô hình: "+(e?.message||e),"error")}},' +
+    's=async()=>{try{await __stsEmbeddingService.deleteProvider(e),r(await __stsEmbeddingService.getProviderStatus(e)),t("Đã xóa "+a.shortLabel+" khỏi bộ nhớ cục bộ.","info")}catch(e){t("Không thể xóa mô hình: "+(e?.message||e),"error")}};' +
+    'if(!i)return(0,wt.jsx)("div",{className:"bg-slate-900/50 border border-slate-700 rounded-lg p-3",children:(0,wt.jsxs)("div",{className:"flex items-center justify-between gap-3",children:[(0,wt.jsxs)("div",{children:[(0,wt.jsx)("div",{className:"text-sm font-bold text-sky-300",children:a.shortLabel}),(0,wt.jsx)("div",{className:"text-xs text-slate-400 mt-1",children:"Online · sử dụng Gemini API đã cấu hình"})]}),(0,wt.jsx)("span",{className:"text-xs font-bold "+("ready"===n.status?"text-emerald-400":"text-amber-400"),children:"ready"===n.status?"Sẵn sàng":"Chưa có API Key"})]})});' +
+    'let l="ready"===n.status?"Sẵn sàng":"cached"===n.status?"Đã tải · sẵn sàng":"loading"===n.status?"Đang tải...":"error"===n.status?"Lỗi":"checking"===n.status?"Đang kiểm tra...":"Chưa tải";' +
+    'return(0,wt.jsxs)("div",{className:"bg-slate-900/50 border border-slate-700 rounded-lg p-3 space-y-3",children:[(0,wt.jsxs)("div",{className:"flex items-start justify-between gap-3",children:[(0,wt.jsxs)("div",{children:[(0,wt.jsx)("div",{className:"text-sm font-bold text-sky-300",children:a.shortLabel}),(0,wt.jsxs)("div",{className:"text-xs text-slate-400 mt-1",children:[a.sizeLabel," · lưu trên thiết bị"]})]}),(0,wt.jsx)("span",{className:"text-xs font-bold "+(("ready"===n.status||"cached"===n.status)?"text-emerald-400":"error"===n.status?"text-red-400":"text-amber-400"),children:l})]}),"loading"===n.status&&(0,wt.jsxs)("div",{className:"space-y-1",children:[(0,wt.jsx)("div",{className:"h-2 bg-slate-800 rounded-full overflow-hidden",children:(0,wt.jsx)("div",{className:"h-full bg-sky-500",style:{width:(n.progress||0)+"%"}})}),(0,wt.jsxs)("div",{className:"text-[11px] text-slate-400 text-right",children:[Math.round(n.progress||0),"%"]})]}),n.error&&(0,wt.jsx)("div",{className:"text-xs text-red-400",children:n.error}),(0,wt.jsxs)("div",{className:"flex flex-wrap gap-2",children:[("missing"===n.status||"error"===n.status)&&(0,wt.jsx)("button",{type:"button",onClick:o,className:"px-3 py-2 rounded-lg bg-sky-600 hover:bg-sky-500 text-white text-xs font-bold",children:"TẢI MÔ HÌNH"}),("cached"===n.status||"ready"===n.status)&&(0,wt.jsx)("button",{type:"button",onClick:s,className:"px-3 py-2 rounded-lg bg-slate-700 hover:bg-red-700 text-slate-200 text-xs font-bold",children:"XÓA MÔ HÌNH"})]})]})},';
+
+  const smartScanUiIndex = findExactlyOnce(code, 'Td=()=>{', 'embedding UI/status component');
+  code = code.slice(0, smartScanUiIndex) + embeddingProviderStatusComponent + code.slice(smartScanUiIndex);
+
+  const semanticHeader =
+    '(0,wt.jsx)("div",{className:"flex items-center gap-2 mb-2",children:(0,wt.jsx)("span",{className:"text-sky-400 font-bold text-sm uppercase tracking-wide",children:"Cài đặt Ngữ nghĩa (Embedding)"})}),(0,wt.jsxs)("div",{className:"grid grid-cols-1 md:grid-cols-2 gap-6"';
+  const semanticHeaderWithProvider =
+    '(0,wt.jsx)("div",{className:"flex items-center gap-2 mb-2",children:(0,wt.jsx)("span",{className:"text-sky-400 font-bold text-sm uppercase tracking-wide",children:"Cài đặt Ngữ nghĩa (Embedding)"})}),(0,wt.jsx)(Cl,{label:"Mô hình Embedding",value:e.embedding_provider||"gemini",onChange:e=>o("embedding_provider",e.target.value),options:__stsEmbeddingService.listProviders().map(e=>({value:e.id,label:e.label}))}),(0,wt.jsx)(__stsEmbeddingProviderStatus,{providerId:e.embedding_provider||"gemini",showToast:a}),(0,wt.jsxs)("div",{className:"grid grid-cols-1 md:grid-cols-2 gap-6"';
+  const semanticHeaderIndex = findExactlyOnce(code, semanticHeader, 'embedding UI/provider selector');
+  code = code.slice(0, semanticHeaderIndex) + semanticHeaderWithProvider + code.slice(semanticHeaderIndex + semanticHeader.length);
+
+  const batchLabel = 'label:"Số mục đồng bộ mỗi lần (Batch Size)"';
+  const batchLabelIndex = findExactlyOnce(code, batchLabel, 'embedding UI/batch label');
+  code = code.slice(0, batchLabelIndex) + 'label:"Số mục xử lý mỗi đợt"' + code.slice(batchLabelIndex + batchLabel.length);
+
+  const syncLabel = '(0,wt.jsx)("span",{className:"text-[10px] font-bold text-slate-400 uppercase tracking-wider",children:"Semantic Sync"})';
+  const syncLabelReplacement = '(0,wt.jsx)("span",{className:"text-[10px] font-bold text-slate-400 uppercase tracking-wider",children:["Semantic Sync · ",__stsEmbeddingService.getProviderInfo(as().embedding_provider||"gemini").shortLabel]})';
+  const syncLabelIndex = findExactlyOnce(code, syncLabel, 'embedding UI/sync provider label');
+  code = code.slice(0, syncLabelIndex) + syncLabelReplacement + code.slice(syncLabelIndex + syncLabel.length);
+
+  const testerTitle = '(0,wt.jsx)("h2",{id:"relevance-tester-title",className:"text-xl font-bold text-sky-400",children:"Relevance Tester (Kiểm tra Ngữ nghĩa)"})';
+  const testerTitleReplacement = '(0,wt.jsx)("h2",{id:"relevance-tester-title",className:"text-xl font-bold text-sky-400",children:["Relevance Tester · ",__stsEmbeddingService.getProviderInfo(as().embedding_provider||"gemini").shortLabel]})';
+  const testerTitleIndex = findExactlyOnce(code, testerTitle, 'embedding UI/tester provider label');
+  code = code.slice(0, testerTitleIndex) + testerTitleReplacement + code.slice(testerTitleIndex + testerTitle.length);
 
   const legacyEmbeddingCache = 'Lc=async e=>{if(e&&!Pc.has(e)){if(!Mc.has(e)){let t=Kc(e).finally(()=>{Mc.delete(e)});Mc.set(e,t)}return Mc.get(e)}},Fc=e=>{let t=Pc.get(e);if(!t)return[];let n=[];for(let e of t.values())n.push(...e);return n},Bc=';
   const ownedEmbeddingCache = '__stsEmbeddingService=__stsCreateEmbeddingService({getSettings:as,getGeminiApiKey:ys,hasGeminiApiKey:()=>{let e=fs();return!e.useDefault&&Array.isArray(e.keys)&&e.keys.some(e=>String(e).trim())},createGeminiClient:e=>new vo({apiKey:e}),addNetworkLog:e=>ol.getState().addNetworkLog(e)}),Lc=e=>__stsEmbeddingService.loadIndex(e),Fc=e=>__stsEmbeddingService.getIndex(e),Bc=';
@@ -257,4 +296,4 @@ export function applyM4ChatGenerationTransform(source) {
   return code;
 }
 
-export const M4_CHAT_GENERATION_PATCH_COUNT = 25;
+export const M4_CHAT_GENERATION_PATCH_COUNT = 31;
