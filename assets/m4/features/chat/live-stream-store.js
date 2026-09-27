@@ -1,5 +1,6 @@
 const EMPTY_SNAPSHOT = Object.freeze({ content: '', reasoning: undefined, version: 0 });
 const snapshots = new Map();
+const pendingSnapshots = new Map();
 const listeners = new Map();
 const pendingKeys = new Set();
 let flushTimer = null;
@@ -20,29 +21,48 @@ function flushPending() {
   flushTimer = null;
   const keys = Array.from(pendingKeys);
   pendingKeys.clear();
-  for (const key of keys) notifyKey(key);
+  for (const key of keys) {
+    const pending = pendingSnapshots.get(key);
+    if (pending) {
+      snapshots.set(key, Object.freeze({
+        content: pending.content,
+        reasoning: pending.reasoning,
+        version: pending.version,
+      }));
+      pendingSnapshots.delete(key);
+    }
+    notifyKey(key);
+  }
 }
 
 function scheduleNotify(key) {
   pendingKeys.add(key);
   if (flushTimer !== null) return;
-  flushTimer = setTimeout(flushPending, 60);
+  flushTimer = setTimeout(flushPending, 100);
 }
 
 export const liveStreamStore = Object.freeze({
   publish(messageId, slot, content, reasoning) {
     const key = streamKey(messageId, slot);
-    const previous = snapshots.get(key) || EMPTY_SNAPSHOT;
-    snapshots.set(key, Object.freeze({
-      content: String(content ?? ''),
-      reasoning: reasoning || undefined,
-      version: previous.version + 1,
-    }));
+    let pending = pendingSnapshots.get(key);
+    if (!pending) {
+      const previous = snapshots.get(key) || EMPTY_SNAPSHOT;
+      pending = {
+        content: previous.content,
+        reasoning: previous.reasoning,
+        version: previous.version,
+      };
+      pendingSnapshots.set(key, pending);
+    }
+    pending.content = String(content ?? '');
+    pending.reasoning = reasoning || undefined;
+    pending.version += 1;
     scheduleNotify(key);
   },
 
   getSnapshot(messageId, slot = 'main') {
-    return snapshots.get(streamKey(messageId, slot)) || EMPTY_SNAPSHOT;
+    const key = streamKey(messageId, slot);
+    return pendingSnapshots.get(key) || snapshots.get(key) || EMPTY_SNAPSHOT;
   },
 
   subscribe(messageId, slot = 'main', listener) {
@@ -62,15 +82,21 @@ export const liveStreamStore = Object.freeze({
   clear(messageId, slot = 'main') {
     const key = streamKey(messageId, slot);
     snapshots.delete(key);
+    pendingSnapshots.delete(key);
     pendingKeys.delete(key);
     notifyKey(key);
   },
 
   clearMessage(messageId) {
     const prefix = String(messageId) + '::';
-    for (const key of Array.from(snapshots.keys())) {
+    const keys = new Set([
+      ...snapshots.keys(),
+      ...pendingSnapshots.keys(),
+    ]);
+    for (const key of keys) {
       if (!key.startsWith(prefix)) continue;
       snapshots.delete(key);
+      pendingSnapshots.delete(key);
       pendingKeys.delete(key);
       notifyKey(key);
     }
