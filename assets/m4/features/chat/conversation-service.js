@@ -1,6 +1,9 @@
 export function createConversationService(deps) {
   const now = deps.now || (() => Date.now());
   const createAbortController = deps.createAbortController || (() => new AbortController());
+  const streamFirstChunkTimeoutMs = deps.streamFirstChunkTimeoutMs ?? 120000;
+  const streamIdleTimeoutMs = deps.streamIdleTimeoutMs ?? 30000;
+  const streamGapWarningMs = deps.streamGapWarningMs ?? 5000;
   const yieldToBrowser = deps.yieldToBrowser || (() => new Promise(resolve => {
     if (typeof requestAnimationFrame === 'function') requestAnimationFrame(() => resolve());
     else setTimeout(resolve, 0);
@@ -10,6 +13,93 @@ export function createConversationService(deps) {
     const message = deps.getState().messages.find(item => item.id === messageId);
     if (!message?.arena) return;
     deps.updateMessage(messageId, { arena: updater(message.arena, slot) });
+  }
+
+  function streamTimeoutError(label, timeoutMs, chunkCount) {
+    const error = new Error(
+      chunkCount > 0
+        ? `Luồng ${label} không nhận dữ liệu mới trong ${Math.round(timeoutMs / 1000)} giây.`
+        : `Luồng ${label} không nhận được dữ liệu đầu tiên trong ${Math.round(timeoutMs / 1000)} giây.`,
+    );
+    error.code = 'STREAM_IDLE_TIMEOUT';
+    return error;
+  }
+
+  async function* watchStream(stream, controller, label) {
+    const iterator = stream[Symbol.asyncIterator]();
+    const startedAt = now();
+    let lastChunkAt = startedAt;
+    let chunkCount = 0;
+    let charCount = 0;
+    let completed = false;
+
+    try {
+      while (!controller.signal.aborted) {
+        const timeoutMs = chunkCount === 0
+          ? streamFirstChunkTimeoutMs
+          : streamIdleTimeoutMs;
+        let timeoutId;
+        let result;
+        try {
+          result = await Promise.race([
+            iterator.next(),
+            new Promise((_, reject) => {
+              timeoutId = setTimeout(
+                () => reject(streamTimeoutError(label, timeoutMs, chunkCount)),
+                timeoutMs,
+              );
+            }),
+          ]);
+        } catch (error) {
+          if (error?.code === 'STREAM_IDLE_TIMEOUT') {
+            deps.logSystemMessage?.(
+              'error',
+              'stream',
+              `[STREAM] ${label}: timeout after ${chunkCount} chunks, ${charCount} chars.`,
+            );
+            try { controller.abort('stream-idle-timeout'); } catch {}
+          }
+          throw error;
+        } finally {
+          if (timeoutId) clearTimeout(timeoutId);
+        }
+
+        if (result?.done) {
+          completed = true;
+          break;
+        }
+
+        const timestamp = now();
+        const gapMs = timestamp - lastChunkAt;
+        chunkCount += 1;
+        charCount += String(result?.value?.text || '').length;
+        charCount += String(result?.value?.reasoning || '').length;
+        if (chunkCount > 1 && gapMs >= streamGapWarningMs) {
+          deps.logSystemMessage?.(
+            'warn',
+            'stream',
+            `[STREAM] ${label}: gap ${Math.round(gapMs)}ms before chunk #${chunkCount}.`,
+          );
+        }
+        lastChunkAt = timestamp;
+        yield result.value;
+      }
+    } finally {
+      if (!completed) {
+        try {
+          const returned = iterator.return?.();
+          Promise.resolve(returned).catch(() => {});
+        } catch {}
+      }
+      const durationMs = now() - startedAt;
+      if (completed && durationMs >= 10000) {
+        deps.logSystemMessage?.(
+          'performance',
+          'stream',
+          `[STREAM] ${label}: completed ${chunkCount} chunks / ${charCount} chars in ${Math.round(durationMs)}ms.`,
+        );
+      }
+    }
   }
 
   async function scanWorldInfo(state, content, options, turn) {
@@ -80,14 +170,19 @@ export function createConversationService(deps) {
   }
 
   async function streamArenaSide({
-    messageId, slot, model, provider, proxyConfig, prompt, preset, signal,
+    messageId, slot, model, provider, proxyConfig, prompt, preset, controller,
   }) {
+    const signal = controller.signal;
     let content = '';
     try {
       const stream = deps.generationGateway.stream({
         prompt, preset, signal, model, source: provider, proxyConfig,
       });
-      for await (const chunk of stream) {
+      for await (const chunk of watchStream(
+        stream,
+        controller,
+        `${provider || 'default'}:${model || slot}`,
+      )) {
         if (signal.aborted) break;
         content += chunk.text || '';
         deps.liveStream.publish(messageId, slot, content);
@@ -128,7 +223,7 @@ export function createConversationService(deps) {
           proxyConfig: mainProxyConfig,
           prompt,
           preset: state.preset,
-          signal: controllerA.signal,
+          controller: controllerA,
         }),
         streamArenaSide({
           messageId: message.id,
@@ -138,7 +233,7 @@ export function createConversationService(deps) {
           proxyConfig: challengerProxyConfig,
           prompt,
           preset: state.preset,
-          signal: controllerB.signal,
+          controller: controllerB,
         }),
       ]);
     } finally {
@@ -156,7 +251,18 @@ export function createConversationService(deps) {
       });
       let reasoning = '';
       try {
-        for await (const chunk of stream) {
+        const connection = deps.getConnectionSettings?.() || {};
+        const source = connection.source || 'default';
+        const model = source === 'gemini'
+          ? connection.gemini_model
+          : source === 'proxy'
+            ? connection.proxy_model
+            : connection.openrouter_model;
+        for await (const chunk of watchStream(
+          stream,
+          controller,
+          `${source}:${model || 'default'}`,
+        )) {
           if (controller.signal.aborted) break;
           content += chunk.text || '';
           if (chunk.reasoning) reasoning += chunk.reasoning;
@@ -261,7 +367,8 @@ export function createConversationService(deps) {
       }
     } catch (error) {
       succeeded = false;
-      if (!deps.turnPolicy.isAbortLike(error, controller.signal)) {
+      const streamTimedOut = error?.code === 'STREAM_IDLE_TIMEOUT';
+      if (streamTimedOut || !deps.turnPolicy.isAbortLike(error, controller.signal)) {
         console.error(error);
         const message = error instanceof Error ? error.message : String(error);
         deps.setError('Lỗi: ' + message);
