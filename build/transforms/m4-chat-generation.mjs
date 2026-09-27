@@ -1,4 +1,4 @@
-const M4_IMPORTS = "import { normalizePromptVariableScopes as __stsNormalizePromptVariableScopes, readGlobalVariables as __stsReadGlobalVariables, writeGlobalVariables as __stsWriteGlobalVariables } from './variable-scope-service-v1.3.6.js?v=1.3.6-variable-scopes-1';\nimport { createGenerationGateway as __stsCreateGenerationGateway } from './m4/providers/common/generation-gateway.js?v=1.3.6-m4.1';\nimport { chatTurnPolicy as __stsChatTurnPolicy } from './m4/features/chat/turn-policy.js?v=1.3.6-m4.5';\nimport { createConversationService as __stsCreateConversationService } from './m4/features/chat/conversation-service.js?v=1.3.6-m4.8';\nimport { scanWorldInfo as __stsScanWorldInfo } from './m4/features/world-info/smart-scan-service.js?v=1.3.6-m4.8';\nimport { buildConversationPrompt as __stsBuildConversationPrompt } from './m4/features/prompts/prompt-service.js?v=1.3.6-m4.3';\nimport { processAIResponse as __stsProcessAIResponse } from './m4/features/chat/response-processor.js?v=1.3.6-m4.3';\n";
+const M4_IMPORTS = "import { normalizePromptVariableScopes as __stsNormalizePromptVariableScopes, readGlobalVariables as __stsReadGlobalVariables, writeGlobalVariables as __stsWriteGlobalVariables } from './variable-scope-service-v1.3.6.js?v=1.3.6-variable-scopes-1';\nimport { createGenerationGateway as __stsCreateGenerationGateway } from './m4/providers/common/generation-gateway.js?v=1.3.6-m4.1';\nimport { chatTurnPolicy as __stsChatTurnPolicy } from './m4/features/chat/turn-policy.js?v=1.3.6-m4.5';\nimport { createConversationService as __stsCreateConversationService } from './m4/features/chat/conversation-service.js?v=1.3.6-m4.8';\nimport { createEmbeddingService as __stsCreateEmbeddingService } from './m4/features/world-info/embedding-service.js?v=1.3.6-m4.9';\nimport { scanWorldInfo as __stsScanWorldInfo } from './m4/features/world-info/smart-scan-service.js?v=1.3.6-m4.8';\nimport { buildConversationPrompt as __stsBuildConversationPrompt } from './m4/features/prompts/prompt-service.js?v=1.3.6-m4.3';\nimport { processAIResponse as __stsProcessAIResponse } from './m4/features/chat/response-processor.js?v=1.3.6-m4.3';\n";
 
 function findExactlyOnce(source, token, label, from = 0) {
   const first = source.indexOf(token, from);
@@ -73,6 +73,30 @@ export function applyM4ChatGenerationTransform(source) {
   const generationEnd = code.indexOf('}var Ed=', generationStart);
   if (generationEnd < 0) throw new Error('[M4 chat/generation] generation gateway/end token not found');
   code = code.slice(0, generationStart) + generationBootstrap + code.slice(generationEnd + 1);
+
+  const legacyEmbeddingCache = 'Lc=async e=>{if(e&&!Pc.has(e)){if(!Mc.has(e)){let t=Kc(e).finally(()=>{Mc.delete(e)});Mc.set(e,t)}return Mc.get(e)}},Fc=e=>{let t=Pc.get(e);if(!t)return[];let n=[];for(let e of t.values())n.push(...e);return n},Bc=';
+  const ownedEmbeddingCache = '__stsEmbeddingService=__stsCreateEmbeddingService({getSettings:as,getGeminiApiKey:ys,hasGeminiApiKey:()=>{let e=fs();return!e.useDefault&&Array.isArray(e.keys)&&e.keys.some(e=>String(e).trim())},createGeminiClient:e=>new vo({apiKey:e}),addNetworkLog:e=>ol.getState().addNetworkLog(e)}),Lc=e=>__stsEmbeddingService.loadIndex(e),Fc=e=>__stsEmbeddingService.getIndex(e),Bc=';
+  const embeddingCacheIndex = findExactlyOnce(code, legacyEmbeddingCache, 'embedding service/cache adapter');
+  code = code.slice(0, embeddingCacheIndex) + ownedEmbeddingCache + code.slice(embeddingCacheIndex + legacyEmbeddingCache.length);
+
+  const legacyQueryEmbedding = '$c=async e=>{let t=ys();if(!t)throw Error("Missing Gemini API Key. Please configure it in settings.");return(await Hc(new vo({apiKey:t}),[e]))[0]||[]},Gc=';
+  const ownedQueryEmbedding = '$c=e=>__stsEmbeddingService.embedQuery(e),Gc=';
+  const queryEmbeddingIndex = findExactlyOnce(code, legacyQueryEmbedding, 'embedding service/query adapter');
+  code = code.slice(0, queryEmbeddingIndex) + ownedQueryEmbedding + code.slice(queryEmbeddingIndex + legacyQueryEmbedding.length);
+
+  const legacySyncStart = 'Vc=async(e,t,n)=>{';
+  const legacySyncEnd = '},Kc=';
+  const syncStart = findExactlyOnce(code, legacySyncStart, 'embedding service/sync start');
+  const syncEnd = code.indexOf(legacySyncEnd, syncStart + legacySyncStart.length);
+  if (syncEnd < 0) throw new Error('[M4 chat/generation] embedding service/sync end token not found');
+  code = code.slice(0, syncStart) + 'Vc=(e,t,n)=>__stsEmbeddingService.syncIndex(e,t,n),Kc=' + code.slice(syncEnd + legacySyncEnd.length);
+
+  const legacyIndexLoaderStart = 'Kc=async e=>{';
+  const legacyIndexLoaderEnd = '},Wc=';
+  const indexLoaderStart = findExactlyOnce(code, legacyIndexLoaderStart, 'embedding service/index loader start');
+  const indexLoaderEnd = code.indexOf(legacyIndexLoaderEnd, indexLoaderStart + legacyIndexLoaderStart.length);
+  if (indexLoaderEnd < 0) throw new Error('[M4 chat/generation] embedding service/index loader end token not found');
+  code = code.slice(0, indexLoaderStart) + 'Kc=e=>__stsEmbeddingService.loadIndex(e),Wc=' + code.slice(indexLoaderEnd + legacyIndexLoaderEnd.length);
 
   code = replaceRange(
     code,
@@ -233,4 +257,4 @@ export function applyM4ChatGenerationTransform(source) {
   return code;
 }
 
-export const M4_CHAT_GENERATION_PATCH_COUNT = 21;
+export const M4_CHAT_GENERATION_PATCH_COUNT = 25;
