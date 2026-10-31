@@ -43,7 +43,7 @@ function replaceExactlyOnce(source, oldText, newText) {
   return source.slice(0, start) + newText + source.slice(start + oldText.length);
 }
 
-export const AI_STUDIO_TEXT_PATCH_COUNT = PATCHES.length + 1;
+export const AI_STUDIO_TEXT_PATCH_COUNT = PATCHES.length + 5;
 
 export function applyAiStudioTextTransform(source) {
   let code = source;
@@ -61,5 +61,29 @@ export function applyAiStudioTextTransform(source) {
   }
   const newOption = 'children:[(0,wt.jsx)("option",{value:"",children:"-- Chọn Model --"}),("aistudio"===d.source?[{id:d.aistudio_model||"gemini-2.5-flash",name:d.aistudio_model||"gemini-2.5-flash"}]:k).map(e=>(0,wt.jsx)("option",{value:e.id,children:e.name},e.id))]';
   code = code.slice(0, second) + newOption + code.slice(second + oldOption.length);
+
+  // Preserve the full diagnostic event chain instead of replacing with the last log.
+  // The System Console's built-in copy/export actions can then report stage
+  // transitions and status diagnostics in chronological order.
+  code = replaceExactlyOnce(
+    code,
+    'addSystemLog:t=>e(e=>{e.logs.systemLog=[t]})',
+    'addSystemLog:t=>e(e=>{e.logs.systemLog=[t,...(e.logs.systemLog||[])].slice(0,300)})',
+  );
+  code = replaceExactlyOnce(
+    code,
+    '{id:"diagnostic",label:"Chẩn đoán"},{id:"regex"',
+    '{id:"diagnostic",label:"Chẩn đoán"},{id:"aistudio",label:"AI Studio"},{id:"regex"',
+  );
+  code = replaceExactlyOnce(
+    code,
+    '"diagnostic"===r?t=t.filter(e=>"diagnostic"===e.source):"regex"',
+    '"diagnostic"===r?t=t.filter(e=>"diagnostic"===e.source):"aistudio"===r?t=t.filter(e=>"aistudio"===e.source):"regex"',
+  );
+  code = replaceExactlyOnce(
+    code,
+    'e.filter(e=>"diagnostic"===e.source).map(e=>e.message.trim())',
+    'e.filter(e=>"diagnostic"===e.source||"aistudio"===e.source).map(e=>e.message.trim())',
+  );
   return code;
 }
