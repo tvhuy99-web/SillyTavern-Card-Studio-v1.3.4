@@ -3,7 +3,7 @@ const KEY = 'sts_aistudio_diagnostics_v1';
 const MAX = 250;
 const EVENT = 'sillytavern:system-log';
 const SECRET = /(?:Bearer\s+[A-Za-z0-9._-]+|AIza[A-Za-z0-9_-]{15,}|(?:api[-_]?key|access[-_]?token|cookie|authorization)\s*[:=]\s*[^,\s]+)/gi;
-let attached = false, handle = null;
+let attached = false, handle = null, attaching = false;
 
 function safe(value) {
   return String(value ?? '').replace(SECRET, '[REDACTED]')
@@ -51,7 +51,8 @@ export function installAiStudioDiagnostics() {
   });
   async function start() {
     const plugin = window.Capacitor?.Plugins?.AIStudioText;
-    if (!plugin?.addListener || handle) return;
+    if (!plugin?.addListener || handle || attaching) return;
+    attaching = true;
     try {
       handle = await plugin.addListener('diagnostic', e => {
         recordAiStudioDiagnostic(e?.stage || 'NATIVE', {
@@ -62,6 +63,8 @@ export function installAiStudioDiagnostics() {
       recordAiStudioDiagnostic('BRIDGE_READY', {message: 'Native log connected to System Console.'});
     } catch(e) {
       recordAiStudioDiagnostic('BRIDGE_ERROR', {message:String(e?.message || e)}, 'warn');
+    } finally {
+      attaching = false;
     }
   }
   start();
