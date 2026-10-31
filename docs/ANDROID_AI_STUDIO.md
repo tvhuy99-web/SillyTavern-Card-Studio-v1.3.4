@@ -120,3 +120,30 @@ text callbacks, and diagnostic snapshots. Its video-description modes still
 require an attachment workflow; removing video input does not turn them into
 a public text API. The Card Studio implementation therefore keeps the
 browser-session approach but implements a separate text-only UI route.
+
+
+## 5. Automatic first-use initialization and JSON diagnostics (R3)
+
+When Card Studio sends text to Google / AI Studio without a native WebView
+session, it now initializes the real first-party site automatically and
+opens its login/model-selection window. The original chat request waits for
+the user to finish login and close the window, then attempts to send the
+prompt. There is no need to open Settings manually first. Google can refuse
+embedded WebView login; do not bypass such restrictions.
+
+A 65,956-character Card Studio conversation prompt previously resulted in
+\`AI_STUDIO_EDITOR_JS: JSONException\` before pressing Run. The WebView could
+have returned null from a JavaScript error, navigation, or large inline
+evaluation. This is not evidence of a Google-side error. R3 implements:
+
+- 2,000-UTF16-unit prompt transfer chunks with length acknowledgements.
+- A guarded JavaScript return envelope to distinguish JS exception, null
+  evaluation, non-JSON reply, and missing response object.
+- Console phases \`SESSION_AUTO_START\`, \`WAIT_FOR_LOGIN\`, \`SESSION_READY\`,
+  \`INPUT_TRANSFER_COMPLETE\`, \`EDITOR_PARSE\`, \`EDITOR_NO_RESULT\`, etc.
+- A provider-specific streaming watchdog that permits initial account login
+  without stopping after the generic 120-second first-chunk timeout.
+
+Logging never captures raw chat prompts, AI responses, authentication tokens,
+cookies, or passwords. If the new version fails, use the **AI Studio** filter
+and **Xuất báo cáo lỗi** to identify the exact failed phase.
