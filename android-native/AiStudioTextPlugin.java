@@ -557,8 +557,53 @@ public class AiStudioTextPlugin extends Plugin {
                 return;
             }
             trace("state","JS_BOOTSTRAP","Text-only UI reader installed",details("promptChars",prompt.length()));
-            String expression="window.__STS_AI_TEXT_V2__?.prepare(" + JSONObject.quote(prompt) + ")" ;
-            sessionWebView.evaluateJavascript(guardJs(expression),raw->{
+            transferPromptChunk(call,prompt,0);
+        });
+    }
+
+    // A ~66,000-character roleplay prompt should not be embedded into one
+    // evaluateJavascript call. Transfer it as 2,000-UTF16-unit chunks, verify
+    // each acknowledgement, and never log any prompt content.
+    private void transferPromptChunk(PluginCall call,String prompt,int offset) {
+        if(pending!=call||sessionWebView==null)return;
+        if(offset<prompt.length()) {
+            int end=Math.min(offset+2000,prompt.length());
+            if(end<prompt.length() && Character.isHighSurrogate(prompt.charAt(end-1)))end--;
+            final int next=end;
+            String js="JSON.stringify((function(){try{var prev="+
+                (offset==0?"''":"(window.__STS_AI_TEXT_INPUT__||'')")+
+                ";window.__STS_AI_TEXT_INPUT__=prev+"+
+                JSONObject.quote(prompt.substring(offset,end))+
+                ";return {ok:true,length:window.__STS_AI_TEXT_INPUT__.length};"+
+                "}catch(e){return {ok:false,errorName:String(e.name||'Error')}}})())";
+            sessionWebView.evaluateJavascript(js,raw->{
+                if(pending!=call)return;
+                try{
+                    JSONObject result=parse(raw);
+                    if(!result.optBoolean("ok",false)||result.optInt("length",-1)!=next){
+                        trace("error","INPUT_CHUNK_REJECTED","AI Studio prompt transfer failed",details(
+                            "offset",offset,"next",next,"confirmed",result.optInt("length",-1),
+                            "errorName",result.optString("errorName","none")));
+                        fail("AI_STUDIO_INPUT_TRANSFER_FAILED");
+                        return;
+                    }
+                    transferPromptChunk(call,prompt,next);
+                }catch(Exception e){
+                    trace("error","INPUT_CHUNK_JS","Failed to transfer AI Studio prompt chunk",details(
+                        "offset",offset,"rawNull",raw==null||"null".equals(raw),
+                        "exception",e.getClass().getSimpleName()));
+                    fail("AI_STUDIO_INPUT_TRANSFER_JS_"+e.getClass().getSimpleName());
+                }
+            });
+            return;
+        }
+        trace("state","INPUT_TRANSFER_COMPLETE","Prompt copied to AI Studio in verified chunks",
+            details("promptChars",prompt.length(),
+                "chunkCount",(prompt.length()+1999)/2000));
+        String expression="(function(){var p=window.__STS_AI_TEXT_INPUT__||'';"+
+            "delete window.__STS_AI_TEXT_INPUT__;"+
+            "return window.__STS_AI_TEXT_V2__?.prepare(p)})()";
+        sessionWebView.evaluateJavascript(guardJs(expression),raw->{
                 if(pending!=call)return;
                 try {
                     JSONObject obj=unwrapJs(raw,"EDITOR");
