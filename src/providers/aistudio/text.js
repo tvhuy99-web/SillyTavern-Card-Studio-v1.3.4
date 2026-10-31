@@ -4,6 +4,8 @@
 // account cookies, OAuth tokens, or private Google endpoints.
 // The Google AI Studio page is not a documented automation API; failures must
 // be explicit rather than silently falling back to a different provider.
+import { recordAiStudioDiagnostic } from '../../diagnostics/aistudio-log.js';
+
 export const AI_STUDIO_SOURCE = 'aistudio';
 
 function bridge() {
@@ -23,6 +25,7 @@ export function createAiStudioTextProvider() {
   async function generate({ model, prompt, signal }) {
     if (signal?.aborted) throw new DOMException('Generation aborted', 'AbortError');
     const cap = bridge();
+    recordAiStudioDiagnostic('GENERATE_REQUEST', { model: String(model || ''), promptChars: String(prompt || '').length });
     const request = cap.nativePromise('AIStudioText', 'generate', {
       model: String(model || 'gemini-2.5-flash'),
       prompt: String(prompt || ''),
@@ -33,6 +36,7 @@ export function createAiStudioTextProvider() {
     signal?.addEventListener('abort', stop, { once: true });
     try {
       const result = await request;
+      recordAiStudioDiagnostic('GENERATE_REPLY', { responseChars: String(result?.text || '').length });
       if (signal?.aborted) throw new DOMException('Generation aborted', 'AbortError');
       const text = String(result?.text || '');
       if (!text.trim()) throw new Error('AI Studio không trả về văn bản.');
