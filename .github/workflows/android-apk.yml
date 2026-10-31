@@ -71,6 +71,28 @@ jobs:
           npx cap add android
           npx cap sync android
 
+      - name: Register AI Studio Android text plugin
+        shell: bash
+        run: |
+          set -euo pipefail
+          PLUGIN_DIR="android/app/src/main/java/com/tvhuy99/cardstudio"
+          mkdir -p "$PLUGIN_DIR"
+          cp android-native/AiStudioTextPlugin.java "$PLUGIN_DIR/AiStudioTextPlugin.java"
+          cat > "$PLUGIN_DIR/MainActivity.java" <<'JAVA'
+          package com.tvhuy99.cardstudio;
+
+          import android.os.Bundle;
+          import com.getcapacitor.BridgeActivity;
+
+          public class MainActivity extends BridgeActivity {
+              @Override
+              public void onCreate(Bundle savedInstanceState) {
+                  registerPlugin(AiStudioTextPlugin.class);
+                  super.onCreate(savedInstanceState);
+              }
+          }
+          JAVA
+
       # Stable debug key copied from GeminiLiveTranslate. This is a PUBLIC
       # DEBUG key, not a release signing key. Do NOT use for production releases.
       - name: Configure stable debug signature and monotonic version
