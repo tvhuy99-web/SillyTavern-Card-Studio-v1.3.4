@@ -34,10 +34,6 @@ const PATCHES = [
     '"gemini"===d.source?n.gemini_model=t:"proxy"===d.source?n.proxy_model=t:"openrouter"===d.source&&(n.openrouter_model=t)',
     '"aistudio"===d.source?n.aistudio_model=t:"gemini"===d.source?n.gemini_model=t:"proxy"===d.source?n.proxy_model=t:"openrouter"===d.source&&(n.openrouter_model=t)',
   ],
-  [
-    '"gemini"===e.source?e.gemini_model:"proxy"===e.source?e.proxy_model:e.openrouter_model',
-    '"aistudio"===e.source?e.aistudio_model||"gemini-2.5-flash":"gemini"===e.source?e.gemini_model:"proxy"===e.source?e.proxy_model:e.openrouter_model',
-  ],
 ];
 
 function replaceExactlyOnce(source, oldText, newText) {
