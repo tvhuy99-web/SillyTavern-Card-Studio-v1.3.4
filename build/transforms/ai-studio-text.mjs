@@ -13,8 +13,7 @@ const PATCHES = [
     '"proxy"===t.source&&(0,wt.jsxs)("div",{className:"space-y-6 "',
     '"aistudio"===t.source&&(0,wt.jsxs)("div",{className:"space-y-4",children:[' +
       '(0,wt.jsx)("p",{className:"text-sm text-amber-300",children:"Dùng phiên Google / AI Studio trong WebView Android (thử nghiệm). Không yêu cầu API key. Google có thể chặn đăng nhập WebView; nội dung và giao diện AI Studio có thể thay đổi."}),' +
-      '(0,wt.jsx)("label",{className:"block text-sm font-bold text-indigo-300",children:"Mô hình AI Studio"}),' +
-      '(0,wt.jsx)("input",{value:t.aistudio_model||"gemini-2.5-flash",onChange:e=>Y("aistudio_model",e.target.value),className:"w-full bg-slate-900 border border-slate-600 rounded p-2 text-white",placeholder:"gemini-2.5-flash","aria-label":"Mô hình AI Studio"}),' +
+      '(0,wt.jsx)("p",{className:"text-xs text-slate-400",children:"Hãy chọn mô hình trực tiếp trên trang AI Studio. Ứng dụng không tự thay đổi model qua API riêng."}),' +
       '(0,wt.jsx)("button",{type:"button",onClick:async()=>{try{const n=window.Capacitor;if(typeof n?.nativePromise!=="function")throw Error("Chỉ hỗ trợ APK Android");await n.nativePromise("AIStudioText","openSession",{})}catch(t){e("AI Studio: "+(t?.message||String(t)),"error")}},className:"bg-indigo-600 hover:bg-indigo-500 text-white rounded px-4 py-2",children:"Mở Google / AI Studio để đăng nhập"})' +
     ']}),"proxy"===t.source&&(0,wt.jsxs)("div",{className:"space-y-6 "',
   ],
