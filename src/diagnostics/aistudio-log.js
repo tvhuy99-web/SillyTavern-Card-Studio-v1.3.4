@@ -20,7 +20,7 @@ function stored() {
 function broadcast(item) {
   window.dispatchEvent(new CustomEvent(EVENT, { detail: {
     level: item.level, source: 'aistudio',
-    message: '[AI Studio][' + item.stage + '][#' + (item.requestId || '-') + '] ' + item.message,
+    message: '[AI Studio][' + item.stage + '][#' + (item.requestId || '-') + '] ' + item.message + ' | ' + Object.entries(item.details).map(([k,v]) => k + '=' + String(v)).join(' '),
     payload: item.details,
   }}));
 }
