@@ -43,7 +43,7 @@ function replaceExactlyOnce(source, oldText, newText) {
   return source.slice(0, start) + newText + source.slice(start + oldText.length);
 }
 
-export const AI_STUDIO_TEXT_PATCH_COUNT = PATCHES.length + 4;
+export const AI_STUDIO_TEXT_PATCH_COUNT = PATCHES.length + 7;
 
 export function applyAiStudioTextTransform(source) {
   let code = source;
@@ -77,6 +77,24 @@ export function applyAiStudioTextTransform(source) {
     code,
     'e.filter(e=>"diagnostic"===e.source).map(e=>e.message.trim())',
     'e.filter(e=>"diagnostic"===e.source||"aistudio"===e.source).map(e=>e.message.trim())',
+  );
+  // Android System WebView may implement speechSynthesis without
+  // SpeechSynthesisUtterance. Missing browser TTS must not produce a global
+  // unhandled promise rejection while an AI Studio text request is running.
+  code = replaceExactlyOnce(
+    code,
+    'Bd=()=>{Fd++,typeof window<"u"&&(window.speechSynthesis.speaking||window.speechSynthesis.pending)&&window.speechSynthesis.cancel()}',
+    'Bd=()=>{Fd++,typeof window<"u"&&window.speechSynthesis&&(window.speechSynthesis.speaking||window.speechSynthesis.pending)&&window.speechSynthesis.cancel()}',
+  );
+  code = replaceExactlyOnce(
+    code,
+    'Ud=(e,t,n=1,r=1,a,i)=>{Bd();let o=++Fd',
+    'Ud=(e,t,n=1,r=1,a,i)=>{if(typeof window.SpeechSynthesisUtterance!=="function"||!window.speechSynthesis){console.warn("[TTS] Browser voice unavailable");i&&i();return;}Bd();let o=++Fd',
+  );
+  code = replaceExactlyOnce(
+    code,
+    'let e=async()=>{let t=new SpeechSynthesisUtterance("");t.volume=0,window.speechSynthesis.speak(t)',
+    'let e=async()=>{if(typeof window.SpeechSynthesisUtterance!=="function"||!window.speechSynthesis){document.removeEventListener("click",e),document.removeEventListener("touchstart",e);return;}let t=new SpeechSynthesisUtterance("");t.volume=0,window.speechSynthesis.speak(t)',
   );
   return code;
 }
