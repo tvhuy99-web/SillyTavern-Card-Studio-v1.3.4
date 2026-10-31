@@ -1,0 +1,77 @@
+# Android APK: stable debug signature + Google / AI Studio text source
+
+## 1. Stable install-over updates
+
+The Android GitHub Actions workflow decodes
+`.github/signing/stable-debug.keystore.b64`, a copy of the public development
+certificate from GeminiLiveTranslate. It injects a Gradle `stableDebug` signing
+configuration into Capacitor's generated Android project. CI verifies the APK
+with `apksigner` and compares the certificate SHA-256 against:
+
+`85e27156c4557de4f35b6ebe771dd426f108182894219ff3b6dbed607a230c95`
+
+The package ID remains `com.tvhuy99.cardstudio`. Each CI run sets an
+increasing `versionCode = 10000 + GITHUB_RUN_NUMBER`.
+
+This is a **publicly known debug key**, not suitable for a real Play Store or
+security-sensitive release. Anyone can read it in the public repository. A
+private production keystore must be kept in GitHub Secrets or a secure release
+signing system.
+
+**Migration:** The first Card Studio APK from the earlier random debug signing
+setup has a different certificate. Android cannot install this stable-signed
+APK over that copy; back up chat/cards and uninstall once. Subsequent APKs built
+with the same package name + debug certificate + increasing version code can
+install over one another.
+
+## 2. Fourth provider: Google Account / AI Studio (Android only)
+
+The existing Gemini API Key, OpenRouter, and Proxy providers are unchanged.
+
+This optional provider uses the same **embedded AI Studio WebView session**
+architecture as GeminiLiveTranslate. Card Studio now has a separate native
+Capacitor plugin named `AIStudioText`. Its WebView loads the Google AI Studio
+chat page. Users open it via **Cài đặt → Google / AI Studio → Mở Google /
+AI Studio**, sign in, and select a model there. The session remains in that
+WebView. The Card Studio text provider sends the prompt through the website's
+visible text-entry controls and tries to read only the returned text response.
+It does **not** use an API key, extract Google cookies/tokens, or transmit audio
+or video.
+
+**Important limitations:**
+
+- This is an **experimental browser-UI automation**, not an officially supported
+  Google Gemini text API and not a proof that Google account-based generation
+  works. Google may block embedded-WebView sign-in; the user may see an
+  authentication error. Do not attempt to bypass that block.
+- The reference app implemented Live audio input and text *transcriptions*;
+  it did **not** implement a standalone text prompt sender. This repo adds
+  that missing piece and therefore cannot claim byte-for-byte behavior
+  identical to the audio pipeline.
+- AI Studio may change its DOM at any time, requiring updated selectors.
+  Model selection happens on the AI Studio page itself, not over an official
+  model-selection endpoint.
+- Without a live authenticated Android device we cannot verify prompt
+  submission or response extraction; CI only confirms app compilation and
+  signing. No silent fallback to a different provider is used.
+- Text is delivered as one completed response, not fake SSE token streaming.
+- The provider is Android-only. Browser/Netlify builds will show an error if
+  selected rather than pretending to authenticate.
+
+## 3. Android test checklist
+
+1. Back up data from the previous debug APK, then migrate once if Android
+   reports an inconsistent signing certificate.
+2. Install the latest stable-debug APK.
+3. Open **Cài đặt**, select **Tài khoản Google / AI Studio**, press the new
+   login/session button, then confirm the browser loads the AI Studio page.
+4. If Google blocks WebView login, record the exact error; do not try to enter
+   credentials on a spoofed page.
+5. If authenticated, choose the model in AI Studio and return to Card Studio.
+6. Send a short text prompt in a test character chat.
+7. Verify a nonempty answer is returned, and that no audio/video permission
+   is requested. Try cancel and timeout behavior.
+8. Verify chat history is retained after app restarts and new signed APKs can
+   install as an update without wiping app data.
+
+Do not claim feature completion until step 6 works on an actual Android phone.
