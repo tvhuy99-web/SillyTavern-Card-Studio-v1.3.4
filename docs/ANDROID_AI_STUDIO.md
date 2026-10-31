@@ -75,3 +75,48 @@ or video.
    install as an update without wiping app data.
 
 Do not claim feature completion until step 6 works on an actual Android phone.
+
+
+## 4. Detailed System Console diagnostics (text-only, R2)
+
+The AI Studio native bridge emits structured, privacy-redacted diagnostics into
+**Trò chuyện → Bảng điều khiển Hệ thống (Console) → AI Studio**. The UI now
+retains 300 system entries rather than only the most recent message. A separate
+ring of 250 AI Studio events is preserved in localStorage across app restarts.
+The **Sao chép log** and **Xuất báo cáo lỗi** buttons include these events,
+with their structured fields and request IDs.
+
+Diagnostic phases:
+- SESSION_CREATE / PAGE_STARTED / PAGE_FINISHED / PAGE_UI
+- SESSION_VISIBLE / WEBVIEW_RETAIN (WebView stays attached behind Card Studio)
+- REQUEST_START / JS_BOOTSTRAP / EDITOR_SNAPSHOT / EDITOR_FILLED
+- SUBMIT_SNAPSHOT / SUBMIT_CLICKED (click is *not* a server acknowledgement)
+- POLL_HEARTBEAT / WAITING / RESPONSE_PROGRESS / RESPONSE_COMPLETE
+- REQUEST_FAILED / MAIN_FRAME_ERROR / HTTP_ERROR / SSL_ERROR / PAGE_JS_ERROR
+
+Each log includes a request ID, local timestamp, UI state, element counts,
+response length (never response text), stage and relevant elapsed time.
+The diagnostic snapshot probes the DOM, including open shadow roots. Failed
+requests distinguish missing editors, missing Run button, missing response
+selectors, non-completion, Google auth, SSL, HTTP and webpage-JS problems.
+The Android adapter emits incremental, actually observed text chunks while
+generation proceeds and supports cancellation. This UI-observed streaming
+is not guaranteed to match official Gemini API token streaming.
+
+### What to send when chat fails
+
+1. Open **Bảng điều khiển Hệ thống (Console)** in the Card Studio chat.
+2. Select the **AI Studio** filter.
+3. Press **Sao chép log** (or **Xuất báo cáo lỗi**).
+4. Paste the report into ChatGPT. **Do not** share passwords, cookies or
+   complete prompt/response content; the new logger deliberately excludes them.
+5. If the logs show PAGE_UI with no editor or Run button, inspect the AI Studio
+   login window. Google may deny embedded WebView authentication. Do not
+   circumvent that restriction.
+
+Reference inspiration: GeminiLiveTranslate's AppLogRepository and
+AiStudioWebSessionExecutor, especially staged lifecycle checkpoints, partial
+text callbacks, and diagnostic snapshots. Its video-description modes still
+require an attachment workflow; removing video input does not turn them into
+a public text API. The Card Studio implementation therefore keeps the
+browser-session approach but implements a separate text-only UI route.
