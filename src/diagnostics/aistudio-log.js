@@ -46,6 +46,7 @@ export function installAiStudioDiagnostics() {
   attached = true;
   window.__STS_AI_STUDIO_LOGS__ = Object.freeze({
     export: exportAiStudioDiagnostics,
+    record: recordAiStudioDiagnostic,
     clear() { try { localStorage.removeItem(KEY); } catch {} },
   });
   async function start() {
