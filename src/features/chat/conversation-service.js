@@ -35,9 +35,12 @@ export function createConversationService(deps) {
 
     try {
       while (!controller.signal.aborted) {
+        // AI Studio may need first-use account login in its native WebView.
+        // Keep the existing timeouts unchanged for all other providers.
+        const isAiStudio = String(label).startsWith('aistudio:');
         const timeoutMs = chunkCount === 0
-          ? streamFirstChunkTimeoutMs
-          : streamIdleTimeoutMs;
+          ? (isAiStudio ? Math.max(streamFirstChunkTimeoutMs, 320000) : streamFirstChunkTimeoutMs)
+          : (isAiStudio ? Math.max(streamIdleTimeoutMs, 120000) : streamIdleTimeoutMs);
         let timeoutId;
         let result;
         try {
