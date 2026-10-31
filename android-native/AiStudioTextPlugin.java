@@ -622,7 +622,6 @@ public class AiStudioTextPlugin extends Plugin {
                     fail("AI_STUDIO_EDITOR_JS_"+e.getMessage());
                 }
             });
-        });
     }
 
     private void submit(PluginCall call) {
