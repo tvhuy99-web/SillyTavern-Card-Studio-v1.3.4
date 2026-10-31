@@ -110,7 +110,7 @@ public class AiStudioTextPlugin extends Plugin {
             // walk()'s 3500-element limit. AI Studio uses Angular components
             // ms-chat-turn / ms-cmark-node for assistant replies.
             output(_ignored) {
-              const roots=[document], visited=new Set(), nested=[];
+              const roots=[document], visited=new Set();
               let seenFrames=0, seenShadows=0, crossOriginFrames=0;
               for(let pos=0;pos<roots.length && pos<60;pos++){
                 const root=roots[pos];
@@ -159,9 +159,9 @@ public class AiStudioTextPlugin extends Plugin {
                       'ms-cmark-node.cmark-node,ms-cmark-node,[class*="cmark-node"],'+
                       'markdown-renderer,.markdown,.response-content'
                     );
-                    const output=Array.from(textNodes).filter(e=>{
-                      return !Array.from(e.parentElement?.closest('ms-cmark-node')?[1]:[]).length;
-                    }).map(e=>String(e.innerText||e.textContent||'').trim()).filter(Boolean);
+                    const output=Array.from(textNodes)
+                      .filter(e=>!e.parentElement?.closest('ms-cmark-node'))
+                      .map(e=>String(e.innerText||e.textContent||'').trim()).filter(Boolean);
                     const value=(output.length?output.join('\n'):String(container.innerText||container.textContent||'')).trim();
                     if(value && value.length>=answer.length){
                       answer=value;method=selector;
@@ -186,8 +186,8 @@ public class AiStudioTextPlugin extends Plugin {
                 method,modelTurns,cmarkNodes,rawNodes,
                 shadowRoots:seenShadows,iframeRoots:seenFrames,crossOriginFrames};
             },
-            snapshot() {
-              const a=this.walk(), ed=this.editors(a.elements), btn=this.buttons(a.elements), out=this.output(a);
+            snapshot(prefetched) {
+              const a=this.walk(), ed=this.editors(a.elements), btn=this.buttons(a.elements), out=prefetched||this.output();
               const stop=btn.some(e=>this.visible(e)&&!e.disabled&&/(stop generating|stop response|stop|cancel)/i.test(this.info(e)));
               const login=/(accounts.google.com|signin|login)/i.test(location.hostname+location.pathname);
               return {
@@ -250,7 +250,8 @@ public class AiStudioTextPlugin extends Plugin {
               }catch(e){return {ok:false,error:"SEND_CLICK_FAILED",snapshot:this.snapshot()};}
             },
             read() {
-              const snap=this.snapshot(), a=this.walk(), output=this.output(a);
+              const output=this.output();
+              const snap=this.snapshot(output);
               return {text:output.text,...snap};
             }
           };
