@@ -298,13 +298,13 @@ public class AiStudioTextPlugin extends Plugin {
         }
         FrameLayout root=getActivity().findViewById(android.R.id.content);
         if(root!=null) {
-            FrameLayout.LayoutParams params=new FrameLayout.LayoutParams(2,2,Gravity.END|Gravity.BOTTOM);
+            FrameLayout.LayoutParams params=new FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT,ViewGroup.LayoutParams.MATCH_PARENT,Gravity.END|Gravity.BOTTOM);
             sessionWebView.setAlpha(0.01f);
-            root.addView(sessionWebView,params);
+            root.addView(sessionWebView,0,params);
             sessionWebView.onResume();
             sessionWebView.resumeTimers();
             trace("state","WEBVIEW_RETAIN","AI Studio session attached to small keep-alive host",
-                details("parent",true,"width",2,"height",2));
+                details("parent",true,"fullViewport",true,"behindApp",true));
         }
     }
     private void showWindow() {
