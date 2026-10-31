@@ -61,6 +61,7 @@ public class AiStudioTextPlugin extends Plugin {
     private boolean everSawResponse;
     private boolean everSawBusy;
     private boolean submitClicked;
+    private int bootstrapFailures;
 
     // Probe the UI without reading credentials. The JS returns model text
     // only to the plugin method. Log records always contain metadata only.
@@ -162,7 +163,7 @@ public class AiStudioTextPlugin extends Plugin {
                     const output=Array.from(textNodes)
                       .filter(e=>!e.parentElement?.closest('ms-cmark-node'))
                       .map(e=>String(e.innerText||e.textContent||'').trim()).filter(Boolean);
-                    const value=(output.length?output.join('\n'):String(container.innerText||container.textContent||'')).trim();
+                    const value=(output.length?output.join('\\n'):String(container.innerText||container.textContent||'')).trim();
                     if(value && !answer){
                       answer=value;method=selector;
                     }
@@ -530,7 +531,7 @@ public class AiStudioTextPlugin extends Plugin {
             if(requestId.length()>35)requestId=requestId.substring(0,35);
             pending=call;
             baseline="";latest="";sentPrefix="";polls=0;responseNodes=0;
-            everSawResponse=false;everSawBusy=false;submitClicked=false;
+            everSawResponse=false;everSawBusy=false;submitClicked=false;bootstrapFailures=0;
             requestStart=SystemClock.elapsedRealtime();lastChanged=requestStart;
             lastCheckpoint=requestStart;
             trace("state",coldStart?"SESSION_AUTO_START":"SESSION_REUSE",
@@ -551,9 +552,23 @@ public class AiStudioTextPlugin extends Plugin {
         sessionWebView.evaluateJavascript(INSTALL_JS,ready->{
             if(pending!=call)return;
             if(ready==null || "null".equals(ready)){
-                trace("warn","BOOTSTRAP_NULL","Page navigated while installing reader; retrying",
-                    details("rawNull",ready==null));
-                handler.postDelayed(()->waitUntilReady(call,prompt,0),900L);
+                bootstrapFailures++;
+                trace("warn","BOOTSTRAP_NULL","WebView could not execute AI Studio reader",details(
+                    "rawNull",ready==null,"failureCount",bootstrapFailures,
+                    "hostPath",safePath(sessionWebView==null?null:sessionWebView.getUrl())));
+                if(bootstrapFailures>=5){
+                    fail("AI_STUDIO_BOOTSTRAP_FAILED: JavaScript returned null after 5 attempts.");
+                    return;
+                }
+                // A navigation race is transient. Do not restart the session
+                // watchdog or flood console with an unbounded retry loop.
+                handler.postDelayed(()->prepareText(call,prompt),1500L);
+                return;
+            }
+            if(!("\"installed\"".equals(ready) || "\"ready\"".equals(ready))){
+                trace("error","BOOTSTRAP_UNEXPECTED","AI Studio bootstrap returned unexpected result",
+                    details("responseLength",ready.length(),"firstChar",ready.substring(0,1)));
+                fail("AI_STUDIO_BOOTSTRAP_UNEXPECTED_RESULT");
                 return;
             }
             trace("state","JS_BOOTSTRAP","Text-only UI reader installed",details("promptChars",prompt.length()));
