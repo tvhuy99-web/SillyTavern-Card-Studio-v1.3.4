@@ -163,7 +163,7 @@ public class AiStudioTextPlugin extends Plugin {
                       .filter(e=>!e.parentElement?.closest('ms-cmark-node'))
                       .map(e=>String(e.innerText||e.textContent||'').trim()).filter(Boolean);
                     const value=(output.length?output.join('\n'):String(container.innerText||container.textContent||'')).trim();
-                    if(value && value.length>=answer.length){
+                    if(value && !answer){
                       answer=value;method=selector;
                     }
                   }
