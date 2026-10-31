@@ -43,7 +43,7 @@ function replaceExactlyOnce(source, oldText, newText) {
   return source.slice(0, start) + newText + source.slice(start + oldText.length);
 }
 
-export const AI_STUDIO_TEXT_PATCH_COUNT = PATCHES.length + 5;
+export const AI_STUDIO_TEXT_PATCH_COUNT = PATCHES.length + 4;
 
 export function applyAiStudioTextTransform(source) {
   let code = source;
@@ -62,14 +62,7 @@ export function applyAiStudioTextTransform(source) {
   const newOption = 'children:[(0,wt.jsx)("option",{value:"",children:"-- Chọn Model --"}),("aistudio"===d.source?[{id:d.aistudio_model||"gemini-2.5-flash",name:d.aistudio_model||"gemini-2.5-flash"}]:k).map(e=>(0,wt.jsx)("option",{value:e.id,children:e.name},e.id))]';
   code = code.slice(0, second) + newOption + code.slice(second + oldOption.length);
 
-  // Preserve the full diagnostic event chain instead of replacing with the last log.
-  // The System Console's built-in copy/export actions can then report stage
-  // transitions and status diagnostics in chronological order.
-  code = replaceExactlyOnce(
-    code,
-    'addSystemLog:t=>e(e=>{e.logs.systemLog=[t]})',
-    'addSystemLog:t=>e(e=>{e.logs.systemLog=[t,...(e.logs.systemLog||[])].slice(0,300)})',
-  );
+  // Add an AI Studio filter in System Console without modifying M5's store tokens.
   code = replaceExactlyOnce(
     code,
     '{id:"diagnostic",label:"Chẩn đoán"},{id:"regex"',
