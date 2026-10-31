@@ -307,57 +307,61 @@ public class AiStudioTextPlugin extends Plugin {
     }
 
     @SuppressLint("SetJavaScriptEnabled")
+    private void createSessionIfNeeded() {
+        if (sessionWebView == null) {
+            sessionWebView = new WebView(getActivity());
+            WebSettings settings = sessionWebView.getSettings();
+            settings.setJavaScriptEnabled(true);
+            settings.setDomStorageEnabled(true);
+            settings.setAllowFileAccess(false);
+            settings.setAllowContentAccess(false);
+            CookieManager.getInstance().setAcceptCookie(true);
+            CookieManager.getInstance().setAcceptThirdPartyCookies(sessionWebView, true);
+            sessionWebView.setWebViewClient(new WebViewClient() {
+                @Override public void onPageStarted(WebView view, String url, Bitmap icon) {
+                    trace("state","PAGE_STARTED","AI Studio page navigation",
+                        details("hostPath",safePath(url)));
+                }
+                @Override public void onPageFinished(WebView view, String url) {
+                    trace("state","PAGE_FINISHED","AI Studio page loaded",
+                        details("hostPath",safePath(url)));
+                    inspect("PAGE_UI");
+                }
+                @Override public void onReceivedError(WebView v,WebResourceRequest r,WebResourceError e) {
+                    if (r.isForMainFrame())
+                        trace("error","MAIN_FRAME_ERROR","WebView connection failed",
+                            details("errorCode",e.getErrorCode(),"hostPath",safePath(r.getUrl().toString())));
+                }
+                @Override public void onReceivedHttpError(WebView v,WebResourceRequest r,WebResourceResponse e) {
+                    if (r.isForMainFrame())
+                        trace("warn","HTTP_ERROR","AI Studio main frame returned an HTTP error",
+                            details("status",e.getStatusCode(),"hostPath",safePath(r.getUrl().toString())));
+                }
+                @Override public void onReceivedSslError(WebView v,SslErrorHandler h,SslError e) {
+                    h.cancel();
+                    trace("error","SSL_ERROR","AI Studio SSL certificate rejected",
+                        details("sslCode",e.getPrimaryError()));
+                }
+            });
+            sessionWebView.setWebChromeClient(new WebChromeClient() {
+                @Override public boolean onConsoleMessage(android.webkit.ConsoleMessage m) {
+                    if(m.messageLevel() == android.webkit.ConsoleMessage.MessageLevel.ERROR)
+                        trace("warn","PAGE_JS_ERROR","AI Studio website reported JS error (contents hidden)",
+                            details("line",m.lineNumber(),"source",safePath(m.sourceId())));
+                    return false;
+                }
+            });
+            trace("state","SESSION_CREATE","Creating persistent WebView session",details(
+                "androidSdk",android.os.Build.VERSION.SDK_INT));
+            sessionWebView.loadUrl(URL);
+        }
+    }
+
     @PluginMethod
     public void openSession(PluginCall call) {
         getActivity().runOnUiThread(() -> {
             try {
-                if (sessionWebView == null) {
-                    sessionWebView = new WebView(getActivity());
-                    WebSettings settings = sessionWebView.getSettings();
-                    settings.setJavaScriptEnabled(true);
-                    settings.setDomStorageEnabled(true);
-                    settings.setAllowFileAccess(false);
-                    settings.setAllowContentAccess(false);
-                    CookieManager.getInstance().setAcceptCookie(true);
-                    CookieManager.getInstance().setAcceptThirdPartyCookies(sessionWebView, true);
-                    sessionWebView.setWebViewClient(new WebViewClient() {
-                        @Override public void onPageStarted(WebView view, String url, Bitmap icon) {
-                            trace("state","PAGE_STARTED","AI Studio page navigation",
-                                details("hostPath",safePath(url)));
-                        }
-                        @Override public void onPageFinished(WebView view, String url) {
-                            trace("state","PAGE_FINISHED","AI Studio page loaded",
-                                details("hostPath",safePath(url)));
-                            inspect("PAGE_UI");
-                        }
-                        @Override public void onReceivedError(WebView v,WebResourceRequest r,WebResourceError e) {
-                            if (r.isForMainFrame())
-                                trace("error","MAIN_FRAME_ERROR","WebView connection failed",
-                                    details("errorCode",e.getErrorCode(),"hostPath",safePath(r.getUrl().toString())));
-                        }
-                        @Override public void onReceivedHttpError(WebView v,WebResourceRequest r,WebResourceResponse e) {
-                            if (r.isForMainFrame())
-                                trace("warn","HTTP_ERROR","AI Studio main frame returned an HTTP error",
-                                    details("status",e.getStatusCode(),"hostPath",safePath(r.getUrl().toString())));
-                        }
-                        @Override public void onReceivedSslError(WebView v,SslErrorHandler h,SslError e) {
-                            h.cancel();
-                            trace("error","SSL_ERROR","AI Studio SSL certificate rejected",
-                                details("sslCode",e.getPrimaryError()));
-                        }
-                    });
-                    sessionWebView.setWebChromeClient(new WebChromeClient() {
-                        @Override public boolean onConsoleMessage(android.webkit.ConsoleMessage m) {
-                            if(m.messageLevel() == android.webkit.ConsoleMessage.MessageLevel.ERROR)
-                                trace("warn","PAGE_JS_ERROR","AI Studio website reported JS error (contents hidden)",
-                                    details("line",m.lineNumber(),"source",safePath(m.sourceId())));
-                            return false;
-                        }
-                    });
-                    trace("state","SESSION_CREATE","Creating persistent WebView session",details(
-                        "androidSdk",android.os.Build.VERSION.SDK_INT));
-                    sessionWebView.loadUrl(URL);
-                }
+                createSessionIfNeeded();
                 showWindow();
                 JSObject result = new JSObject();
                 result.put("opened", true);
@@ -365,10 +369,11 @@ public class AiStudioTextPlugin extends Plugin {
             } catch (Exception e) {
                 trace("error","OPEN_ERROR","Cannot initialize AI Studio WebView",details(
                     "exception",e.getClass().getSimpleName()));
-                call.reject("AI_STUDIO_OPEN_FAILED: "+e.getMessage());
+                call.reject("AI_STUDIO_OPEN_FAILED: " + e.getClass().getSimpleName());
             }
         });
     }
+
     private void retainWebView() {
         if (sessionWebView == null || getActivity() == null) return;
         if (sessionWebView.getParent() instanceof ViewGroup) {
@@ -417,62 +422,164 @@ public class AiStudioTextPlugin extends Plugin {
         });
     }
 
+    // JS exceptions and page navigations must not be disguised as JSONException.
+    // Android evaluateJavascript passes an outer JSON-encoded string. The
+    // inner payload is always an object with ok/value or ok/errorCode.
+    private String guardJs(String expression) {
+        return "JSON.stringify((function(){try{" +
+            "var v=(" + expression + ");" +
+            "return {ok:true,value:v};" +
+            "}catch(e){return {ok:false,errorCode:'JS_EXCEPTION'," +
+            "errorName:String(e&&e.name||'Error').slice(0,60)};}})())";
+    }
+    private JSONObject unwrapJs(String raw, String stage) throws Exception {
+        if(raw==null || raw.isBlank() || "null".equals(raw)) {
+            trace("error",stage+"_NO_RESULT","WebView returned null (navigation or JavaScript exception)",details(
+                "rawNull",raw==null,"rawChars",raw==null?0:raw.length(),
+                "hostPath",safePath(sessionWebView==null?null:sessionWebView.getUrl())));
+            throw new IllegalStateException("JS_NULL_RESULT");
+        }
+        JSONObject envelope;
+        try {envelope=parse(raw);}
+        catch(Exception e) {
+            trace("error",stage+"_PARSE","WebView returned non-JSON value",details(
+                "exception",e.getClass().getSimpleName(),"rawChars",raw.length(),
+                "firstCharacter",raw.isEmpty()?"empty":String.valueOf(raw.charAt(0))));
+            throw new IllegalStateException("JS_NON_JSON_RESULT");
+        }
+        if(!envelope.optBoolean("ok",false)) {
+            trace("error",stage+"_EXCEPTION","JavaScript evaluation threw",details(
+                "errorCode",envelope.optString("errorCode","UNKNOWN"),
+                "errorName",envelope.optString("errorName","Error")));
+            throw new IllegalStateException("JS_EXCEPTION_"+envelope.optString("errorName","Error"));
+        }
+        JSONObject value=envelope.optJSONObject("value");
+        if(value==null) {
+            trace("error",stage+"_INVALID","JavaScript returned no response object",
+                details("valueType",envelope.isNull("value")?"null":"nonObject"));
+            throw new IllegalStateException("JS_INVALID_RESPONSE");
+        }
+        return value;
+    }
+
+    // A cold app launch must never require Settings -> Open AI Studio first.
+    // Show the real first-party WebView for login/model selection only if the
+    // user has no live session, then resume the original text request.
+    private void waitUntilReady(PluginCall call, String prompt, int attempt) {
+        if(pending!=call)return;
+        final long elapsed=SystemClock.elapsedRealtime()-requestStart;
+        if(elapsed>180_000L){
+            fail("AI_STUDIO_LOGIN_OR_PAGE_TIMEOUT: Đăng nhập AI Studio và thử gửi lại.");
+            return;
+        }
+        if(sessionDialog!=null && sessionDialog.isShowing()){
+            if(attempt%8==0)trace("state","WAIT_FOR_LOGIN","Waiting for user to close AI Studio window",
+                details("seconds",elapsed/1000));
+            handler.postDelayed(()->waitUntilReady(call,prompt,attempt+1),1000L);
+            return;
+        }
+        if(sessionWebView==null){fail("AI_STUDIO_SESSION_LOST");return;}
+        sessionWebView.evaluateJavascript(
+            "JSON.stringify((function(){try{var h=location.hostname;var n=document.querySelectorAll('textarea,[contenteditable=\"true\"],[role=\"textbox\"]');return {ok:h==='aistudio.google.com'&&n.length>0,host:h,editors:n.length,ready:document.readyState};}catch(e){return {ok:false,errorName:String(e.name)}}})())",
+            raw->{
+                if(pending!=call)return;
+                try {
+                    JSONObject x=parse(raw);
+                    if(x.optBoolean("ok",false)) {
+                        trace("state","SESSION_READY","AI Studio text editor found without manual setup",
+                            details("waitMs",SystemClock.elapsedRealtime()-requestStart,
+                                "editorCount",x.optInt("editors",0)));
+                        // Reset generation timeout after login/network startup.
+                        requestStart=SystemClock.elapsedRealtime();
+                        prepareText(call,prompt);
+                        return;
+                    }
+                    if(attempt%10==0)trace("warn","SESSION_WAIT","AI Studio not ready for text",
+                        details("host",x.optString("host","unknown"),
+                            "ready",x.optString("ready","unknown"),
+                            "editors",x.optInt("editors",0),"elapsedMs",elapsed));
+                    if(attempt==12 && (sessionDialog==null || !sessionDialog.isShowing())){
+                        trace("warn","OPEN_LOGIN","Showing AI Studio for login or loading problem",null);
+                        showWindow();
+                    }
+                }catch(Exception e){
+                    if(attempt%10==0)trace("warn","SESSION_PROBE_ERROR","Cannot inspect AI Studio readiness",
+                        details("exception",e.getClass().getSimpleName(),
+                            "rawNull",raw==null || "null".equals(raw)));
+                }
+                handler.postDelayed(()->waitUntilReady(call,prompt,attempt+1),1000L);
+            });
+    }
+
     @PluginMethod
     public void generate(PluginCall call) {
-        final String prompt=call.getString("prompt", "");
-        if(prompt==null || prompt.isBlank()) {
+        final String prompt=call.getString("prompt","");
+        if(prompt==null || prompt.isBlank()){
             call.reject("AI_STUDIO_PROMPT_EMPTY");return;
         }
         getActivity().runOnUiThread(() -> {
-            if(pending!=null) {call.reject("AI_STUDIO_BUSY");return;}
-            if(sessionWebView==null) {
-                trace("error","SESSION_MISSING","Open Google / AI Studio from Settings first",null);
-                call.reject("AI_STUDIO_NOT_OPEN");return;
+            if(pending!=null){call.reject("AI_STUDIO_BUSY");return;}
+            boolean coldStart=sessionWebView==null;
+            try {createSessionIfNeeded();}
+            catch(Exception e){
+                trace("error","AUTO_START_FAILED","Unable to open AI Studio automatically",
+                    details("exception",e.getClass().getSimpleName()));
+                call.reject("AI_STUDIO_AUTO_START_FAILED");return;
             }
-            Uri current=Uri.parse(sessionWebView.getUrl()==null?"":sessionWebView.getUrl());
-            if(!"aistudio.google.com".equalsIgnoreCase(current.getHost())) {
-                trace("error","LOGIN_OR_HOST","AI Studio session not at expected host",
-                    details("hostPath",safePath(sessionWebView.getUrl())));
-                call.reject("AI_STUDIO_AUTH_OR_HOST: Check Google login in the AI Studio window.");
-                return;
-            }
-            requestId=call.getString("requestId", "chat");
-            requestId=requestId.replaceAll("[^a-zA-Z0-9_-]","").substring(0,
-                Math.min(35,requestId.replaceAll("[^a-zA-Z0-9_-]","").length()));
+            requestId=call.getString("requestId","chat").replaceAll("[^a-zA-Z0-9_-]","");
+            if(requestId.length()>35)requestId=requestId.substring(0,35);
             pending=call;
             baseline="";latest="";sentPrefix="";polls=0;responseNodes=0;
             everSawResponse=false;everSawBusy=false;submitClicked=false;
             requestStart=SystemClock.elapsedRealtime();lastChanged=requestStart;
             lastCheckpoint=requestStart;
-            trace("state","REQUEST_START","Sending text through authenticated AI Studio UI",
-                details("promptChars",prompt.length(),"modelSetInAiStudio",true,
-                    "hasWebViewParent",sessionWebView.getParent()!=null));
+            trace("state",coldStart?"SESSION_AUTO_START":"SESSION_REUSE",
+                coldStart?"Created AI Studio WebView automatically":"Using existing AI Studio WebView",
+                details("promptChars",prompt.length(),"hasWebViewParent",sessionWebView.getParent()!=null));
             sessionWebView.onResume();sessionWebView.resumeTimers();
-            sessionWebView.evaluateJavascript(INSTALL_JS, ready -> {
+            if(coldStart) {
+                // Let the user sign in to Google's actual website and pick a
+                // model. No credentials are read by this plugin.
+                showWindow();
+            }
+            waitUntilReady(call,prompt,0);
+        });
+    }
+
+    private void prepareText(PluginCall call,String prompt) {
+        if(pending!=call||sessionWebView==null)return;
+        sessionWebView.evaluateJavascript(INSTALL_JS,ready->{
+            if(pending!=call)return;
+            if(ready==null || "null".equals(ready)){
+                trace("warn","BOOTSTRAP_NULL","Page navigated while installing reader; retrying",
+                    details("rawNull",ready==null));
+                handler.postDelayed(()->waitUntilReady(call,prompt,0),900L);
+                return;
+            }
+            trace("state","JS_BOOTSTRAP","Text-only UI reader installed",details("promptChars",prompt.length()));
+            String expression="window.__STS_AI_TEXT_V2__?.prepare(" + JSONObject.quote(prompt) + ")" ;
+            sessionWebView.evaluateJavascript(guardJs(expression),raw->{
                 if(pending!=call)return;
-                trace("state","JS_BOOTSTRAP","Installed text-only UI observer",null);
-                String js="JSON.stringify(window.__STS_AI_TEXT_V2__.prepare("+JSONObject.quote(prompt)+"))";
-                sessionWebView.evaluateJavascript(js, raw -> {
-                    if(pending!=call)return;
-                    try {
-                        JSONObject obj=parse(raw);
-                        JSONObject snapshot=obj.optJSONObject("snapshot");
-                        if(snapshot!=null)snapshotTrace("EDITOR_SNAPSHOT",snapshot);
-                        if(!obj.optBoolean("ok")) {
-                            fail("AI_STUDIO_EDITOR: "+obj.optString("error","Cannot enter prompt"));return;
-                        }
-                        baseline=obj.optString("before","");
-                        trace("state","EDITOR_FILLED","Text entered (text content not logged)",
-                            details("editorTag",obj.optString("editorTag","unknown"),"promptChars",prompt.length(),
-                                "baselineChars",baseline.length()));
-                        handler.postDelayed(() -> submit(call),400L);
-                    }catch(Exception e){
-                        fail("AI_STUDIO_EDITOR_JS: "+e.getClass().getSimpleName());
+                try {
+                    JSONObject obj=unwrapJs(raw,"EDITOR");
+                    JSONObject snapshot=obj.optJSONObject("snapshot");
+                    if(snapshot!=null)snapshotTrace("EDITOR_SNAPSHOT",snapshot);
+                    if(!obj.optBoolean("ok",false)){
+                        fail("AI_STUDIO_EDITOR_"+obj.optString("error","UNKNOWN"));
+                        return;
                     }
-                });
+                    baseline=obj.optString("before","");
+                    trace("state","EDITOR_FILLED","AI Studio text editor filled",details(
+                        "editorTag",obj.optString("editorTag","unknown"),
+                        "promptChars",prompt.length(),"baselineChars",baseline.length()));
+                    handler.postDelayed(()->submit(call),400L);
+                }catch(Exception e){
+                    fail("AI_STUDIO_EDITOR_JS_"+e.getMessage());
+                }
             });
         });
     }
+
     private void submit(PluginCall call) {
         if(pending!=call||sessionWebView==null)return;
         sessionWebView.evaluateJavascript(
