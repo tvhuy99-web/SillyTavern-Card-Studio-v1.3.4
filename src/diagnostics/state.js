@@ -19,7 +19,7 @@ function array(value) {
 function clone(value) {
   return {
     turns: array(value?.turns).slice(0, 10),
-    systemLog: array(value?.systemLog).slice(0, 1),
+    systemLog: array(value?.systemLog).slice(0, 300),
     smartScanLog: array(value?.smartScanLog).slice(0, 1),
     mythicLog: array(value?.mythicLog).slice(0, 1),
     networkLog: array(value?.networkLog).slice(0, 1),
