@@ -66,9 +66,9 @@ public class AiStudioTextPlugin extends Plugin {
     // only to the plugin method. Log records always contain metadata only.
     private static final String INSTALL_JS = """
         (function() {
-          if (window.__STS_AI_TEXT_V2__?.version === 2) return "ready";
+          if (window.__STS_AI_TEXT_V2__?.version === 3) return "ready";
           const S = {
-            version: 2, submitted: false, clicked: false, lastSubmitAt: 0,
+            version: 3, submitted: false, clicked: false, lastSubmitAt: 0,
             walk() {
               const out=[], todo=[document.documentElement], seen=new Set();
               let shadows=0, frames=0;
@@ -106,18 +106,85 @@ public class AiStudioTextPlugin extends Plugin {
             buttons(els) {
               return els.filter(e=>e.matches?.("button,[role='button'],input[type='submit']"));
             },
-            responses(els) {
-              return els.filter(e=>e.matches?.(
-                "markdown-renderer,.markdown,[data-role='model'],[data-message-role='model'],"+
-                "[data-testid*='response'],[data-testid*='model-output'],.model-response,"+
-                ".model-output,[class*='model-response'],[class*='modelResponse'],"+
-                "[class*='response-content'],.response-container"
-              ));
-            },
-            output(snapshot) {
-              const nodes=this.responses(snapshot.elements);
-              const arr=nodes.map(e=>String(e.innerText||e.textContent||"").trim()).filter(Boolean);
-              return {text:arr.length?arr[arr.length-1]:"", count:nodes.length};
+            // Extract directly from AI Studio model turns, independently of
+            // walk()'s 3500-element limit. AI Studio uses Angular components
+            // ms-chat-turn / ms-cmark-node for assistant replies.
+            output(_ignored) {
+              const roots=[document], visited=new Set(), nested=[];
+              let seenFrames=0, seenShadows=0, crossOriginFrames=0;
+              for(let pos=0;pos<roots.length && pos<60;pos++){
+                const root=roots[pos];
+                if(!root||visited.has(root))continue;
+                visited.add(root);
+                try {
+                  for(const frame of root.querySelectorAll('iframe')) {
+                    try {
+                      if(frame.contentDocument) {roots.push(frame.contentDocument);seenFrames++;}
+                      else crossOriginFrames++;
+                    }catch(e){crossOriginFrames++;}
+                  }
+                  // Open shadow roots only; never evade closed-root boundaries.
+                  const hosts=root.querySelectorAll('*');
+                  let limit=0;
+                  for(const host of hosts){
+                    if(host.shadowRoot){seenShadows++;roots.push(host.shadowRoot);}
+                    if(++limit>=18000)break;
+                  }
+                }catch(e){}
+              }
+              const unique=roots.filter(r=>r && visited.has(r));
+              const selectors=[
+                'ms-chat-turn .chat-turn-container.model',
+                'ms-chat-turn .chat-turn-container[class*="model"]',
+                '.chat-turn-container.model',
+                'ms-chat-turn .model-response',
+                '[data-role="model"]',
+                '[data-message-role="model"]',
+                '[data-testid*="model-output"]',
+                '[data-testid*="response"]'
+              ];
+              let modelTurns=0, cmarkNodes=0, rawNodes=0, fallbackNodes=0;
+              let answer='', method='none', count=0;
+              for(const root of unique){
+                try{
+                  modelTurns+=root.querySelectorAll('ms-chat-turn').length;
+                  cmarkNodes+=root.querySelectorAll('ms-cmark-node').length;
+                  rawNodes+=root.querySelectorAll('.chat-turn-container.model').length;
+                  for(const selector of selectors){
+                    const containers=Array.from(root.querySelectorAll(selector));
+                    if(!containers.length)continue;
+                    count+=containers.length;
+                    const container=containers[containers.length-1];
+                    const textNodes=container.querySelectorAll(
+                      'ms-cmark-node.cmark-node,ms-cmark-node,[class*="cmark-node"],'+
+                      'markdown-renderer,.markdown,.response-content'
+                    );
+                    const output=Array.from(textNodes).filter(e=>{
+                      return !Array.from(e.parentElement?.closest('ms-cmark-node')?[1]:[]).length;
+                    }).map(e=>String(e.innerText||e.textContent||'').trim()).filter(Boolean);
+                    const value=(output.length?output.join('\n'):String(container.innerText||container.textContent||'')).trim();
+                    if(value && value.length>=answer.length){
+                      answer=value;method=selector;
+                    }
+                  }
+                  if(!answer){
+                    // Some AI Studio versions render cmark nodes without the
+                    // .model container class. Only accept model-associated turns.
+                    const globalCmark=root.querySelectorAll('ms-cmark-node');
+                    for(const node of globalCmark){
+                      const turn=node.closest('ms-chat-turn');
+                      if(!turn)continue;
+                      const cls=String(turn.className||'')+' '+String(turn.querySelector('.chat-turn-container')?.className||'');
+                      if(!/model/i.test(cls))continue;
+                      const value=String(node.innerText||node.textContent||'').trim();
+                      if(value){answer=value;method='ms-cmark-node/model-turn';fallbackNodes++;}
+                    }
+                  }
+                }catch(e){}
+              }
+              return {text:answer,count:Math.max(count,fallbackNodes),
+                method,modelTurns,cmarkNodes,rawNodes,
+                shadowRoots:seenShadows,iframeRoots:seenFrames,crossOriginFrames};
             },
             snapshot() {
               const a=this.walk(), ed=this.editors(a.elements), btn=this.buttons(a.elements), out=this.output(a);
@@ -127,6 +194,10 @@ public class AiStudioTextPlugin extends Plugin {
                 path:location.pathname.slice(0,150), ready:document.readyState,
                 editors:ed.length, visibleEditors:ed.filter(e=>this.visible(e)).length,
                 buttons:btn.length, responseNodes:out.count, outputChars:out.text.length,
+                modelTurns:out.modelTurns, cmarkNodes:out.cmarkNodes,
+                rawModelNodes:out.rawNodes, responseMethod:out.method,
+                responseIframes:out.iframeRoots, responseShadows:out.shadowRoots,
+                inaccessibleFrames:out.crossOriginFrames,
                 shadows:a.shadows, frames:a.frames, scanned:a.elements.length,
                 busy:stop, authGate:login, clicked:this.clicked,
                 elapsedSinceClickMs:this.lastSubmitAt?Date.now()-this.lastSubmitAt:-1
@@ -220,6 +291,12 @@ public class AiStudioTextPlugin extends Plugin {
             "editors", o.optInt("editors", -1), "visibleEditors", o.optInt("visibleEditors", -1),
             "buttons", o.optInt("buttons", -1), "responseNodes", o.optInt("responseNodes", -1),
             "outputChars", o.optInt("outputChars", -1),
+            "modelTurns", o.optInt("modelTurns", -1), "cmarkNodes", o.optInt("cmarkNodes", -1),
+            "rawModelNodes", o.optInt("rawModelNodes", -1),
+            "responseMethod", o.optString("responseMethod", "none"),
+            "responseIframes", o.optInt("responseIframes", -1),
+            "responseShadows", o.optInt("responseShadows", -1),
+            "inaccessibleFrames", o.optInt("inaccessibleFrames", -1),
             "shadows", o.optInt("shadows", -1), "frames", o.optInt("frames", -1),
             "scanned", o.optInt("scanned", -1), "busy", o.optBoolean("busy", false),
             "authGate", o.optBoolean("authGate", false),
