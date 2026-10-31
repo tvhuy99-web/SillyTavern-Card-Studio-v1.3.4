@@ -110,7 +110,7 @@ export function updateCurrentTurn(patch) {
 }
 
 export function addSystem(value) {
-  return publish({ ...state, systemLog: [value] });
+  return publish({ ...state, systemLog: [value, ...state.systemLog].slice(0, 300) });
 }
 
 export function addSmartScan(value) {
