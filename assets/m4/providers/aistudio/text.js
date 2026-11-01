@@ -62,56 +62,62 @@ export function createAiStudioTextProvider() {
     const requestId = makeId();
     const listenerAPI = cap.Plugins?.AIStudioText;
     if (!listenerAPI?.addListener) {
-      log('STREAM_UNAVAILABLE', {requestId,message:'Native listener not available; using complete response'}, 'warn');
+      log('STREAM_UNAVAILABLE', {requestId, message:'Native listener unavailable: returning complete answer'}, 'warn');
       yield {text:await run({...options,requestId})};
       return;
     }
-    const queue = [];
-    let wake = null, completed = false, failure = null, final = '', seen = '';
+
+    let latestSnapshot = null;
+    let wake = null;
+    let completed = false;
+    let failure = null;
+    let finalText = '';
+    let lastYielded = null;
     const signal = options.signal;
-    const wakeUp = () => { if (wake) { const f=wake; wake=null; f(); } };
+    const wakeUp = () => {const callback = wake; wake = null; callback?.();};
     const listener = await listenerAPI.addListener('textProgress', event => {
-      if (event?.requestId !== requestId) return;
-      if (signal?.aborted) return;
-      const chunk = String(event?.text ?? '');
-      if (!chunk) return;
-      queue.push(chunk);
+      if (event?.requestId !== requestId || signal?.aborted) return;
+      // AI Studio may rewrite previously rendered Markdown and thinking text.
+      // Always send the FULL current text; the consumer replaces its preview.
+      // Holding only the latest snapshot also avoids a slow UI backlog.
+      if (event?.replace !== true) return;
+      latestSnapshot = String(event?.text ?? '');
       wakeUp();
     });
-    log('STREAM_ATTACHED',{requestId,message:'Listening for incremental AI Studio text'});
+
+    log('STREAM_ATTACHED', {requestId, message:'Live full-text snapshots enabled'});
     const job = run({...options,requestId}).then(
-      value => {final=value; completed=true; wakeUp();},
-      error => {failure=error; completed=true; wakeUp();}
+      value => {finalText=value; completed=true; wakeUp();},
+      error => {failure=error; completed=true; wakeUp();},
     );
     try {
-      for (;;) {
-        while (queue.length) {
-          const chunk = queue.shift();
-          seen += chunk;
-          yield {text:chunk};
+      while (true) {
+        if (latestSnapshot !== null) {
+          const snapshot = latestSnapshot;
+          latestSnapshot = null;
+          if (snapshot && snapshot !== lastYielded) {
+            lastYielded = snapshot;
+            yield {text:snapshot, replaceText:true};
+          }
+          continue;
         }
         if (completed) break;
         if (signal?.aborted) throw new DOMException('Stopped','AbortError');
         await new Promise(resolve => {wake=resolve;});
       }
       if (failure) throw failure;
-      if (final.startsWith(seen) && final.length > seen.length) {
-        yield {text:final.slice(seen.length)};
-      } else if (final !== seen && seen) {
-        log('STREAM_TEXT_CHANGED',{
-          requestId,message:'AI Studio modified earlier streamed text; partial output may differ',
-          streamedChars:seen.length,finalChars:final.length,
-        },'warn');
-      } else if (!seen) {
-        yield {text:final};
+      if (finalText !== lastYielded) {
+        lastYielded = finalText;
+        yield {text:finalText, replaceText:true};
       }
+      log('STREAM_FINAL', {requestId, responseChars:finalText.length}, 'script-success');
     } finally {
-      wakeUp();
       if (signal?.aborted) cap.nativePromise('AIStudioText','cancel',{}).catch(()=>{});
       await job;
       try {await listener.remove();} catch {}
-      log('STREAM_DETACHED',{requestId,message:'Streaming listener cleaned up'});
+      log('STREAM_DETACHED', {requestId, message:'Live snapshot listener cleaned up'});
     }
   }
+
   return Object.freeze({generate,stream});
 }
