@@ -18,7 +18,16 @@ assert.match(native, /getBoolean\(PREFS_SHOW_PAGE, false\)/);
 assert.match(native, /public void setVisibility\(PluginCall call\)/);
 assert.match(native, /public void getVisibility\(PluginCall call\)/);
 assert.match(native, /if \(isPageDisplayEnabled\(\)\) \{\s*showWindow\(\);/);
-assert.match(native, /root\.addView\(sessionWebView,0,params\)/);
+// The old alpha=0.01 full-screen WebView leaked through the top of the app.
+assert.match(native, /root\.addView\(offscreenHost,0,params\)/);
+assert.match(native, /offscreenHost\.setTranslationY\(\(float\)screenHeight \+ safeHeight\)/);
+assert.match(native, /offscreenHost\.setImportantForAccessibility\(/);
+assert.match(native, /IMPORTANT_FOR_ACCESSIBILITY_NO_HIDE_DESCENDANTS/);
+assert.match(native, /sessionWebView\.setAlpha\(1f\)/);
+assert.doesNotMatch(native, /sessionWebView\.setAlpha\(0\.01f\)/);
+assert.match(native, /sessionWebView\.resumeTimers\(\)/);
+assert.match(native, /WEBVIEW_HIDDEN_OFFSCREEN/);
+assert.match(native, /sessionDialog\.setOnDismissListener\(dialog -> retainWebView\(\)\)/);
 assert.match(native, /AI_STUDIO_NOT_READY_HIDDEN/);
 const settingsPatch = fs.readFileSync(new URL('../build/transforms/ai-studio-text.mjs', import.meta.url), 'utf8');
 assert.match(settingsPatch, /Hiển thị trang web AI Studio/);
