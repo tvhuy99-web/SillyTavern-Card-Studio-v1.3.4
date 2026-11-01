@@ -46,8 +46,10 @@ jobs:
       - name: Install web dependencies
         run: npm install --no-audit --no-fund
 
-      - name: Test AI Studio response selectors
-        run: node tests/ai-studio-response-extractor.mjs
+      - name: Test AI Studio response selectors and streaming
+        run: |
+          node tests/ai-studio-response-extractor.mjs
+          node tests/ai-studio-live-turns.mjs
 
       - name: Build portable static web app
         run: |
