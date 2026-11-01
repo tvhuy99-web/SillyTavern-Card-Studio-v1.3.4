@@ -147,3 +147,31 @@ evaluation. This is not evidence of a Google-side error. R3 implements:
 Logging never captures raw chat prompts, AI responses, authentication tokens,
 cookies, or passwords. If the new version fails, use the **AI Studio** filter
 and **Xuất báo cáo lỗi** to identify the exact failed phase.
+
+## 6. One Google conversation per Card Studio turn + true live preview (R4)
+
+Each Card Studio request now **navigates to a new AI Studio conversation**
+(`/prompts/new_chat`) while reusing only its authenticated Google WebView
+session. Before submitting text, the native plugin confirms the editor is
+present and no model response turns exist on the new page. It rejects an
+uncleared/stale conversation instead of silently submitting into that old
+Google chat. The Card Studio character/history and full roleplay prompt are
+**not cleared**. The generated response creates a normal new model reply in
+Card Studio's local conversation.
+
+The provider now emits **full replacement snapshots** as AI Studio gradually
+renders text. Previously, a 78-character partial answer could be replaced
+by longer Markdown with a different prefix, triggering `STREAM_NON_PREFIX`
+and suppressing all later live updates. Native now raises
+`textProgress: {requestId, text, replace:true}`, the JS generator maps to
+`{text,replaceText:true}`, and Card Studio's stream display replaces its
+preview rather than appending. The full answer still commits to chat at end.
+
+AI Studio live preview is always enabled for this Android provider even if
+the character preset's `stream_response` switch is off. Streaming behavior
+for Gemini API-key, OpenRouter and Reverse Proxy is unchanged.
+
+Android UI automation is experimental: `/prompts/new_chat` and DOM model
+selectors are not Google-supported integration APIs. CI tests validate
+snapshot semantics and new-chat invariants but cannot guarantee Google will
+keep the same website behavior.
