@@ -47,6 +47,10 @@ public class AiStudioTextPlugin extends Plugin {
     private static final String LOG_TAG = "CardStudioAIStudio";
     private final Handler handler = new Handler(Looper.getMainLooper());
     private WebView sessionWebView;
+    // The reference app keeps a REAL visible WebView at its normal opacity
+    // while translating its host completely off-screen. Alpha hiding allows
+    // WebView compositor surfaces to bleed through above the app on devices.
+    private FrameLayout offscreenHost;
     private AlertDialog sessionDialog;
     private PluginCall pending;
     private String requestId = "";
@@ -431,27 +435,79 @@ public class AiStudioTextPlugin extends Plugin {
         });
     }
 
+    // Mirrors GeminiLiveTranslate AiStudioDebugWebViewHost.applyPresentation:
+    // WebView remains VISIBLE at alpha=1 for rendering/JS, but the entire
+    // host panel is translated beyond the bottom of the physical display.
+    // This prevents Chromium's separate compositor surface leaking into
+    // Card Studio's top bar, unlike the previous alpha=0.01 workaround.
+    private void moveHostOffscreen() {
+        if (offscreenHost == null || getActivity() == null) return;
+        final int screenHeight = getActivity().getResources().getDisplayMetrics().heightPixels;
+        final int hostHeight = offscreenHost.getLayoutParams() != null
+            ? offscreenHost.getLayoutParams().height
+            : offscreenHost.getHeight();
+        final int safeHeight = Math.max(hostHeight, 1);
+        offscreenHost.setVisibility(android.view.View.VISIBLE);
+        sessionWebView.setVisibility(android.view.View.VISIBLE);
+        offscreenHost.setAlpha(1f);
+        sessionWebView.setAlpha(1f);
+        offscreenHost.setTranslationY((float)screenHeight + safeHeight);
+        offscreenHost.setImportantForAccessibility(
+            android.view.View.IMPORTANT_FOR_ACCESSIBILITY_NO_HIDE_DESCENDANTS);
+        sessionWebView.setImportantForAccessibility(
+            android.view.View.IMPORTANT_FOR_ACCESSIBILITY_NO_HIDE_DESCENDANTS);
+        offscreenHost.setFocusable(false);
+        offscreenHost.setFocusableInTouchMode(false);
+        offscreenHost.setClickable(false);
+        offscreenHost.setEnabled(false);
+        sessionWebView.setFocusable(false);
+        trace("state","WEBVIEW_HIDDEN_OFFSCREEN",
+            "AI Studio host translated below display while page stays active",
+            details("translationY",screenHeight+safeHeight,"screenHeight",screenHeight,
+                "hostHeight",safeHeight,"webVisible",sessionWebView.getVisibility()==android.view.View.VISIBLE));
+    }
+
     private void retainWebView() {
         if (sessionWebView == null || getActivity() == null) return;
-        if (sessionWebView.getParent() instanceof ViewGroup) {
-            ((ViewGroup)sessionWebView.getParent()).removeView(sessionWebView);
+        FrameLayout root = getActivity().findViewById(android.R.id.content);
+        if(root==null) {
+            trace("warn","WEBVIEW_HOST_MISSING","Could not find Android content root",null);
+            return;
         }
-        FrameLayout root=getActivity().findViewById(android.R.id.content);
-        if(root!=null) {
-            FrameLayout.LayoutParams params=new FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT,ViewGroup.LayoutParams.MATCH_PARENT,Gravity.END|Gravity.BOTTOM);
-            sessionWebView.setAlpha(0.01f);
-            root.addView(sessionWebView,0,params);
-            sessionWebView.onResume();
-            sessionWebView.resumeTimers();
-            trace("state","WEBVIEW_RETAIN","AI Studio WebView retained behind Card Studio",
-                details("parent",true,"fullViewport",true,"behindApp",true));
+        if(offscreenHost==null) {
+            offscreenHost = new FrameLayout(getActivity());
+            final int screenHeight = getActivity().getResources().getDisplayMetrics().heightPixels;
+            final int panelHeight = Math.max((int)(screenHeight * 0.48f),
+                (int)(300f * getActivity().getResources().getDisplayMetrics().density));
+            FrameLayout.LayoutParams params = new FrameLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,panelHeight,Gravity.BOTTOM);
+            root.addView(offscreenHost,0,params);
+        } else if(offscreenHost.getParent()==null) {
+            root.addView(offscreenHost,0,offscreenHost.getLayoutParams());
         }
+        if(sessionWebView.getParent()!=offscreenHost) {
+            if(sessionWebView.getParent() instanceof ViewGroup) {
+                ((ViewGroup)sessionWebView.getParent()).removeView(sessionWebView);
+            }
+            offscreenHost.addView(sessionWebView,new FrameLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
+        }
+        moveHostOffscreen();
+        sessionWebView.onResume();
+        sessionWebView.resumeTimers();
+        trace("state","WEBVIEW_RETAIN","AI Studio WebView stays active fully off-screen",
+            details("hasParent",sessionWebView.getParent()==offscreenHost,
+                "offscreen",true,"visiblePreference",isPageDisplayEnabled()));
     }
+
     private void showWindow() {
         if (sessionDialog != null && sessionDialog.isShowing()) return;
         if (sessionWebView.getParent() instanceof ViewGroup)
             ((ViewGroup)sessionWebView.getParent()).removeView(sessionWebView);
         sessionWebView.setAlpha(1f);
+        sessionWebView.setFocusable(true);
+        sessionWebView.setImportantForAccessibility(
+            android.view.View.IMPORTANT_FOR_ACCESSIBILITY_AUTO);
         sessionDialog = new AlertDialog.Builder(getActivity())
             .setTitle("Google / AI Studio (tài khoản)")
             .setView(sessionWebView)
@@ -864,6 +920,12 @@ public class AiStudioTextPlugin extends Plugin {
             sessionWebView.destroy();
         }
         sessionWebView=null;
+        if(offscreenHost!=null){
+            if(offscreenHost.getParent() instanceof ViewGroup)
+                ((ViewGroup)offscreenHost.getParent()).removeView(offscreenHost);
+            offscreenHost.removeAllViews();
+            offscreenHost=null;
+        }
         super.handleOnDestroy();
     }
 }
