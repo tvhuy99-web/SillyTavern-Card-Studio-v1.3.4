@@ -13,7 +13,8 @@ assert.match(native,/AI_STUDIO_NEW_CHAT_NOT_EMPTY/);
 
 // Google login is retained across requests; the troubleshooting WebView must
 // be hidden by default without stopping the native page or text streaming.
-assert.match(native, /getBoolean\("show_ai_studio_page", false\)/);
+assert.match(native, /PREFS_SHOW_PAGE = "show_ai_studio_page"/);
+assert.match(native, /getBoolean\(PREFS_SHOW_PAGE, false\)/);
 assert.match(native, /public void setVisibility\(PluginCall call\)/);
 assert.match(native, /public void getVisibility\(PluginCall call\)/);
 assert.match(native, /if \(isPageDisplayEnabled\(\)\) \{\s*showWindow\(\);/);
