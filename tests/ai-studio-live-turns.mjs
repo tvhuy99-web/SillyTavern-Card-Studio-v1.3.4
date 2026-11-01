@@ -34,6 +34,22 @@ assert.match(settingsPatch, /Hiển thị trang web AI Studio/);
 assert.match(settingsPatch, /defaultChecked:localStorage\.getItem\("sts_aistudio_show_page"\)==="true"/);
 assert.match(settingsPatch, /"setVisibility",\{visible:o\}/);
 
+// Compact provider UI: all four sources share one select instead of four
+// wide buttons. AI Studio settings expose controls without long helper notes.
+assert.match(settingsPatch, /"aria-label":"Nhà cung cấp AI"/);
+for (const source of ['gemini','openrouter','proxy','aistudio']) {
+  assert.match(settingsPatch, new RegExp('option"\\,\\{value:"' + source + '"'));
+}
+assert.match(settingsPatch, /"select"\,\{value:t\.source,onChange:e=>Y\("source",e\.target\.value\)/);
+for (const note of [
+  'Dùng phiên Google / AI Studio trong WebView Android (thử nghiệm)',
+  'Hãy chọn mô hình trực tiếp trên trang AI Studio',
+  'Mặc định tắt. Bật khi cần đăng nhập, chọn mô hình hoặc kiểm tra lỗi',
+]) {
+  assert.equal(settingsPatch.includes(note), false, 'Removed verbose note: '+note);
+}
+
+
 assert.match(native,/event\.put\("replace",true\)/);
 assert.match(service,/connectionSource === 'aistudio'/);
 assert.match(service,/chunk\.replaceText === true/);
