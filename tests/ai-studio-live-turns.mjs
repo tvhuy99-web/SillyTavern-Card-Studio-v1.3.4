@@ -10,6 +10,20 @@ assert.match(native,/sessionWebView\.loadUrl\(URL\)/);
 assert.match(native,/NEW_CHAT_CONFIRMED/);
 assert.match(native,/oldModelTurns/);
 assert.match(native,/AI_STUDIO_NEW_CHAT_NOT_EMPTY/);
+
+// Google login is retained across requests; the troubleshooting WebView must
+// be hidden by default without stopping the native page or text streaming.
+assert.match(native, /getBoolean\("show_ai_studio_page", false\)/);
+assert.match(native, /public void setVisibility\(PluginCall call\)/);
+assert.match(native, /public void getVisibility\(PluginCall call\)/);
+assert.match(native, /if \(isPageDisplayEnabled\(\)\) \{\s*showWindow\(\);/);
+assert.match(native, /root\.addView\(sessionWebView,0,params\)/);
+assert.match(native, /AI_STUDIO_NOT_READY_HIDDEN/);
+const settingsPatch = fs.readFileSync(new URL('../build/transforms/ai-studio-text.mjs', import.meta.url), 'utf8');
+assert.match(settingsPatch, /Hiển thị trang web AI Studio/);
+assert.match(settingsPatch, /defaultChecked:localStorage\.getItem\("sts_aistudio_show_page"\)==="true"/);
+assert.match(settingsPatch, /"setVisibility",\{visible:o\}/);
+
 assert.match(native,/event\.put\("replace",true\)/);
 assert.match(service,/connectionSource === 'aistudio'/);
 assert.match(service,/chunk\.replaceText === true/);
