@@ -64,6 +64,50 @@ public class AiStudioTextPlugin extends Plugin {
     private boolean everSawBusy;
     private boolean submitClicked;
     private int bootstrapFailures;
+    private static final String PREFS_NAME = "ai_studio_page_preferences";
+    private static final String PREFS_SHOW_PAGE = "show_ai_studio_page";
+
+    // Default OFF: the AI Studio WebView runs behind the Card Studio UI.
+    private boolean isPageDisplayEnabled() {
+        return getContext().getSharedPreferences(PREFS_NAME, android.content.Context.MODE_PRIVATE)
+            .getBoolean(PREFS_SHOW_PAGE, false);
+    }
+
+    @PluginMethod
+    public void getVisibility(PluginCall call) {
+        JSObject result = new JSObject();
+        result.put("visible", isPageDisplayEnabled());
+        call.resolve(result);
+    }
+
+    @PluginMethod
+    public void setVisibility(PluginCall call) {
+        final boolean visible = Boolean.TRUE.equals(call.getBoolean("visible", false));
+        getActivity().runOnUiThread(() -> {
+            getContext().getSharedPreferences(PREFS_NAME, android.content.Context.MODE_PRIVATE)
+                .edit().putBoolean(PREFS_SHOW_PAGE, visible).apply();
+            trace("state","PAGE_VISIBILITY_CHANGED",
+                visible ? "AI Studio debug page enabled" : "AI Studio debug page hidden",
+                details("visible",visible));
+            try {
+                if (visible) {
+                    createSessionIfNeeded();
+                    showWindow();
+                } else if (sessionDialog != null && sessionDialog.isShowing()) {
+                    sessionDialog.dismiss();
+                } else if (sessionWebView != null) {
+                    retainWebView();
+                }
+                JSObject result = new JSObject();
+                result.put("visible", visible);
+                call.resolve(result);
+            } catch (Exception e) {
+                trace("error","PAGE_VISIBILITY_FAILED","Unable to change AI Studio visibility",
+                    details("exception",e.getClass().getSimpleName()));
+                call.reject("AI_STUDIO_VISIBILITY_FAILED");
+            }
+        });
+    }
 
     // Probe the UI without reading credentials. The JS returns model text
     // only to the plugin method. Log records always contain metadata only.
@@ -362,6 +406,10 @@ public class AiStudioTextPlugin extends Plugin {
             });
             trace("state","SESSION_CREATE","Creating persistent WebView session",details(
                 "androidSdk",android.os.Build.VERSION.SDK_INT));
+            // Attach BELOW Capacitor's app WebView before the first load.
+            // Without a parent, Android may postpone WebView rendering/JS.
+            // This backing view does not intercept Card Studio's touch input.
+            retainWebView();
             sessionWebView.loadUrl(URL);
         }
     }
@@ -395,7 +443,7 @@ public class AiStudioTextPlugin extends Plugin {
             root.addView(sessionWebView,0,params);
             sessionWebView.onResume();
             sessionWebView.resumeTimers();
-            trace("state","WEBVIEW_RETAIN","AI Studio session attached to small keep-alive host",
+            trace("state","WEBVIEW_RETAIN","AI Studio WebView retained behind Card Studio",
                 details("parent",true,"fullViewport",true,"behindApp",true));
         }
     }
@@ -477,8 +525,10 @@ public class AiStudioTextPlugin extends Plugin {
     private void waitUntilReady(PluginCall call, String prompt, int attempt) {
         if(pending!=call)return;
         final long elapsed=SystemClock.elapsedRealtime()-requestStart;
-        if(elapsed>180_000L){
-            fail("AI_STUDIO_LOGIN_OR_PAGE_TIMEOUT: Đăng nhập AI Studio và thử gửi lại.");
+        if(elapsed>(isPageDisplayEnabled()?180_000L:45_000L)){
+            fail(isPageDisplayEnabled()
+                ? "AI_STUDIO_LOGIN_OR_PAGE_TIMEOUT: Đăng nhập AI Studio rồi thử lại."
+                : "AI_STUDIO_NOT_READY_HIDDEN: Bật 'Hiển thị trang web AI Studio' trong Cài đặt để đăng nhập hoặc xem lỗi.");
             return;
         }
         if(sessionDialog!=null && sessionDialog.isShowing()){
@@ -521,9 +571,15 @@ public class AiStudioTextPlugin extends Plugin {
                         fail("AI_STUDIO_NEW_CHAT_NOT_EMPTY: AI Studio has prior model turns.");
                         return;
                     }
-                    if(attempt==12 && (sessionDialog==null || !sessionDialog.isShowing())){
-                        trace("warn","OPEN_LOGIN","Showing AI Studio for login or loading problem",null);
-                        showWindow();
+                    if(attempt==12) {
+                        if (isPageDisplayEnabled() &&
+                            (sessionDialog==null || !sessionDialog.isShowing())) {
+                            trace("warn","OPEN_LOGIN","AI Studio debug page enabled: showing login",null);
+                            showWindow();
+                        } else if (!isPageDisplayEnabled()) {
+                            trace("warn","LOGIN_HIDDEN","AI Studio not ready while debug page is hidden",
+                                details("help","Bật Hiển thị trang web AI Studio trong Cài đặt để đăng nhập hoặc xem lỗi"));
+                        }
                     }
                 }catch(Exception e){
                     if(attempt%10==0)trace("warn","SESSION_PROBE_ERROR","Cannot inspect AI Studio readiness",
@@ -562,15 +618,16 @@ public class AiStudioTextPlugin extends Plugin {
                 details("promptChars",prompt.length(),"hasWebViewParent",sessionWebView.getParent()!=null));
             sessionWebView.onResume();sessionWebView.resumeTimers();
             if(coldStart) {
-                // Let the user sign in to Google's actual website and pick a
-                // model. No credentials are read by this plugin.
-                showWindow();
-                trace("state","NEW_CHAT_INITIAL","First-use session is loading a new chat page",null);
+                trace("state","NEW_CHAT_INITIAL","First-use session is loading a new chat page",
+                    details("showDebugPage",isPageDisplayEnabled()));
             } else {
                 // Each Card Studio model turn has its OWN AI Studio chat.
                 // Never append to the previously generated Google conversation.
                 trace("state","NEW_CHAT_NAVIGATE","Opening fresh AI Studio conversation for this turn",null);
                 sessionWebView.loadUrl(URL);
+            }
+            if (isPageDisplayEnabled()) {
+                showWindow();
             }
             waitUntilReady(call,prompt,0);
         });
