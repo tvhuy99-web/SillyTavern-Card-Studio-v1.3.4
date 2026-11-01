@@ -198,3 +198,36 @@ keep the same website behavior.
 chat liên tiếp. Trang Google không được bật lên; văn bản vẫn phải hiện theo
 thời gian thực. Sau đó bật công tắc để kiểm tra trang, tắt để quay về giao diện
 không bị che.
+
+## 8. Fix the AI Studio page leaking above Card Studio (R6)
+
+The previous implementation retained the Android WebView as a **full-screen
+child of the app root** with `alpha=0.01f`. Some Android WebView/Chromium
+compositors can draw that surface above the app's top bar, even though it is
+almost transparent. Switching the settings checkbox off therefore did not
+actually remove the Google website from view.
+
+Compared with the reference repo
+`GeminiLiveTranslate_GitHubReady_v1.2.`, file
+`network/AiStudioNativeTapDebugSupport.kt` and object
+`AiStudioDebugWebViewHost.applyPresentation`, this build now:
+
+- Keeps the AI Studio WebView **VISIBLE and alpha 1** so rendering, login
+  cookies, JavaScript and text streaming can continue.
+- Mounts it inside a dedicated **48%-screen-height FrameLayout** below the
+  Capacitor content, then translates **the host** down by
+  `screenHeight + hostHeight`, entirely outside the physical display.
+- Disables accessibility/focus/touch for the hidden host, so invisible Google
+  controls do not interfere with Card Studio.
+- Temporarily reattaches the *same* WebView to the debug dialog when the
+  visibility setting is enabled; dismissing the dialog reattaches it
+  off-screen without losing the Google session.
+
+The checkbox is still OFF by default. During normal chat, the Google page
+must no longer peek out above Card Studio. When debugging is needed, enable
+`Hiển thị trang web AI Studio` in provider settings to view the same
+authenticated page. The existing real-time snapshots and one-new-Google-chat-
+per-turn behavior are preserved.
+
+The Android WebView rendering behavior varies by device; this code mirrors
+the working reference app but needs one on-device regression check.
