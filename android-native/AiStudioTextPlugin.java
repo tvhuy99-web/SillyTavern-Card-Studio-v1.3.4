@@ -52,7 +52,9 @@ public class AiStudioTextPlugin extends Plugin {
     private String requestId = "";
     private String baseline = "";
     private String latest = "";
-    private String sentPrefix = "";
+    private String lastStreamSnapshot = "";
+    private boolean freshChatLoaded = false;
+    private int freshChatAttempt = 0;
     private long requestStart;
     private long lastChanged;
     private long lastCheckpoint;
@@ -326,6 +328,12 @@ public class AiStudioTextPlugin extends Plugin {
                 @Override public void onPageFinished(WebView view, String url) {
                     trace("state","PAGE_FINISHED","AI Studio page loaded",
                         details("hostPath",safePath(url)));
+                    if(pending!=null && url!=null &&
+                        url.startsWith("https://aistudio.google.com/prompts/")){
+                        freshChatLoaded = true;
+                        trace("state","NEW_CHAT_PAGE_LOADED","New-chat page loaded; checking for old model turns",
+                            details("attempt",freshChatAttempt,"hostPath",safePath(url)));
+                    }
                     inspect("PAGE_UI");
                 }
                 @Override public void onReceivedError(WebView v,WebResourceRequest r,WebResourceError e) {
@@ -480,25 +488,39 @@ public class AiStudioTextPlugin extends Plugin {
             return;
         }
         if(sessionWebView==null){fail("AI_STUDIO_SESSION_LOST");return;}
+        if(!freshChatLoaded) {
+            if(attempt%7==0)trace("state","NEW_CHAT_WAIT","Waiting for fresh AI Studio page to finish navigation",
+                details("elapsedMs",elapsed));
+            handler.postDelayed(()->waitUntilReady(call,prompt,attempt+1),750L);
+            return;
+        }
         sessionWebView.evaluateJavascript(
-            "JSON.stringify((function(){try{var h=location.hostname;var n=document.querySelectorAll('textarea,[contenteditable=\"true\"],[role=\"textbox\"]');return {ok:h==='aistudio.google.com'&&n.length>0,host:h,editors:n.length,ready:document.readyState};}catch(e){return {ok:false,errorName:String(e.name)}}})())",
+            "JSON.stringify((function(){try{var h=location.hostname;var p=location.pathname;var n=document.querySelectorAll('textarea,[contenteditable=\"true\"],[role=\"textbox\"]');var turns=document.querySelectorAll('ms-chat-turn .chat-turn-container.model,.chat-turn-container.model').length;return {ok:h==='aistudio.google.com'&&p.indexOf('/prompts/new_chat')===0&&n.length>0&&turns===0,host:h,path:p,editors:n.length,oldModelTurns:turns,ready:document.readyState};}catch(e){return {ok:false,errorName:String(e.name)}}})())",
             raw->{
                 if(pending!=call)return;
                 try {
                     JSONObject x=parse(raw);
                     if(x.optBoolean("ok",false)) {
-                        trace("state","SESSION_READY","AI Studio text editor found without manual setup",
+                        trace("state","NEW_CHAT_CONFIRMED","Fresh empty AI Studio chat ready for this Card Studio turn",
                             details("waitMs",SystemClock.elapsedRealtime()-requestStart,
-                                "editorCount",x.optInt("editors",0)));
+                                "editorCount",x.optInt("editors",0),
+                                "oldModelTurns",x.optInt("oldModelTurns",-1)));
                         // Reset generation timeout after login/network startup.
                         requestStart=SystemClock.elapsedRealtime();
                         prepareText(call,prompt);
                         return;
                     }
-                    if(attempt%10==0)trace("warn","SESSION_WAIT","AI Studio not ready for text",
+                    if(attempt%10==0)trace("warn","SESSION_WAIT","AI Studio new chat not ready",
                         details("host",x.optString("host","unknown"),
+                            "path",x.optString("path","unknown"),
+                            "oldModelTurns",x.optInt("oldModelTurns",-1),
                             "ready",x.optString("ready","unknown"),
                             "editors",x.optInt("editors",0),"elapsedMs",elapsed));
+                    // Do not inadvertently send into a prior Google thread.
+                    if(attempt>=30 && x.optInt("oldModelTurns",0)>0){
+                        fail("AI_STUDIO_NEW_CHAT_NOT_EMPTY: AI Studio has prior model turns.");
+                        return;
+                    }
                     if(attempt==12 && (sessionDialog==null || !sessionDialog.isShowing())){
                         trace("warn","OPEN_LOGIN","Showing AI Studio for login or loading problem",null);
                         showWindow();
@@ -530,7 +552,8 @@ public class AiStudioTextPlugin extends Plugin {
             requestId=call.getString("requestId","chat").replaceAll("[^a-zA-Z0-9_-]","");
             if(requestId.length()>35)requestId=requestId.substring(0,35);
             pending=call;
-            baseline="";latest="";sentPrefix="";polls=0;responseNodes=0;
+            baseline="";latest="";lastStreamSnapshot="";polls=0;responseNodes=0;
+            freshChatLoaded=false;freshChatAttempt=0;
             everSawResponse=false;everSawBusy=false;submitClicked=false;bootstrapFailures=0;
             requestStart=SystemClock.elapsedRealtime();lastChanged=requestStart;
             lastCheckpoint=requestStart;
@@ -542,6 +565,12 @@ public class AiStudioTextPlugin extends Plugin {
                 // Let the user sign in to Google's actual website and pick a
                 // model. No credentials are read by this plugin.
                 showWindow();
+                trace("state","NEW_CHAT_INITIAL","First-use session is loading a new chat page",null);
+            } else {
+                // Each Card Studio model turn has its OWN AI Studio chat.
+                // Never append to the previously generated Google conversation.
+                trace("state","NEW_CHAT_NAVIGATE","Opening fresh AI Studio conversation for this turn",null);
+                sessionWebView.loadUrl(URL);
             }
             waitUntilReady(call,prompt,0);
         });
@@ -695,7 +724,7 @@ public class AiStudioTextPlugin extends Plugin {
                             trace("state","RESPONSE_PROGRESS","AI Studio response text changed",
                                 details("responseChars",latest.length(),"responseNodes",
                                     obj.optInt("responseNodes",0),"busy",busy,"poll",polls));
-                            emitDelta(latest);
+                            emitSnapshot(latest);
                         }
                         long stable=SystemClock.elapsedRealtime()-lastChanged;
                         // Prefer a completed Run/Stop state; 5s fallback for
@@ -729,20 +758,23 @@ public class AiStudioTextPlugin extends Plugin {
             }
         );
     }
-    private void emitDelta(String text){
-        if(!text.startsWith(sentPrefix)){
-            trace("warn","STREAM_NON_PREFIX","UI changed already observed output; skipping duplicate chunks",
-                details("oldChars",sentPrefix.length(),"newChars",text.length()));
-            return;
+    private void emitSnapshot(String text){
+        // AI Studio updates already-rendered Markdown as it streams. Treat
+        // each observation as a replaceable snapshot instead of assuming that
+        // each new observation extends the previous one byte-for-byte.
+        if(text.equals(lastStreamSnapshot))return;
+        boolean revision=!text.startsWith(lastStreamSnapshot);
+        if(revision && !lastStreamSnapshot.isEmpty()){
+            trace("state","STREAM_REVISION","AI Studio revised previously rendered text; replacing preview",
+                details("previousChars",lastStreamSnapshot.length(),"newChars",text.length()));
         }
-        String delta=text.substring(sentPrefix.length());
-        if(delta.isEmpty())return;
-        sentPrefix=text;
-        JSObject chunk=new JSObject();
-        chunk.put("requestId",requestId);
-        chunk.put("text",delta);
-        chunk.put("totalChars",sentPrefix.length());
-        notifyListeners("textProgress",chunk);
+        lastStreamSnapshot=text;
+        JSObject event=new JSObject();
+        event.put("requestId",requestId);
+        event.put("text",text);
+        event.put("replace",true);
+        event.put("totalChars",text.length());
+        notifyListeners("textProgress",event);
     }
     @PluginMethod
     public void cancel(PluginCall call){
