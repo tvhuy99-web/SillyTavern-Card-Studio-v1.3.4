@@ -175,3 +175,26 @@ Android UI automation is experimental: `/prompts/new_chat` and DOM model
 selectors are not Google-supported integration APIs. CI tests validate
 snapshot semantics and new-chat invariants but cannot guarantee Google will
 keep the same website behavior.
+
+## 7. Optional AI Studio debug page display (R5)
+
+**Cài đặt → Tài khoản Google / AI Studio → Hiển thị trang web AI Studio**
+
+- **Tắt (mặc định):** Không bật hộp thoại AI Studio mỗi lần tạo phản hồi.
+  WebView vẫn được gắn phía sau giao diện Card Studio để xử lý văn bản
+  nền, giữ đăng nhập Google, streaming và một chat mới trên AI Studio mỗi lượt.
+- **Bật:** Mở cửa sổ AI Studio để đăng nhập, chọn mô hình hoặc xem lỗi.
+  Tùy chọn được lưu trên điện thoại và tiếp tục có hiệu lực sau khi khởi động lại.
+  Khi đóng cửa sổ, phiên WebView tiếp tục tồn tại.
+- **Mở Google / AI Studio để đăng nhập:** Lệnh mở trang một lần theo yêu cầu
+  vẫn tồn tại, kể cả khi tùy chọn hiển thị mặc định đang tắt.
+- Nếu chưa đăng nhập và trang được ẩn, yêu cầu sẽ báo
+  `AI_STUDIO_NOT_READY_HIDDEN` cùng hướng dẫn bật tùy chọn hiển thị,
+  thay vì tự mở trang Google đè lên Card Studio.
+- Không thay đổi luồng gửi/nhận văn bản, tạo cuộc trò chuyện Google mới theo
+  mỗi lượt, hoặc khóa ký APK.
+
+**Kiểm tra trên máy thật:** cài đè APK, không chạm công tắc và gửi 2 lượt
+chat liên tiếp. Trang Google không được bật lên; văn bản vẫn phải hiện theo
+thời gian thực. Sau đó bật công tắc để kiểm tra trang, tắt để quay về giao diện
+không bị che.
