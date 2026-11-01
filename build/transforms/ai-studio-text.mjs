@@ -14,6 +14,10 @@ const PATCHES = [
     '"aistudio"===t.source&&(0,wt.jsxs)("div",{className:"space-y-4",children:[' +
       '(0,wt.jsx)("p",{className:"text-sm text-amber-300",children:"Dùng phiên Google / AI Studio trong WebView Android (thử nghiệm). Không yêu cầu API key. Google có thể chặn đăng nhập WebView; nội dung và giao diện AI Studio có thể thay đổi."}),' +
       '(0,wt.jsx)("p",{className:"text-xs text-slate-400",children:"Hãy chọn mô hình trực tiếp trên trang AI Studio. Ứng dụng không tự thay đổi model qua API riêng."}),' +
+      '(0,wt.jsxs)("label",{className:"flex items-center gap-3 rounded-lg border border-slate-600 bg-slate-900/60 p-3 cursor-pointer",children:[' +
+        '(0,wt.jsx)("input",{type:"checkbox",defaultChecked:localStorage.getItem("sts_aistudio_show_page")==="true",onChange:async t=>{const n=t.target,o=n.checked;try{const a=window.Capacitor;if(typeof a?.nativePromise!=="function")throw Error("Chỉ hỗ trợ APK Android");await a.nativePromise("AIStudioText","setVisibility",{visible:o});localStorage.setItem("sts_aistudio_show_page",o?"true":"false");}catch(t){n.checked=!o;e("Không đổi được hiển thị AI Studio: "+(t?.message||String(t)),"error")}},className:"h-5 w-5 accent-indigo-500","aria-label":"Hiển thị trang web AI Studio"}),' +
+        '(0,wt.jsxs)("span",{className:"flex flex-col gap-1",children:[(0,wt.jsx)("span",{className:"text-sm text-white font-semibold",children:"Hiển thị trang web AI Studio"}),(0,wt.jsx)("span",{className:"text-xs text-slate-400",children:"Mặc định tắt. Bật khi cần đăng nhập, chọn mô hình hoặc kiểm tra lỗi. Khi tắt, AI Studio vẫn tạo văn bản ở chế độ nền."})]})' +
+      ']}),' +
       '(0,wt.jsx)("button",{type:"button",onClick:async()=>{try{const n=window.Capacitor;if(typeof n?.nativePromise!=="function")throw Error("Chỉ hỗ trợ APK Android");await n.nativePromise("AIStudioText","openSession",{})}catch(t){e("AI Studio: "+(t?.message||String(t)),"error")}},className:"bg-indigo-600 hover:bg-indigo-500 text-white rounded px-4 py-2",children:"Mở Google / AI Studio để đăng nhập"})' +
     ']}),"proxy"===t.source&&(0,wt.jsxs)("div",{className:"space-y-6 "',
   ],
