@@ -3,7 +3,7 @@ const KEY = 'sts_aistudio_diagnostics_v1';
 const MAX = 250;
 const EVENT = 'sillytavern:system-log';
 const SECRET = /(?:Bearer\s+[A-Za-z0-9._-]+|AIza[A-Za-z0-9_-]{15,}|(?:api[-_]?key|access[-_]?token|cookie|authorization)\s*[:=]\s*[^,\s]+)/gi;
-let attached = false, handle = null, attaching = false;
+let attached = false, handle = null, visibilityHandle = null, attaching = false;
 
 function safe(value) {
   return String(value ?? '').replace(SECRET, '[REDACTED]')
@@ -60,6 +60,14 @@ export function installAiStudioDiagnostics() {
           ...(e?.details && typeof e.details === 'object' ? e.details : {}),
         }, e?.level || 'state');
       });
+      if (!visibilityHandle) {
+        visibilityHandle = await plugin.addListener('pageVisibilityChanged', e => {
+          const visible = e?.visible === true;
+          try { localStorage.setItem('sts_aistudio_show_page', visible ? 'true' : 'false'); } catch {}
+          const input = document.querySelector('input[aria-label="Hiển thị trang web AI Studio"]');
+          if (input) input.checked = visible;
+        });
+      }
       recordAiStudioDiagnostic('BRIDGE_READY', {message: 'Native log connected to System Console.'});
     } catch(e) {
       recordAiStudioDiagnostic('BRIDGE_ERROR', {message:String(e?.message || e)}, 'warn');
