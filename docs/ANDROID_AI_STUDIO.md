@@ -231,3 +231,40 @@ per-turn behavior are preserved.
 
 The Android WebView rendering behavior varies by device; this code mirrors
 the working reference app but needs one on-device regression check.
+
+## 9. Incomplete answers and non-modal debug monitor (R7)
+
+Real-device logs showed that Card Studio completed a long AI Studio request
+as a **33-character answer**, even though the Google site was still
+generating. The old completion condition incorrectly accepted 5 seconds of
+unchanged text without checking whether the UI was still busy. The short
+reply then triggered the Mythic Engine short-response warning. An unrelated
+proxy summarization request also returned 401; that error is not an AI Studio
+chat transport error.
+
+New behavior:
+- Native response polling continues to publish partial text snapshots even
+  during quiet periods.
+- **Never** mark a turn complete while the AI Studio page is busy.
+- After a Stop/processing control has been observed, require **at least 7
+  seconds of uninterrupted idle**, at least four idle polling samples, and
+  3.5 seconds of stable text before finalizing.
+- If busy cannot be detected, conservatively require 15 seconds of stable
+  text and idle; generation timeout is now 300 seconds.
+- The Console includes idle duration, stop button and loading-indicator
+  status; errors retain the last observed response state.
+
+Visibility now mirrors the reference repo's non-modal
+`AiStudioDebugWebViewHost` concept: **one single WebView** is attached to
+a 42%-height panel at the top of the app when the visibility setting is ON.
+The chat input area remains accessible below it, so the user can send new
+messages without dismissing a Google login dialog. The panel has a
+`Ẩn AI Studio` button which returns the same WebView off-screen, without
+destroying the Google login or stopping streaming. The native setting and
+checkbox are synchronized. When the setting is OFF, WebView remains active
+off-screen.
+
+These changes keep one new Google chat per Card Studio reply, full response
+snapshot streaming, and stable Android signing unchanged. The real-device
+confirmation still matters because the AI Studio website is not a supported
+automation API and can change its indicators without notice.
