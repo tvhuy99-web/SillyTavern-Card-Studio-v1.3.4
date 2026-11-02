@@ -66,8 +66,10 @@ public class AiStudioGenerationService extends Service {
     }
 
     private Notification buildNotification(boolean active, boolean success) {
-        return new Notification.Builder(this,
-            Build.VERSION.SDK_INT >= 26 ? (active ? CHANNEL_WORK : CHANNEL_DONE) : CHANNEL_WORK)
+        Notification.Builder builder = Build.VERSION.SDK_INT >= 26
+            ? new Notification.Builder(this, active ? CHANNEL_WORK : CHANNEL_DONE)
+            : new Notification.Builder(this);
+        return builder
             .setSmallIcon(active ? android.R.drawable.stat_sys_upload : android.R.drawable.stat_sys_download_done)
             .setContentTitle(active ? "AI Studio đang trả lời" :
                 success ? "AI Studio đã trả lời xong" : "AI Studio đã dừng")
