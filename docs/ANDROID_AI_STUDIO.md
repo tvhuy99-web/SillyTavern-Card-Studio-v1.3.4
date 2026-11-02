@@ -268,3 +268,40 @@ These changes keep one new Google chat per Card Studio reply, full response
 snapshot streaming, and stable Android signing unchanged. The real-device
 confirmation still matters because the AI Studio website is not a supported
 automation API and can change its indicators without notice.
+
+## 10. Continue AI Studio generation after pressing Home (R8)
+
+While a Card Studio AI Studio text reply is **actively generating**, Android
+starts a user-initiated foreground `dataSync` service *before* the user leaves
+the app. Its ongoing notification says **AI Studio đang trả lời** and opens
+Card Studio when tapped. The service holds a bounded partial CPU wake lock,
+keeps native WebView timers resumed through the Activity's pause/resume cycle,
+and stops immediately when the request completes, fails, or is canceled.
+On completion, it shows **AI Studio đã trả lời xong**. On Android 13+, allow
+notification permission when prompted to see the progress/completion in the
+notification drawer.
+
+Expected user flow:
+1. Start a Google / AI Studio message in Card Studio.
+2. Press Home or switch to a different app. Do **not** force-stop Card Studio.
+3. Leave mobile data/Wi-Fi available. Android reports an ongoing
+   **AI Studio đang trả lời** notification (if notifications are allowed).
+4. Tap the notification or return to Card Studio to see its latest streamed
+   text or completed chat response.
+5. The foreground service and its wake lock automatically shut down after
+   completion/failure/cancellation.
+
+Technical constraints: the text generation still relies on an active Android
+WebView within the app process. A foreground service helps keep that process
+active and the WebView's JavaScript timers running, but it is **not a guarantee**
+against aggressive OEM battery management, process termination, reboot,
+user force-stop, or Google UI changes. Swiping an app away from Recents may
+behave differently by phone manufacturer. The feature targets normal Home /
+app switching, not power-off or force-stop. No prompts, answers, cookies,
+or account tokens are stored in notifications.
+
+Diagnostics: `BACKGROUND_SERVICE_STARTED`, `APP_BACKGROUND`,
+`APP_RETURNED`, `BACKGROUND_SERVICE_STOPPED`, or
+`BACKGROUND_SERVICE_FAILED`. The optional `getBackgroundStatus` bridge
+returns request ID, active state, and response length without exposing the
+model's text.
