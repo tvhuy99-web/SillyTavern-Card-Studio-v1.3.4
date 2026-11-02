@@ -100,6 +100,9 @@ public class AiStudioTextPlugin extends Plugin {
             try {
                 createSessionIfNeeded();
                 applyPanelPresentation(visible, "settings-toggle");
+                JSObject event = new JSObject();
+                event.put("visible", visible);
+                notifyListeners("pageVisibilityChanged", event);
                 JSObject result = new JSObject();
                 result.put("visible", visible);
                 call.resolve(result);
@@ -496,6 +499,9 @@ public class AiStudioTextPlugin extends Plugin {
                 getContext().getSharedPreferences(PREFS_NAME,android.content.Context.MODE_PRIVATE)
                     .edit().putBoolean(PREFS_SHOW_PAGE,false).apply();
                 applyPanelPresentation(false,"panel-hide-button");
+                JSObject event = new JSObject();
+                event.put("visible",false);
+                notifyListeners("pageVisibilityChanged",event);
                 trace("state","PAGE_VISIBILITY_CHANGED","AI Studio debug panel hidden",details("visible",false));
             });
             FrameLayout.LayoutParams bp=new FrameLayout.LayoutParams(
