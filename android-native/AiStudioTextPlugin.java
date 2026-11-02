@@ -2,6 +2,9 @@ package com.tvhuy99.cardstudio;
 
 import android.annotation.SuppressLint;
 import android.graphics.Color;
+import android.content.Intent;
+import android.content.pm.PackageManager;
+import android.os.Build;
 import android.graphics.Bitmap;
 import android.net.Uri;
 import android.net.http.SslError;
@@ -72,6 +75,95 @@ public class AiStudioTextPlugin extends Plugin {
     private boolean everSawBusy;
     private boolean submitClicked;
     private int bootstrapFailures;
+    private boolean foregroundRequestStarted;
+    private boolean appInBackground;
+
+    // The foreground service is started by a user-initiated generation call
+    // before the user presses Home. This avoids Android 12+ restrictions on
+    // starting foreground services after the app has gone to the background.
+    private void startBackgroundGeneration() {
+        try {
+            Intent intent = AiStudioGenerationService.startIntent(getContext());
+            if (Build.VERSION.SDK_INT >= 26) getContext().startForegroundService(intent);
+            else getContext().startService(intent);
+            foregroundRequestStarted = true;
+            trace("state","BACKGROUND_SERVICE_STARTED",
+                "AI Studio generation protected by Android foreground dataSync service",
+                details("requestActive",pending!=null,"sdk",Build.VERSION.SDK_INT));
+            if (Build.VERSION.SDK_INT >= 33 &&
+                getActivity().checkSelfPermission("android.permission.POST_NOTIFICATIONS") !=
+                    PackageManager.PERMISSION_GRANTED) {
+                android.content.SharedPreferences prefs = getContext().getSharedPreferences(
+                    PREFS_NAME,android.content.Context.MODE_PRIVATE);
+                if(!prefs.getBoolean("notifications_asked",false)) {
+                    prefs.edit().putBoolean("notifications_asked",true).apply();
+                    getActivity().requestPermissions(
+                        new String[]{"android.permission.POST_NOTIFICATIONS"},4088);
+                    trace("state","BACKGROUND_NOTIFICATION_PERMISSION",
+                        "Requested optional notification visibility permission",null);
+                }
+            }
+        } catch (Exception e) {
+            foregroundRequestStarted = false;
+            trace("warn","BACKGROUND_SERVICE_FAILED",
+                "Android cannot guarantee AI Studio will continue after Home",
+                details("exception",e.getClass().getSimpleName()));
+        }
+    }
+
+    private void stopBackgroundGeneration(boolean success) {
+        if (foregroundRequestStarted) {
+            AiStudioGenerationService.finish(getContext(),success);
+            foregroundRequestStarted = false;
+            trace("state","BACKGROUND_SERVICE_STOPPED",
+                "Foreground generation service stopped",details("success",success));
+        }
+    }
+
+    @PluginMethod
+    public void getBackgroundStatus(PluginCall call) {
+        JSObject result=new JSObject();
+        result.put("active",pending!=null);
+        result.put("inBackground",appInBackground);
+        result.put("foregroundService",foregroundRequestStarted);
+        result.put("requestId",requestId);
+        result.put("responseChars",latest.length());
+        call.resolve(result);
+    }
+
+    @Override
+    protected void handleOnPause() {
+        appInBackground = true;
+        if (pending != null) {
+            // WebView.onPause() is not a JavaScript hard-stop; nevertheless
+            // keep both WebView and Chromium timers resumed for UI polling.
+            if (sessionWebView != null) {
+                sessionWebView.onResume();
+                sessionWebView.resumeTimers();
+            }
+            trace("state","APP_BACKGROUND",
+                "Card Studio left foreground; native AI Studio polling continues",
+                details("foregroundService",foregroundRequestStarted,
+                    "responseChars",latest.length(),"polls",polls));
+        }
+        super.handleOnPause();
+    }
+
+    @Override
+    protected void handleOnResume() {
+        appInBackground = false;
+        if(sessionWebView != null) {
+            sessionWebView.onResume();
+            sessionWebView.resumeTimers();
+        }
+        if(pending != null) {
+            trace("state","APP_RETURNED",
+                "Card Studio foreground restored during active AI Studio generation",
+                details("foregroundService",foregroundRequestStarted,
+                    "responseChars",latest.length(),"polls",polls));
+        }
+        super.handleOnResume();
+    }
     private static final String PREFS_NAME = "ai_studio_page_preferences";
     private static final String PREFS_SHOW_PAGE = "show_ai_studio_page";
 
@@ -696,6 +788,7 @@ public class AiStudioTextPlugin extends Plugin {
             requestId=call.getString("requestId","chat").replaceAll("[^a-zA-Z0-9_-]","");
             if(requestId.length()>35)requestId=requestId.substring(0,35);
             pending=call;
+            startBackgroundGeneration();
             baseline="";latest="";lastStreamSnapshot="";polls=0;responseNodes=0;
             observedIdleSince=0L;consecutiveIdlePolls=0;
             freshChatLoaded=false;freshChatAttempt=0;
@@ -896,6 +989,7 @@ public class AiStudioTextPlugin extends Plugin {
                         if(terminal) {
                             PluginCall done=pending;
                             pending=null;
+                            stopBackgroundGeneration(true);
                             trace("script-success","RESPONSE_COMPLETE","Received completed AI Studio text",
                                 details("responseChars",latest.length(),"polls",polls,
                                     "idleMs",confirmedIdle,"stableMs",stable,
@@ -959,6 +1053,7 @@ public class AiStudioTextPlugin extends Plugin {
     private void fail(String message){
         PluginCall p=pending;
         pending=null;
+        stopBackgroundGeneration(false);
         trace("error","REQUEST_FAILED",message,details(
             "elapsedMs",SystemClock.elapsedRealtime()-requestStart,
             "polls",polls,"maxResponseNodes",responseNodes,
