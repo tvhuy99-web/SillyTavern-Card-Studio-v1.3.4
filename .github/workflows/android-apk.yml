@@ -50,6 +50,7 @@ jobs:
         run: |
           node tests/ai-studio-response-extractor.mjs
           node tests/ai-studio-live-turns.mjs
+          node tests/ai-studio-background.mjs
 
       - name: Build portable static web app
         run: |
