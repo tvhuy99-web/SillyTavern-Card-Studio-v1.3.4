@@ -17,17 +17,25 @@ assert.match(native, /PREFS_SHOW_PAGE = "show_ai_studio_page"/);
 assert.match(native, /getBoolean\(PREFS_SHOW_PAGE, false\)/);
 assert.match(native, /public void setVisibility\(PluginCall call\)/);
 assert.match(native, /public void getVisibility\(PluginCall call\)/);
-assert.match(native, /if \(isPageDisplayEnabled\(\)\) \{\s*showWindow\(\);/);
-// The old alpha=0.01 full-screen WebView leaked through the top of the app.
-assert.match(native, /root\.addView\(offscreenHost,0,params\)/);
-assert.match(native, /offscreenHost\.setTranslationY\(\(float\)screenHeight \+ safeHeight\)/);
-assert.match(native, /offscreenHost\.setImportantForAccessibility\(/);
+// A visible AI Studio page is an inline non-modal monitor, never an
+// AlertDialog. The user must be able to send messages without leaving it.
+assert.match(native, /root\.addView\(offscreenHost,0,p\)/);
+assert.match(native, /offscreenHost\.setTranslationY\(visible\?0f:screenHeight\+Math\.max\(1,panelHeight\)\)/);
+assert.match(native, /offscreenHost\.setImportantForAccessibility\(accessibility\)/);
 assert.match(native, /IMPORTANT_FOR_ACCESSIBILITY_NO_HIDE_DESCENDANTS/);
 assert.match(native, /sessionWebView\.setAlpha\(1f\)/);
 assert.doesNotMatch(native, /sessionWebView\.setAlpha\(0\.01f\)/);
 assert.match(native, /sessionWebView\.resumeTimers\(\)/);
 assert.match(native, /WEBVIEW_HIDDEN_OFFSCREEN/);
-assert.match(native, /sessionDialog\.setOnDismissListener\(dialog -> retainWebView\(\)\)/);
+assert.match(native, /WEBVIEW_INLINE_VISIBLE/);
+assert.match(native, /hidePanelButton\.setText\("Ẩn AI Studio"\)/);
+assert.doesNotMatch(native, /AlertDialog|sessionDialog|showWindow\(\)/);
+assert.match(native, /applyPanelPresentation\(isPageDisplayEnabled\(\),"generate"\)/);
+assert.match(native, /CONFIRMED_IDLE_MS = 7_000L/);
+assert.match(native, /if\(busy\)\{/);
+assert.match(native, /boolean terminal=!busy&&confirmedIdle>=idleRequirement/);
+assert.match(native, /consecutiveIdlePolls>=4/);
+assert.doesNotMatch(native, /if\(stable>\(everSawBusy&&!busy\?1700L:5000L\)\)/);
 assert.match(native, /AI_STUDIO_NOT_READY_HIDDEN/);
 const settingsPatch = fs.readFileSync(new URL('../build/transforms/ai-studio-text.mjs', import.meta.url), 'utf8');
 assert.match(settingsPatch, /Hiển thị trang web AI Studio/);
