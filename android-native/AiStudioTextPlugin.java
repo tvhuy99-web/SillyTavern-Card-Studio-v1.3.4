@@ -1,7 +1,7 @@
 package com.tvhuy99.cardstudio;
 
 import android.annotation.SuppressLint;
-import android.app.AlertDialog;
+import android.graphics.Color;
 import android.graphics.Bitmap;
 import android.net.Uri;
 import android.net.http.SslError;
@@ -12,6 +12,7 @@ import android.util.Log;
 import android.view.Gravity;
 import android.view.ViewGroup;
 import android.widget.FrameLayout;
+import android.widget.Button;
 import android.webkit.CookieManager;
 import android.webkit.SslErrorHandler;
 import android.webkit.WebChromeClient;
@@ -42,7 +43,8 @@ import org.json.JSONTokener;
 @CapacitorPlugin(name = "AIStudioText")
 public class AiStudioTextPlugin extends Plugin {
     private static final String URL = "https://aistudio.google.com/prompts/new_chat";
-    private static final long TIMEOUT_MS = 120_000L;
+    private static final long TIMEOUT_MS = 300_000L;
+    private static final long CONFIRMED_IDLE_MS = 7_000L;
     private static final long POLL_MS = 600L;
     private static final String LOG_TAG = "CardStudioAIStudio";
     private final Handler handler = new Handler(Looper.getMainLooper());
@@ -51,7 +53,7 @@ public class AiStudioTextPlugin extends Plugin {
     // while translating its host completely off-screen. Alpha hiding allows
     // WebView compositor surfaces to bleed through above the app on devices.
     private FrameLayout offscreenHost;
-    private AlertDialog sessionDialog;
+    private Button hidePanelButton;
     private PluginCall pending;
     private String requestId = "";
     private String baseline = "";
@@ -62,6 +64,8 @@ public class AiStudioTextPlugin extends Plugin {
     private long requestStart;
     private long lastChanged;
     private long lastCheckpoint;
+    private long observedIdleSince;
+    private int consecutiveIdlePolls;
     private int polls;
     private int responseNodes;
     private boolean everSawResponse;
@@ -94,14 +98,8 @@ public class AiStudioTextPlugin extends Plugin {
                 visible ? "AI Studio debug page enabled" : "AI Studio debug page hidden",
                 details("visible",visible));
             try {
-                if (visible) {
-                    createSessionIfNeeded();
-                    showWindow();
-                } else if (sessionDialog != null && sessionDialog.isShowing()) {
-                    sessionDialog.dismiss();
-                } else if (sessionWebView != null) {
-                    retainWebView();
-                }
+                createSessionIfNeeded();
+                applyPanelPresentation(visible, "settings-toggle");
                 JSObject result = new JSObject();
                 result.put("visible", visible);
                 call.resolve(result);
@@ -423,7 +421,7 @@ public class AiStudioTextPlugin extends Plugin {
         getActivity().runOnUiThread(() -> {
             try {
                 createSessionIfNeeded();
-                showWindow();
+                showInlinePanel("manual-open");
                 JSObject result = new JSObject();
                 result.put("opened", true);
                 call.resolve(result);
@@ -467,60 +465,88 @@ public class AiStudioTextPlugin extends Plugin {
                 "hostHeight",safeHeight,"webVisible",sessionWebView.getVisibility()==android.view.View.VISIBLE));
     }
 
+    // Reference repo AiStudioDebugWebViewHost: one non-modal WebView panel.
+    // Hidden: translate below display while keeping rendering alive.
+    // Visible: float in the top 42% so Card Studio input remains usable.
     private void retainWebView() {
-        if (sessionWebView == null || getActivity() == null) return;
-        FrameLayout root = getActivity().findViewById(android.R.id.content);
-        if(root==null) {
-            trace("warn","WEBVIEW_HOST_MISSING","Could not find Android content root",null);
-            return;
-        }
-        if(offscreenHost==null) {
-            offscreenHost = new FrameLayout(getActivity());
-            final int screenHeight = getActivity().getResources().getDisplayMetrics().heightPixels;
-            final int panelHeight = Math.max((int)(screenHeight * 0.48f),
-                (int)(300f * getActivity().getResources().getDisplayMetrics().density));
-            FrameLayout.LayoutParams params = new FrameLayout.LayoutParams(
-                ViewGroup.LayoutParams.MATCH_PARENT,panelHeight,Gravity.BOTTOM);
-            root.addView(offscreenHost,0,params);
-        } else if(offscreenHost.getParent()==null) {
+        if(sessionWebView==null||getActivity()==null)return;
+        FrameLayout root=getActivity().findViewById(android.R.id.content);
+        if(root==null){trace("warn","WEBVIEW_HOST_MISSING","No content root",null);return;}
+        if(offscreenHost==null){
+            offscreenHost=new FrameLayout(getActivity());
+            offscreenHost.setBackgroundColor(Color.WHITE);
+            float dp=getActivity().getResources().getDisplayMetrics().density;
+            int height=Math.max((int)(getActivity().getResources().getDisplayMetrics().heightPixels*.42f),
+                (int)(260f*dp));
+            FrameLayout.LayoutParams p=new FrameLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,height,Gravity.TOP);
+            root.addView(offscreenHost,0,p);
+            hidePanelButton=new Button(getActivity());
+            hidePanelButton.setText("Ẩn AI Studio");
+            hidePanelButton.setTextSize(12f);
+            hidePanelButton.setAllCaps(false);
+            hidePanelButton.setOnClickListener(v->{
+                getContext().getSharedPreferences(PREFS_NAME,android.content.Context.MODE_PRIVATE)
+                    .edit().putBoolean(PREFS_SHOW_PAGE,false).apply();
+                applyPanelPresentation(false,"panel-hide-button");
+                trace("state","PAGE_VISIBILITY_CHANGED","AI Studio debug panel hidden",details("visible",false));
+            });
+            FrameLayout.LayoutParams bp=new FrameLayout.LayoutParams(
+                (int)(132f*dp),(int)(42f*dp),Gravity.TOP|Gravity.END);
+            bp.setMargins(0,(int)(4f*dp),(int)(4f*dp),0);
+            offscreenHost.addView(hidePanelButton,bp);
+        }else if(offscreenHost.getParent()==null){
             root.addView(offscreenHost,0,offscreenHost.getLayoutParams());
         }
-        if(sessionWebView.getParent()!=offscreenHost) {
-            if(sessionWebView.getParent() instanceof ViewGroup) {
+        if(sessionWebView.getParent()!=offscreenHost){
+            if(sessionWebView.getParent() instanceof ViewGroup)
                 ((ViewGroup)sessionWebView.getParent()).removeView(sessionWebView);
-            }
-            offscreenHost.addView(sessionWebView,new FrameLayout.LayoutParams(
-                ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
+            offscreenHost.addView(sessionWebView,0,new FrameLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,ViewGroup.LayoutParams.MATCH_PARENT));
         }
-        moveHostOffscreen();
+        applyPanelPresentation(isPageDisplayEnabled(),"retain");
         sessionWebView.onResume();
         sessionWebView.resumeTimers();
-        trace("state","WEBVIEW_RETAIN","AI Studio WebView stays active fully off-screen",
-            details("hasParent",sessionWebView.getParent()==offscreenHost,
-                "offscreen",true,"visiblePreference",isPageDisplayEnabled()));
+        trace("state","WEBVIEW_RETAIN","AI Studio WebView attached without modal",details(
+            "hasParent",sessionWebView.getParent()==offscreenHost,
+            "visiblePreference",isPageDisplayEnabled()));
+    }
+    private void applyPanelPresentation(boolean visible,String reason) {
+        if(sessionWebView==null||offscreenHost==null)return;
+        final int screenHeight=getActivity().getResources().getDisplayMetrics().heightPixels;
+        final int panelHeight=offscreenHost.getLayoutParams()==null?
+            offscreenHost.getHeight():offscreenHost.getLayoutParams().height;
+        offscreenHost.setVisibility(android.view.View.VISIBLE);
+        sessionWebView.setVisibility(android.view.View.VISIBLE);
+        offscreenHost.setAlpha(1f);
+        sessionWebView.setAlpha(1f);
+        offscreenHost.setTranslationY(visible?0f:screenHeight+Math.max(1,panelHeight));
+        offscreenHost.setEnabled(visible);
+        offscreenHost.setClickable(visible);
+        offscreenHost.setFocusable(visible);
+        offscreenHost.setFocusableInTouchMode(visible);
+        sessionWebView.setFocusable(visible);
+        int accessibility=visible?
+            android.view.View.IMPORTANT_FOR_ACCESSIBILITY_AUTO:
+            android.view.View.IMPORTANT_FOR_ACCESSIBILITY_NO_HIDE_DESCENDANTS;
+        offscreenHost.setImportantForAccessibility(accessibility);
+        sessionWebView.setImportantForAccessibility(accessibility);
+        if(hidePanelButton!=null)hidePanelButton.setVisibility(visible?
+            android.view.View.VISIBLE:android.view.View.GONE);
+        if(visible){
+            offscreenHost.bringToFront();
+            offscreenHost.requestLayout();
+        }
+        trace("state",visible?"WEBVIEW_INLINE_VISIBLE":"WEBVIEW_HIDDEN_OFFSCREEN",
+            visible?"Non-modal AI Studio monitor remains beside Card Studio chat":
+                    "AI Studio WebView kept fully off-screen and running",
+            details("reason",reason,"visible",visible,"modal",false,"panelHeight",panelHeight));
+    }
+    private void showInlinePanel(String reason) {
+        retainWebView();
+        applyPanelPresentation(true,reason);
     }
 
-    private void showWindow() {
-        if (sessionDialog != null && sessionDialog.isShowing()) return;
-        if (sessionWebView.getParent() instanceof ViewGroup)
-            ((ViewGroup)sessionWebView.getParent()).removeView(sessionWebView);
-        sessionWebView.setAlpha(1f);
-        sessionWebView.setFocusable(true);
-        sessionWebView.setImportantForAccessibility(
-            android.view.View.IMPORTANT_FOR_ACCESSIBILITY_AUTO);
-        sessionDialog = new AlertDialog.Builder(getActivity())
-            .setTitle("Google / AI Studio (tài khoản)")
-            .setView(sessionWebView)
-            .setPositiveButton("Quay lại Card Studio", (dialog, which) -> {})
-            .create();
-        sessionDialog.setOnDismissListener(dialog -> retainWebView());
-        sessionDialog.show();
-        if (sessionDialog.getWindow() != null)
-            sessionDialog.getWindow().setLayout(
-                ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT);
-        trace("state","SESSION_VISIBLE","Showing AI Studio for Google login / model selection",
-            details("hostPath",safePath(sessionWebView.getUrl())));
-    }
     private void inspect(String stage) {
         if(sessionWebView==null) return;
         sessionWebView.evaluateJavascript(INSTALL_JS, raw -> {
@@ -587,12 +613,6 @@ public class AiStudioTextPlugin extends Plugin {
                 : "AI_STUDIO_NOT_READY_HIDDEN: Bật 'Hiển thị trang web AI Studio' trong Cài đặt để đăng nhập hoặc xem lỗi.");
             return;
         }
-        if(sessionDialog!=null && sessionDialog.isShowing()){
-            if(attempt%8==0)trace("state","WAIT_FOR_LOGIN","Waiting for user to close AI Studio window",
-                details("seconds",elapsed/1000));
-            handler.postDelayed(()->waitUntilReady(call,prompt,attempt+1),1000L);
-            return;
-        }
         if(sessionWebView==null){fail("AI_STUDIO_SESSION_LOST");return;}
         if(!freshChatLoaded) {
             if(attempt%7==0)trace("state","NEW_CHAT_WAIT","Waiting for fresh AI Studio page to finish navigation",
@@ -628,10 +648,9 @@ public class AiStudioTextPlugin extends Plugin {
                         return;
                     }
                     if(attempt==12) {
-                        if (isPageDisplayEnabled() &&
-                            (sessionDialog==null || !sessionDialog.isShowing())) {
-                            trace("warn","OPEN_LOGIN","AI Studio debug page enabled: showing login",null);
-                            showWindow();
+                        if (isPageDisplayEnabled()) {
+                            trace("warn","OPEN_LOGIN","AI Studio inline monitor is available for login",null);
+                            applyPanelPresentation(true,"login-help");
                         } else if (!isPageDisplayEnabled()) {
                             trace("warn","LOGIN_HIDDEN","AI Studio not ready while debug page is hidden",
                                 details("help","Bật Hiển thị trang web AI Studio trong Cài đặt để đăng nhập hoặc xem lỗi"));
@@ -665,6 +684,7 @@ public class AiStudioTextPlugin extends Plugin {
             if(requestId.length()>35)requestId=requestId.substring(0,35);
             pending=call;
             baseline="";latest="";lastStreamSnapshot="";polls=0;responseNodes=0;
+            observedIdleSince=0L;consecutiveIdlePolls=0;
             freshChatLoaded=false;freshChatAttempt=0;
             everSawResponse=false;everSawBusy=false;submitClicked=false;bootstrapFailures=0;
             requestStart=SystemClock.elapsedRealtime();lastChanged=requestStart;
@@ -682,9 +702,8 @@ public class AiStudioTextPlugin extends Plugin {
                 trace("state","NEW_CHAT_NAVIGATE","Opening fresh AI Studio conversation for this turn",null);
                 sessionWebView.loadUrl(URL);
             }
-            if (isPageDisplayEnabled()) {
-                showWindow();
-            }
+            // Keep the inline monitor in place. Never hijack the chat with a modal.
+            applyPanelPresentation(isPageDisplayEnabled(),"generate");
             waitUntilReady(call,prompt,0);
         });
     }
@@ -913,7 +932,6 @@ public class AiStudioTextPlugin extends Plugin {
     @Override
     protected void handleOnDestroy(){
         if(pending!=null)fail("AI_STUDIO_SESSION_CLOSED");
-        if(sessionDialog!=null){sessionDialog.setOnDismissListener(null);sessionDialog.dismiss();}
         if(sessionWebView!=null){
             if(sessionWebView.getParent() instanceof ViewGroup)
                 ((ViewGroup)sessionWebView.getParent()).removeView(sessionWebView);
