@@ -83,6 +83,7 @@ jobs:
           PLUGIN_DIR="android/app/src/main/java/com/tvhuy99/cardstudio"
           mkdir -p "$PLUGIN_DIR"
           cp android-native/AiStudioTextPlugin.java "$PLUGIN_DIR/AiStudioTextPlugin.java"
+          cp android-native/AiStudioGenerationService.java "$PLUGIN_DIR/AiStudioGenerationService.java"
           cat > "$PLUGIN_DIR/MainActivity.java" <<'JAVA'
           package com.tvhuy99.cardstudio;
 
@@ -97,6 +98,29 @@ jobs:
               }
           }
           JAVA
+          python3 - <<'PY'
+          from pathlib import Path
+          manifest = Path("android/app/src/main/AndroidManifest.xml")
+          text = manifest.read_text()
+          permissions = [
+              "android.permission.FOREGROUND_SERVICE",
+              "android.permission.FOREGROUND_SERVICE_DATA_SYNC",
+              "android.permission.WAKE_LOCK",
+              "android.permission.POST_NOTIFICATIONS",
+          ]
+          for permission in permissions:
+              line = f'<uses-permission android:name="{permission}" />'
+              if line not in text:
+                  text = text.replace("<application", f"    {line}\\n    <application", 1)
+          service = (
+              '<service android:name=".AiStudioGenerationService" '
+              'android:exported="false" android:stopWithTask="false" '
+              'android:foregroundServiceType="dataSync" />'
+          )
+          if service not in text:
+              text = text.replace("</application>", f"    {service}\\n    </application>", 1)
+          manifest.write_text(text)
+          PY
 
       # Stable debug key copied from GeminiLiveTranslate. This is a PUBLIC
       # DEBUG key, not a release signing key. Do NOT use for production releases.
