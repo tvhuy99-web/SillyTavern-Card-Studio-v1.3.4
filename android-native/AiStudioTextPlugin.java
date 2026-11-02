@@ -238,6 +238,10 @@ public class AiStudioTextPlugin extends Plugin {
             snapshot(prefetched) {
               const a=this.walk(), ed=this.editors(a.elements), btn=this.buttons(a.elements), out=prefetched||this.output();
               const stop=btn.some(e=>this.visible(e)&&!e.disabled&&/(stop generating|stop response|stop|cancel)/i.test(this.info(e)));
+              const loading=a.elements.filter(e=>this.visible(e)&&e.matches?.(
+                '[role="progressbar"],[aria-busy="true"],mat-spinner,.mat-mdc-progress-spinner'
+              )).length;
+              const isGenerating=stop||loading>0;
               const login=/(accounts.google.com|signin|login)/i.test(location.hostname+location.pathname);
               return {
                 path:location.pathname.slice(0,150), ready:document.readyState,
@@ -248,7 +252,8 @@ public class AiStudioTextPlugin extends Plugin {
                 responseIframes:out.iframeRoots, responseShadows:out.shadowRoots,
                 inaccessibleFrames:out.crossOriginFrames,
                 shadows:a.shadows, frames:a.frames, scanned:a.elements.length,
-                busy:stop, authGate:login, clicked:this.clicked,
+                busy:isGenerating, stopVisible:stop, loadingIndicators:loading,
+                authGate:login, clicked:this.clicked,
                 elapsedSinceClickMs:this.lastSubmitAt?Date.now()-this.lastSubmitAt:-1
               };
             },
@@ -351,6 +356,8 @@ public class AiStudioTextPlugin extends Plugin {
             "scanned", o.optInt("scanned", -1), "busy", o.optBoolean("busy", false),
             "authGate", o.optBoolean("authGate", false),
             "clicked", o.optBoolean("clicked", false),
+            "stopVisible",o.optBoolean("stopVisible",false),
+            "loadingIndicators",o.optInt("loadingIndicators",0),
             "elapsedClickMs", o.optLong("elapsedSinceClickMs", -1L)
         ));
     }
@@ -848,6 +855,15 @@ public class AiStudioTextPlugin extends Plugin {
                     responseNodes=Math.max(responseNodes,obj.optInt("responseNodes",0));
                     boolean busy=obj.optBoolean("busy",false);
                     everSawBusy|=busy;
+                    // A brief pause between tokens is not a completed answer.
+                    // The old 5s stable-text fallback completed while busy=true.
+                    if(busy){
+                        observedIdleSince=0L;
+                        consecutiveIdlePolls=0;
+                    }else{
+                        if(observedIdleSince==0L)observedIdleSince=SystemClock.elapsedRealtime();
+                        consecutiveIdlePolls++;
+                    }
                     String response=obj.optString("text","");
                     if(!response.isBlank()&&!response.equals(baseline)){
                         everSawResponse=true;
@@ -859,13 +875,25 @@ public class AiStudioTextPlugin extends Plugin {
                             emitSnapshot(latest);
                         }
                         long stable=SystemClock.elapsedRealtime()-lastChanged;
-                        // Prefer a completed Run/Stop state; 5s fallback for
-                        // interfaces without a recognizable Stop control.
-                        if(stable>(everSawBusy&&!busy?1700L:5000L)) {
+                        long confirmedIdle=observedIdleSince==0L?0L:
+                            SystemClock.elapsedRealtime()-observedIdleSince;
+                        // Never finalize while the UI reports generating. For
+                        // sites with a Stop control, require the Stop state to
+                        // vanish continuously for 7+ seconds and the output to
+                        // stop changing. This defeats one-frame idle flickers.
+                        // If no busy indicator was ever detected, require a
+                        // conservative 15s idle+stable fallback.
+                        long idleRequirement=everSawBusy?CONFIRMED_IDLE_MS:15_000L;
+                        boolean terminal=!busy&&confirmedIdle>=idleRequirement &&
+                            consecutiveIdlePolls>=4 &&
+                            stable>=(everSawBusy?3500L:15_000L);
+                        if(terminal) {
                             PluginCall done=pending;
                             pending=null;
                             trace("script-success","RESPONSE_COMPLETE","Received completed AI Studio text",
                                 details("responseChars",latest.length(),"polls",polls,
+                                    "idleMs",confirmedIdle,"stableMs",stable,
+                                    "seenBusy",everSawBusy,"idlePolls",consecutiveIdlePolls,
                                     "elapsedMs",SystemClock.elapsedRealtime()-requestStart));
                             JSObject result=new JSObject();
                             result.put("text",latest);
@@ -880,7 +908,10 @@ public class AiStudioTextPlugin extends Plugin {
                         trace("state","WAITING","Waiting for AI Studio response",
                             details("elapsedMs",t-requestStart,"polls",polls,
                                 "maxResponseNodes",responseNodes,"seenResponse",everSawResponse,
-                                "seenBusy",everSawBusy));
+                                "seenBusy",everSawBusy,"busy",busy,
+                                "stopVisible",obj.optBoolean("stopVisible",false),
+                                "loadingIndicators",obj.optInt("loadingIndicators",0),
+                                "idleMs",observedIdleSince==0L?0L:t-observedIdleSince));
                     }
                 } catch(Exception e){
                     trace("warn","POLL_PARSE_ERROR","Cannot parse AI Studio page state",
