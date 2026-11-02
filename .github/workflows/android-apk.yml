@@ -111,14 +111,14 @@ jobs:
           for permission in permissions:
               line = f'<uses-permission android:name="{permission}" />'
               if line not in text:
-                  text = text.replace("<application", f"    {line}\\n    <application", 1)
+                  text = text.replace("<application", f"    {line}\n    <application", 1)
           service = (
               '<service android:name=".AiStudioGenerationService" '
               'android:exported="false" android:stopWithTask="false" '
               'android:foregroundServiceType="dataSync" />'
           )
           if service not in text:
-              text = text.replace("</application>", f"    {service}\\n    </application>", 1)
+              text = text.replace("</application>", f"    {service}\n    </application>", 1)
           manifest.write_text(text)
           PY
 
