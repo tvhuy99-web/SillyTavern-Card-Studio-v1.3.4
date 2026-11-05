@@ -252,13 +252,21 @@ function recordId(characterId, uid, chunkIndex, provider) {
   return `${characterId}::${provider.id}::${uid}_${chunkIndex}`;
 }
 
+export function configureTransformersEnvironment(environment) {
+  if (!environment) return;
+  // Transformers.js v3 defaults allowLocalModels=false in browsers/WebViews.
+  // Offline sync uses local_files_only=true and must be allowed to read files
+  // previously downloaded into the browser Cache API.
+  // Do not disable allowRemoteModels globally: first-time downloads still need it.
+  environment.allowLocalModels = true;
+  environment.useBrowserCache = true;
+  environment.useWasmCache = true;
+  environment.cacheKey = TRANSFORMERS_CACHE_KEY;
+}
+
 async function getTransformersModule() {
   const module = await import(TRANSFORMERS_MODULE_URL);
-  if (module?.env) {
-    module.env.useBrowserCache = true;
-    module.env.useWasmCache = true;
-    module.env.cacheKey = TRANSFORMERS_CACHE_KEY;
-  }
+  configureTransformersEnvironment(module?.env);
   return module;
 }
 
