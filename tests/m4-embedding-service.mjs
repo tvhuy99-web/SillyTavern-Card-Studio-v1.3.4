@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import {
   EMBEDDING_PROVIDERS,
+  configureTransformersEnvironment,
   resolveEmbeddingProvider,
   getEmbeddingProvider,
   formatEmbeddingQuery,
@@ -10,6 +11,23 @@ import {
   buildEmbeddingEntryText,
   chunkEmbeddingText,
 } from '../src/features/world-info/embedding-service.js';
+
+// Android WebView sets allowLocalModels=false, which conflicts with
+// local_files_only=true when loading cached ONNX weights for offline sync.
+{
+  const env = {
+    allowLocalModels: false,
+    allowRemoteModels: true,
+    useBrowserCache: false,
+    useWasmCache: false,
+  };
+  configureTransformersEnvironment(env);
+  assert.equal(env.allowLocalModels, true, 'browser cache-only sync requires local models enabled');
+  assert.equal(env.allowRemoteModels, true, 'initial model download must remain possible');
+  assert.equal(env.useBrowserCache, true);
+  assert.equal(env.useWasmCache, true);
+}
+configureTransformersEnvironment(null);
 
 assert.equal(EMBEDDING_PROVIDERS.length, 3);
 assert.equal(resolveEmbeddingProvider({}).id, 'gemini');
