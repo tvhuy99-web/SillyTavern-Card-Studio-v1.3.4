@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import { scanWorldInfo, resolveSmartScanLlmModel } from '../src/features/world-info/smart-scan-service.js';
 
 assert.equal(resolveSmartScanLlmModel(), 'gemini-3.5-flash-lite');
-assert.equal(resolveSmartScanLlmModel('gemini-3.1-flash-lite-preview'), 'gemini-3.5-flash-lite');
+assert.equal(resolveSmartScanLlmModel('gemini-3.1-flash-lite-preview'), 'gemini-3.1-flash-lite-preview', 'respect explicitly selected models');
 assert.equal(resolveSmartScanLlmModel('gemini-3.1-flash-lite'), 'gemini-3.1-flash-lite');
 assert.equal(resolveSmartScanLlmModel('custom-llm-id'), 'custom-llm-id');
 
@@ -150,7 +150,7 @@ const baseInput = {
   });
   assert.deepEqual(result.activeEntries, ['keyword-fallback']);
   assert.equal(resolveArgs[6], false, 'ultimate mode must keep keyword fallback enabled');
-  assert.ok(logs.some(item => String(item[2]).includes('deterministic World Info fallback')));
+  assert.ok(logs.some(item => String(item[2]).includes('keyword scan is independently enabled')));
 }
 
 {
@@ -164,22 +164,24 @@ const baseInput = {
     resolveWorldInfo: (...args) => (selected = args[5], { activeEntries: [] }),
     logSystemMessage: (...args) => logs.push(args),
   });
-  assert.equal(modelId, 'gemini-3.5-flash-lite', 'retired selected model must be remapped');
+  assert.equal(modelId, 'gemini-3.1-flash-lite-preview', 'selected model must never be replaced');
   assert.deepEqual(selected, ['a']);
 }
 
 {
   let resolveArgs;
   const logs = [];
-  await scanWorldInfo(baseInput, {
+  const result = await scanWorldInfo(baseInput, {
     getSettings: () => ({ enabled: true, mode: 'llm_only' }),
     callSelectionModel: async () => { throw new Error('model no longer available'); },
     parseJson: JSON.parse,
     resolveWorldInfo: (...args) => (resolveArgs = args, { activeEntries: ['keyword-fallback'] }),
     logSystemMessage: (...args) => logs.push(args),
   });
-  assert.equal(resolveArgs[6], false, 'LLM-only API error must restore keyword fallback');
+  assert.equal(resolveArgs[6], true, 'LLM-only API error must NOT restore keyword fallback');
   assert.ok(logs.some(item => String(item[2]).includes('model no longer available')));
+  assert.match(result.smartScanLog.fullPrompt, /Nhiệm vụ: Chọn các ID/);
+  assert.match(result.smartScanLog.rawResponse, /LỖI GỌI LLM.*model no longer available/);
 }
 
 {
@@ -192,7 +194,45 @@ const baseInput = {
     logSystemMessage() {},
   });
   assert.deepEqual(resolveArgs[5], []);
-  assert.equal(resolveArgs[6], false, 'unrecognized LLM IDs must restore keyword fallback');
+  assert.equal(resolveArgs[6], true, 'unrecognized LLM IDs must not activate keyword fallback');
+}
+
+{
+  // The journal must retain the actual request and actual raw response.
+  let requestedPrompt = '';
+  const result = await scanWorldInfo(baseInput, {
+    getSettings: () => ({ enabled: true, mode: 'llm_only', model: 'my-custom-model' }),
+    callSelectionModel: async (prompt, model) => {
+      requestedPrompt = prompt;
+      assert.equal(model, 'my-custom-model');
+      return '```json\\n["a"]\\n```';
+    },
+    parseJson: JSON.parse,
+    resolveWorldInfo: () => ({ activeEntries: [] }),
+    logSystemMessage() {},
+  });
+  assert.equal(result.smartScanLog.fullPrompt, requestedPrompt);
+  assert.equal(result.smartScanLog.rawResponse, '```json\\n["a"]\\n```');
+}
+
+{
+  // No candidates means no API call; the journal must say so.
+  let calls = 0;
+  const result = await scanWorldInfo({
+    ...baseInput,
+    card: { char_book: { entries: [] } },
+  }, {
+    getSettings: () => ({ enabled: true, mode: 'llm_only' }),
+    callSelectionModel: async () => { calls++; return '["a"]'; },
+    parseJson: JSON.parse,
+    resolveWorldInfo: (...args) => {
+      assert.equal(args[6], true);
+      return { activeEntries: [] };
+    },
+    logSystemMessage() {},
+  });
+  assert.equal(calls, 0);
+  assert.match(result.smartScanLog.rawResponse, /SKIPPED/);
 }
 
 console.log('M4 Smart Scan service checks: OK');
