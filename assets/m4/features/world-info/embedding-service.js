@@ -323,6 +323,51 @@ async function deleteProviderCache(provider) {
   }
 }
 
+let nextWorldInfoSyncId = 0;
+
+// A bounded, privacy-safe diagnostic journal for the System Console.
+// Checkpoints are emitted BEFORE each awaited model/IndexedDB operation.
+export function createWorldInfoSyncJournal(logger, providerId, options = {}) {
+  const now = options.now || Date.now;
+  const schedule = options.setInterval || setInterval;
+  const unschedule = options.clearInterval || clearInterval;
+  const startedAt = now();
+  const id = String(++nextWorldInfoSyncId);
+  const prefix = '[WI-SYNC #' + id + '][' + providerId + ']';
+  let lastStage = 'khởi động';
+  let lastCheckpointAt = startedAt;
+  let lastHeartbeatAt = startedAt;
+  let finished = false;
+
+  const elapsed = () => Math.max(0, Math.round((now() - startedAt) / 1000));
+  const emit = (level, message) => {
+    try { logger?.(level, 'system', prefix + ' ' + String(message).slice(0, 1400)); } catch {}
+  };
+  const stage = (message) => {
+    lastStage = String(message);
+    lastCheckpointAt = now();
+    emit('state', lastStage + ' (' + elapsed() + 's)');
+  };
+  const timer = schedule(() => {
+    if (finished) return;
+    const idle = Math.max(0, Math.round((now() - lastCheckpointAt) / 1000));
+    if (now() - lastHeartbeatAt < 15000) return;
+    lastHeartbeatAt = now();
+    emit(idle >= 45 ? 'warn' : 'state',
+      'Đang chạy: ' + lastStage + '; tổng ' + elapsed() + 's; không có bước mới ' + idle + 's'
+      + (idle >= 45 ? '. Có thể đang chờ ONNX, bộ nhớ hoặc IndexedDB.' : '.'));
+  }, 15000);
+  return Object.freeze({
+    stage,
+    info: message => emit('state', String(message) + ' (' + elapsed() + 's)'),
+    warning: message => emit('warn', String(message) + ' (' + elapsed() + 's)'),
+    success: message => emit('performance', String(message) + ' (' + elapsed() + 's)'),
+    fail: (step, error) => emit('error', 'THẤT BẠI tại [' + step + '] sau ' + elapsed()
+      + 's: ' + (error instanceof Error ? error.message : String(error))),
+    close: () => { finished = true; unschedule(timer); },
+  });
+}
+
 export function createEmbeddingService(deps) {
   const modelRuntimes = new Map();
   const modelLoads = new Map();
@@ -343,9 +388,11 @@ export function createEmbeddingService(deps) {
     }
   }
 
-  async function createLocalRuntime(provider, onProgress, localOnly = false) {
+  async function createLocalRuntime(provider, onProgress, localOnly = false, onStage = () => {}) {
     if (provider.kind !== 'local') throw new Error('Provider này không phải mô hình cục bộ.');
+    onStage('Import Transformers.js (có thể truy cập CDN cho mã thư viện)');
     const transformers = await getTransformersModule();
+    onStage('Đã nạp Transformers.js; chuẩn bị bộ suy luận cục bộ');
     const callback = progressAdapter(onProgress);
     const common = {
       dtype: provider.dtype,
@@ -356,11 +403,14 @@ export function createEmbeddingService(deps) {
 
     try {
       if (provider.id === 'embeddinggemma') {
+        onStage('Nạp tokenizer EmbeddingGemma từ cache');
         const tokenizer = await transformers.AutoTokenizer.from_pretrained(provider.modelId, {
           progress_callback: callback,
           local_files_only: localOnly,
         });
+        onStage('Khởi tạo ONNX EmbeddingGemma (' + common.device + ', Q4)');
         const model = await transformers.AutoModel.from_pretrained(provider.modelId, common);
+        onStage('ONNX EmbeddingGemma sẵn sàng');
         return {
           provider,
           async embed(texts) {
@@ -380,7 +430,9 @@ export function createEmbeddingService(deps) {
         };
       }
 
+      onStage('Khởi tạo pipeline ONNX ' + provider.shortLabel + ' (' + common.device + ', Q4)');
       const extractor = await transformers.pipeline('feature-extraction', provider.modelId, common);
+      onStage('Pipeline ONNX ' + provider.shortLabel + ' sẵn sàng');
       return {
         provider,
         async embed(texts) {
@@ -443,14 +495,23 @@ export function createEmbeddingService(deps) {
   }
 
   async function ensureLocalRuntime(provider, options = {}) {
-    if (modelRuntimes.has(provider.id)) return modelRuntimes.get(provider.id);
-    if (modelLoads.has(provider.id)) return modelLoads.get(provider.id);
+    const onStage = options.onStage || (() => {});
+    if (modelRuntimes.has(provider.id)) {
+      onStage('Dùng runtime ONNX đã nạp');
+      return modelRuntimes.get(provider.id);
+    }
+    if (modelLoads.has(provider.id)) {
+      onStage('Đợi lần nạp runtime ONNX đang chạy');
+      return modelLoads.get(provider.id);
+    }
+    if (options.localOnly) onStage('Kiểm tra cache của model ' + provider.shortLabel);
     if (options.localOnly && !(await providerIsCached(provider))) {
       throw new Error(`Mô hình ${provider.shortLabel} chưa được tải. Hãy tải mô hình trong Cài đặt Smart Scan trước.`);
     }
     // Keep only one heavy ONNX model resident when switching embedding providers.
+    onStage('Giải phóng các model ONNX không sử dụng');
     await disposeUnusedLocalRuntimes(provider.id);
-    const loading = createLocalRuntime(provider, options.onProgress, !!options.localOnly)
+    const loading = createLocalRuntime(provider, options.onProgress, !!options.localOnly, onStage)
       .then(runtime => {
         modelRuntimes.set(provider.id, runtime);
         modelLoads.delete(provider.id);
@@ -495,7 +556,7 @@ export function createEmbeddingService(deps) {
 
   async function embedTexts(provider, texts, options = {}) {
     if (provider.id === 'gemini') return geminiEmbed(texts);
-    const runtime = await ensureLocalRuntime(provider, { localOnly: true, onProgress: options.onProgress });
+    const runtime = await ensureLocalRuntime(provider, { localOnly: true, onProgress: options.onProgress, onStage: options.onStage });
     return runtime.embed(texts);
   }
 
