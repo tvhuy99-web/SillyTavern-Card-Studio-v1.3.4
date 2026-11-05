@@ -126,7 +126,7 @@ export function applyM4ChatGenerationTransform(source) {
   code = code.slice(0, testerTitleIndex) + testerTitleReplacement + code.slice(testerTitleIndex + testerTitle.length);
 
   const legacyEmbeddingCache = 'Lc=async e=>{if(e&&!Pc.has(e)){if(!Mc.has(e)){let t=Kc(e).finally(()=>{Mc.delete(e)});Mc.set(e,t)}return Mc.get(e)}},Fc=e=>{let t=Pc.get(e);if(!t)return[];let n=[];for(let e of t.values())n.push(...e);return n},Bc=';
-  const ownedEmbeddingCache = '__stsEmbeddingService=__stsCreateEmbeddingService({getSettings:as,getGeminiApiKey:ys,hasGeminiApiKey:()=>{let e=fs();return!e.useDefault&&Array.isArray(e.keys)&&e.keys.some(e=>String(e).trim())},createGeminiClient:e=>new vo({apiKey:e}),addNetworkLog:e=>ol.getState().addNetworkLog(e),logSystemMessage:qu}),Lc=e=>__stsEmbeddingService.loadIndex(e),Fc=e=>__stsEmbeddingService.getIndex(e),Bc=';
+  const ownedEmbeddingCache = '__stsEmbeddingService=__stsCreateEmbeddingService({getSettings:as,getGeminiApiKey:ys,hasGeminiApiKey:()=>{let e=fs();return!e.useDefault&&Array.isArray(e.keys)&&e.keys.some(e=>String(e).trim())},createGeminiClient:e=>new vo({apiKey:e}),addNetworkLog:e=>ol.getState().addNetworkLog(e)}),Lc=e=>__stsEmbeddingService.loadIndex(e),Fc=e=>__stsEmbeddingService.getIndex(e),Bc=';
   const embeddingCacheIndex = findExactlyOnce(code, legacyEmbeddingCache, 'embedding service/cache adapter');
   code = code.slice(0, embeddingCacheIndex) + ownedEmbeddingCache + code.slice(embeddingCacheIndex + legacyEmbeddingCache.length);
 
