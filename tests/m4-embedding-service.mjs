@@ -4,6 +4,8 @@ import {
   configureTransformersEnvironment,
   createEmbeddingService,
   createWorldInfoSyncJournal,
+  planLocalEmbeddingBatch,
+  createLocalEmbeddingBatchPlanner,
   resolveEmbeddingProvider,
   getEmbeddingProvider,
   formatEmbeddingQuery,
@@ -139,5 +141,41 @@ assert.equal((await hashEmbeddingText('abc')).length, 64);
     console.error = previousError;
   }
 }
+
+// Memory-aware WASM batching, inspired by NgheTruyen's adaptive profiles.
+// Never select a different model or Smart Scan mode based on these signals.
+{
+  const cfg = (providerId, deviceMemoryGB, hardwareConcurrency = 8, requestedBatchSize = 30) =>
+    planLocalEmbeddingBatch(providerId, { deviceMemoryGB, hardwareConcurrency, requestedBatchSize });
+  assert.equal(cfg('embeddinggemma', 2).maxBatch, 1, 'low-RAM Android must stay at batch 1');
+  assert.equal(cfg('embeddinggemma', 4).maxBatch, 2);
+  assert.equal(cfg('embeddinggemma', 8).maxBatch, 4);
+  assert.equal(cfg('embeddinggemma', 0).maxBatch, 2, 'unknown memory must be conservative');
+  assert.equal(cfg('embeddinggemma', 8, 2).maxBatch, 1, 'low-core device must be conservative');
+  assert.equal(cfg('embeddinggemma', 8, 8, 1).maxBatch, 1, 'respect user entry batch limit');
+  assert.equal(cfg('qwen3', 4).maxBatch, 1, 'large model must stay single on 4 GiB');
+  assert.equal(cfg('qwen3', 8).maxBatch, 2, 'large model never expands to 4');
+  assert.equal(planLocalEmbeddingBatch('embeddinggemma', { deviceMemoryGB: 8, lowMemory: true }).maxBatch, 1);
+  assert.equal(cfg('unsupported-provider', 16).maxBatch, 1);
+
+  const planner = createLocalEmbeddingBatchPlanner(cfg('embeddinggemma', 8));
+  assert.equal(planner.next(8), 2, 'start with safe microbatch to measure throughput');
+  assert.match(planner.report(2, 1000), /Tăng batch/);
+  assert.equal(planner.next(10), 4);
+  assert.match(planner.report(4, 5000), /Giảm batch/, 'batch 4 slower per item than 2');
+  assert.equal(planner.next(10), 2);
+  assert.equal(planner.report(2, 1000), '', 'do not oscillate back to 4');
+  assert.equal(planner.next(1), 1);
+
+  const single = createLocalEmbeddingBatchPlanner(cfg('qwen3', 4));
+  assert.equal(single.next(9), 1);
+  assert.equal(single.report(1, 2000), '');
+  assert.equal(single.next(9), 1);
+}
+
+// We intentionally keep 1,000-character chunking and per-provider max_length
+// unchanged. Shortening model context without rechunking would silently truncate
+// Lorebook content and force an unintended index policy change.
+assert.deepEqual(chunkEmbeddingText('abc', 1000), ['abc']);
 
 console.log('M4 embedding service checks: OK');
