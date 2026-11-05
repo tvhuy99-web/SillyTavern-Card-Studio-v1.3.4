@@ -605,7 +605,14 @@ export function createEmbeddingService(deps) {
   async function syncIndex(characterId, entries, onProgress) {
     const config = settings();
     const provider = activeProvider();
-    const journal = createWorldInfoSyncJournal(deps.logSystemMessage, provider.id);
+    // The shipped app already mirrors console.warn/error into
+    // "1. BẢNG ĐIỀU KHIỂN HỆ THỐNG (CONSOLE)" (category: console).
+    // This path works without rebuilding the legacy minified UI bridge.
+    const consoleLogger = (level, _category, message) => {
+      if (level === 'error') console.error(message);
+      else console.warn(message);
+    };
+    const journal = createWorldInfoSyncJournal(deps.logSystemMessage || consoleLogger, provider.id);
     let currentStep = 'kiểm tra chế độ';
     let completed = false;
     let lastModelProgress = -1;
