@@ -150,6 +150,59 @@ function normalizeRows(rows) {
   });
 }
 
+// Inspired by NgheTruyen's per-device inference profiles. The WebView has a
+// smaller memory budget than Android-native ORT, so batches stay capped at 4.
+// A missing deviceMemory signal is treated conservatively, not as 8 GiB.
+export function planLocalEmbeddingBatch(providerId, options = {}) {
+  const requested = Math.max(1, Math.min(30, Math.floor(Number(options.requestedBatchSize) || 30)));
+  const memory = Number(options.deviceMemoryGB) || 0;
+  const cores = Number(options.hardwareConcurrency) || 0;
+  const lowMemory = options.lowMemory === true || (memory > 0 && memory <= 2);
+  let limit = 1;
+  if (!lowMemory && cores !== 1 && cores !== 2) {
+    if (providerId === 'embeddinggemma') {
+      limit = memory >= 8 ? 4 : 2;
+    } else if (providerId === 'qwen3') {
+      // Large Qwen weights can exhaust the Android WebView process.
+      limit = memory >= 8 ? 2 : 1;
+    }
+  }
+  const maxBatch = Math.min(requested, limit);
+  return { maxBatch, initialBatch: Math.min(maxBatch, 2), deviceMemoryGB: memory, hardwareConcurrency: cores };
+}
+
+// Autotune with useful work rather than running an extra benchmark. One batch
+// of 2 is measured before a >=8 GiB device may try 4; slower batches are
+// reduced after comparing per-vector inference time. No model/mode fallback.
+export function createLocalEmbeddingBatchPlanner(profile) {
+  const maxBatch = Math.max(1, Math.min(4, Number(profile?.maxBatch) || 1));
+  let current = Math.max(1, Math.min(maxBatch, Number(profile?.initialBatch) || 1));
+  let twoThroughput = 0;
+  let escalated = false;
+  let downgraded = false;
+  return Object.freeze({
+    next: remaining => Math.min(Math.max(1, Number(remaining) || 1), current),
+    report: (count, elapsedMs) => {
+      const size = Math.max(1, Number(count) || 1);
+      const duration = Math.max(1, Number(elapsedMs) || 1);
+      const throughput = size * 1000 / duration;
+      if (size === 2 && current === 2 && maxBatch >= 4 && !escalated && !downgraded) {
+        twoThroughput = throughput;
+        current = 4;
+        escalated = true;
+        return 'Tăng batch 2 → 4 sau phép đo đầu tiên trên thiết bị đủ RAM';
+      }
+      if (size === 4 && current === 4 && twoThroughput > 0 && throughput < twoThroughput * 0.9) {
+        current = 2;
+        downgraded = true;
+        return 'Giảm batch 4 → 2 vì tốc độ mỗi vector không cải thiện';
+      }
+      return '';
+    },
+    get size() { return current; },
+  });
+}
+
 function isAndroidHost() {
   return typeof navigator !== 'undefined' && /Android/i.test(String(navigator.userAgent || ''));
 }
@@ -678,6 +731,22 @@ export function createEmbeddingService(deps) {
       : provider.id === 'embeddinggemma'
         ? Math.min(requestedBatchSize, 8)
         : requestedBatchSize;
+    const memoryGB = typeof navigator === 'undefined' ? 0 : Number(navigator.deviceMemory) || 0;
+    const cpuCores = typeof navigator === 'undefined' ? 0 : Number(navigator.hardwareConcurrency) || 0;
+    const profile = provider.kind === 'local'
+      ? planLocalEmbeddingBatch(provider.id, {
+        requestedBatchSize,
+        deviceMemoryGB: memoryGB,
+        hardwareConcurrency: cpuCores,
+      })
+      : null;
+    const batchPlanner = profile ? createLocalEmbeddingBatchPlanner(profile) : null;
+    journal.info('Cấu hình hiệu năng: ' + (profile
+      ? 'WebView RAM≈' + (profile.deviceMemoryGB || 'không xác định') + 'GiB'
+        + '; CPU=' + (profile.hardwareConcurrency || 'không xác định')
+        + '; batch suy luận khởi đầu=' + profile.initialBatch
+        + '; giới hạn=' + profile.maxBatch
+      : 'API online, không thay đổi cách xử lý'));
 
     for (let offset = 0; offset < pending.length; offset += batchSize) {
       const group = pending.slice(offset, offset + batchSize);
