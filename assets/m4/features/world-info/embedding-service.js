@@ -230,12 +230,32 @@ async function openEmbeddingDb() {
   });
 }
 
-async function putRecord(record) {
+// Replace one Lorebook UID atomically in a single IndexedDB transaction.
+// Keeping all vectors together avoids an open/close for every chunk and
+// prevents losing the old index if an individual put fails.
+async function replaceRecordsAtomic(oldRecords, newRecords) {
+  if (!oldRecords.length && !newRecords.length) return;
   const db = await openEmbeddingDb();
   return new Promise((resolve, reject) => {
-    const request = db.transaction([STORE_NAME], 'readwrite').objectStore(STORE_NAME).put(record);
-    request.onsuccess = () => { db.close(); resolve(); };
-    request.onerror = event => { db.close(); reject(event?.target?.error || new Error('Failed to store embedding')); };
+    let tx;
+    try {
+      tx = db.transaction([STORE_NAME], 'readwrite');
+      tx.oncomplete = () => { db.close(); resolve(); };
+      tx.onabort = () => {
+        const error = tx.error || new Error('Atomic embedding update was aborted');
+        db.close();
+        reject(error);
+      };
+      const store = tx.objectStore(STORE_NAME);
+      const nextIds = new Set(newRecords.map(record => record.id));
+      for (const record of oldRecords) {
+        if (!nextIds.has(record.id)) store.delete(record.id);
+      }
+      for (const record of newRecords) store.put(record);
+    } catch (error) {
+      db.close();
+      reject(error);
+    }
   });
 }
 
@@ -825,6 +845,7 @@ export function createEmbeddingService(deps) {
       });
 
       currentStep = 'ghi vectors vào IndexedDB';
+      const writeStarted = Date.now();
       journal.stage('Đã suy luận ' + vectors.length + ' vectors; bắt đầu ghi IndexedDB');
       for (const item of group) {
         const uid = item.entry.uid;
@@ -832,24 +853,23 @@ export function createEmbeddingService(deps) {
         if (!vectorsForUid || vectorsForUid.length !== item.chunks.length || vectorsForUid.some(vector => !vector?.length)) {
           throw new Error(`Dữ liệu trả về bị thiếu cho mục: ${item.entry.comment || uid}`);
         }
-        await deleteUidForProvider(uid, characterId, provider);
-        index.set(uid, []);
-        for (let chunkIndex = 0; chunkIndex < item.chunks.length; chunkIndex += 1) {
-          const record = {
-            id: recordId(characterId, uid, chunkIndex, provider),
-            uid,
-            characterId,
-            provider: provider.id,
-            indexKey: provider.indexKey,
-            contentHash: item.hash,
-            vector: vectorsForUid[chunkIndex],
-            updatedAt: Date.now(),
-          };
-          await putRecord(record);
-          index.get(uid).push(record);
-        }
+        const storedAt = Date.now();
+        const newRecords = item.chunks.map((_, chunkIndex) => ({
+          id: recordId(characterId, uid, chunkIndex, provider),
+          uid,
+          characterId,
+          provider: provider.id,
+          indexKey: provider.indexKey,
+          contentHash: item.hash,
+          vector: vectorsForUid[chunkIndex],
+          updatedAt: storedAt,
+        }));
+        await replaceRecordsAtomic(index.get(uid) || [], newRecords);
+        index.set(uid, newRecords);
       }
 
+      journal.info('[PERF] IndexedDB: lưu ' + group.length + ' mục, ' + vectors.length
+        + ' vectors trong ' + (Date.now() - writeStarted) + 'ms; giao dịch nguyên tử từng UID');
       complete += group.length;
       journal.info('Đã ghi xong nhóm; tiến độ mục ' + complete + '/' + searchable.length);
       onProgress?.(Math.min(complete, searchable.length), searchable.length);
@@ -863,7 +883,7 @@ export function createEmbeddingService(deps) {
     const validUids = new Set(searchable.map(entry => entry.uid));
     for (const [uid] of Array.from(index.entries())) {
       if (validUids.has(uid)) continue;
-      await deleteUidForProvider(uid, characterId, provider);
+      await deleteRecords(index.get(uid) || []);
       index.delete(uid);
     }
     completed = true;
