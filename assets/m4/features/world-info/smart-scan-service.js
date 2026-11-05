@@ -40,6 +40,18 @@ function parseSelection(rawResponse, parseJson) {
   return Array.isArray(selected) ? selected.map(String) : [];
 }
 
+const DEFAULT_LLM_SELECTION_MODEL = 'gemini-3.5-flash-lite';
+const RETIRED_LLM_SELECTION_MODELS = new Set([
+  'gemini-3.1-flash-lite-preview',
+]);
+
+export function resolveSmartScanLlmModel(model) {
+  const requested = String(model || '').trim();
+  return !requested || RETIRED_LLM_SELECTION_MODELS.has(requested)
+    ? DEFAULT_LLM_SELECTION_MODEL
+    : requested;
+}
+
 function buildVariableState(variables) {
   if (!variables || Object.keys(variables).length === 0) return '';
   return Object.entries(variables).map(([key, value]) => {
@@ -84,7 +96,7 @@ export async function scanWorldInfo(input, deps) {
   const mode = settings.mode || 'keyword';
   const llmEnabled = settings.enabled && ['llm_only', 'ultimate'].includes(mode);
   const semanticEnabled = settings.enabled && ['semantic', 'hybrid_fast', 'ultimate'].includes(mode);
-  const keywordEnabled = !settings.enabled || ['keyword', 'hybrid_fast', 'ultimate'].includes(mode);
+  let keywordEnabled = !settings.enabled || ['keyword', 'hybrid_fast', 'ultimate'].includes(mode);
   const forced = Array.isArray(input.forceActiveUids) && input.forceActiveUids.length > 0;
 
   if (semanticEnabled && !forced) {
@@ -151,10 +163,14 @@ export async function scanWorldInfo(input, deps) {
             .replace('{{candidates}}', candidateString)
             .replace('{{input}}', input.content || input.scanInput || '')
             .replace('{{state}}', variableState);
-          let rawResponse = await deps.callSelectionModel(prompt, settings.model || 'gemini-3.1-flash-lite-preview');
+          const model = resolveSmartScanLlmModel(settings.model);
+          let rawResponse = await deps.callSelectionModel(prompt, model);
           rawResponse = String(rawResponse || '').replace(/```(?:json)?\s*([\s\S]*?)\s*```/gi, '$1').trim();
           const selected = parseSelection(rawResponse, deps.parseJson);
-          llmSelected = selected.slice(0, settings.max_entries || 5);
+          const eligibleUids = new Set(entries.filter(entry => !entry.constant).map(entry => String(entry.uid)));
+          llmSelected = selected
+            .filter(uid => eligibleUids.has(uid))
+            .slice(0, settings.max_entries || 5);
           smartScanLog = { fullPrompt: prompt, rawResponse, latency: Date.now() - started };
         }
       } catch (error) {
@@ -169,6 +185,18 @@ export async function scanWorldInfo(input, deps) {
         input.setScanning?.(false);
       }
     }
+  }
+
+  // A failed/unusable LLM response must not disable deterministic World Info matching.
+  // This is especially important in LLM-only mode, where otherwise no dynamic
+  // entries would be activated even though ordinary keyword scan can run.
+  if (mode === 'llm_only' && llmSelected.length === 0) {
+    keywordEnabled = true;
+    deps.logSystemMessage?.(
+      'warn',
+      'system',
+      '[Smart Scan] LLM did not select usable World Info IDs; enabled keyword fallback.',
+    );
   }
 
   const selected = Array.from(new Set([...llmSelected, ...semanticSelected]));
