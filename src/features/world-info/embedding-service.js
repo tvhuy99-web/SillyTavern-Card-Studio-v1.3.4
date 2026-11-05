@@ -466,13 +466,17 @@ export function createEmbeddingService(deps) {
         onStage('ONNX EmbeddingGemma sẵn sàng');
         return {
           provider,
-          async embed(texts) {
+          async embed(texts, onMeasurement) {
+            const tokenStart = Date.now();
             const inputs = await tokenizer(texts, {
               padding: true,
               truncation: true,
               max_length: provider.maxLength,
             });
+            const tokenizationMs = Date.now() - tokenStart;
+            const modelStart = Date.now();
             const output = await model(inputs);
+            onMeasurement?.({ tokenizationMs, onnxMs: Date.now() - modelStart });
             const tensor = output.sentence_embedding || output.pooler_output;
             if (!tensor) throw new Error('EmbeddingGemma không trả về sentence_embedding.');
             return normalizeRows(normalizeTensorRows(tensor));
@@ -488,13 +492,15 @@ export function createEmbeddingService(deps) {
       onStage('Pipeline ONNX ' + provider.shortLabel + ' sẵn sàng');
       return {
         provider,
-        async embed(texts) {
+        async embed(texts, onMeasurement) {
+          const start = Date.now();
           const tensor = await extractor(texts, {
             pooling: provider.pooling,
             normalize: true,
             truncation: true,
             max_length: provider.maxLength,
           });
+          onMeasurement?.({ pipelineMs: Date.now() - start });
           return normalizeRows(normalizeTensorRows(tensor));
         },
         async dispose() {
@@ -512,13 +518,17 @@ export function createEmbeddingService(deps) {
         const model = await transformers.AutoModel.from_pretrained(provider.modelId, fallback);
         return {
           provider,
-          async embed(texts) {
+          async embed(texts, onMeasurement) {
+            const tokenStart = Date.now();
             const inputs = await tokenizer(texts, {
               padding: true,
               truncation: true,
               max_length: provider.maxLength,
             });
+            const tokenizationMs = Date.now() - tokenStart;
+            const modelStart = Date.now();
             const output = await model(inputs);
+            onMeasurement?.({ tokenizationMs, onnxMs: Date.now() - modelStart });
             const tensor = output.sentence_embedding || output.pooler_output;
             if (!tensor) throw new Error('EmbeddingGemma không trả về sentence_embedding.');
             return normalizeRows(normalizeTensorRows(tensor));
@@ -531,13 +541,15 @@ export function createEmbeddingService(deps) {
       const extractor = await transformers.pipeline('feature-extraction', provider.modelId, fallback);
       return {
         provider,
-        async embed(texts) {
+        async embed(texts, onMeasurement) {
+          const start = Date.now();
           const tensor = await extractor(texts, {
             pooling: provider.pooling,
             normalize: true,
             truncation: true,
             max_length: provider.maxLength,
           });
+          onMeasurement?.({ pipelineMs: Date.now() - start });
           return normalizeRows(normalizeTensorRows(tensor));
         },
         async dispose() {
@@ -610,7 +622,7 @@ export function createEmbeddingService(deps) {
   async function embedTexts(provider, texts, options = {}) {
     if (provider.id === 'gemini') return geminiEmbed(texts);
     const runtime = await ensureLocalRuntime(provider, { localOnly: true, onProgress: options.onProgress, onStage: options.onStage });
-    return runtime.embed(texts);
+    return runtime.embed(texts, options.onMeasurement);
   }
 
   async function embedQuery(text) {
@@ -770,20 +782,42 @@ export function createEmbeddingService(deps) {
       // entry can yield dozens of chunks and kill the Android WebView process.
       const texts = flattened.map(item => item.text);
       const vectors = [];
-      const inferenceBatchSize = provider.kind === 'local' ? 1 : Math.max(1, texts.length);
-      journal.info('Nhóm đang xử lý gồm ' + texts.length + ' đoạn; batch suy luận=' + inferenceBatchSize);
-      for (let textOffset = 0; textOffset < texts.length; textOffset += inferenceBatchSize) {
-        currentStep = 'suy luận embedding đoạn ' + (textOffset + 1) + '/' + texts.length;
-        if (textOffset === 0 || textOffset % 10 === 0) {
-          journal.stage('Suy luận embedding đoạn ' + (textOffset + 1) + '/' + texts.length
-            + ' trong nhóm; tổng ' + totalChunks + ' đoạn cần tạo');
+      const groupStarted = Date.now();
+      journal.info('Nhóm đang xử lý gồm ' + texts.length + ' đoạn; batch suy luận hiện tại='
+        + (batchPlanner?.size || Math.max(1, texts.length)));
+      for (let textOffset = 0; textOffset < texts.length;) {
+        const batch = batchPlanner
+          ? batchPlanner.next(texts.length - textOffset)
+          : Math.max(1, texts.length - textOffset);
+        currentStep = 'suy luận embedding đoạn ' + (textOffset + 1) + '/'
+          + texts.length + ' (batch=' + batch + ')';
+        journal.stage('Suy luận embedding đoạn ' + (textOffset + 1) + '-' + (textOffset + batch)
+          + '/' + texts.length + ' trong nhóm; batch=' + batch);
+        const metrics = {};
+        const started = Date.now();
+        const part = await embedTexts(provider, texts.slice(textOffset, textOffset + batch), {
+          onMeasurement: result => Object.assign(metrics, result),
+        });
+        const inferenceMs = Date.now() - started;
+        if (part.length !== batch || part.some(vector => !vector?.length)) {
+          throw new Error('ONNX trả về ' + part.length + '/' + batch + ' embedding, không đúng số yêu cầu.');
         }
-        const part = await embedTexts(provider, texts.slice(textOffset, textOffset + inferenceBatchSize));
         vectors.push(...part);
-        if (provider.kind === 'local' && textOffset + inferenceBatchSize < texts.length) {
+        textOffset += batch;
+        journal.info('[PERF] ' + textOffset + '/' + texts.length + ' đoạn; batch=' + batch
+          + '; thời gian=' + inferenceMs + 'ms'
+          + (metrics.tokenizationMs !== undefined ? '; tokenizer=' + metrics.tokenizationMs + 'ms' : '')
+          + (metrics.onnxMs !== undefined ? '; ONNX=' + metrics.onnxMs + 'ms' : '')
+          + (metrics.pipelineMs !== undefined ? '; pipeline=' + metrics.pipelineMs + 'ms (gồm tokenizer + ONNX)' : '')
+          + '; tốc độ=' + (batch * 1000 / Math.max(1, inferenceMs)).toFixed(2) + ' đoạn/s');
+        const decision = batchPlanner?.report(batch, inferenceMs);
+        if (decision) journal.info('[AUTOTUNE] ' + decision);
+        if (provider.kind === 'local' && textOffset < texts.length) {
           await new Promise(resolve => setTimeout(resolve, 0));
         }
       }
+      journal.info('[PERF] Tổng thời gian tạo ' + vectors.length + ' vectors trong nhóm: '
+        + (Date.now() - groupStarted) + 'ms');
       const byUid = new Map();
       flattened.forEach((item, vectorIndex) => {
         if (!byUid.has(item.entry.uid)) byUid.set(item.entry.uid, []);
