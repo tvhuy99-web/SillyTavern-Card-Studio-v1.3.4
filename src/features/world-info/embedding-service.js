@@ -604,19 +604,48 @@ export function createEmbeddingService(deps) {
 
   async function syncIndex(characterId, entries, onProgress) {
     const config = settings();
-    if (!config.enabled || !['semantic', 'hybrid_fast', 'ultimate'].includes(config.mode)) {
-      throw new Error('Smart Scan hoặc Semantic Search đang tắt.');
-    }
-    if (!characterId) throw new Error('Character ID is required for sync.');
     const provider = activeProvider();
-    if (provider.kind === 'local') await ensureLocalRuntime(provider, { localOnly: true });
+    const journal = createWorldInfoSyncJournal(deps.logSystemMessage, provider.id);
+    let currentStep = 'kiểm tra chế độ';
+    let completed = false;
+    let lastModelProgress = -1;
+    journal.stage('Bắt đầu đồng bộ World Info; mode=' + (config.mode || 'unknown')
+      + '; provider=' + provider.modelId + '; số mục truyền vào=' + (entries?.length || 0)
+      + '; nguồn=' + (provider.kind === 'local' ? 'OFFLINE' : 'ONLINE'));
     try {
-    await loadIndex(characterId);
+      if (!config.enabled || !['semantic', 'hybrid_fast', 'ultimate'].includes(config.mode)) {
+        throw new Error('Smart Scan hoặc Semantic Search đang tắt.');
+      }
+      if (!characterId) throw new Error('Character ID is required for sync.');
+      if (provider.kind === 'local') {
+        currentStep = 'khởi tạo runtime ONNX';
+        journal.stage('Chuẩn bị model offline, chỉ sử dụng dữ liệu đã tải (local_files_only=true)');
+        await ensureLocalRuntime(provider, {
+          localOnly: true,
+          onStage: message => { currentStep = message; journal.stage(message); },
+          onProgress: info => {
+            if (info.status === 'loading') {
+              const progress = Math.floor(Number(info.progress) || 0);
+              if (progress >= lastModelProgress + 10 || (lastModelProgress < 0 && progress === 0)) {
+                lastModelProgress = progress;
+                journal.info('Nạp model: ' + progress + '%'
+                  + (info.file ? '; tệp=' + String(info.file).split('/').pop() : ''));
+              }
+            }
+          },
+        });
+      }
+      currentStep = 'đọc IndexedDB';
+      journal.stage('Đọc chỉ mục embedding trong IndexedDB');
+      await loadIndex(characterId);
+      journal.info('Đã đọc xong chỉ mục embedding');
     const key = memoryKey(characterId, provider);
     const index = memoryIndexes.get(key) || new Map();
     memoryIndexes.set(key, index);
     const searchable = (entries || []).filter(entry => entry?.uid && entry?.content?.trim());
     const pending = [];
+    currentStep = 'băm nội dung các mục Lorebook';
+    journal.stage('Kiểm tra ' + searchable.length + ' mục có nội dung và đối chiếu mã băm');
 
     await Promise.all(searchable.map(async entry => {
       const text = buildEmbeddingEntryText(entry);
@@ -632,6 +661,9 @@ export function createEmbeddingService(deps) {
     }));
 
     let complete = searchable.length - pending.length;
+    const totalChunks = pending.reduce((sum, item) => sum + item.chunks.length, 0);
+    journal.info('Đối chiếu xong: ' + complete + ' mục đã cập nhật; '
+      + pending.length + ' mục cần tạo lại; tổng ' + totalChunks + ' đoạn embedding');
     onProgress?.(complete, searchable.length);
     const requestedBatchSize = Math.max(1, Math.floor(Number(config.embedding_batch_size) || 30));
     const batchSize = provider.id === 'qwen3'
@@ -642,6 +674,9 @@ export function createEmbeddingService(deps) {
 
     for (let offset = 0; offset < pending.length; offset += batchSize) {
       const group = pending.slice(offset, offset + batchSize);
+      currentStep = 'xử lý nhóm mục ' + (offset + 1) + '-' + Math.min(offset + group.length, pending.length);
+      journal.stage('Xử lý nhóm ' + (Math.floor(offset / batchSize) + 1) + '/'
+        + Math.ceil(pending.length / batchSize) + ': ' + group.length + ' mục Lorebook');
       const flattened = [];
       for (const item of group) {
         item.chunks.forEach((chunk, chunkIndex) => {
@@ -660,7 +695,13 @@ export function createEmbeddingService(deps) {
       const texts = flattened.map(item => item.text);
       const vectors = [];
       const inferenceBatchSize = provider.kind === 'local' ? 1 : Math.max(1, texts.length);
+      journal.info('Nhóm đang xử lý gồm ' + texts.length + ' đoạn; batch suy luận=' + inferenceBatchSize);
       for (let textOffset = 0; textOffset < texts.length; textOffset += inferenceBatchSize) {
+        currentStep = 'suy luận embedding đoạn ' + (textOffset + 1) + '/' + texts.length;
+        if (textOffset === 0 || textOffset % 10 === 0) {
+          journal.stage('Suy luận embedding đoạn ' + (textOffset + 1) + '/' + texts.length
+            + ' trong nhóm; tổng ' + totalChunks + ' đoạn cần tạo');
+        }
         const part = await embedTexts(provider, texts.slice(textOffset, textOffset + inferenceBatchSize));
         vectors.push(...part);
         if (provider.kind === 'local' && textOffset + inferenceBatchSize < texts.length) {
@@ -673,6 +714,8 @@ export function createEmbeddingService(deps) {
         byUid.get(item.entry.uid).push(vectors[vectorIndex]);
       });
 
+      currentStep = 'ghi vectors vào IndexedDB';
+      journal.stage('Đã suy luận ' + vectors.length + ' vectors; bắt đầu ghi IndexedDB');
       for (const item of group) {
         const uid = item.entry.uid;
         const vectorsForUid = byUid.get(uid);
@@ -698,21 +741,37 @@ export function createEmbeddingService(deps) {
       }
 
       complete += group.length;
+      journal.info('Đã ghi xong nhóm; tiến độ mục ' + complete + '/' + searchable.length);
       onProgress?.(Math.min(complete, searchable.length), searchable.length);
       if (offset + batchSize < pending.length && provider.id === 'gemini') {
         await new Promise(resolve => setTimeout(resolve, 500));
       }
     }
 
+    currentStep = 'dọn các vector không còn dùng';
+    journal.stage('Dọn các bản ghi đã xóa khỏi Lorebook');
     const validUids = new Set(searchable.map(entry => entry.uid));
     for (const [uid] of Array.from(index.entries())) {
       if (validUids.has(uid)) continue;
       await deleteUidForProvider(uid, characterId, provider);
       index.delete(uid);
     }
+    completed = true;
+    } catch (error) {
+      journal.fail(currentStep, error);
+      throw error;
     } finally {
       // On Android the ONNX runtime competes with the chat UI for one WebView memory budget.
-      if (isAndroidHost() && provider.kind === 'local') await disposeUnusedLocalRuntimes();
+      if (isAndroidHost() && provider.kind === 'local') {
+        journal.stage('Giải phóng runtime ONNX để trả RAM cho Android WebView');
+        try {
+          await disposeUnusedLocalRuntimes();
+        } catch (error) {
+          journal.warning('Lỗi giải phóng ONNX: ' + (error instanceof Error ? error.message : String(error)));
+        }
+      }
+      if (completed) journal.success('ĐỒNG BỘ HOÀN TẤT; tất cả bước đã chạy xong');
+      journal.close();
     }
   }
 
