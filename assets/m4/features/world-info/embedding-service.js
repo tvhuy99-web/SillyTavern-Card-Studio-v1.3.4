@@ -8,11 +8,11 @@ const QWEN_TASK = 'Given the current roleplay context, retrieve the most relevan
 export const EMBEDDING_PROVIDERS = Object.freeze([
   Object.freeze({
     id: 'gemini',
-    label: 'Gemini Embedding 2 - Online',
+    label: 'Gemini Embedding 2 (Stable) - Online',
     shortLabel: 'Gemini Online',
     kind: 'online',
-    modelId: 'gemini-embedding-2-preview',
-    indexKey: 'gemini:gemini-embedding-2-preview:v1',
+    modelId: 'gemini-embedding-2',
+    indexKey: 'gemini:gemini-embedding-2:v1',
     dimensions: null,
     sizeLabel: 'Online',
   }),
@@ -150,8 +150,13 @@ function normalizeRows(rows) {
   });
 }
 
+function isAndroidHost() {
+  return typeof navigator !== 'undefined' && /Android/i.test(String(navigator.userAgent || ''));
+}
+
 function preferredDevice() {
-  return typeof navigator !== 'undefined' && navigator.gpu ? 'webgpu' : 'wasm';
+  // Android WebView drivers can terminate the renderer on large WebGPU allocations.
+  return !isAndroidHost() && typeof navigator !== 'undefined' && navigator.gpu ? 'webgpu' : 'wasm';
 }
 
 async function openEmbeddingDb() {
@@ -176,8 +181,8 @@ async function putRecord(record) {
   const db = await openEmbeddingDb();
   return new Promise((resolve, reject) => {
     const request = db.transaction([STORE_NAME], 'readwrite').objectStore(STORE_NAME).put(record);
-    request.onsuccess = () => resolve();
-    request.onerror = event => reject(event?.target?.error || new Error('Failed to store embedding'));
+    request.onsuccess = () => { db.close(); resolve(); };
+    request.onerror = event => { db.close(); reject(event?.target?.error || new Error('Failed to store embedding')); };
   });
 }
 
@@ -188,8 +193,8 @@ async function getRecordsByCharacter(characterId) {
       .objectStore(STORE_NAME)
       .index('characterId')
       .getAll(characterId);
-    request.onsuccess = event => resolve(event.target.result || []);
-    request.onerror = event => reject(event?.target?.error || new Error('Failed to read embeddings'));
+    request.onsuccess = event => { const records = event.target.result || []; db.close(); resolve(records); };
+    request.onerror = event => { db.close(); reject(event?.target?.error || new Error('Failed to read embeddings')); };
   });
 }
 
@@ -200,8 +205,8 @@ async function getRecordsByUid(uid) {
       .objectStore(STORE_NAME)
       .index('uid')
       .getAll(uid);
-    request.onsuccess = event => resolve(event.target.result || []);
-    request.onerror = event => reject(event?.target?.error || new Error('Failed to read embedding UID'));
+    request.onsuccess = event => { const records = event.target.result || []; db.close(); resolve(records); };
+    request.onerror = event => { db.close(); reject(event?.target?.error || new Error('Failed to read embedding UID')); };
   });
 }
 
@@ -215,9 +220,9 @@ async function deleteRecords(records) {
       const request = store.delete(record.id);
       request.onsuccess = () => {
         completed += 1;
-        if (completed === records.length) resolve();
+        if (completed === records.length) { db.close(); resolve(); }
       };
-      request.onerror = event => reject(event?.target?.error || new Error('Failed to delete embedding'));
+      request.onerror = event => { db.close(); reject(event?.target?.error || new Error('Failed to delete embedding')); };
     }
   });
 }
@@ -247,13 +252,21 @@ function recordId(characterId, uid, chunkIndex, provider) {
   return `${characterId}::${provider.id}::${uid}_${chunkIndex}`;
 }
 
+export function configureTransformersEnvironment(environment) {
+  if (!environment) return;
+  // Transformers.js v3 defaults allowLocalModels=false in browsers/WebViews.
+  // Offline sync uses local_files_only=true and must be allowed to read files
+  // previously downloaded into the browser Cache API.
+  // Do not disable allowRemoteModels globally: first-time downloads still need it.
+  environment.allowLocalModels = true;
+  environment.useBrowserCache = true;
+  environment.useWasmCache = true;
+  environment.cacheKey = TRANSFORMERS_CACHE_KEY;
+}
+
 async function getTransformersModule() {
   const module = await import(TRANSFORMERS_MODULE_URL);
-  if (module?.env) {
-    module.env.useBrowserCache = true;
-    module.env.useWasmCache = true;
-    module.env.cacheKey = TRANSFORMERS_CACHE_KEY;
-  }
+  configureTransformersEnvironment(module?.env);
   return module;
 }
 
@@ -319,6 +332,16 @@ export function createEmbeddingService(deps) {
   const settings = () => deps.getSettings?.() || {};
   const activeProvider = () => resolveEmbeddingProvider(settings());
   const memoryKey = (characterId, provider = activeProvider()) => `${characterId}::${provider.indexKey}`;
+
+  async function disposeUnusedLocalRuntimes(keepProviderId = null) {
+    for (const [id, runtime] of Array.from(modelRuntimes.entries())) {
+      if (id === keepProviderId) continue;
+      modelRuntimes.delete(id);
+      try { await runtime.dispose?.(); } catch (error) {
+        console.warn('[Embedding] Could not dispose inactive local model:', id, error);
+      }
+    }
+  }
 
   async function createLocalRuntime(provider, onProgress, localOnly = false) {
     if (provider.kind !== 'local') throw new Error('Provider này không phải mô hình cục bộ.');
@@ -425,6 +448,8 @@ export function createEmbeddingService(deps) {
     if (options.localOnly && !(await providerIsCached(provider))) {
       throw new Error(`Mô hình ${provider.shortLabel} chưa được tải. Hãy tải mô hình trong Cài đặt Smart Scan trước.`);
     }
+    // Keep only one heavy ONNX model resident when switching embedding providers.
+    await disposeUnusedLocalRuntimes(provider.id);
     const loading = createLocalRuntime(provider, options.onProgress, !!options.localOnly)
       .then(runtime => {
         modelRuntimes.set(provider.id, runtime);
@@ -524,7 +549,7 @@ export function createEmbeddingService(deps) {
     if (!characterId) throw new Error('Character ID is required for sync.');
     const provider = activeProvider();
     if (provider.kind === 'local') await ensureLocalRuntime(provider, { localOnly: true });
-
+    try {
     await loadIndex(characterId);
     const key = memoryKey(characterId, provider);
     const index = memoryIndexes.get(key) || new Map();
@@ -547,7 +572,7 @@ export function createEmbeddingService(deps) {
 
     let complete = searchable.length - pending.length;
     onProgress?.(complete, searchable.length);
-    const requestedBatchSize = config.embedding_batch_size || 30;
+    const requestedBatchSize = Math.max(1, Math.floor(Number(config.embedding_batch_size) || 30));
     const batchSize = provider.id === 'qwen3'
       ? Math.min(requestedBatchSize, 4)
       : provider.id === 'embeddinggemma'
@@ -569,7 +594,18 @@ export function createEmbeddingService(deps) {
         });
       }
 
-      const vectors = await embedTexts(provider, flattened.map(item => item.text));
+      // Entry batch size does not bound the number of chunks: a single long lorebook
+      // entry can yield dozens of chunks and kill the Android WebView process.
+      const texts = flattened.map(item => item.text);
+      const vectors = [];
+      const inferenceBatchSize = provider.kind === 'local' ? 1 : Math.max(1, texts.length);
+      for (let textOffset = 0; textOffset < texts.length; textOffset += inferenceBatchSize) {
+        const part = await embedTexts(provider, texts.slice(textOffset, textOffset + inferenceBatchSize));
+        vectors.push(...part);
+        if (provider.kind === 'local' && textOffset + inferenceBatchSize < texts.length) {
+          await new Promise(resolve => setTimeout(resolve, 0));
+        }
+      }
       const byUid = new Map();
       flattened.forEach((item, vectorIndex) => {
         if (!byUid.has(item.entry.uid)) byUid.set(item.entry.uid, []);
@@ -613,6 +649,10 @@ export function createEmbeddingService(deps) {
       await deleteUidForProvider(uid, characterId, provider);
       index.delete(uid);
     }
+    } finally {
+      // On Android the ONNX runtime competes with the chat UI for one WebView memory budget.
+      if (isAndroidHost() && provider.kind === 'local') await disposeUnusedLocalRuntimes();
+    }
   }
 
   async function getProviderStatus(providerId) {
@@ -638,6 +678,9 @@ export function createEmbeddingService(deps) {
     const provider = getEmbeddingProvider(providerId);
     if (provider.kind !== 'local') return getProviderStatus(provider.id);
     await ensureLocalRuntime(provider, { localOnly: false, onProgress });
+    // Downloaded model weights stay in browser cache; do not retain a second
+    // full ONNX model in RAM while the user prepares other providers.
+    await disposeUnusedLocalRuntimes();
     return getProviderStatus(provider.id);
   }
 

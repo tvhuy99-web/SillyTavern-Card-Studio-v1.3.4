@@ -40,6 +40,13 @@ function parseSelection(rawResponse, parseJson) {
   return Array.isArray(selected) ? selected.map(String) : [];
 }
 
+const DEFAULT_LLM_SELECTION_MODEL = 'gemini-3.5-flash-lite';
+// Never override an explicitly selected model. Failed models must report an error,
+// not be silently replaced by another model.
+export function resolveSmartScanLlmModel(model) {
+  return String(model || '').trim() || DEFAULT_LLM_SELECTION_MODEL;
+}
+
 function buildVariableState(variables) {
   if (!variables || Object.keys(variables).length === 0) return '';
   return Object.entries(variables).map(([key, value]) => {
@@ -116,7 +123,7 @@ export async function scanWorldInfo(input, deps) {
         }
       } catch (error) {
         console.error('[Semantic Scan] Error:', error);
-        deps.logSystemMessage('error', 'system', `[Semantic Scan] Failed, falling back to keyword. Error: ${error}`);
+        deps.logSystemMessage('error', 'system', `[Semantic Scan] Failed${keywordEnabled ? '; keyword scan remains enabled' : '; semantic-only mode, no fallback'}. Error: ${error}`);
         deps.onSemanticError?.(error);
       } finally {
         input.setScanning?.(false);
@@ -127,10 +134,19 @@ export async function scanWorldInfo(input, deps) {
   if (llmEnabled) {
     if (forced) {
       llmSelected = input.forceActiveUids;
+      smartScanLog = {
+        fullPrompt: '[Không gửi yêu cầu mới: sử dụng lại lựa chọn từ lượt trước]',
+        rawResponse: `[SKIPPED] Không gọi LLM. Đã dùng lại ${llmSelected.length} UID.`,
+        latency: 0,
+      };
       deps.logSystemMessage('state', 'system', `[Smart Scan] Skipped API call. Reusing ${llmSelected.length} UIDs from previous turn.`);
     } else {
       input.setScanning?.(true);
       const started = Date.now();
+      let requestPrompt = '';
+      let requestedModel = '';
+      let rawResponseText = '';
+      let attemptedRequest = false;
       try {
         const depth = settings.depth || 3;
         const history = (input.promptHistory || []).slice(-depth).map(message => {
@@ -151,18 +167,48 @@ export async function scanWorldInfo(input, deps) {
             .replace('{{candidates}}', candidateString)
             .replace('{{input}}', input.content || input.scanInput || '')
             .replace('{{state}}', variableState);
-          let rawResponse = await deps.callSelectionModel(prompt, settings.model || 'gemini-3.1-flash-lite-preview');
-          rawResponse = String(rawResponse || '').replace(/```(?:json)?\s*([\s\S]*?)\s*```/gi, '$1').trim();
-          const selected = parseSelection(rawResponse, deps.parseJson);
-          llmSelected = selected.slice(0, settings.max_entries || 5);
-          smartScanLog = { fullPrompt: prompt, rawResponse, latency: Date.now() - started };
+          requestedModel = resolveSmartScanLlmModel(settings.model);
+          requestPrompt = prompt;
+          attemptedRequest = true;
+          // Record the exact outbound prompt before calling the provider. Persist
+          // the result (including errors) into section 3 of Smart Scan diagnostics.
+          smartScanLog = {
+            fullPrompt: requestPrompt,
+            rawResponse: '[ĐÃ GỬI] Chưa có phản hồi từ mô hình ' + requestedModel,
+            latency: 0,
+          };
+          rawResponseText = String(await deps.callSelectionModel(prompt, requestedModel) || '');
+          const cleanedResponse = rawResponseText
+            .replace(/```(?:json)?\s*([\s\S]*?)\s*```/gi, '$1')
+            .trim();
+          const selected = parseSelection(cleanedResponse, deps.parseJson);
+          const eligibleUids = new Set(entries.filter(entry => !entry.constant).map(entry => String(entry.uid)));
+          llmSelected = selected
+            .filter(uid => eligibleUids.has(uid))
+            .slice(0, settings.max_entries || 5);
+          smartScanLog = { fullPrompt: requestPrompt, rawResponse: rawResponseText, latency: Date.now() - started };
+        } else {
+          smartScanLog = {
+            fullPrompt: '[Không gửi yêu cầu: không có mục World Info động để chọn]',
+            rawResponse: '[SKIPPED] Không gọi LLM vì không có ứng viên.',
+            latency: 0,
+          };
         }
       } catch (error) {
+        const message = error instanceof Error ? error.message : String(error);
         console.error('[Smart Scan] Error:', error);
+        // Without this record, a provider error makes both the sent prompt and
+        // the error/response disappear from the Smart Scan journal.
+        smartScanLog = {
+          fullPrompt: requestPrompt || '[Không gửi yêu cầu: lỗi trước khi chuẩn bị xong prompt]',
+          rawResponse: (rawResponseText ? rawResponseText + '\n\n' : '') +
+            `[LỖI ${attemptedRequest ? 'GỌI LLM' : 'CHUẨN BỊ'}]${requestedModel ? ' ' + requestedModel : ''}: ${message}`,
+          latency: Date.now() - started,
+        };
         deps.logSystemMessage?.(
           'error',
           'system',
-          `[Smart Scan] LLM selection failed; continuing with deterministic World Info fallback. Error: ${error instanceof Error ? error.message : String(error)}`,
+          `[Smart Scan] LLM selection failed${keywordEnabled ? '; keyword scan is independently enabled' : '; no fallback in LLM-only mode'}. Error: ${message}`,
         );
         deps.onLlmError?.(error);
       } finally {

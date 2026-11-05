@@ -76,6 +76,7 @@ const allowedAssetRoots = new Set([
   'm5',
   'm6',
   'm7',
+  'm8',
   'prompt-normalizer-v1.3.6.js',
   'proxy-persistence-service-v1.3.6.js',
   'smart-state-service-v1.3.6.js',

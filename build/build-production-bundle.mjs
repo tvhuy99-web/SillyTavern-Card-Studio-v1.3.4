@@ -9,6 +9,7 @@ import {
 import { applyCardRuntimeTransform } from './transforms/card-runtime.mjs';
 import { applyProxyPersistenceTransform, PROXY_PERSISTENCE_PATCH_COUNT } from './transforms/proxy-persistence.mjs';
 import { applyM4ChatGenerationTransform, M4_CHAT_GENERATION_PATCH_COUNT } from './transforms/m4-chat-generation.mjs';
+import { applyAiStudioTextTransform, AI_STUDIO_TEXT_PATCH_COUNT } from './transforms/ai-studio-text.mjs';
 import { applyRuntimeSurfaceGapsTransform, RUNTIME_SURFACE_GAP_PATCH_COUNT } from './transforms/runtime-surface-gaps.mjs';
 import { applyM5StateTransform, M5_STATE_PATCH_COUNT } from './transforms/m5-state-persistence-runtime.mjs';
 import { applyM6UiAccessibilityTransform, M6_UI_ACCESSIBILITY_PATCH_COUNT } from './transforms/m6-ui-accessibility.mjs';
@@ -29,6 +30,10 @@ const VARIABLE_SCOPE_OUTPUT_URL = new URL('../assets/variable-scope-service-v1.3
 const INITIAL_VARIABLE_SOURCE_URL = new URL('../src/features/state/initial-variable-service.js', import.meta.url);
 const INITIAL_VARIABLE_OUTPUT_URL = new URL('../assets/initial-variable-service-v1.3.6.js', import.meta.url);
 
+
+const M8_DOMAIN_ASSETS = [
+  ['../src/diagnostics/aistudio-log.js', '../assets/m8/diagnostics/aistudio-log.js'],
+].map(([source, output]) => ({ source: new URL(source, import.meta.url), output: new URL(output, import.meta.url) }));
 
 const M7_DOMAIN_ASSETS = [
   ['../src/diagnostics/gemini-model-list.js', '../assets/m7/diagnostics/gemini-model-list.js'],
@@ -62,6 +67,7 @@ const M4_DOMAIN_ASSETS = [
   ['../src/providers/proxy/generation.js', '../assets/m4/providers/proxy/generation.js'],
   ['../src/providers/openrouter/generation.js', '../assets/m4/providers/openrouter/generation.js'],
   ['../src/providers/gemini/generation.js', '../assets/m4/providers/gemini/generation.js'],
+  ['../src/providers/aistudio/text.js', '../assets/m4/providers/aistudio/text.js'],
   ['../src/features/chat/turn-policy.js', '../assets/m4/features/chat/turn-policy.js'],
   ['../src/features/chat/conversation-service.js', '../assets/m4/features/chat/conversation-service.js'],
   ['../src/features/chat/live-stream-store.js', '../assets/m4/features/chat/live-stream-store.js'],
@@ -97,7 +103,7 @@ await copyFile(SMART_STATE_SOURCE_URL, SMART_STATE_OUTPUT_URL);
 await copyFile(VARIABLE_SCOPE_SOURCE_URL, VARIABLE_SCOPE_OUTPUT_URL);
 await copyFile(INITIAL_VARIABLE_SOURCE_URL, INITIAL_VARIABLE_OUTPUT_URL);
 await copyFile(APP_ENTRY_SOURCE_URL, APP_ENTRY_OUTPUT_URL);
-for (const asset of [...M4_DOMAIN_ASSETS, ...M5_DOMAIN_ASSETS, ...M6_DOMAIN_ASSETS, ...M7_DOMAIN_ASSETS]) {
+for (const asset of [...M4_DOMAIN_ASSETS, ...M5_DOMAIN_ASSETS, ...M6_DOMAIN_ASSETS, ...M7_DOMAIN_ASSETS, ...M8_DOMAIN_ASSETS]) {
   await mkdir(new URL('./', asset.output), { recursive: true });
   await copyFile(asset.source, asset.output);
 }
@@ -110,6 +116,7 @@ code = applyPresetBoundaryTransform(code);
 code = applyCardRuntimeTransform(code);
 code = applyProxyPersistenceTransform(code);
 code = applyM4ChatGenerationTransform(code);
+code = applyAiStudioTextTransform(code);
 code = applyRuntimeSurfaceGapsTransform(code);
 code = applyM5StateTransform(code);
 code = applyM6UiAccessibilityTransform(code);
@@ -134,6 +141,7 @@ console.log(JSON.stringify({
     presetBoundaries: PRESET_BOUNDARY_PATCH_COUNT,
     proxyPersistence: PROXY_PERSISTENCE_PATCH_COUNT,
     m4ChatGeneration: M4_CHAT_GENERATION_PATCH_COUNT,
+    aiStudioText: AI_STUDIO_TEXT_PATCH_COUNT,
     runtimeSurfaceGaps: RUNTIME_SURFACE_GAP_PATCH_COUNT,
     m5StatePersistenceRuntime: M5_STATE_PATCH_COUNT,
     m6UiAccessibility: M6_UI_ACCESSIBILITY_PATCH_COUNT,
