@@ -16,6 +16,10 @@ assert.equal(resolveEmbeddingProvider({}).id, 'gemini');
 assert.equal(resolveEmbeddingProvider({ embedding_provider: 'embeddinggemma' }).id, 'embeddinggemma');
 assert.equal(resolveEmbeddingProvider({ embedding_provider: 'qwen3' }).id, 'qwen3');
 assert.equal(getEmbeddingProvider('missing').id, 'gemini');
+assert.equal(getEmbeddingProvider('gemini').modelId, 'gemini-embedding-2');
+assert.equal(getEmbeddingProvider('gemini').indexKey, 'gemini:gemini-embedding-2:v1');
+assert.match(getEmbeddingProvider('gemini').label, /Stable/);
+
 
 assert.equal(formatEmbeddingQuery('gemini', ' hello '), 'hello');
 assert.equal(formatEmbeddingQuery('embeddinggemma', 'hello'), 'task: search result | query: hello');
