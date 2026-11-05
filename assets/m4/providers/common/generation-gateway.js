@@ -1,4 +1,5 @@
 import { createGeminiGenerationProvider } from '../gemini/generation.js';
+import { createAiStudioTextProvider } from '../aistudio/text.js';
 import { createOpenRouterGenerationProvider } from '../openrouter/generation.js';
 import { createProxyGenerationProvider } from '../proxy/generation.js';
 
@@ -17,6 +18,7 @@ export function createGenerationGateway(deps) {
     getHeaders: deps.getOpenRouterHeaders,
     readResponseError: deps.readResponseError,
   });
+  const aistudio = createAiStudioTextProvider();
   const gemini = createGeminiGenerationProvider({
     generateOnce: deps.geminiGenerateOnce,
     createClient: deps.createGeminiClient,
@@ -28,8 +30,10 @@ export function createGenerationGateway(deps) {
     const settings = deps.getConnectionSettings();
     const source = sourceOverride || settings.source;
     const model = modelOverride || (
-      source === 'gemini'
-        ? settings.gemini_model
+      source === 'aistudio'
+        ? (settings.aistudio_model || 'gemini-2.5-flash')
+        : source === 'gemini'
+          ? settings.gemini_model
         : source === 'proxy'
           ? settings.proxy_model
           : settings.openrouter_model
@@ -39,6 +43,9 @@ export function createGenerationGateway(deps) {
 
   async function generateOnce({ prompt, preset, model, source, proxyConfig, signal }) {
     const resolved = resolve(source, model);
+    if (resolved.source === 'aistudio') {
+      return aistudio.generate({ model: resolved.model, prompt, signal });
+    }
     if (resolved.source === 'proxy') {
       const result = await proxy.generate({ model: resolved.model, prompt, preset, proxyConfig, signal });
       return { response: { text: result.text } };
@@ -53,6 +60,10 @@ export function createGenerationGateway(deps) {
   async function* stream(options) {
     const resolved = resolve(options.source, options.model);
     const args = { ...options, model: resolved.model };
+    if (resolved.source === 'aistudio') {
+      yield* aistudio.stream(args);
+      return;
+    }
     if (resolved.source === 'proxy') {
       yield* proxy.stream(args);
       return;

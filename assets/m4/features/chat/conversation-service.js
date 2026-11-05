@@ -35,9 +35,12 @@ export function createConversationService(deps) {
 
     try {
       while (!controller.signal.aborted) {
+        // AI Studio may need first-use account login in its native WebView.
+        // Keep the existing timeouts unchanged for all other providers.
+        const isAiStudio = String(label).startsWith('aistudio:');
         const timeoutMs = chunkCount === 0
-          ? streamFirstChunkTimeoutMs
-          : streamIdleTimeoutMs;
+          ? (isAiStudio ? Math.max(streamFirstChunkTimeoutMs, 320000) : streamFirstChunkTimeoutMs)
+          : (isAiStudio ? Math.max(streamIdleTimeoutMs, 120000) : streamIdleTimeoutMs);
         let timeoutId;
         let result;
         try {
@@ -184,7 +187,9 @@ export function createConversationService(deps) {
         `${provider || 'default'}:${model || slot}`,
       )) {
         if (signal.aborted) break;
-        content += chunk.text || '';
+        content = chunk.replaceText === true
+          ? String(chunk.text || '')
+          : content + String(chunk.text || '');
         deps.liveStream.publish(messageId, slot, content);
       }
       updateArena(messageId, slot, (arena, side) =>
@@ -245,7 +250,10 @@ export function createConversationService(deps) {
 
   async function generateSingle(state, message, prompt, controller) {
     let content = '';
-    if (state.preset.stream_response) {
+    // AI Studio uses a native WebView and must show live text even if the
+    // character preset disables API streaming. No change for other providers.
+    const connectionSource = deps.getConnectionSettings?.()?.source;
+    if (state.preset.stream_response || connectionSource === 'aistudio') {
       const stream = deps.generationGateway.stream({
         prompt, preset: state.preset, signal: controller.signal,
       });
@@ -264,7 +272,9 @@ export function createConversationService(deps) {
           `${source}:${model || 'default'}`,
         )) {
           if (controller.signal.aborted) break;
-          content += chunk.text || '';
+          content = chunk.replaceText === true
+            ? String(chunk.text || '')
+            : content + String(chunk.text || '');
           if (chunk.reasoning) reasoning += chunk.reasoning;
           deps.liveStream.publish(message.id, 'main', content, reasoning || undefined);
         }
