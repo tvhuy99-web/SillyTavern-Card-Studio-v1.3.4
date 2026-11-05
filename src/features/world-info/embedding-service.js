@@ -323,6 +323,51 @@ async function deleteProviderCache(provider) {
   }
 }
 
+let nextWorldInfoSyncId = 0;
+
+// A bounded, privacy-safe diagnostic journal for the System Console.
+// Checkpoints are emitted BEFORE each awaited model/IndexedDB operation.
+export function createWorldInfoSyncJournal(logger, providerId, options = {}) {
+  const now = options.now || Date.now;
+  const schedule = options.setInterval || setInterval;
+  const unschedule = options.clearInterval || clearInterval;
+  const startedAt = now();
+  const id = String(++nextWorldInfoSyncId);
+  const prefix = '[WI-SYNC #' + id + '][' + providerId + ']';
+  let lastStage = 'khởi động';
+  let lastCheckpointAt = startedAt;
+  let lastHeartbeatAt = startedAt;
+  let finished = false;
+
+  const elapsed = () => Math.max(0, Math.round((now() - startedAt) / 1000));
+  const emit = (level, message) => {
+    try { logger?.(level, 'system', prefix + ' ' + String(message).slice(0, 1400)); } catch {}
+  };
+  const stage = (message) => {
+    lastStage = String(message);
+    lastCheckpointAt = now();
+    emit('state', lastStage + ' (' + elapsed() + 's)');
+  };
+  const timer = schedule(() => {
+    if (finished) return;
+    const idle = Math.max(0, Math.round((now() - lastCheckpointAt) / 1000));
+    if (now() - lastHeartbeatAt < 15000) return;
+    lastHeartbeatAt = now();
+    emit(idle >= 45 ? 'warn' : 'state',
+      'Đang chạy: ' + lastStage + '; tổng ' + elapsed() + 's; không có bước mới ' + idle + 's'
+      + (idle >= 45 ? '. Có thể đang chờ ONNX, bộ nhớ hoặc IndexedDB.' : '.'));
+  }, 15000);
+  return Object.freeze({
+    stage,
+    info: message => emit('state', String(message) + ' (' + elapsed() + 's)'),
+    warning: message => emit('warn', String(message) + ' (' + elapsed() + 's)'),
+    success: message => emit('performance', String(message) + ' (' + elapsed() + 's)'),
+    fail: (step, error) => emit('error', 'THẤT BẠI tại [' + step + '] sau ' + elapsed()
+      + 's: ' + (error instanceof Error ? error.message : String(error))),
+    close: () => { finished = true; unschedule(timer); },
+  });
+}
+
 export function createEmbeddingService(deps) {
   const modelRuntimes = new Map();
   const modelLoads = new Map();
@@ -343,9 +388,11 @@ export function createEmbeddingService(deps) {
     }
   }
 
-  async function createLocalRuntime(provider, onProgress, localOnly = false) {
+  async function createLocalRuntime(provider, onProgress, localOnly = false, onStage = () => {}) {
     if (provider.kind !== 'local') throw new Error('Provider này không phải mô hình cục bộ.');
+    onStage('Import Transformers.js (có thể truy cập CDN cho mã thư viện)');
     const transformers = await getTransformersModule();
+    onStage('Đã nạp Transformers.js; chuẩn bị bộ suy luận cục bộ');
     const callback = progressAdapter(onProgress);
     const common = {
       dtype: provider.dtype,
@@ -356,11 +403,14 @@ export function createEmbeddingService(deps) {
 
     try {
       if (provider.id === 'embeddinggemma') {
+        onStage('Nạp tokenizer EmbeddingGemma từ cache');
         const tokenizer = await transformers.AutoTokenizer.from_pretrained(provider.modelId, {
           progress_callback: callback,
           local_files_only: localOnly,
         });
+        onStage('Khởi tạo ONNX EmbeddingGemma (' + common.device + ', Q4)');
         const model = await transformers.AutoModel.from_pretrained(provider.modelId, common);
+        onStage('ONNX EmbeddingGemma sẵn sàng');
         return {
           provider,
           async embed(texts) {
@@ -380,7 +430,9 @@ export function createEmbeddingService(deps) {
         };
       }
 
+      onStage('Khởi tạo pipeline ONNX ' + provider.shortLabel + ' (' + common.device + ', Q4)');
       const extractor = await transformers.pipeline('feature-extraction', provider.modelId, common);
+      onStage('Pipeline ONNX ' + provider.shortLabel + ' sẵn sàng');
       return {
         provider,
         async embed(texts) {
@@ -443,14 +495,23 @@ export function createEmbeddingService(deps) {
   }
 
   async function ensureLocalRuntime(provider, options = {}) {
-    if (modelRuntimes.has(provider.id)) return modelRuntimes.get(provider.id);
-    if (modelLoads.has(provider.id)) return modelLoads.get(provider.id);
+    const onStage = options.onStage || (() => {});
+    if (modelRuntimes.has(provider.id)) {
+      onStage('Dùng runtime ONNX đã nạp');
+      return modelRuntimes.get(provider.id);
+    }
+    if (modelLoads.has(provider.id)) {
+      onStage('Đợi lần nạp runtime ONNX đang chạy');
+      return modelLoads.get(provider.id);
+    }
+    if (options.localOnly) onStage('Kiểm tra cache của model ' + provider.shortLabel);
     if (options.localOnly && !(await providerIsCached(provider))) {
       throw new Error(`Mô hình ${provider.shortLabel} chưa được tải. Hãy tải mô hình trong Cài đặt Smart Scan trước.`);
     }
     // Keep only one heavy ONNX model resident when switching embedding providers.
+    onStage('Giải phóng các model ONNX không sử dụng');
     await disposeUnusedLocalRuntimes(provider.id);
-    const loading = createLocalRuntime(provider, options.onProgress, !!options.localOnly)
+    const loading = createLocalRuntime(provider, options.onProgress, !!options.localOnly, onStage)
       .then(runtime => {
         modelRuntimes.set(provider.id, runtime);
         modelLoads.delete(provider.id);
@@ -495,7 +556,7 @@ export function createEmbeddingService(deps) {
 
   async function embedTexts(provider, texts, options = {}) {
     if (provider.id === 'gemini') return geminiEmbed(texts);
-    const runtime = await ensureLocalRuntime(provider, { localOnly: true, onProgress: options.onProgress });
+    const runtime = await ensureLocalRuntime(provider, { localOnly: true, onProgress: options.onProgress, onStage: options.onStage });
     return runtime.embed(texts);
   }
 
@@ -543,19 +604,55 @@ export function createEmbeddingService(deps) {
 
   async function syncIndex(characterId, entries, onProgress) {
     const config = settings();
-    if (!config.enabled || !['semantic', 'hybrid_fast', 'ultimate'].includes(config.mode)) {
-      throw new Error('Smart Scan hoặc Semantic Search đang tắt.');
-    }
-    if (!characterId) throw new Error('Character ID is required for sync.');
     const provider = activeProvider();
-    if (provider.kind === 'local') await ensureLocalRuntime(provider, { localOnly: true });
+    // The shipped app already mirrors console.warn/error into
+    // "1. BẢNG ĐIỀU KHIỂN HỆ THỐNG (CONSOLE)" (category: console).
+    // This path works without rebuilding the legacy minified UI bridge.
+    const consoleLogger = (level, _category, message) => {
+      if (level === 'error') console.error(message);
+      else console.warn(message);
+    };
+    const journal = createWorldInfoSyncJournal(deps.logSystemMessage || consoleLogger, provider.id);
+    let currentStep = 'kiểm tra chế độ';
+    let completed = false;
+    let lastModelProgress = -1;
+    journal.stage('Bắt đầu đồng bộ World Info; mode=' + (config.mode || 'unknown')
+      + '; provider=' + provider.modelId + '; số mục truyền vào=' + (entries?.length || 0)
+      + '; nguồn=' + (provider.kind === 'local' ? 'OFFLINE' : 'ONLINE'));
     try {
-    await loadIndex(characterId);
+      if (!config.enabled || !['semantic', 'hybrid_fast', 'ultimate'].includes(config.mode)) {
+        throw new Error('Smart Scan hoặc Semantic Search đang tắt.');
+      }
+      if (!characterId) throw new Error('Character ID is required for sync.');
+      if (provider.kind === 'local') {
+        currentStep = 'khởi tạo runtime ONNX';
+        journal.stage('Chuẩn bị model offline, chỉ sử dụng dữ liệu đã tải (local_files_only=true)');
+        await ensureLocalRuntime(provider, {
+          localOnly: true,
+          onStage: message => { currentStep = message; journal.stage(message); },
+          onProgress: info => {
+            if (info.status === 'loading') {
+              const progress = Math.floor(Number(info.progress) || 0);
+              if (progress >= lastModelProgress + 10 || (lastModelProgress < 0 && progress === 0)) {
+                lastModelProgress = progress;
+                journal.info('Nạp model: ' + progress + '%'
+                  + (info.file ? '; tệp=' + String(info.file).split('/').pop() : ''));
+              }
+            }
+          },
+        });
+      }
+      currentStep = 'đọc IndexedDB';
+      journal.stage('Đọc chỉ mục embedding trong IndexedDB');
+      await loadIndex(characterId);
+      journal.info('Đã đọc xong chỉ mục embedding');
     const key = memoryKey(characterId, provider);
     const index = memoryIndexes.get(key) || new Map();
     memoryIndexes.set(key, index);
     const searchable = (entries || []).filter(entry => entry?.uid && entry?.content?.trim());
     const pending = [];
+    currentStep = 'băm nội dung các mục Lorebook';
+    journal.stage('Kiểm tra ' + searchable.length + ' mục có nội dung và đối chiếu mã băm');
 
     await Promise.all(searchable.map(async entry => {
       const text = buildEmbeddingEntryText(entry);
@@ -571,6 +668,9 @@ export function createEmbeddingService(deps) {
     }));
 
     let complete = searchable.length - pending.length;
+    const totalChunks = pending.reduce((sum, item) => sum + item.chunks.length, 0);
+    journal.info('Đối chiếu xong: ' + complete + ' mục đã cập nhật; '
+      + pending.length + ' mục cần tạo lại; tổng ' + totalChunks + ' đoạn embedding');
     onProgress?.(complete, searchable.length);
     const requestedBatchSize = Math.max(1, Math.floor(Number(config.embedding_batch_size) || 30));
     const batchSize = provider.id === 'qwen3'
@@ -581,6 +681,9 @@ export function createEmbeddingService(deps) {
 
     for (let offset = 0; offset < pending.length; offset += batchSize) {
       const group = pending.slice(offset, offset + batchSize);
+      currentStep = 'xử lý nhóm mục ' + (offset + 1) + '-' + Math.min(offset + group.length, pending.length);
+      journal.stage('Xử lý nhóm ' + (Math.floor(offset / batchSize) + 1) + '/'
+        + Math.ceil(pending.length / batchSize) + ': ' + group.length + ' mục Lorebook');
       const flattened = [];
       for (const item of group) {
         item.chunks.forEach((chunk, chunkIndex) => {
@@ -599,7 +702,13 @@ export function createEmbeddingService(deps) {
       const texts = flattened.map(item => item.text);
       const vectors = [];
       const inferenceBatchSize = provider.kind === 'local' ? 1 : Math.max(1, texts.length);
+      journal.info('Nhóm đang xử lý gồm ' + texts.length + ' đoạn; batch suy luận=' + inferenceBatchSize);
       for (let textOffset = 0; textOffset < texts.length; textOffset += inferenceBatchSize) {
+        currentStep = 'suy luận embedding đoạn ' + (textOffset + 1) + '/' + texts.length;
+        if (textOffset === 0 || textOffset % 10 === 0) {
+          journal.stage('Suy luận embedding đoạn ' + (textOffset + 1) + '/' + texts.length
+            + ' trong nhóm; tổng ' + totalChunks + ' đoạn cần tạo');
+        }
         const part = await embedTexts(provider, texts.slice(textOffset, textOffset + inferenceBatchSize));
         vectors.push(...part);
         if (provider.kind === 'local' && textOffset + inferenceBatchSize < texts.length) {
@@ -612,6 +721,8 @@ export function createEmbeddingService(deps) {
         byUid.get(item.entry.uid).push(vectors[vectorIndex]);
       });
 
+      currentStep = 'ghi vectors vào IndexedDB';
+      journal.stage('Đã suy luận ' + vectors.length + ' vectors; bắt đầu ghi IndexedDB');
       for (const item of group) {
         const uid = item.entry.uid;
         const vectorsForUid = byUid.get(uid);
@@ -637,21 +748,37 @@ export function createEmbeddingService(deps) {
       }
 
       complete += group.length;
+      journal.info('Đã ghi xong nhóm; tiến độ mục ' + complete + '/' + searchable.length);
       onProgress?.(Math.min(complete, searchable.length), searchable.length);
       if (offset + batchSize < pending.length && provider.id === 'gemini') {
         await new Promise(resolve => setTimeout(resolve, 500));
       }
     }
 
+    currentStep = 'dọn các vector không còn dùng';
+    journal.stage('Dọn các bản ghi đã xóa khỏi Lorebook');
     const validUids = new Set(searchable.map(entry => entry.uid));
     for (const [uid] of Array.from(index.entries())) {
       if (validUids.has(uid)) continue;
       await deleteUidForProvider(uid, characterId, provider);
       index.delete(uid);
     }
+    completed = true;
+    } catch (error) {
+      journal.fail(currentStep, error);
+      throw error;
     } finally {
       // On Android the ONNX runtime competes with the chat UI for one WebView memory budget.
-      if (isAndroidHost() && provider.kind === 'local') await disposeUnusedLocalRuntimes();
+      if (isAndroidHost() && provider.kind === 'local') {
+        journal.stage('Giải phóng runtime ONNX để trả RAM cho Android WebView');
+        try {
+          await disposeUnusedLocalRuntimes();
+        } catch (error) {
+          journal.warning('Lỗi giải phóng ONNX: ' + (error instanceof Error ? error.message : String(error)));
+        }
+      }
+      if (completed) journal.success('ĐỒNG BỘ HOÀN TẤT; tất cả bước đã chạy xong');
+      journal.close();
     }
   }
 
