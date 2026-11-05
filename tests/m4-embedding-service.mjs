@@ -118,12 +118,26 @@ assert.equal((await hashEmbeddingText('abc')).length, 64);
   assert.ok(logs.some(args => args[0] === 'error' && String(args[2]).includes('THẤT BẠI')));
 }
 
-// Regression guard: the generated M4 bridge must forward the console logger,
-// otherwise the embedding service works but all diagnostic entries disappear.
+// Existing production bridge captures console.warn/error into the system panel;
+// the embedding service must still report when no explicit logger is injected.
 {
-  const { readFileSync } = await import('node:fs');
-  const bridge = readFileSync(new URL('../build/transforms/m4-chat-generation.mjs', import.meta.url), 'utf8');
-  assert.match(bridge, /addNetworkLog:e=>ol\.getState\(\)\.addNetworkLog\(e\),logSystemMessage:qu/);
+  const previousWarn = console.warn;
+  const previousError = console.error;
+  const warnings = [];
+  const errors = [];
+  console.warn = message => warnings.push(String(message));
+  console.error = message => errors.push(String(message));
+  try {
+    const service = createEmbeddingService({
+      getSettings: () => ({ enabled: false, mode: 'semantic', embedding_provider: 'embeddinggemma' }),
+    });
+    await assert.rejects(service.syncIndex('test-card', []), /Smart Scan hoặc Semantic Search đang tắt/);
+    assert.ok(warnings.some(message => message.includes('Bắt đầu đồng bộ World Info')));
+    assert.ok(errors.some(message => message.includes('THẤT BẠI')));
+  } finally {
+    console.warn = previousWarn;
+    console.error = previousError;
+  }
 }
 
 console.log('M4 embedding service checks: OK');
