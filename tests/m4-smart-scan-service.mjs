@@ -150,7 +150,7 @@ const baseInput = {
   });
   assert.deepEqual(result.activeEntries, ['keyword-fallback']);
   assert.equal(resolveArgs[6], false, 'ultimate mode must keep keyword fallback enabled');
-  assert.ok(logs.some(item => String(item[2]).includes('deterministic World Info fallback')));
+  assert.ok(logs.some(item => String(item[2]).includes('keyword scan is independently enabled')));
 }
 
 {
