@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import {
   EMBEDDING_PROVIDERS,
+  configureTransformersEnvironment,
   resolveEmbeddingProvider,
   getEmbeddingProvider,
   formatEmbeddingQuery,
@@ -11,11 +12,32 @@ import {
   chunkEmbeddingText,
 } from '../src/features/world-info/embedding-service.js';
 
+// Android WebView sets allowLocalModels=false, which conflicts with
+// local_files_only=true when loading cached ONNX weights for offline sync.
+{
+  const env = {
+    allowLocalModels: false,
+    allowRemoteModels: true,
+    useBrowserCache: false,
+    useWasmCache: false,
+  };
+  configureTransformersEnvironment(env);
+  assert.equal(env.allowLocalModels, true, 'browser cache-only sync requires local models enabled');
+  assert.equal(env.allowRemoteModels, true, 'initial model download must remain possible');
+  assert.equal(env.useBrowserCache, true);
+  assert.equal(env.useWasmCache, true);
+}
+configureTransformersEnvironment(null);
+
 assert.equal(EMBEDDING_PROVIDERS.length, 3);
 assert.equal(resolveEmbeddingProvider({}).id, 'gemini');
 assert.equal(resolveEmbeddingProvider({ embedding_provider: 'embeddinggemma' }).id, 'embeddinggemma');
 assert.equal(resolveEmbeddingProvider({ embedding_provider: 'qwen3' }).id, 'qwen3');
 assert.equal(getEmbeddingProvider('missing').id, 'gemini');
+assert.equal(getEmbeddingProvider('gemini').modelId, 'gemini-embedding-2');
+assert.equal(getEmbeddingProvider('gemini').indexKey, 'gemini:gemini-embedding-2:v1');
+assert.match(getEmbeddingProvider('gemini').label, /Stable/);
+
 
 assert.equal(formatEmbeddingQuery('gemini', ' hello '), 'hello');
 assert.equal(formatEmbeddingQuery('embeddinggemma', 'hello'), 'task: search result | query: hello');
