@@ -41,15 +41,10 @@ function parseSelection(rawResponse, parseJson) {
 }
 
 const DEFAULT_LLM_SELECTION_MODEL = 'gemini-3.5-flash-lite';
-const RETIRED_LLM_SELECTION_MODELS = new Set([
-  'gemini-3.1-flash-lite-preview',
-]);
-
+// Never override an explicitly selected model. Failed models must report an error,
+// not be silently replaced by another model.
 export function resolveSmartScanLlmModel(model) {
-  const requested = String(model || '').trim();
-  return !requested || RETIRED_LLM_SELECTION_MODELS.has(requested)
-    ? DEFAULT_LLM_SELECTION_MODEL
-    : requested;
+  return String(model || '').trim() || DEFAULT_LLM_SELECTION_MODEL;
 }
 
 function buildVariableState(variables) {
@@ -96,7 +91,7 @@ export async function scanWorldInfo(input, deps) {
   const mode = settings.mode || 'keyword';
   const llmEnabled = settings.enabled && ['llm_only', 'ultimate'].includes(mode);
   const semanticEnabled = settings.enabled && ['semantic', 'hybrid_fast', 'ultimate'].includes(mode);
-  let keywordEnabled = !settings.enabled || ['keyword', 'hybrid_fast', 'ultimate'].includes(mode);
+  const keywordEnabled = !settings.enabled || ['keyword', 'hybrid_fast', 'ultimate'].includes(mode);
   const forced = Array.isArray(input.forceActiveUids) && input.forceActiveUids.length > 0;
 
   if (semanticEnabled && !forced) {
@@ -128,7 +123,7 @@ export async function scanWorldInfo(input, deps) {
         }
       } catch (error) {
         console.error('[Semantic Scan] Error:', error);
-        deps.logSystemMessage('error', 'system', `[Semantic Scan] Failed, falling back to keyword. Error: ${error}`);
+        deps.logSystemMessage('error', 'system', `[Semantic Scan] Failed${keywordEnabled ? '; keyword scan remains enabled' : '; semantic-only mode, no fallback'}. Error: ${error}`);
         deps.onSemanticError?.(error);
       } finally {
         input.setScanning?.(false);
@@ -139,10 +134,19 @@ export async function scanWorldInfo(input, deps) {
   if (llmEnabled) {
     if (forced) {
       llmSelected = input.forceActiveUids;
+      smartScanLog = {
+        fullPrompt: '[Không gửi yêu cầu mới: sử dụng lại lựa chọn từ lượt trước]',
+        rawResponse: `[SKIPPED] Không gọi LLM. Đã dùng lại ${llmSelected.length} UID.`,
+        latency: 0,
+      };
       deps.logSystemMessage('state', 'system', `[Smart Scan] Skipped API call. Reusing ${llmSelected.length} UIDs from previous turn.`);
     } else {
       input.setScanning?.(true);
       const started = Date.now();
+      let requestPrompt = '';
+      let requestedModel = '';
+      let rawResponseText = '';
+      let attemptedRequest = false;
       try {
         const depth = settings.depth || 3;
         const history = (input.promptHistory || []).slice(-depth).map(message => {
@@ -163,40 +167,54 @@ export async function scanWorldInfo(input, deps) {
             .replace('{{candidates}}', candidateString)
             .replace('{{input}}', input.content || input.scanInput || '')
             .replace('{{state}}', variableState);
-          const model = resolveSmartScanLlmModel(settings.model);
-          let rawResponse = await deps.callSelectionModel(prompt, model);
-          rawResponse = String(rawResponse || '').replace(/```(?:json)?\s*([\s\S]*?)\s*```/gi, '$1').trim();
-          const selected = parseSelection(rawResponse, deps.parseJson);
+          requestedModel = resolveSmartScanLlmModel(settings.model);
+          requestPrompt = prompt;
+          attemptedRequest = true;
+          // Record the exact outbound prompt before calling the provider. Persist
+          // the result (including errors) into section 3 of Smart Scan diagnostics.
+          smartScanLog = {
+            fullPrompt: requestPrompt,
+            rawResponse: '[ĐÃ GỬI] Chưa có phản hồi từ mô hình ' + requestedModel,
+            latency: 0,
+          };
+          rawResponseText = String(await deps.callSelectionModel(prompt, requestedModel) || '');
+          const cleanedResponse = rawResponseText
+            .replace(/```(?:json)?\s*([\s\S]*?)\s*```/gi, '$1')
+            .trim();
+          const selected = parseSelection(cleanedResponse, deps.parseJson);
           const eligibleUids = new Set(entries.filter(entry => !entry.constant).map(entry => String(entry.uid)));
           llmSelected = selected
             .filter(uid => eligibleUids.has(uid))
             .slice(0, settings.max_entries || 5);
-          smartScanLog = { fullPrompt: prompt, rawResponse, latency: Date.now() - started };
+          smartScanLog = { fullPrompt: requestPrompt, rawResponse: rawResponseText, latency: Date.now() - started };
+        } else {
+          smartScanLog = {
+            fullPrompt: '[Không gửi yêu cầu: không có mục World Info động để chọn]',
+            rawResponse: '[SKIPPED] Không gọi LLM vì không có ứng viên.',
+            latency: 0,
+          };
         }
       } catch (error) {
+        const message = error instanceof Error ? error.message : String(error);
         console.error('[Smart Scan] Error:', error);
+        // Without this record, a provider error makes both the sent prompt and
+        // the error/response disappear from the Smart Scan journal.
+        smartScanLog = {
+          fullPrompt: requestPrompt || '[Không gửi yêu cầu: lỗi trước khi chuẩn bị xong prompt]',
+          rawResponse: (rawResponseText ? rawResponseText + '\n\n' : '') +
+            `[LỖI ${attemptedRequest ? 'GỌI LLM' : 'CHUẨN BỊ'}]${requestedModel ? ' ' + requestedModel : ''}: ${message}`,
+          latency: Date.now() - started,
+        };
         deps.logSystemMessage?.(
           'error',
           'system',
-          `[Smart Scan] LLM selection failed; continuing with deterministic World Info fallback. Error: ${error instanceof Error ? error.message : String(error)}`,
+          `[Smart Scan] LLM selection failed${keywordEnabled ? '; keyword scan is independently enabled' : '; no fallback in LLM-only mode'}. Error: ${message}`,
         );
         deps.onLlmError?.(error);
       } finally {
         input.setScanning?.(false);
       }
     }
-  }
-
-  // A failed/unusable LLM response must not disable deterministic World Info matching.
-  // This is especially important in LLM-only mode, where otherwise no dynamic
-  // entries would be activated even though ordinary keyword scan can run.
-  if (mode === 'llm_only' && llmSelected.length === 0) {
-    keywordEnabled = true;
-    deps.logSystemMessage?.(
-      'warn',
-      'system',
-      '[Smart Scan] LLM did not select usable World Info IDs; enabled keyword fallback.',
-    );
   }
 
   const selected = Array.from(new Set([...llmSelected, ...semanticSelected]));
