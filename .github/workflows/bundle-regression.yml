@@ -66,6 +66,7 @@ jobs:
           node --check assets/m4/features/chat/live-stream-store.js
           node --check assets/m4/features/world-info/embedding-service.js
           node --check assets/m4/features/world-info/smart-scan-service.js
+          node --check assets/m4/features/world-info/sticky-compat.js
           node --check assets/m4/features/prompts/prompt-service.js
           node --check assets/m4/features/chat/response-processor.js
           node --check assets/m5/app/state/runtime-state.js
@@ -95,6 +96,8 @@ jobs:
         run: node tests/m4-live-stream-store.mjs
       - name: Test M4 Smart Scan service
         run: node tests/m4-smart-scan-service.mjs
+      - name: Test M4 World Info Sticky UID compatibility
+        run: node tests/m4-sticky-compat.mjs
       - name: Test M4 embedding service
         run: node tests/m4-embedding-service.mjs
       - name: Test M4 prompt service
