@@ -53,6 +53,7 @@ jobs:
           node tests/ai-studio-background.mjs
           node tests/m4-native-embedding-bridge.mjs
           node tests/m4-embeddinggemma2-litert-bridge.mjs
+          node tests/m4-sticky-compat.mjs
           node tests/android-export-download.mjs
 
       - name: Build portable static web app
