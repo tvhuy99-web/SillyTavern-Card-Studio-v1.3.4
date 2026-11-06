@@ -1,4 +1,8 @@
 import { createNativeEmbeddingGemmaRuntime, getNativeEmbeddingPlugin } from './native-embedding-bridge.js';
+import {
+  getEmbeddingGemma2Status, downloadEmbeddingGemma2,
+  removeEmbeddingGemma2, createEmbeddingGemma2Runtime,
+} from './embeddinggemma2-litert-bridge.js';
 
 const DB_NAME = 'LorebookEmbeddingsDB';
 const DB_VERSION = 2;
@@ -33,6 +37,18 @@ export const EMBEDDING_PROVIDERS = Object.freeze([
     cacheHints: ['onnx/model_q4.onnx', 'onnx/model_q4.onnx_data'],
   }),
   Object.freeze({
+    id: 'embeddinggemma2',
+    label: 'EmbeddingGemma 2 Text 270M INT4 - Offline Android · LiteRT',
+    shortLabel: 'EmbeddingGemma 2 Text 270M',
+    kind: 'local',
+    modelId: 'litert-community/embeddinggemma-2-text-270m-litert-lm',
+    indexKey: 'embeddinggemma2:text270m:int4:768:litertlm:v1',
+    dimensions: 768,
+    maxLength: 2048,
+    sizeLabel: '~165 MB',
+    cacheHints: [],
+  }),
+  Object.freeze({
     id: 'qwen3',
     label: 'Qwen3-Embedding 0.6B Q4 - Offline · Chất lượng cao',
     shortLabel: 'Qwen3 0.6B',
@@ -60,14 +76,14 @@ export function getEmbeddingProvider(id) {
 
 export function formatEmbeddingQuery(providerId, text) {
   const value = String(text || '').trim();
-  if (providerId === 'embeddinggemma') return `task: search result | query: ${value}`;
+  if (providerId === 'embeddinggemma' || providerId === 'embeddinggemma2') return `task: search result | query: ${value}`;
   if (providerId === 'qwen3') return `Instruct: ${QWEN_TASK}\nQuery:${value}`;
   return value;
 }
 
 export function formatEmbeddingDocument(providerId, text, title = 'none') {
   const value = String(text || '').trim();
-  if (providerId === 'embeddinggemma') {
+  if (providerId === 'embeddinggemma' || providerId === 'embeddinggemma2') {
     const safeTitle = String(title || 'none').replace(/[\r\n|]+/g, ' ').trim() || 'none';
     return `title: ${safeTitle} | text: ${value}`;
   }
@@ -162,7 +178,7 @@ export function planLocalEmbeddingBatch(providerId, options = {}) {
   const lowMemory = options.lowMemory === true || (memory > 0 && memory <= 2);
   let limit = 1;
   if (!lowMemory && cores !== 1 && cores !== 2) {
-    if (providerId === 'embeddinggemma') {
+    if (providerId === 'embeddinggemma' || providerId === 'embeddinggemma2') {
       limit = memory >= 8 ? 4 : 2;
     } else if (providerId === 'qwen3') {
       // Large Qwen weights can exhaust the Android WebView process.
@@ -472,6 +488,13 @@ export function createEmbeddingService(deps) {
 
   async function createLocalRuntime(provider, onProgress, localOnly = false, onStage = () => {}) {
     if (provider.kind !== 'local') throw new Error('Provider này không phải mô hình cục bộ.');
+    if (provider.id === 'embeddinggemma2') {
+      if (!isNativeAndroidEmbeddingHost()) {
+        throw new Error('EmbeddingGemma 2 Text 270M yêu cầu APK Android có LiteRT-LM.');
+      }
+      // Native LiteRT-LM engine, never import Transformers.js or switch to ONNX.
+      return createEmbeddingGemma2Runtime(provider, onStage);
+    }
     onStage('Import Transformers.js (có thể truy cập CDN cho mã thư viện)');
     const transformers = await getTransformersModule();
     onStage('Đã nạp Transformers.js; chuẩn bị bộ suy luận cục bộ');
@@ -606,14 +629,21 @@ export function createEmbeddingService(deps) {
     }
     if (options.localOnly) onStage('Kiểm tra cache của model ' + provider.shortLabel);
     if (options.localOnly) {
-      const cached = await providerIsCached(provider);
-      let alreadyNative = false;
-      if (!cached && isNativeAndroidEmbeddingHost() && provider.id === 'embeddinggemma') {
-        const plugin = getNativeEmbeddingPlugin();
-        alreadyNative = !!(plugin && (await plugin.status()).modelReady);
-      }
-      if (!cached && !alreadyNative) {
-        throw new Error(`Mô hình ${provider.shortLabel} chưa được tải. Hãy tải mô hình trong Cài đặt Smart Scan trước.`);
+      if (provider.id === 'embeddinggemma2') {
+        const status = await getEmbeddingGemma2Status();
+        if (status.status !== 'ready' && status.status !== 'cached') {
+          throw new Error('EmbeddingGemma 2 Text 270M chưa được tải hoặc APK không hỗ trợ LiteRT-LM. Không tự chuyển model.');
+        }
+      } else {
+        const cached = await providerIsCached(provider);
+        let alreadyNative = false;
+        if (!cached && isNativeAndroidEmbeddingHost() && provider.id === 'embeddinggemma') {
+          const plugin = getNativeEmbeddingPlugin();
+          alreadyNative = !!(plugin && (await plugin.status()).modelReady);
+        }
+        if (!cached && !alreadyNative) {
+          throw new Error(`Mô hình ${provider.shortLabel} chưa được tải. Hãy tải mô hình trong Cài đặt Smart Scan trước.`);
+        }
       }
     }
     // Keep only one heavy ONNX model resident when switching embedding providers.
@@ -785,7 +815,9 @@ export function createEmbeddingService(deps) {
       ? Math.min(requestedBatchSize, 4)
       : provider.id === 'embeddinggemma'
         ? Math.min(requestedBatchSize, 8)
-        : requestedBatchSize;
+        : provider.id === 'embeddinggemma2'
+          ? Math.min(requestedBatchSize, 8)
+          : requestedBatchSize;
     const memoryGB = typeof navigator === 'undefined' ? 0 : Number(navigator.deviceMemory) || 0;
     const cpuCores = typeof navigator === 'undefined' ? 0 : Number(navigator.hardwareConcurrency) || 0;
     const profile = provider.kind === 'local'
@@ -930,6 +962,10 @@ export function createEmbeddingService(deps) {
 
   async function getProviderStatus(providerId) {
     const provider = getEmbeddingProvider(providerId);
+    if (provider.id === 'embeddinggemma2') {
+      const status = await getEmbeddingGemma2Status();
+      return { ...status, provider };
+    }
     if (provider.kind === 'online') {
       const available = !!deps.getGeminiApiKey?.();
       return {
@@ -954,6 +990,10 @@ export function createEmbeddingService(deps) {
 
   async function prepareProvider(providerId, onProgress) {
     const provider = getEmbeddingProvider(providerId);
+    if (provider.id === 'embeddinggemma2') {
+      await downloadEmbeddingGemma2(onProgress);
+      return getProviderStatus(provider.id);
+    }
     if (provider.kind !== 'local') return getProviderStatus(provider.id);
     await ensureLocalRuntime(provider, { localOnly: false, onProgress });
     // Downloaded model weights stay in browser cache; do not retain a second
@@ -968,6 +1008,10 @@ export function createEmbeddingService(deps) {
     modelRuntimes.delete(provider.id);
     modelLoads.delete(provider.id);
     try { await runtime?.dispose?.(); } catch {}
+    if (provider.id === 'embeddinggemma2') {
+      await removeEmbeddingGemma2();
+      return getProviderStatus(provider.id);
+    }
     await deleteProviderCache(provider);
     if (isNativeAndroidEmbeddingHost() && provider.id === 'embeddinggemma') {
       const plugin = getNativeEmbeddingPlugin();
