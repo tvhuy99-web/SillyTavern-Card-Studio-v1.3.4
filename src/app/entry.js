@@ -1,10 +1,12 @@
 import { installAiStudioDiagnostics } from './m8/diagnostics/aistudio-log.js';
+import { installAndroidExportInterceptor } from './m8/diagnostics/android-export-download.js';
 import { proxyPersistence as __stsProxyPersistence } from './proxy-persistence-service-v1.3.6.js?v=1.3.6-m2-final';
 import { installGeminiModelListDiagnostics } from './m7/diagnostics/gemini-model-list.js?v=1.3.6-m7.1';
 import { installModelConnectionTestEnhancer } from './m6/ui/model-connection-test.js?v=1.3.6-m7.1';
 import { installRuntimeUxGuard } from './m5/ui/runtime-guard.js?v=1.3.6-m7.1';
 
 installAiStudioDiagnostics();
+installAndroidExportInterceptor();
 
 const PRODUCTION_BUNDLE_URL = new URL('./app-production-v1.3.6.js?v=1.3.6-m7.5', import.meta.url).href;
 
