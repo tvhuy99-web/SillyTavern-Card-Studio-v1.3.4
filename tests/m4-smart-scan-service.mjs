@@ -235,4 +235,83 @@ const baseInput = {
   assert.match(result.smartScanLog.rawResponse, /SKIPPED/);
 }
 
+// Regression: SillyTavern numeric Lorebook UID vs IndexedDB string UID.
+// A scored ID must reach the World Info resolver without string/number loss.
+{
+  const logs = [];
+  const numericInput = {
+    ...baseInput,
+    card: { name: 'Numeric UID Card', fileName: 'numeric.png',
+      char_book: { entries: [
+        { uid: 123, name: 'Rồng', content: 'dragon lore', enabled: true },
+        { uid: 456, name: 'Cổng', content: 'gate lore', enabled: true },
+      ] } },
+  };
+  let resolverIds = null;
+  let queried = 0;
+  const deps = {
+    getSettings: () => ({ enabled: true, mode: 'semantic', semantic_threshold: 0.1, max_semantic_entries: 20 }),
+    embed: async () => { queried++; return [1, 0]; },
+    loadIndex: async id => assert.equal(id, 'numeric.png'),
+    getIndex: () => [
+      { uid: '123', vector: [0.7, 0.3] },
+      { uid: 456, vector: [0.3, 0.7] },
+    ],
+    cosine: (a, b) => (a[0] * b[0] + a[1] * b[1]) / Math.hypot(...b),
+    resolveWorldInfo: (...args) => { resolverIds = args[5]; return { activeEntries: [] }; },
+    logSystemMessage: (...args) => logs.push(args),
+  };
+  for (const message of ['Mở cổng', 'Bước qua cổng', 'Tìm chìa khóa']) {
+    const result = await scanWorldInfo({ ...numericInput, scanInput: message }, deps);
+    assert.deepEqual(resolverIds, [123, 456], 'UID retains original entry type on every turn');
+    assert.equal(result.selectionData.selectedItems.length, 2);
+    assert.deepEqual(result.selectionData.selectedItems.map(item => item.id), [123, 456]);
+  }
+  assert.equal(queried, 3, 'independent semantic scans on three normal chat turns');
+  assert.equal(logs.filter(item => String(item[2]).includes('[Semantic Scan][DIAG] mode=')).length, 3);
+  assert.ok(logs.some(item => String(item[2]).includes('threshold=0.1')));
+  assert.ok(logs.some(item => String(item[2]).includes('selected=2')));
+}
+
+// No more silent zero entries: report whether the index is missing, scored
+// beneath threshold, or has incompatible vector dimensions.
+{
+  const logs = [];
+  const deps = {
+    getSettings: () => ({ enabled: true, mode: 'semantic', semantic_threshold: 0.1 }),
+    embed: async () => [1, 0],
+    loadIndex: async () => {},
+    getIndex: () => [],
+    cosine: () => 0,
+    resolveWorldInfo: () => ({ activeEntries: [] }),
+    logSystemMessage: (...args) => logs.push(args),
+  };
+  const result = await scanWorldInfo(baseInput, deps);
+  assert.deepEqual(result.selectionData.selectedItems, []);
+  assert.ok(logs.some(item => String(item[2]).includes('Chỉ mục rỗng')));
+  deps.getIndex = () => [{ uid: 'a', vector: [1, 0, 0] }];
+  await scanWorldInfo(baseInput, deps);
+  assert.ok(logs.some(item => String(item[2]).includes('badDimensions=1')));
+  assert.ok(logs.some(item => String(item[2]).includes('không có vector hợp lệ')));
+  deps.getIndex = () => [{ uid: 'a', vector: [0, 1] }];
+  await scanWorldInfo(baseInput, deps);
+  assert.ok(logs.some(item => String(item[2]).includes('maxScore=0.000')));
+  assert.ok(logs.some(item => String(item[2]).includes('không mục nào đạt threshold')));
+}
+
+// Forced UIDs only skip the semantic query on deliberate regenerate.
+{
+  let embedCalls = 0;
+  const logs = [];
+  const result = await scanWorldInfo({ ...baseInput, forceActiveUids: ['a'] }, {
+    getSettings: () => ({ enabled: true, mode: 'semantic', semantic_threshold: 0.1 }),
+    embed: async () => { embedCalls++; return [1, 0]; },
+    resolveWorldInfo: (...args) => ({ activeEntries: [], selected: args[5] }),
+    logSystemMessage: (...args) => logs.push(args),
+  });
+  assert.equal(embedCalls, 0);
+  assert.ok(logs.some(item => String(item[2]).includes('forceActiveUids')));
+  assert.deepEqual(result.selected, [], 'semantic-only mode continues to control actual entries');
+}
+
 console.log('M4 Smart Scan service checks: OK');
