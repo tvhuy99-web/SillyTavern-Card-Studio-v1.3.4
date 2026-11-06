@@ -93,6 +93,23 @@ export function compactModelMessages(messages, options = {}) {
   return { messages: next, changed };
 }
 
+// Semantic embedding contexts must privilege what the user just said.
+// Previous code placed up to three entire assistant messages BEFORE the
+// current turn: with a 2,048-token local model, tokenizer truncation could
+// silently discard the newest user request on turns two and three.
+// Do not modify promptHistory, which remains available to the LLM selector.
+export function buildSemanticScanInput(recentText, userContent, forcedContent = '') {
+  const clipCurrent = value => {
+    const text = String(value ?? '').trim();
+    return text.length <= 2400 ? text : text.slice(0, 1750)
+      + '\n[... phần giữa lược để tìm kiếm ...]\n' + text.slice(-550);
+  };
+  const current = clipCurrent(userContent);
+  const force = clipCurrent(forcedContent).slice(0, 500);
+  const history = String(recentText ?? '').trim().slice(-1000);
+  return [current, force, history].filter(Boolean).join('\n');
+}
+
 export function createChatTurnPolicy(options = {}) {
   const now = options.now || (() => Date.now());
   const random = options.random || (() => Math.random());
@@ -126,9 +143,7 @@ export function createChatTurnPolicy(options = {}) {
   function buildContext(messages, userContent, forcedContent) {
     const history = Array.isArray(messages) ? messages : [];
     const recentText = history.slice(-3).map(modelContextContent).join('\n');
-    const scanInput = forcedContent
-      ? recentText + '\n' + userContent + '\n' + forcedContent
-      : recentText + '\n' + userContent;
+    const scanInput = buildSemanticScanInput(recentText, userContent, forcedContent);
     return {
       recentText,
       scanInput,
