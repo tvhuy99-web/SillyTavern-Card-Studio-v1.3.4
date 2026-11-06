@@ -108,7 +108,7 @@ export function applyM4ChatGenerationTransform(source) {
   // Move it into the always-visible Smart Scan settings area so semantic,
   // hybrid_fast and LLM users can all configure the same global hold.
   const gatedStickyControl =
-    ',(0,wt.jsxs)("div",{className:"bg-emerald-900/20 border border-emerald-500/30 rounded-lg mt-4",children:[(0,wt.jsx)("div",{className:"flex items-center gap-2 mb-2",children:(0,wt.jsx)("span",{className:"text-emerald-400 font-bold text-sm uppercase tracking-wide",children:"AI Persistence"})}),(0,wt.jsx)(nu,{label:"AI Sticky Duration",value:e.aiStickyDuration,onChange:e=>o("aiStickyDuration",e),min:0,max:20,step:1})]})';
+    ',(0,wt.jsxs)("div",{className:"bg-emerald-900/20 border border-emerald-500/30 p-4 rounded-lg mt-4",children:[(0,wt.jsx)("div",{className:"flex items-center gap-2 mb-2",children:(0,wt.jsx)("span",{className:"text-emerald-400 font-bold text-sm uppercase tracking-wide",children:"AI Persistence"})}),(0,wt.jsx)(nu,{label:"AI Sticky Duration",value:e.aiStickyDuration,onChange:e=>o("aiStickyDuration",e),min:0,max:20,step:1})]})';
   code = replaceOnce(code, gatedStickyControl, '', 'remove LLM-gated Sticky slider');
   const globalStickyControl = gatedStickyControl
     .replace('AI Persistence', 'AI Persistence (duy trì mục)')
