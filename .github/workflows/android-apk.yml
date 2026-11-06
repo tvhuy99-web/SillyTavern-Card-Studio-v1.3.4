@@ -52,6 +52,7 @@ jobs:
           node tests/ai-studio-live-turns.mjs
           node tests/ai-studio-background.mjs
           node tests/m4-native-embedding-bridge.mjs
+          node tests/m4-embeddinggemma2-litert-bridge.mjs
 
       - name: Build portable static web app
         run: |
@@ -87,6 +88,7 @@ jobs:
           cp android-native/AiStudioTextPlugin.java "$PLUGIN_DIR/AiStudioTextPlugin.java"
           cp android-native/AiStudioGenerationService.java "$PLUGIN_DIR/AiStudioGenerationService.java"
           cp android-native/WorldInfoEmbeddingNativePlugin.java "$PLUGIN_DIR/WorldInfoEmbeddingNativePlugin.java"
+          cp android-native/EmbeddingGemma2LiteRTPlugin.java "$PLUGIN_DIR/EmbeddingGemma2LiteRTPlugin.java"
           cat > "$PLUGIN_DIR/MainActivity.java" <<'JAVA'
           package com.tvhuy99.cardstudio;
 
@@ -98,6 +100,7 @@ jobs:
               public void onCreate(Bundle savedInstanceState) {
                   registerPlugin(AiStudioTextPlugin.class);
                   registerPlugin(WorldInfoEmbeddingNativePlugin.class);
+                  registerPlugin(EmbeddingGemma2LiteRTPlugin.class);
                   super.onCreate(savedInstanceState);
               }
           }
@@ -135,6 +138,7 @@ jobs:
           cat >> android/app/build.gradle <<'GRADLE'
           dependencies {
               implementation 'com.microsoft.onnxruntime:onnxruntime-android:1.29.0'
+              implementation 'com.google.ai.edge.litertlm:litertlm-android:0.19.0'
           }
           GRADLE
           test -s android-native/WorldInfoEmbeddingNativePlugin.java
@@ -178,6 +182,13 @@ jobs:
       - name: Verify native ONNX Runtime is packaged
         run: |
           unzip -Z1 android/app/build/outputs/apk/debug/app-debug.apk | grep -q 'libonnxruntime.so'
+
+      - name: Verify LiteRT-LM runtime is packaged
+        run: |
+          APK="android/app/build/outputs/apk/debug/app-debug.apk"
+          unzip -Z1 "$APK" | grep -E 'lib/arm64-v8a/.+\.so' | grep -E 'litert|tflite|litertlm|litert_lm' || true
+          test -s "$APK"
+          grep -q 'EmbeddingGemma2LiteRTPlugin' android/app/src/main/java/com/tvhuy99/cardstudio/MainActivity.java
 
       - name: Verify stable signing certificate
         shell: bash
