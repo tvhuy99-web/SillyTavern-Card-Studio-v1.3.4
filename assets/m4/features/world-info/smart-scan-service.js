@@ -291,19 +291,23 @@ export async function scanWorldInfo(input, deps) {
     }),
   };
 
-  return {
-    ...deps.resolveWorldInfo(
-      input.scanInput,
-      entries,
-      input.worldInfoState,
-      input.worldInfoRuntime,
-      input.worldInfoPinned,
-      selected,
-      !keywordEnabled,
-      input.sequence,
-      settings.aiStickyDuration,
-    ),
-    smartScanLog,
-    selectionData,
-  };
+  const resolved = deps.resolveWorldInfo(
+    input.scanInput,
+    entries,
+    input.worldInfoState,
+    input.worldInfoRuntime,
+    input.worldInfoPinned,
+    selected,
+    !keywordEnabled,
+    input.sequence,
+    settings.aiStickyDuration,
+  );
+  if (semanticEnabled) {
+    logSemantic('Tổng kết lượt: semanticSelected=' + semanticSelected.length
+      + '; llmSelected=' + llmSelected.length
+      + '; resolverActive=' + (resolved?.activeEntries?.length ?? 'không có thông tin')
+      + '; forced=' + forced
+      + '; mode=' + mode);
+  }
+  return { ...resolved, smartScanLog, selectionData };
 }
