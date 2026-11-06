@@ -6,7 +6,7 @@ import {
   streamExportUrlToAndroid,
   enqueueAndroidExport,
   installAndroidExportInterceptor,
-} from '../assets/android-export-download.js';
+} from '../src/diagnostics/android-export-download.js';
 
 // Browser behavior is untouched; the Android APK gets its native provider.
 assert.equal(getAndroidExportPlugin({}), null);
