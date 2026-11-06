@@ -42,7 +42,7 @@ const turnTwo = policy.buildContext([
 ], 'Mở cánh cổng rồng ở phía đông');
 assert.ok(turnTwo.scanInput.startsWith('Mở cánh cổng rồng ở phía đông'));
 assert.ok(turnTwo.scanInput.length < 3500, 'bound semantic input regardless of assistant response length');
-assert.equal(turnTwo.promptHistory[0].content, longAnswer);
+assert.equal(turnTwo.promptHistory[0].content, longAnswer.trim());
 const turnThree = policy.buildContext([
   { role: 'model', content: '<content>' + longAnswer + '</content>' },
   { role: 'user', content: 'previous user' },
