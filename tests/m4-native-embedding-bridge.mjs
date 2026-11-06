@@ -133,8 +133,8 @@ assert.throws(() => packNativeEmbeddingInputs({
   const [result] = await runtime.embed(['title: none | text: abc'],
     metrics => measurements.push(metrics));
   assert.equal(result.length, 768);
-  assert.equal(result[0], 1);
-  assert.equal(result[1], 0);
+  assert.ok(Math.abs(result[0] - Math.SQRT1_2) < 1e-12);
+  assert.ok(Math.abs(result[1] - Math.SQRT1_2) < 1e-12);
   assert.equal(measurements[0].onnxMs, 9);
   assert.equal(callLog[0].input.backend, 'CPU');
   assert.deepEqual(callLog[1].inputs.inputIds, [[1, 2]]);
