@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { createChatTurnPolicy } from '../src/features/chat/turn-policy.js';
+import { createChatTurnPolicy, buildSemanticScanInput } from '../src/features/chat/turn-policy.js';
 
 const policy = createChatTurnPolicy({ now: () => 1234, random: () => 0.5 });
 const state = {
@@ -27,12 +27,35 @@ const context = policy.buildContext([
   { role: 'user', content: 'u2' },
 ], 'new', 'forced');
 assert.equal(context.recentText, 'a1\na2\nu2');
-assert.equal(context.scanInput, 'a1\na2\nu2\nnew\nforced');
+assert.equal(context.scanInput, 'new\nforced\na1\na2\nu2');
 assert.deepEqual(context.promptHistory, [
   { role: 'model', content: 'a1' },
   { role: 'model', content: 'a2' },
   { role: 'user', content: 'u2' },
 ]);
+
+// Previously all three assistant messages preceded the user's newest turn.
+// Truncation at 2,048 embedding tokens could drop that turn entirely.
+const longAnswer = 'truyện dài kỳ '.repeat(1400);
+const turnTwo = policy.buildContext([
+  { role: 'model', content: '<content>' + longAnswer + '</content>' },
+], 'Mở cánh cổng rồng ở phía đông');
+assert.ok(turnTwo.scanInput.startsWith('Mở cánh cổng rồng ở phía đông'));
+assert.ok(turnTwo.scanInput.length < 3500, 'bound semantic input regardless of assistant response length');
+assert.equal(turnTwo.promptHistory[0].content, longAnswer.trim());
+const turnThree = policy.buildContext([
+  { role: 'model', content: '<content>' + longAnswer + '</content>' },
+  { role: 'user', content: 'previous user' },
+  { role: 'model', content: '<thinking>hidden</thinking><content>' + longAnswer + '</content>' },
+], 'Nhân vật tìm được chiếc chìa khóa mới');
+assert.ok(turnThree.scanInput.startsWith('Nhân vật tìm được chiếc chìa khóa mới'));
+assert.equal(turnThree.scanInput.includes('hidden'), false, 'internal model reasoning stays excluded');
+assert.ok(turnThree.scanInput.length < 3500);
+const longUser = 'START ' + 'x'.repeat(5000) + ' END';
+const clipped = buildSemanticScanInput(longAnswer, longUser);
+assert.ok(clipped.startsWith('START '));
+assert.ok(clipped.includes(' END'), 'retain the end of an unusually long current user turn');
+assert.ok(clipped.length < 3500);
 
 const pipeline = '<think>legacy hidden</think><thinking>hidden</thinking><plan>plan</plan><basic_confirmation>ok</basic_confirmation><draft>draft</draft><revision_confirmation>rev</revision_confirmation><content>final</content>';
 const compacted = policy.compactModelMessages([
