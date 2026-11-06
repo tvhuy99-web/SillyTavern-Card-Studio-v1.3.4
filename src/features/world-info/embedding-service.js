@@ -209,6 +209,13 @@ function isAndroidHost() {
   return typeof navigator !== 'undefined' && /Android/i.test(String(navigator.userAgent || ''));
 }
 
+// Only the Capacitor Android APK has the registered native ONNX plugin.
+// Android mobile browsers must retain the existing WebAssembly path.
+export function isNativeAndroidEmbeddingHost(host = globalThis) {
+  return /Android/i.test(String(host?.navigator?.userAgent || ''))
+    && host?.Capacitor?.getPlatform?.() === 'android';
+}
+
 function preferredDevice() {
   // Android WebView drivers can terminate the renderer on large WebGPU allocations.
   return !isAndroidHost() && typeof navigator !== 'undefined' && navigator.gpu ? 'webgpu' : 'wasm';
@@ -471,7 +478,7 @@ export function createEmbeddingService(deps) {
     // Android EmbeddingGemma OFFLINE always uses the native ORT engine.
     // The explicit Settings download action (localOnly=false) still fills
     // the original Transformers.js cache; it never changes sync behavior.
-    if (isAndroidHost() && provider.id === 'embeddinggemma' && localOnly) {
+    if (isNativeAndroidEmbeddingHost() && provider.id === 'embeddinggemma' && localOnly) {
       return createNativeEmbeddingGemmaRuntime({ provider, transformers, onStage });
     }
     const callback = progressAdapter(onProgress);
@@ -601,7 +608,7 @@ export function createEmbeddingService(deps) {
     if (options.localOnly) {
       const cached = await providerIsCached(provider);
       let alreadyNative = false;
-      if (!cached && isAndroidHost() && provider.id === 'embeddinggemma') {
+      if (!cached && isNativeAndroidEmbeddingHost() && provider.id === 'embeddinggemma') {
         const plugin = getNativeEmbeddingPlugin();
         alreadyNative = !!(plugin && (await plugin.status()).modelReady);
       }
@@ -934,7 +941,7 @@ export function createEmbeddingService(deps) {
     if (modelRuntimes.has(provider.id)) return { status: 'ready', progress: 100, provider };
     if (modelLoads.has(provider.id)) return { status: 'loading', progress: 0, provider };
     let cached = await providerIsCached(provider);
-    if (!cached && isAndroidHost() && provider.id === 'embeddinggemma') {
+    if (!cached && isNativeAndroidEmbeddingHost() && provider.id === 'embeddinggemma') {
       const plugin = getNativeEmbeddingPlugin();
       cached = !!(plugin && (await plugin.status()).modelReady);
     }
@@ -962,7 +969,7 @@ export function createEmbeddingService(deps) {
     modelLoads.delete(provider.id);
     try { await runtime?.dispose?.(); } catch {}
     await deleteProviderCache(provider);
-    if (isAndroidHost() && provider.id === 'embeddinggemma') {
+    if (isNativeAndroidEmbeddingHost() && provider.id === 'embeddinggemma') {
       const plugin = getNativeEmbeddingPlugin();
       if (plugin) await plugin.deleteModel();
     }
