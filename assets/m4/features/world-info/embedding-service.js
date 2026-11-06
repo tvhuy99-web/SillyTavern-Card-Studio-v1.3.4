@@ -827,7 +827,27 @@ export function createEmbeddingService(deps) {
         hardwareConcurrency: cpuCores,
       })
       : null;
-    const batchPlanner = profile ? createLocalEmbeddingBatchPlanner(profile) : null;
+    let batchPlanner = profile ? createLocalEmbeddingBatchPlanner(profile) : null;
+    let nativeGemma2Profiled = false;
+    // Existing users may already have all 334 entries indexed. Allow them to
+    // benchmark the new CPU/GPU path on their next Sync without modifying or
+    // rewriting any vectors.
+    if (provider.id === 'embeddinggemma2' && pending.length === 0 && searchable.length > 0) {
+      currentStep = 'đo LiteRT trên Lorebook đã đồng bộ';
+      journal.stage('LiteRT-LM [ACCEL] Tất cả mục đã có chỉ mục; thử tăng tốc mà không tạo lại vectors');
+      const runtime = await ensureLocalRuntime(provider, { localOnly: true });
+      const samples = searchable.slice(0, 2).map(entry => {
+        const chunk = chunkEmbeddingText(buildEmbeddingEntryText(entry), 1000)[0];
+        return formatEmbeddingDocument(provider.id, chunk, entry.name || entry.comment || 'none');
+      });
+      const tuneResult = await runtime.tune(samples, message => {
+        currentStep = message;
+        journal.info(message);
+      });
+      journal.info('LiteRT-LM [ACCEL] Batch đề xuất=' + tuneResult.preferredBatch
+        + '; chỉ mục Lorebook không thay đổi');
+      nativeGemma2Profiled = true;
+    }
     journal.info('Cấu hình hiệu năng: ' + (profile
       ? 'WebView RAM≈' + (profile.deviceMemoryGB || 'không xác định') + 'GiB'
         + '; CPU=' + (profile.hardwareConcurrency || 'không xác định')
@@ -856,6 +876,30 @@ export function createEmbeddingService(deps) {
       // Entry batch size does not bound the number of chunks: a single long lorebook
       // entry can yield dozens of chunks and kill the Android WebView process.
       const texts = flattened.map(item => item.text);
+      if (provider.id === 'embeddinggemma2' && !nativeGemma2Profiled && texts.length) {
+        nativeGemma2Profiled = true;
+        currentStep = 'đo hiệu năng LiteRT CPU/GPU trên văn bản Lorebook thực tế';
+        journal.stage('LiteRT-LM [ACCEL] Đo các backend và batch, không đổi model hoặc chế độ Smart Scan');
+        const runtime = await ensureLocalRuntime(provider, { localOnly: true });
+        const preference = await runtime.tune(texts.slice(0, 4), detail => {
+          currentStep = detail;
+          journal.info(detail);
+        });
+        // Prefer the measured LiteRT batch to WASM-specific WebView heuristics,
+        // but never exceed the user's batch setting or the device RAM limit.
+        const tunedBatch = Math.max(1, Math.min(
+          Number(preference.preferredBatch) || 2,
+          profile?.maxBatch || 1,
+          requestedBatchSize,
+        ));
+        batchPlanner = {
+          next: remaining => Math.min(Math.max(1, remaining), tunedBatch),
+          report: () => '',
+          get size() { return tunedBatch; },
+        };
+        journal.info('LiteRT-LM [ACCEL] Sử dụng batch ' + tunedBatch
+          + ' sau khi đo, giới hạn an toàn theo cấu hình thiết bị');
+      }
       const vectors = [];
       const groupStarted = Date.now();
       journal.info('Nhóm đang xử lý gồm ' + texts.length + ' đoạn; batch suy luận hiện tại='
@@ -883,6 +927,9 @@ export function createEmbeddingService(deps) {
           + '; thời gian=' + inferenceMs + 'ms'
           + (metrics.tokenizationMs !== undefined ? '; tokenizer=' + metrics.tokenizationMs + 'ms' : '')
           + (metrics.onnxMs !== undefined ? '; ONNX=' + metrics.onnxMs + 'ms' : '')
+          + (metrics.litertMs !== undefined ? '; LiteRT=' + metrics.litertMs + 'ms' : '')
+          + (metrics.bridgeMs !== undefined ? '; JS/native=' + metrics.bridgeMs + 'ms' : '')
+          + (metrics.backend ? '; backend=' + metrics.backend : '')
           + (metrics.pipelineMs !== undefined ? '; pipeline=' + metrics.pipelineMs + 'ms (gồm tokenizer + ONNX)' : '')
           + '; tốc độ=' + (batch * 1000 / Math.max(1, inferenceMs)).toFixed(2) + ' đoạn/s');
         const decision = batchPlanner?.report(batch, inferenceMs);
@@ -948,7 +995,7 @@ export function createEmbeddingService(deps) {
     } finally {
       // On Android the ONNX runtime competes with the chat UI for one WebView memory budget.
       if (isAndroidHost() && provider.kind === 'local') {
-        journal.stage('Giải phóng runtime ONNX để trả RAM cho Android WebView');
+        journal.stage('Giải phóng runtime embedding offline để trả RAM cho Android WebView');
         try {
           await disposeUnusedLocalRuntimes();
         } catch (error) {
