@@ -74,6 +74,7 @@ const M4_DOMAIN_ASSETS = [
   ['../src/features/chat/live-stream-store.js', '../assets/m4/features/chat/live-stream-store.js'],
   ['../src/features/world-info/embedding-service.js', '../assets/m4/features/world-info/embedding-service.js'],
   ['../src/features/world-info/smart-scan-service.js', '../assets/m4/features/world-info/smart-scan-service.js'],
+  ['../src/features/world-info/sticky-compat.js', '../assets/m4/features/world-info/sticky-compat.js'],
   ['../src/features/prompts/prompt-service.js', '../assets/m4/features/prompts/prompt-service.js'],
   ['../src/features/chat/response-processor.js', '../assets/m4/features/chat/response-processor.js'],
 ].map(([source, output]) => ({
