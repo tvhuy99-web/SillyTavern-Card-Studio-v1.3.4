@@ -52,7 +52,14 @@ assert.equal(isNativeAndroidEmbeddingHost({
 }
 configureTransformersEnvironment(null);
 
-assert.equal(EMBEDDING_PROVIDERS.length, 3);
+assert.equal(EMBEDDING_PROVIDERS.length, 4);
+assert.equal(resolveEmbeddingProvider({ embedding_provider: 'embeddinggemma2' }).id, 'embeddinggemma2');
+assert.equal(getEmbeddingProvider('embeddinggemma2').indexKey,
+  'embeddinggemma2:text270m:int4:768:litertlm:v1');
+assert.notEqual(getEmbeddingProvider('embeddinggemma').indexKey,
+  getEmbeddingProvider('embeddinggemma2').indexKey,
+  'the new model must NOT reuse old vectors');
+assert.equal(getEmbeddingProvider('embeddinggemma2').dimensions, 768);
 assert.equal(resolveEmbeddingProvider({}).id, 'gemini');
 assert.equal(resolveEmbeddingProvider({ embedding_provider: 'embeddinggemma' }).id, 'embeddinggemma');
 assert.equal(resolveEmbeddingProvider({ embedding_provider: 'qwen3' }).id, 'qwen3');
@@ -63,6 +70,10 @@ assert.match(getEmbeddingProvider('gemini').label, /Stable/);
 
 
 assert.equal(formatEmbeddingQuery('gemini', ' hello '), 'hello');
+assert.equal(formatEmbeddingQuery('embeddinggemma2', 'hello'),
+  'task: search result | query: hello');
+assert.equal(formatEmbeddingDocument('embeddinggemma2', 'abc', 'Foo|Bar'),
+  'title: Foo Bar | text: abc');
 assert.equal(formatEmbeddingQuery('embeddinggemma', 'hello'), 'task: search result | query: hello');
 assert.match(formatEmbeddingQuery('qwen3', 'hello'), /^Instruct: .+\nQuery:hello$/);
 assert.equal(
@@ -169,6 +180,8 @@ assert.equal((await hashEmbeddingText('abc')).length, 64);
   assert.equal(cfg('embeddinggemma', 2).maxBatch, 1, 'low-RAM Android must stay at batch 1');
   assert.equal(cfg('embeddinggemma', 4).maxBatch, 2);
   assert.equal(cfg('embeddinggemma', 8).maxBatch, 4);
+  assert.equal(cfg('embeddinggemma2', 8).maxBatch, 4);
+  assert.equal(cfg('embeddinggemma2', 2).maxBatch, 1);
   assert.equal(cfg('embeddinggemma', 0).maxBatch, 2, 'unknown memory must be conservative');
   assert.equal(cfg('embeddinggemma', 8, 2).maxBatch, 1, 'low-core device must be conservative');
   assert.equal(cfg('embeddinggemma', 8, 8, 1).maxBatch, 1, 'respect user entry batch limit');
