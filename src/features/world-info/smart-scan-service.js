@@ -94,41 +94,99 @@ export async function scanWorldInfo(input, deps) {
   const keywordEnabled = !settings.enabled || ['keyword', 'hybrid_fast', 'ultimate'].includes(mode);
   const forced = Array.isArray(input.forceActiveUids) && input.forceActiveUids.length > 0;
 
+  // A SillyTavern Lorebook may use numeric UIDs while IndexedDB and logs
+  // serialize them as strings. Match by canonical key but return the original
+  // entry UID type to the World Info resolver.
+  const entryUidByKey = new Map(
+    entries.filter(entry => entry?.uid != null).map(entry => [String(entry.uid), entry.uid]),
+  );
+  const logSemantic = message => deps.logSystemMessage?.(
+    'state', 'system', '[Semantic Scan][DIAG] ' + message,
+  );
+
   if (semanticEnabled && !forced) {
-    const searchable = new Set(entries.filter(entry => !entry.constant).map(entry => entry.uid));
+    const searchable = new Set(
+      entries.filter(entry => !entry.constant).map(entry => String(entry.uid)),
+    );
     if (searchable.size > 0) {
       input.setScanning?.(true);
       try {
         const query = String(input.scanInput || '');
+        const thresholdValue = Number(settings.semantic_threshold);
+        const threshold = Number.isFinite(thresholdValue)
+          && settings.semantic_threshold !== undefined
+          && settings.semantic_threshold !== null
+          && settings.semantic_threshold !== ''
+          ? thresholdValue : 0.7;
+        const requestedLimit = Number(settings.max_semantic_entries);
+        const limit = Number.isFinite(requestedLimit) && requestedLimit > 0
+          ? Math.floor(requestedLimit) : 20;
         if (query.trim()) {
           const queryVector = await deps.embed(query);
+          if (!queryVector?.length || !Array.from(queryVector).every(Number.isFinite)) {
+            throw new Error('Embedding truy vấn rỗng hoặc chứa giá trị không hợp lệ.');
+          }
           const indexName = input.card?.fileName || input.card?.name || 'default';
           await deps.loadIndex(indexName);
-          const matches = deps.getIndex(indexName)
-            .filter(item => searchable.has(item.uid))
-            .map(item => ({ uid: item.uid, score: deps.cosine(queryVector, item.vector) }));
-          const best = {};
-          for (const match of matches) {
-            if (!best[match.uid] || match.score > best[match.uid]) best[match.uid] = match.score;
+          const records = deps.getIndex(indexName) || [];
+          const matches = [];
+          let eligibleVectors = 0;
+          let invalidDimensions = 0;
+          for (const item of records) {
+            if (!searchable.has(String(item.uid))) continue;
+            if (!item.vector || item.vector.length !== queryVector.length) {
+              invalidDimensions++;
+              continue;
+            }
+            eligibleVectors++;
+            const score = deps.cosine(queryVector, item.vector);
+            if (!Number.isFinite(score)) continue;
+            matches.push({ uid: String(item.uid), score });
           }
-          for (const [uid, score] of Object.entries(best)) semanticScores[uid] = score;
-          const threshold = settings.semantic_threshold || 0.7;
-          const limit = settings.max_semantic_entries || 20;
-          semanticSelected = Object.entries(best)
+          const best = new Map();
+          for (const match of matches) {
+            if (!best.has(match.uid) || match.score > best.get(match.uid)) {
+              best.set(match.uid, match.score);
+            }
+          }
+          for (const [uid, score] of best) semanticScores[uid] = score;
+          semanticSelected = [...best]
             .map(([uid, score]) => ({ uid, score }))
             .filter(item => item.score >= threshold)
             .sort((left, right) => right.score - left.score)
             .slice(0, limit)
-            .map(item => item.uid);
+            .map(item => entryUidByKey.get(item.uid));
+          const scores = [...best.values()];
+          const highest = scores.length ? Math.max(...scores) : null;
+          const lowest = scores.length ? Math.min(...scores) : null;
+          const fmt = value => value == null ? 'không có' : value.toFixed(3);
+          logSemantic('mode=' + mode + '; threshold=' + threshold + '; limit=' + limit
+            + '; queryChars=' + query.length + '; queryDim=' + queryVector.length
+            + '; enabledUIDs=' + searchable.size + '; indexedVectors=' + records.length
+            + '; eligibleVectors=' + eligibleVectors
+            + '; badDimensions=' + invalidDimensions + '; scoredUIDs=' + best.size
+            + '; minScore=' + fmt(lowest) + '; maxScore=' + fmt(highest)
+            + '; selected=' + semanticSelected.length);
+          if (!records.length) logSemantic('Chỉ mục rỗng cho nhân vật hiện tại. Hãy đồng bộ Lorebook với model đang chọn.');
+          else if (!eligibleVectors) logSemantic('Có chỉ mục nhưng không có vector hợp lệ cho những UID được bật; kiểm tra model/chỉ mục/UID.');
+          else if (!semanticSelected.length) logSemantic('Đã so khớp nhưng không mục nào đạt threshold. Xem maxScore phía trên.');
+        } else {
+          logSemantic('Không tạo embedding vì scanInput rỗng; không phải lỗi ngưỡng.');
         }
       } catch (error) {
         console.error('[Semantic Scan] Error:', error);
-        deps.logSystemMessage('error', 'system', `[Semantic Scan] Failed${keywordEnabled ? '; keyword scan remains enabled' : '; semantic-only mode, no fallback'}. Error: ${error}`);
+        deps.logSystemMessage?.('error', 'system', '[Semantic Scan] Failed'
+          + (keywordEnabled ? '; keyword scan remains independently enabled' : '; semantic-only mode, no fallback')
+          + '. Error: ' + String(error));
         deps.onSemanticError?.(error);
       } finally {
         input.setScanning?.(false);
       }
+    } else {
+      logSemantic('Không có mục Lorebook động đang bật. Không tính embedding.');
     }
+  } else if (semanticEnabled && forced) {
+    logSemantic('Lượt tạo lại dùng UID đã chọn từ lượt trước (forceActiveUids); bỏ qua quét mới theo chủ ý.');
   }
 
   if (llmEnabled) {
@@ -185,7 +243,8 @@ export async function scanWorldInfo(input, deps) {
           const eligibleUids = new Set(entries.filter(entry => !entry.constant).map(entry => String(entry.uid)));
           llmSelected = selected
             .filter(uid => eligibleUids.has(uid))
-            .slice(0, settings.max_entries || 5);
+            .slice(0, settings.max_entries || 5)
+            .map(uid => entryUidByKey.get(uid));
           smartScanLog = { fullPrompt: requestPrompt, rawResponse: rawResponseText, latency: Date.now() - started };
         } else {
           smartScanLog = {
@@ -217,12 +276,18 @@ export async function scanWorldInfo(input, deps) {
     }
   }
 
-  const selected = Array.from(new Set([...llmSelected, ...semanticSelected]));
+  const selected = [...new Map(
+    [...llmSelected, ...semanticSelected].map(uid => [String(uid), uid]),
+  ).values()];
   const selectionData = {
-    prompt: smartScanLog?.fullPrompt || `Semantic Search (Threshold: ${settings.semantic_threshold || 0.7})`,
+    prompt: smartScanLog?.fullPrompt || `Semantic Search (Threshold: ${settings.semantic_threshold ?? 0.7})`,
     selectedItems: selected.map(uid => {
-      const entry = entries.find(candidate => candidate.uid === uid);
-      return { id: uid, score: semanticScores[uid] || 1, name: entry?.name || entry?.comment || 'Không tên' };
+      const entry = entries.find(candidate => String(candidate.uid) === String(uid));
+      return {
+        id: uid,
+        score: semanticScores[String(uid)] ?? 1,
+        name: entry?.name || entry?.comment || 'Không tên',
+      };
     }),
   };
 
