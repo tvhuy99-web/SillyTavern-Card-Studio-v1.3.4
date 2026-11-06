@@ -129,6 +129,12 @@ jobs:
           )
           if service not in text:
               text = text.replace("</application>", f"    {service}\n    </application>", 1)
+          # LiteRT-LM requires optional vendor OpenCL libraries to be
+          # visible on Android 12+. CPU-only phones must still install.
+          for lib in ("libOpenCL.so", "libvndksupport.so"):
+              declaration = f'<uses-native-library android:name="{lib}" android:required="false" />'
+              if declaration not in text:
+                  text = text.replace("</application>", f"    {declaration}\\n    </application>", 1)
           manifest.write_text(text)
           PY
 
