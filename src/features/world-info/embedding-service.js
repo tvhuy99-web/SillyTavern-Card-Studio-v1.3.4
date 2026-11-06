@@ -1,3 +1,5 @@
+import { createNativeEmbeddingGemmaRuntime, getNativeEmbeddingPlugin } from './native-embedding-bridge.js';
+
 const DB_NAME = 'LorebookEmbeddingsDB';
 const DB_VERSION = 2;
 const STORE_NAME = 'embeddings';
@@ -466,6 +468,12 @@ export function createEmbeddingService(deps) {
     onStage('Import Transformers.js (có thể truy cập CDN cho mã thư viện)');
     const transformers = await getTransformersModule();
     onStage('Đã nạp Transformers.js; chuẩn bị bộ suy luận cục bộ');
+    // Android EmbeddingGemma OFFLINE always uses the native ORT engine.
+    // The explicit Settings download action (localOnly=false) still fills
+    // the original Transformers.js cache; it never changes sync behavior.
+    if (isAndroidHost() && provider.id === 'embeddinggemma' && localOnly) {
+      return createNativeEmbeddingGemmaRuntime({ provider, transformers, onStage });
+    }
     const callback = progressAdapter(onProgress);
     const common = {
       dtype: provider.dtype,
@@ -590,8 +598,16 @@ export function createEmbeddingService(deps) {
       return modelLoads.get(provider.id);
     }
     if (options.localOnly) onStage('Kiểm tra cache của model ' + provider.shortLabel);
-    if (options.localOnly && !(await providerIsCached(provider))) {
-      throw new Error(`Mô hình ${provider.shortLabel} chưa được tải. Hãy tải mô hình trong Cài đặt Smart Scan trước.`);
+    if (options.localOnly) {
+      const cached = await providerIsCached(provider);
+      let alreadyNative = false;
+      if (!cached && isAndroidHost() && provider.id === 'embeddinggemma') {
+        const plugin = getNativeEmbeddingPlugin();
+        alreadyNative = !!(plugin && (await plugin.status()).modelReady);
+      }
+      if (!cached && !alreadyNative) {
+        throw new Error(`Mô hình ${provider.shortLabel} chưa được tải. Hãy tải mô hình trong Cài đặt Smart Scan trước.`);
+      }
     }
     // Keep only one heavy ONNX model resident when switching embedding providers.
     onStage('Giải phóng các model ONNX không sử dụng');
@@ -917,8 +933,13 @@ export function createEmbeddingService(deps) {
     }
     if (modelRuntimes.has(provider.id)) return { status: 'ready', progress: 100, provider };
     if (modelLoads.has(provider.id)) return { status: 'loading', progress: 0, provider };
+    let cached = await providerIsCached(provider);
+    if (!cached && isAndroidHost() && provider.id === 'embeddinggemma') {
+      const plugin = getNativeEmbeddingPlugin();
+      cached = !!(plugin && (await plugin.status()).modelReady);
+    }
     return {
-      status: (await providerIsCached(provider)) ? 'cached' : 'missing',
+      status: cached ? 'cached' : 'missing',
       progress: 0,
       provider,
     };
@@ -941,6 +962,10 @@ export function createEmbeddingService(deps) {
     modelLoads.delete(provider.id);
     try { await runtime?.dispose?.(); } catch {}
     await deleteProviderCache(provider);
+    if (isAndroidHost() && provider.id === 'embeddinggemma') {
+      const plugin = getNativeEmbeddingPlugin();
+      if (plugin) await plugin.deleteModel();
+    }
     return getProviderStatus(provider.id);
   }
 
