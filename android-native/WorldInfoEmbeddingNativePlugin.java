@@ -353,6 +353,24 @@ public class WorldInfoEmbeddingNativePlugin extends Plugin {
         });
     }
 
+    @PluginMethod
+    public void deleteModel(PluginCall call) {
+        execute(call, () -> {
+            closeSession();
+            closeWriter();
+            File dir = modelDir();
+            for (String name : Arrays.asList(GRAPH, WEIGHTS)) {
+                for (String suffix : Arrays.asList("", ".ok", ".part")) {
+                    File file = new File(dir, name + suffix);
+                    if (file.exists() && !file.delete()) {
+                        throw new IOException("Unable to delete native file " + name + suffix);
+                    }
+                }
+            }
+            call.resolve();
+        });
+    }
+
     @Override
     protected void handleOnDestroy() {
         background.execute(() -> { closeWriter(); closeSession(); });
