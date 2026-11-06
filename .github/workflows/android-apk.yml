@@ -134,11 +134,19 @@ jobs:
 
       # Stable debug key copied from GeminiLiveTranslate. This is a PUBLIC
       # DEBUG key, not a release signing key. Do NOT use for production releases.
-      - name: Add Android-native ONNX Runtime
+      - name: Add ARM64-only Android-native ONNX Runtime and LiteRT-LM
         shell: bash
         run: |
           set -euo pipefail
           cat >> android/app/build.gradle <<'GRADLE'
+          // Package native libraries only for 64-bit ARM devices.
+          android {
+              defaultConfig {
+                  ndk {
+                      abiFilters 'arm64-v8a'
+                  }
+              }
+          }
           dependencies {
               implementation 'com.microsoft.onnxruntime:onnxruntime-android:1.29.0'
               implementation 'com.google.ai.edge.litertlm:litertlm-android:0.19.0'
@@ -182,15 +190,30 @@ jobs:
           chmod +x ./gradlew
           ./gradlew assembleDebug --no-daemon
 
-      - name: Verify native ONNX Runtime is packaged
+      - name: Verify APK only contains ARM64 native libraries
         run: |
-          unzip -Z1 android/app/build/outputs/apk/debug/app-debug.apk | grep -q 'libonnxruntime.so'
+          python3 - <<'PY'
+          from zipfile import ZipFile
+          from pathlib import Path
 
-      - name: Verify LiteRT-LM runtime is packaged
-        run: |
-          APK="android/app/build/outputs/apk/debug/app-debug.apk"
-          unzip -Z1 "$APK" | grep -E 'lib/arm64-v8a/.+\.so' | grep -E 'litert|tflite|litertlm|litert_lm' || true
-          test -s "$APK"
+          apk = Path('android/app/build/outputs/apk/debug/app-debug.apk')
+          assert apk.is_file() and apk.stat().st_size, 'APK missing or empty'
+          with ZipFile(apk) as bundle:
+              files = set(bundle.namelist())
+              libraries = sorted(name for name in files if name.startswith('lib/') and name.endswith('.so'))
+              abis = {name.split('/')[1] for name in libraries}
+              assert abis == {'arm64-v8a'}, f'Unexpected native ABI(s): {sorted(abis)}'
+              required = {
+                  'lib/arm64-v8a/libonnxruntime.so',
+                  'lib/arm64-v8a/libonnxruntime4j_jni.so',
+                  'lib/arm64-v8a/liblitertlm_jni.so',
+              }
+              missing = required - files
+              assert not missing, f'Native model runtime missing: {sorted(missing)}'
+              for library in libraries:
+                  print(library)
+          print('ARM64-only ONNX Runtime + LiteRT-LM packaging verified.')
+          PY
           grep -q 'EmbeddingGemma2LiteRTPlugin' android/app/src/main/java/com/tvhuy99/cardstudio/MainActivity.java
 
       - name: Verify stable signing certificate
