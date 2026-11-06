@@ -829,6 +829,25 @@ export function createEmbeddingService(deps) {
       : null;
     let batchPlanner = profile ? createLocalEmbeddingBatchPlanner(profile) : null;
     let nativeGemma2Profiled = false;
+    // Existing users may already have all 334 entries indexed. Allow them to
+    // benchmark the new CPU/GPU path on their next Sync without modifying or
+    // rewriting any vectors.
+    if (provider.id === 'embeddinggemma2' && pending.length === 0 && searchable.length > 0) {
+      currentStep = 'đo LiteRT trên Lorebook đã đồng bộ';
+      journal.stage('LiteRT-LM [ACCEL] Tất cả mục đã có chỉ mục; thử tăng tốc mà không tạo lại vectors');
+      const runtime = await ensureLocalRuntime(provider, { localOnly: true });
+      const samples = searchable.slice(0, 2).map(entry => {
+        const chunk = chunkEmbeddingText(buildEmbeddingEntryText(entry), 1000)[0];
+        return formatEmbeddingDocument(provider.id, chunk, entry.name || entry.comment || 'none');
+      });
+      const tuneResult = await runtime.tune(samples, message => {
+        currentStep = message;
+        journal.info(message);
+      });
+      journal.info('LiteRT-LM [ACCEL] Batch đề xuất=' + tuneResult.preferredBatch
+        + '; chỉ mục Lorebook không thay đổi');
+      nativeGemma2Profiled = true;
+    }
     journal.info('Cấu hình hiệu năng: ' + (profile
       ? 'WebView RAM≈' + (profile.deviceMemoryGB || 'không xác định') + 'GiB'
         + '; CPU=' + (profile.hardwareConcurrency || 'không xác định')
