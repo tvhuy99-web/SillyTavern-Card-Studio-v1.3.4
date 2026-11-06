@@ -51,6 +51,7 @@ jobs:
           node tests/ai-studio-response-extractor.mjs
           node tests/ai-studio-live-turns.mjs
           node tests/ai-studio-background.mjs
+          node tests/m4-native-embedding-bridge.mjs
 
       - name: Build portable static web app
         run: |
@@ -77,7 +78,7 @@ jobs:
           npx cap add android
           npx cap sync android
 
-      - name: Register AI Studio Android text plugin
+      - name: Register Android AI Studio and native World Info ONNX plugins
         shell: bash
         run: |
           set -euo pipefail
@@ -85,6 +86,7 @@ jobs:
           mkdir -p "$PLUGIN_DIR"
           cp android-native/AiStudioTextPlugin.java "$PLUGIN_DIR/AiStudioTextPlugin.java"
           cp android-native/AiStudioGenerationService.java "$PLUGIN_DIR/AiStudioGenerationService.java"
+          cp android-native/WorldInfoEmbeddingNativePlugin.java "$PLUGIN_DIR/WorldInfoEmbeddingNativePlugin.java"
           cat > "$PLUGIN_DIR/MainActivity.java" <<'JAVA'
           package com.tvhuy99.cardstudio;
 
@@ -95,6 +97,7 @@ jobs:
               @Override
               public void onCreate(Bundle savedInstanceState) {
                   registerPlugin(AiStudioTextPlugin.class);
+                  registerPlugin(WorldInfoEmbeddingNativePlugin.class);
                   super.onCreate(savedInstanceState);
               }
           }
@@ -125,6 +128,17 @@ jobs:
 
       # Stable debug key copied from GeminiLiveTranslate. This is a PUBLIC
       # DEBUG key, not a release signing key. Do NOT use for production releases.
+      - name: Add Android-native ONNX Runtime
+        shell: bash
+        run: |
+          set -euo pipefail
+          cat >> android/app/build.gradle <<'GRADLE'
+          dependencies {
+              implementation 'com.microsoft.onnxruntime:onnxruntime-android:1.29.0'
+          }
+          GRADLE
+          test -s android-native/WorldInfoEmbeddingNativePlugin.java
+
       - name: Configure stable debug signature and monotonic version
         shell: bash
         run: |
@@ -160,6 +174,10 @@ jobs:
         run: |
           chmod +x ./gradlew
           ./gradlew assembleDebug --no-daemon
+
+      - name: Verify native ONNX Runtime is packaged
+        run: |
+          unzip -Z1 android/app/build/outputs/apk/debug/app-debug.apk | grep -q 'libonnxruntime.so'
 
       - name: Verify stable signing certificate
         shell: bash
