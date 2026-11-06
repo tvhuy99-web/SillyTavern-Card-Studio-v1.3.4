@@ -69,24 +69,90 @@ export function validateEmbeddingGemma2Vectors(vectors, count) {
   });
 }
 
+// Capacitor base64 transport: each embedding is 768 little-endian float32
+// values. Preserve the existing L2-normalization, index dimensions and
+// provider identity, while avoiding thousands of JSON number objects.
+export function decodeEmbeddingGemma2Binary(base64, count, dimensions = 768) {
+  if (typeof base64 !== 'string' || !Number.isInteger(count) || count < 1 || count > 4
+    || dimensions !== 768) {
+    throw new Error('LiteRT: định dạng vector nhị phân không hợp lệ.');
+  }
+  const raw = atob(base64);
+  if (raw.length !== count * dimensions * 4) {
+    throw new Error('LiteRT: độ dài bộ đệm embedding không khớp.');
+  }
+  const bytes = Uint8Array.from(raw, char => char.charCodeAt(0));
+  const view = new DataView(bytes.buffer);
+  const vectors = [];
+  for (let batch = 0; batch < count; batch++) {
+    const vector = [];
+    for (let position = 0; position < dimensions; position++) {
+      const value = view.getFloat32((batch * dimensions + position) * 4, true);
+      if (!Number.isFinite(value)) throw new Error('LiteRT: vector có NaN hoặc Infinity.');
+      vector.push(value);
+    }
+    vectors.push(vector);
+  }
+  return vectors;
+}
+
+export function formatEmbeddingGemma2TuningReport(result) {
+  const entries = Array.isArray(result?.benchmarks) ? result.benchmarks : [];
+  const measured = entries.map(item => (item.backend || 'không xác định') + '/batch'
+    + Number(item.batch) + '=' + Number(item.segmentsPerSecond || 0).toFixed(2) + ' đoạn/s');
+  const warnings = Array.isArray(result?.warnings) ? result.warnings : [];
+  return {
+    summary: 'LiteRT-LM [ACCEL] backend chọn: ' + (result?.backend || 'CPU')
+      + '; batch=' + (Number(result?.preferredBatch) || 2)
+      + (result?.reused ? '; dùng cấu hình đã đo' : '; đo thực tế ' + (Number(result?.totalMs) || 0) + 'ms'),
+    measurements: measured,
+    warnings,
+  };
+}
+
 export async function createEmbeddingGemma2Runtime(provider, onStage = () => {}, plugin = requirePlugin()) {
   if (provider?.id !== 'embeddinggemma2') throw new Error('Sai model: LiteRT-LM chỉ dành cho EmbeddingGemma 2 Text 270M.');
   const status = await plugin.status();
   if (!status.modelReady) throw new Error('EmbeddingGemma 2 chưa được tải. Hãy tải mô hình trong Cài đặt Smart Scan.');
-  onStage('LiteRT-LM: khởi tạo EmbeddingGemma 2 Text 270M trên Android CPU');
+  onStage('LiteRT-LM: khởi tạo EmbeddingGemma 2 Text 270M bằng backend đã chọn');
   const loaded = await plugin.load();
   onStage('LiteRT-LM: model sẵn sàng; backend=' + (loaded.backend || 'CPU')
-    + '; thời gian nạp=' + (loaded.loadMs ?? 0) + 'ms');
+    + '; thời gian nạp=' + (loaded.loadMs ?? 0) + 'ms'
+    + (loaded.backendNote ? '; ' + loaded.backendNote : ''));
+  let tuningDone = false;
+  let preferredBatch = Math.max(1, Math.min(4, Number(loaded.preferredBatch) || 2));
   return {
     provider,
+    async tune(texts, report = onStage) {
+      if (tuningDone) return { preferredBatch, reused: true };
+      if (!Array.isArray(texts) || !texts.length) return { preferredBatch, reused: true };
+      report('LiteRT-LM [ACCEL] Đang đo CPU 2/4 luồng và kiểm tra GPU/OpenCL (nếu hỗ trợ).');
+      const result = await plugin.tune({ texts: texts.slice(0, 4) });
+      preferredBatch = Math.max(1, Math.min(4, Number(result.preferredBatch) || 2));
+      tuningDone = true;
+      const detail = formatEmbeddingGemma2TuningReport(result);
+      report(detail.summary);
+      for (const line of detail.measurements) report('LiteRT-LM [ACCEL] ' + line);
+      for (const warning of detail.warnings) report('LiteRT-LM [ACCEL] ' + warning);
+      return { ...result, preferredBatch };
+    },
+    get preferredBatch() { return preferredBatch; },
     async embed(texts, onMeasurement) {
       if (!Array.isArray(texts) || texts.length < 1 || texts.length > 4) {
         throw new Error('LiteRT-LM yêu cầu batch từ 1 đến 4 đoạn.');
       }
       const start = Date.now();
       const result = await plugin.embed({ texts });
-      const rows = validateEmbeddingGemma2Vectors(result.vectors, texts.length);
-      onMeasurement?.({ onnxMs: Number(result.onnxMs) || 0, backend: result.backend || 'LiteRT-LM CPU' });
+      const decoded = result.format === 'float32le'
+        ? decodeEmbeddingGemma2Binary(result.vectorBytes, Number(result.count), Number(result.dimensions))
+        : result.vectors;
+      const rows = validateEmbeddingGemma2Vectors(decoded, texts.length);
+      const totalMs = Date.now() - start;
+      onMeasurement?.({
+        litertMs: Number(result.onnxMs) || 0,
+        bridgeMs: Math.max(0, totalMs - (Number(result.onnxMs) || 0)),
+        backend: result.backend || 'LiteRT-LM CPU',
+      });
       return rows;
     },
     async dispose() {
