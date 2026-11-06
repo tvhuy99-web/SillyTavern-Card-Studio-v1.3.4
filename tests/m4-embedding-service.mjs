@@ -3,6 +3,7 @@ import {
   EMBEDDING_PROVIDERS,
   configureTransformersEnvironment,
   createEmbeddingService,
+  isNativeAndroidEmbeddingHost,
   createWorldInfoSyncJournal,
   planLocalEmbeddingBatch,
   createLocalEmbeddingBatchPlanner,
@@ -15,6 +16,24 @@ import {
   buildEmbeddingEntryText,
   chunkEmbeddingText,
 } from '../src/features/world-info/embedding-service.js';
+
+// The Android APK uses ONNX native. Ordinary Android browsers must not
+// be forced through a Capacitor plugin they do not have.
+assert.equal(isNativeAndroidEmbeddingHost({
+  navigator: { userAgent: 'Mozilla/5.0 (Linux; Android 15)' },
+}), false);
+assert.equal(isNativeAndroidEmbeddingHost({
+  navigator: { userAgent: 'Mozilla/5.0 (Linux; Android 15)' },
+  Capacitor: { getPlatform: () => 'web' },
+}), false);
+assert.equal(isNativeAndroidEmbeddingHost({
+  navigator: { userAgent: 'Mozilla/5.0 (Linux; Android 15)' },
+  Capacitor: { getPlatform: () => 'android' },
+}), true);
+assert.equal(isNativeAndroidEmbeddingHost({
+  navigator: { userAgent: 'Mozilla/5.0 (Windows NT 10)' },
+  Capacitor: { getPlatform: () => 'android' },
+}), false);
 
 // Android WebView sets allowLocalModels=false, which conflicts with
 // local_files_only=true when loading cached ONNX weights for offline sync.
