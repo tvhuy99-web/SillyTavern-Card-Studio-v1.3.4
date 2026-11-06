@@ -134,7 +134,7 @@ jobs:
           for lib in ("libOpenCL.so", "libvndksupport.so"):
               declaration = f'<uses-native-library android:name="{lib}" android:required="false" />'
               if declaration not in text:
-                  text = text.replace("</application>", f"    {declaration}\\n    </application>", 1)
+                  text = text.replace("</application>", f"    {declaration}\n    </application>", 1)
           manifest.write_text(text)
           PY
 
