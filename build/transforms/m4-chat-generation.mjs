@@ -1,4 +1,4 @@
-const M4_IMPORTS = "import { normalizePromptVariableScopes as __stsNormalizePromptVariableScopes, readGlobalVariables as __stsReadGlobalVariables, writeGlobalVariables as __stsWriteGlobalVariables } from './variable-scope-service-v1.3.6.js?v=1.3.6-variable-scopes-1';\nimport { createGenerationGateway as __stsCreateGenerationGateway } from './m4/providers/common/generation-gateway.js?v=1.3.6-m4.1';\nimport { chatTurnPolicy as __stsChatTurnPolicy } from './m4/features/chat/turn-policy.js?v=1.3.6-m4.5';\nimport { createConversationService as __stsCreateConversationService } from './m4/features/chat/conversation-service.js?v=1.3.6-m4.8';\nimport { liveStreamStore as __stsLiveStreamStore } from './m4/features/chat/live-stream-store.js?v=1.3.6-m4.10';\nimport { createEmbeddingService as __stsCreateEmbeddingService } from './m4/features/world-info/embedding-service.js?v=1.3.6-m4.9';\nimport { scanWorldInfo as __stsScanWorldInfo } from './m4/features/world-info/smart-scan-service.js?v=1.3.6-m4.8';\nimport { buildConversationPrompt as __stsBuildConversationPrompt } from './m4/features/prompts/prompt-service.js?v=1.3.6-m4.3';\nimport { processAIResponse as __stsProcessAIResponse } from './m4/features/chat/response-processor.js?v=1.3.6-m4.3';\n";
+const M4_IMPORTS = "import { normalizePromptVariableScopes as __stsNormalizePromptVariableScopes, readGlobalVariables as __stsReadGlobalVariables, writeGlobalVariables as __stsWriteGlobalVariables } from './variable-scope-service-v1.3.6.js?v=1.3.6-variable-scopes-1';\nimport { createGenerationGateway as __stsCreateGenerationGateway } from './m4/providers/common/generation-gateway.js?v=1.3.6-m4.1';\nimport { chatTurnPolicy as __stsChatTurnPolicy } from './m4/features/chat/turn-policy.js?v=1.3.6-m4.5';\nimport { createConversationService as __stsCreateConversationService } from './m4/features/chat/conversation-service.js?v=1.3.6-m4.8';\nimport { liveStreamStore as __stsLiveStreamStore } from './m4/features/chat/live-stream-store.js?v=1.3.6-m4.10';\nimport { createEmbeddingService as __stsCreateEmbeddingService } from './m4/features/world-info/embedding-service.js?v=1.3.6-m4.9';\nimport { scanWorldInfo as __stsScanWorldInfo } from './m4/features/world-info/smart-scan-service.js?v=1.3.6-m4.8';\nimport { createUidSafeWorldInfoResolver as __stsCreateUidSafeWorldInfoResolver, migrateSmartScanStickySettings as __stsMigrateSmartScanStickySettings, markSmartScanStickySettingsSaved as __stsMarkSmartScanStickySettingsSaved } from './m4/features/world-info/sticky-compat.js?v=1.3.6-m4.1';\nimport { buildConversationPrompt as __stsBuildConversationPrompt } from './m4/features/prompts/prompt-service.js?v=1.3.6-m4.3';\nimport { processAIResponse as __stsProcessAIResponse } from './m4/features/chat/response-processor.js?v=1.3.6-m4.3';\n";
 
 function findExactlyOnce(source, token, label, from = 0) {
   const first = source.indexOf(token, from);
@@ -40,7 +40,7 @@ function smartScanAdapter() {
     'scanInput:t?.scanInput??"",worldInfoState:t?.state?.worldInfoState??{},worldInfoRuntime:t?.state?.worldInfoRuntime??{},worldInfoPinned:t?.state?.worldInfoPinned??{},preset:t?.state?.preset??{},promptHistory:t?.promptHistory??[],content:t?.content??"",variables:t?.state?.variables??{},generatedEntries:t?.generatedEntries??[],sequence:t?.sequence??0,forceActiveUids:t?.forceActiveUids,card:t?.state?.card??e,lorebooks:r,setScanning:n' +
     '},{getSettings:as,embed:$c,loadIndex:Lc,getIndex:Fc,cosine:Gc,logSystemMessage:qu,' +
     'onSemanticError:e=>{e.message?.includes("API Key")?window.dispatchEvent(new CustomEvent("toast",{detail:{message:"Vui lòng cấu hình Gemini API Key trong phần Cài đặt để sử dụng Semantic Search.",type:"error"}})):e.message?.includes("chưa được tải")?window.dispatchEvent(new CustomEvent("toast",{detail:{message:e.message,type:"error"}})):window.dispatchEvent(new CustomEvent("toast",{detail:{message:"Lỗi Semantic Search, chuyển sang quét từ khóa.",type:"error"}}))},' +
-    'callSelectionModel:async(e,t)=>{if(Cs()){let o=ns();return Ks(e,o.proxy_tool_model||o.proxy_model||t,o.proxy_protocol)}return(await cl(t,e,{temp:0},_d)).text||"[]"},parseJson:As,resolveWorldInfo:ch}),[e,r])';
+    'callSelectionModel:async(e,t)=>{if(Cs()){let o=ns();return Ks(e,o.proxy_tool_model||o.proxy_model||t,o.proxy_protocol)}return(await cl(t,e,{temp:0},_d)).text||"[]"},parseJson:As,resolveWorldInfo:__stsCreateUidSafeWorldInfoResolver(ch)}),[e,r])';
 }
 
 function responseProcessorAdapter() {
@@ -88,9 +88,35 @@ export function applyM4ChatGenerationTransform(source) {
 
 
   const legacySmartScanDefaults = 'Jo={enabled:!0,mode:"hybrid_fast",model:"gemini-3-flash-preview",depth:6,max_entries:20,aiStickyDuration:5,system_prompt:"",scan_strategy:"efficient",semantic_threshold:.7,max_semantic_entries:20,embedding_batch_size:30}';
-  const embeddingSmartScanDefaults = 'Jo={enabled:!0,mode:"hybrid_fast",model:"gemini-3-flash-preview",depth:6,max_entries:20,aiStickyDuration:5,system_prompt:"",scan_strategy:"efficient",embedding_provider:"gemini",semantic_threshold:.7,max_semantic_entries:20,embedding_batch_size:30}';
+  const embeddingSmartScanDefaults = 'Jo={enabled:!0,mode:"hybrid_fast",model:"gemini-3-flash-preview",depth:6,max_entries:20,aiStickyDuration:3,system_prompt:"",scan_strategy:"efficient",embedding_provider:"gemini",semantic_threshold:.7,max_semantic_entries:20,embedding_batch_size:30}';
   const smartScanDefaultsIndex = findExactlyOnce(code, legacySmartScanDefaults, 'embedding UI/default provider');
   code = code.slice(0, smartScanDefaultsIndex) + embeddingSmartScanDefaults + code.slice(smartScanDefaultsIndex + legacySmartScanDefaults.length);
+
+  // Older installations persist the original default (5). Migrate it once
+  // when settings are read; future manual selections (including 5) are kept.
+  const oldStickySettingsRead =
+    'as=()=>{try{let e=localStorage.getItem(Ho);if(e){let t=JSON.parse(e);return{...Jo,...t}}}catch(e){console.error("Failed to load smart scan global settings",e)}return Jo}';
+  const newStickySettingsRead =
+    'as=()=>{try{let e=localStorage.getItem(Ho);if(e){let t=JSON.parse(e),r=__stsMigrateSmartScanStickySettings(t);r!==t&&localStorage.setItem(Ho,JSON.stringify(r));return{...Jo,...r}}}catch(e){console.error("Failed to load smart scan global settings",e)}return Jo}';
+  code = replaceOnce(code, oldStickySettingsRead, newStickySettingsRead, 'sticky migration persisted getter');
+  code = replaceOnce(code,
+    'is=e=>{localStorage.setItem(Ho,JSON.stringify(e))}',
+    'is=e=>{localStorage.setItem(Ho,JSON.stringify(__stsMarkSmartScanStickySettingsSaved(e)))}',
+    'sticky settings write tracks migration version');
+
+  // The existing Sticky slider was hidden inside the LLM-only section.
+  // Move it into the always-visible Smart Scan settings area so semantic,
+  // hybrid_fast and LLM users can all configure the same global hold.
+  const gatedStickyControl =
+    ',(0,wt.jsxs)("div",{className:"bg-emerald-900/20 border border-emerald-500/30 p-4 rounded-lg mt-4",children:[(0,wt.jsx)("div",{className:"flex items-center gap-2 mb-2",children:(0,wt.jsx)("span",{className:"text-emerald-400 font-bold text-sm uppercase tracking-wide",children:"AI Persistence"})}),(0,wt.jsx)(nu,{label:"AI Sticky Duration",value:e.aiStickyDuration,onChange:e=>o("aiStickyDuration",e),min:0,max:20,step:1})]})';
+  code = replaceOnce(code, gatedStickyControl, '', 'remove LLM-gated Sticky slider');
+  const globalStickyControl = gatedStickyControl
+    .replace('AI Persistence', 'AI Persistence (duy trì mục)')
+    .replace('AI Sticky Duration', 'AI Sticky Duration (lượt AI phản hồi)');
+  const resetSettings = ',(0,wt.jsx)("div",{className:"pt-4 border-t border-slate-700 flex justify-end"';
+  code = replaceOnce(code, resetSettings, globalStickyControl + resetSettings,
+    'always-visible Sticky slider before reset button');
+
 
   const embeddingProviderStatusComponent =
     '__stsEmbeddingProviderStatus=({providerId:e,showToast:t})=>{let[n,r]=(0,b.useState)({status:"checking",progress:0}),a=__stsEmbeddingService.getProviderInfo(e),i="local"===a.kind;' +
