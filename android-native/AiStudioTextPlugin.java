@@ -773,6 +773,10 @@ public class AiStudioTextPlugin extends Plugin {
     @PluginMethod
     public void generate(PluginCall call) {
         final String prompt=call.getString("prompt","");
+        final String preferredModel=call.getString("model","");
+        final String modelId=preferredModel==null ? "" : preferredModel.trim().replaceFirst("^models/", "");
+        final String chatUrl=modelId.matches("[A-Za-z0-9._-]{1,100}")
+            ? URL+"?model="+android.net.Uri.encode(modelId) : URL;
         if(prompt==null || prompt.isBlank()){
             call.reject("AI_STUDIO_PROMPT_EMPTY");return;
         }
@@ -802,11 +806,12 @@ public class AiStudioTextPlugin extends Plugin {
             if(coldStart) {
                 trace("state","NEW_CHAT_INITIAL","First-use session is loading a new chat page",
                     details("showDebugPage",isPageDisplayEnabled()));
+                if(!chatUrl.equals(URL)) sessionWebView.loadUrl(chatUrl);
             } else {
                 // Each Card Studio model turn has its OWN AI Studio chat.
-                // Never append to the previously generated Google conversation.
+                // Request a model through AI Studio\'s public new-chat URL; Google controls its availability.
                 trace("state","NEW_CHAT_NAVIGATE","Opening fresh AI Studio conversation for this turn",null);
-                sessionWebView.loadUrl(URL);
+                sessionWebView.loadUrl(chatUrl);
             }
             // Keep the inline monitor in place. Never hijack the chat with a modal.
             applyPanelPresentation(isPageDisplayEnabled(),"generate");

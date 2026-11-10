@@ -50,7 +50,54 @@ function replaceExactlyOnce(source, oldText, newText) {
   return source.slice(0, start) + newText + source.slice(start + oldText.length);
 }
 
-export const AI_STUDIO_TEXT_PATCH_COUNT = PATCHES.length + 7;
+const AI_STUDIO_TOOL_MODEL_PATCHES = [
+  [
+    "Wo={source:\"gemini\",aistudio_model:\"gemini-2.5-flash\",gemini_model:\"gemini-3-flash-preview\"",
+    "Wo={source:\"gemini\",aistudio_model:\"gemini-2.5-flash\",aistudio_tool_model:\"\",gemini_model:\"gemini-3-flash-preview\""
+  ],
+  [
+    "\"aistudio\"===t.source&&(0,wt.jsxs)(\"div\",{className:\"space-y-4\",children:[(0,wt.jsxs)(\"label\"",
+    "\"aistudio\"===t.source&&(0,wt.jsxs)(\"div\",{className:\"space-y-4\",children:[(0,wt.jsx)(Ed,{label:\"Tool Model ID\",value:t.aistudio_tool_model||t.aistudio_model||\"gemini-2.5-flash\",onChange:e=>Y(\"aistudio_tool_model\",e),options:[{id:\"gemini-2.5-flash\",name:\"Gemini 2.5 Flash\"},...Vo]}),(0,wt.jsxs)(\"label\""
+  ],
+  [
+    "ms=e=>{localStorage.setItem(Bo,JSON.stringify(e))},gs=()=>",
+    "ms=e=>{localStorage.setItem(Bo,JSON.stringify(e))},__stsAiStudioToolText=async(e,t)=>{let n=await __stsGenerationGateway.generateOnce({prompt:e,model:t,source:\"aistudio\"});return String(n?.response?.text||\"\")},gs=()=>"
+  ],
+  [
+    "callSelectionModel:async(e,t)=>{if(Cs()){",
+    "callSelectionModel:async(e,t)=>{let n=ns();if(n.source===\"aistudio\")return __stsAiStudioToolText(e,n.aistudio_tool_model||n.aistudio_model||t);if(Cs()){"
+  ],
+  [
+    "let s=ns(),l=\"proxy\"===s.source||Cs(),c=t.settings?.modelId||(l?s.proxy_tool_model||s.proxy_model:i)",
+    "let s=ns(),l=\"proxy\"===s.source||Cs(),c=t.settings?.modelId||(\"aistudio\"===s.source?s.aistudio_tool_model||s.aistudio_model||i:l?s.proxy_tool_model||s.proxy_model:i)"
+  ],
+  [
+    "e=l?await Ks(m,c,s.proxy_protocol,0,o):(await new vo({apiKey:n}).models.generateContent",
+    "e=\"aistudio\"===s.source?await __stsAiStudioToolText(m,c):l?await Ks(m,c,s.proxy_protocol,0,o):(await new vo({apiKey:n}).models.generateContent"
+  ],
+  [
+    "i=\"\";if(Cs()){let e=ns();i=await Ks(a,e.proxy_tool_model||e.proxy_model||\"gemini-3-flash-preview\",e.proxy_protocol)}else i=(await cl(\"gemini-3-flash-preview\",a,{temp:.3},_d)).text||\"\"",
+    "i=\"\";let u=ns();if(u.source===\"aistudio\")i=await __stsAiStudioToolText(a,u.aistudio_tool_model||u.aistudio_model||\"gemini-2.5-flash\");else if(Cs()){let e=ns();i=await Ks(a,e.proxy_tool_model||e.proxy_model||\"gemini-3-flash-preview\",e.proxy_protocol)}else i=(await cl(\"gemini-3-flash-preview\",a,{temp:.3},_d)).text||\"\""
+  ],
+  [
+    "o=\"proxy\"===s.source?await Ks(i,s.proxy_tool_model||s.proxy_model||\"gemini-3-flash-preview\",s.proxy_protocol):(await cl",
+    "o=\"aistudio\"===s.source?await __stsAiStudioToolText(i,s.aistudio_tool_model||s.aistudio_model||\"gemini-2.5-flash\"):\"proxy\"===s.source?await Ks(i,s.proxy_tool_model||s.proxy_model||\"gemini-3-flash-preview\",s.proxy_protocol):(await cl"
+  ],
+  [
+    "return r=Cs()||\"proxy\"===a.source?await Ks(n,a.proxy_tool_model||a.proxy_model||\"gemini-3-flash-preview\",a.proxy_protocol):(await cl",
+    "return r=\"aistudio\"===a.source?await __stsAiStudioToolText(n,a.aistudio_tool_model||a.aistudio_model||\"gemini-2.5-flash\"):Cs()||\"proxy\"===a.source?await Ks(n,a.proxy_tool_model||a.proxy_model||\"gemini-3-flash-preview\",a.proxy_protocol):(await cl"
+  ],
+  [
+    "if(Cs()){let e=ns();i=await Ks(a,e.proxy_model||e.proxy_tool_model||\"gemini-3.1-pro-preview\",e.proxy_protocol)}else i=(await cl",
+    "if(ns().source===\"aistudio\"){let e=ns();i=await __stsAiStudioToolText(a,e.aistudio_tool_model||e.aistudio_model||\"gemini-2.5-flash\")}else if(Cs()){let e=ns();i=await Ks(a,e.proxy_model||e.proxy_tool_model||\"gemini-3.1-pro-preview\",e.proxy_protocol)}else i=(await cl"
+  ],
+  [
+    "if(Cs()){let e=ns();r=await Ks(n,e.proxy_tool_model||e.proxy_model||t,e.proxy_protocol)}else r=(await sl()",
+    "if(ns().source===\"aistudio\"){let e=ns();r=await __stsAiStudioToolText(n,e.aistudio_tool_model||e.aistudio_model||t)}else if(Cs()){let e=ns();r=await Ks(n,e.proxy_tool_model||e.proxy_model||t,e.proxy_protocol)}else r=(await sl()"
+  ]
+];
+
+export const AI_STUDIO_TEXT_PATCH_COUNT = PATCHES.length + 7 + AI_STUDIO_TOOL_MODEL_PATCHES.length;
 
 export function applyAiStudioTextTransform(source) {
   let code = source;
@@ -103,5 +150,8 @@ export function applyAiStudioTextTransform(source) {
     'let e=async()=>{let t=new SpeechSynthesisUtterance("");t.volume=0,window.speechSynthesis.speak(t)',
     'let e=async()=>{if(typeof window.SpeechSynthesisUtterance!=="function"||!window.speechSynthesis){document.removeEventListener("click",e),document.removeEventListener("touchstart",e);return;}let t=new SpeechSynthesisUtterance("");t.volume=0,window.speechSynthesis.speak(t)',
   );
+  for (const [oldText, newText] of AI_STUDIO_TOOL_MODEL_PATCHES) {
+    code = replaceExactlyOnce(code, oldText, newText);
+  }
   return code;
 }
