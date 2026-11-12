@@ -6,7 +6,7 @@ const service = fs.readFileSync(new URL('../android-native/AiStudioGenerationSer
 const workflow = fs.readFileSync(new URL('../.github/workflows/android-apk.yml', import.meta.url),'utf8');
 
 // A user-initiated generation must start the FGS before pressing Home.
-assert.match(native, /pending=call;\s*startBackgroundGeneration\(\);/);
+assert.match(native, /pending=call;\s*pendingThinkingLevel=[^;]+;\s*startBackgroundGeneration\(\);/);
 assert.match(native, /startForegroundService\(intent\)/);
 assert.match(native, /foregroundRequestStarted = true/);
 assert.match(native, /handleOnPause\(\)/);

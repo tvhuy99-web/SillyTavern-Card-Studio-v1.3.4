@@ -51,6 +51,7 @@ jobs:
           node tests/ai-studio-response-extractor.mjs
           node tests/ai-studio-live-turns.mjs
           node tests/ai-studio-background.mjs
+          node tests/ai-studio-model-controls.mjs
           node tests/m4-native-embedding-bridge.mjs
           node tests/m4-embeddinggemma2-litert-bridge.mjs
           node tests/m4-sticky-compat.mjs
