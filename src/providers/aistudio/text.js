@@ -20,7 +20,12 @@ function makeId() {
   return 'text-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 7);
 }
 
-async function run({ prompt, model, signal, requestId }) {
+function resolveThinkingLevel(explicit){
+  if(typeof explicit==="string"&&explicit.trim())return explicit.trim();
+  try{const s=JSON.parse(localStorage.getItem("sillyTavernStudio_globalConnection")||"{}");return String(s.aistudio_thinking||"default");}
+  catch{return "default";}
+}
+async function run({ prompt, model, signal, requestId, thinkingLevel }) {
   if (signal?.aborted) throw new DOMException('Stopped', 'AbortError');
   const cap = bridge();
   log('TEXT_REQUEST', {requestId, promptChars: String(prompt || '').length,
@@ -32,7 +37,7 @@ async function run({ prompt, model, signal, requestId }) {
   signal?.addEventListener('abort', abort, {once:true});
   try {
     const result = await cap.nativePromise('AIStudioText', 'generate', {
-      prompt: String(prompt ?? ''), model: String(model ?? ''), requestId,
+      prompt: String(prompt ?? ''), model: String(model ?? ''), thinkingLevel: resolveThinkingLevel(thinkingLevel), requestId,
     });
     if (signal?.aborted) throw new DOMException('Stopped', 'AbortError');
     const text = String(result?.text ?? '');
@@ -52,8 +57,8 @@ export function openAiStudioSession() {
 }
 
 export function createAiStudioTextProvider() {
-  async function generate({prompt, model, signal}) {
-    const text = await run({prompt, model, signal, requestId:makeId()});
+  async function generate({prompt, model, signal, thinkingLevel}) {
+    const text = await run({prompt, model, signal, thinkingLevel, requestId:makeId()});
     return {response:{text}};
   }
 

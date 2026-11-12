@@ -10,6 +10,7 @@ import { applyCardRuntimeTransform } from './transforms/card-runtime.mjs';
 import { applyProxyPersistenceTransform, PROXY_PERSISTENCE_PATCH_COUNT } from './transforms/proxy-persistence.mjs';
 import { applyM4ChatGenerationTransform, M4_CHAT_GENERATION_PATCH_COUNT } from './transforms/m4-chat-generation.mjs';
 import { applyAiStudioTextTransform, AI_STUDIO_TEXT_PATCH_COUNT } from './transforms/ai-studio-text.mjs';
+import { applyAiStudioConfigTransform } from './transforms/ai-studio-config.mjs';
 import { applyRuntimeSurfaceGapsTransform, RUNTIME_SURFACE_GAP_PATCH_COUNT } from './transforms/runtime-surface-gaps.mjs';
 import { applyM5StateTransform, M5_STATE_PATCH_COUNT } from './transforms/m5-state-persistence-runtime.mjs';
 import { applyM6UiAccessibilityTransform, M6_UI_ACCESSIBILITY_PATCH_COUNT } from './transforms/m6-ui-accessibility.mjs';
@@ -122,6 +123,7 @@ code = applyAiStudioTextTransform(code);
 code = applyRuntimeSurfaceGapsTransform(code);
 code = applyM5StateTransform(code);
 code = applyM6UiAccessibilityTransform(code);
+code = applyAiStudioConfigTransform(code);
 
 const banner = `/* GENERATED FILE. DO NOT EDIT DIRECTLY.
    Build source: legacy/app-bundle-input-v1.3.6.js

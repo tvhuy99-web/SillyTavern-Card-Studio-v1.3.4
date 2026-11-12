@@ -41,10 +41,10 @@ export function createGenerationGateway(deps) {
     return { source, model };
   }
 
-  async function generateOnce({ prompt, preset, model, source, proxyConfig, signal }) {
+  async function generateOnce({ prompt, preset, model, source, proxyConfig, signal, thinkingLevel }) {
     const resolved = resolve(source, model);
     if (resolved.source === 'aistudio') {
-      return aistudio.generate({ model: resolved.model, prompt, signal });
+      return aistudio.generate({ model: resolved.model, prompt, signal, thinkingLevel });
     }
     if (resolved.source === 'proxy') {
       const result = await proxy.generate({ model: resolved.model, prompt, preset, proxyConfig, signal });
