@@ -154,6 +154,7 @@ final class AiStudioModelCatalogReader {
             settings.setAllowFileAccess(false);
             settings.setAllowContentAccess(false);
             settings.setLoadsImagesAutomatically(false);
+            settings.setMixedContentMode(WebSettings.MIXED_CONTENT_NEVER_ALLOW);
             CookieManager.getInstance().setAcceptCookie(true);
             CookieManager.getInstance().setAcceptThirdPartyCookies(view,true);
             WebViewCompat.addDocumentStartJavaScript(view,DOCUMENT_START,Collections.singleton(ORIGIN));
@@ -192,7 +193,7 @@ final class AiStudioModelCatalogReader {
                 if(models!=null)for(int i=0;i<models.length();i++){
                     JSONObject item=models.optJSONObject(i);if(item==null)continue;
                     String id=item.optString("id","").trim();
-                    if(!id.matches("(?i)^gemini-[a-z0-9][a-z0-9._-]{2,110}$"))continue;
+                    if(!id.matches("(?i)^gemini-[a-z0-9][a-z0-9._-]{2,110}$") || !isTextGenerationModel(id))continue;
                     found.put(id,new JSONObject().put("id",id).put("name",id));
                 }
             }catch(Exception ignored){}
@@ -206,6 +207,17 @@ final class AiStudioModelCatalogReader {
                 handler.postDelayed(()->scan(attempt+1),1100L);
             }
         });
+    }
+
+    // Match the reference app's video/text-generation model filtering. The
+    // AI Studio network may also advertise embedding, speech and image models.
+    private static boolean isTextGenerationModel(String id){
+        String value=id.toLowerCase(java.util.Locale.ROOT);
+        return !(value.contains("transcribe") || value.contains("embedding") ||
+            value.contains("-tts") || value.contains("tts-") ||
+            value.contains("-live") || value.startsWith("gemini-live") ||
+            value.contains("imagen") || value.contains("-image") ||
+            value.contains("image-") || value.contains("computer-use"));
     }
 
     private void finish(){

@@ -927,7 +927,7 @@ public class AiStudioTextPlugin extends Plugin {
         final String requestedThinking=call.getString("thinkingLevel","default");
         final String preferredModel=call.getString("model","");
         final String modelId=preferredModel==null ? "" : preferredModel.trim().replaceFirst("^models/", "");
-        final String chatUrl=modelId.matches("[A-Za-z0-9._-]{1,100}")
+        final String chatUrl=(!"default".equalsIgnoreCase(modelId) && !"web_default".equalsIgnoreCase(modelId) && modelId.matches("[A-Za-z0-9._-]{1,100}"))
             ? URL+"?model="+android.net.Uri.encode(modelId) : URL;
         if(prompt==null || prompt.isBlank()){
             call.reject("AI_STUDIO_PROMPT_EMPTY");return;

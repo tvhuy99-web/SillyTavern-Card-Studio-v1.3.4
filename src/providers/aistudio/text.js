@@ -16,6 +16,12 @@ function bridge() {
   return cap;
 }
 
+// "default" means leave the model selection to the signed-in AI Studio page.
+export function resolveAiStudioWebModelId(model) {
+  const id = String(model ?? '').trim();
+  return id === 'default' || id === 'web_default' ? '' : id;
+}
+
 function makeId() {
   return 'text-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 7);
 }
@@ -37,7 +43,7 @@ async function run({ prompt, model, signal, requestId, thinkingLevel }) {
   signal?.addEventListener('abort', abort, {once:true});
   try {
     const result = await cap.nativePromise('AIStudioText', 'generate', {
-      prompt: String(prompt ?? ''), model: String(model ?? ''), thinkingLevel: resolveThinkingLevel(thinkingLevel), requestId,
+      prompt: String(prompt ?? ''), model: resolveAiStudioWebModelId(model), thinkingLevel: resolveThinkingLevel(thinkingLevel), requestId,
     });
     if (signal?.aborted) throw new DOMException('Stopped', 'AbortError');
     const text = String(result?.text ?? '');
