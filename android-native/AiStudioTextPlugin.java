@@ -33,6 +33,7 @@ import com.getcapacitor.PluginMethod;
 import com.getcapacitor.annotation.CapacitorPlugin;
 
 import org.json.JSONObject;
+import org.json.JSONArray;
 import org.json.JSONTokener;
 
 /**
@@ -63,6 +64,7 @@ public class AiStudioTextPlugin extends Plugin {
     private String latest = "";
     private String lastStreamSnapshot = "";
     private boolean freshChatLoaded = false;
+    private String pendingThinkingLevel = "default";
     private int freshChatAttempt = 0;
     private long requestStart;
     private long lastChanged;
@@ -738,7 +740,7 @@ public class AiStudioTextPlugin extends Plugin {
                                 "oldModelTurns",x.optInt("oldModelTurns",-1)));
                         // Reset generation timeout after login/network startup.
                         requestStart=SystemClock.elapsedRealtime();
-                        prepareText(call,prompt);
+                        configureThinking(call,prompt);
                         return;
                     }
                     if(attempt%10==0)trace("warn","SESSION_WAIT","AI Studio new chat not ready",
@@ -770,9 +772,140 @@ public class AiStudioTextPlugin extends Plugin {
             });
     }
 
+
+    private static final String MODEL_PICKER_OPEN_JS = """
+        (function(){
+          try{
+            if(location.hostname!=='aistudio.google.com')return 'wrong-host';
+            for(var b of document.querySelectorAll('button,[role="combobox"],mat-select,[data-testid]')){
+              var label=[b.getAttribute('aria-label')||'',b.getAttribute('title')||'',b.getAttribute('data-testid')||'',
+                 (b.textContent||'').trim().slice(0,75)].join(' ').toLowerCase();
+              if((label.includes('select model')||label.includes('model selector')||
+                   label.includes('choose model')||label.includes('model picker')||
+                   label.includes('current model'))&&!label.includes('thinking')&&b.getClientRects().length){
+                b.click();return 'opened';
+              }
+            }
+            return 'not-found';
+          }catch(e){return 'error';}
+        })()
+        """;
+    private static final String MODEL_LIST_SCAN_JS = """
+        JSON.stringify((function(){
+          try{
+            if(location.hostname!=='aistudio.google.com')return {error:'wrong-host'};
+            var models=[],ids=new Set(),roots=[document],visited=new Set(),count=0;
+            while(roots.length&&visited.size<100){
+              var root=roots.shift();if(!root||visited.has(root))continue;visited.add(root);
+              for(var b of root.querySelectorAll('button,[role="option"],[role="menuitem"],mat-option,option,[data-testid*="model"],[aria-label*="Gemini"]')){
+                if(++count>7500)break;
+                var name=[b.getAttribute('aria-label')||'',b.getAttribute('title')||'',
+                  (b.textContent||'').trim().slice(0,150)].join(' ');
+                var m=name.match(/Gemini[ -]+([0-9]+(?:[.][0-9]+)?)[ -]+(Pro|Flash[ -]?Lite|Flash)(?:[ -]+(Preview))?/i);
+                if(!m)continue;
+                var attrs=[b.getAttribute('data-model-id')||'',b.getAttribute('value')||'',
+                  b.getAttribute('data-value')||'',b.getAttribute('data-testid')||''].join(' ');
+                var direct=attrs.match(/gemini-[0-9][a-z0-9.-]*/i);
+                var id=direct?direct[0].toLowerCase():
+                  'gemini-'+m[1]+'-'+m[2].toLowerCase().replace(/[ -]/g,'-')+(m[3]?'-preview':'');
+                if(ids.has(id))continue;ids.add(id);
+                models.push({id:id,name:m[0]});
+              }
+              for(var el of root.querySelectorAll('*'))if(el.shadowRoot&&!visited.has(el.shadowRoot))roots.push(el.shadowRoot);
+            }
+            return {models:models.slice(0,100)};
+          }catch(e){return {error:'scan-failed'};}
+        })())
+        """;
+    @PluginMethod
+    public void listModels(PluginCall call) {
+        getActivity().runOnUiThread(() -> {
+            if(pending!=null){call.reject("AI_STUDIO_BUSY: Đợi tạo nội dung xong rồi thử lại.");return;}
+            try{createSessionIfNeeded();}catch(Exception e){call.reject("AI_STUDIO_SESSION_FAILED");return;}
+            if(sessionWebView==null){call.reject("AI_STUDIO_SESSION_MISSING");return;}
+            sessionWebView.evaluateJavascript(MODEL_PICKER_OPEN_JS,ignored ->
+                handler.postDelayed(() -> {
+                    if(sessionWebView==null){call.reject("AI_STUDIO_SESSION_CLOSED");return;}
+                    sessionWebView.evaluateJavascript(MODEL_LIST_SCAN_JS,raw -> {
+                        try {
+                            JSONArray models=parse(raw).optJSONArray("models");
+                            if(models==null||models.length()==0){
+                                call.reject("AI_STUDIO_NO_MODELS: Đăng nhập AI Studio, mở trình chọn model rồi nhấn Tải danh sách Model.");
+                                return;
+                            }
+                            JSObject out=new JSObject();out.put("models",models);call.resolve(out);
+                        }catch(Exception e){call.reject("AI_STUDIO_MODEL_SCAN_FAILED");}
+                    });
+                },850L));
+        });
+    }
+    private static final String THINKING_OPEN_JS = """
+        JSON.stringify((function(){
+          try{
+            for(var el of document.querySelectorAll('button,[role="combobox"],mat-select,[role="button"],label,[aria-label]')){
+              var name=[el.getAttribute('aria-label')||'',el.getAttribute('title')||'',
+                (el.textContent||'').trim().slice(0,85)].join(' ').toLowerCase();
+              if((name.includes('thinking level')||name.includes('thinking mode')||name.includes('mức suy nghĩ'))
+                &&el.getClientRects().length){
+                var b=el.matches('button,[role="combobox"],mat-select,[role="button"]')?el:
+                  (el.querySelector('button,[role="combobox"],mat-select,[role="button"]')||el);
+                b.click();return {ok:true};
+              }
+            }
+            return {ok:false};
+          }catch(e){return {ok:false};}
+        })())
+        """;
+    private static final String THINKING_SELECT_JS = """
+        JSON.stringify((function(level){
+          try{
+            var names={minimal:['minimal','tối thiểu'],low:['low','thấp'],
+              medium:['medium','trung bình'],high:['high','cao']}[level];
+            if(!names)return {ok:false};
+            for(var el of document.querySelectorAll('[role="option"],mat-option,[role="menuitem"],[role="menuitemradio"],[role="radio"],button')){
+              if(!el.getClientRects().length)continue;
+              var text=(el.getAttribute('aria-label')||el.textContent||'').trim().toLowerCase();
+              if(names.some(n=>text===n||text.startsWith(n+' ')||text.startsWith(n+'('))){
+                el.click();return {ok:true};
+              }
+            }
+            return {ok:false};
+          }catch(e){return {ok:false};}
+        })(__STS_LEVEL__))
+        """;
+    private void configureThinking(PluginCall call,String prompt) {
+        if(pending!=call)return;
+        final String level=pendingThinkingLevel;
+        if("default".equals(level)){prepareText(call,prompt);return;}
+        if(!level.matches("minimal|low|medium|high")){fail("AI_STUDIO_THINKING_INVALID");return;}
+        if(sessionWebView==null){fail("AI_STUDIO_SESSION_LOST");return;}
+        sessionWebView.evaluateJavascript(THINKING_OPEN_JS,raw -> {
+            if(pending!=call)return;
+            try {
+                if(!parse(raw).optBoolean("ok",false)){
+                    fail("AI_STUDIO_THINKING_UNAVAILABLE: Không tìm được mức suy nghĩ. Chọn Mặc định hoặc chỉnh trực tiếp trong AI Studio.");return;
+                }
+            }catch(Exception e){fail("AI_STUDIO_THINKING_OPEN_ERROR");return;}
+            handler.postDelayed(() -> {
+                if(pending!=call||sessionWebView==null)return;
+                sessionWebView.evaluateJavascript(THINKING_SELECT_JS.replace("__STS_LEVEL__",JSONObject.quote(level)),out -> {
+                    if(pending!=call)return;
+                    try {
+                        if(!parse(out).optBoolean("ok",false)){
+                            fail("AI_STUDIO_THINKING_NOT_SUPPORTED: Không chọn được mức suy nghĩ cho model này. Chọn Mặc định.");return;
+                        }
+                        trace("state","THINKING_CLICKED","Selected thinking option in AI Studio interface",details("level",level));
+                        prepareText(call,prompt);
+                    }catch(Exception e){fail("AI_STUDIO_THINKING_SELECT_ERROR");}
+                });
+            },600L);
+        });
+    }
+
     @PluginMethod
     public void generate(PluginCall call) {
         final String prompt=call.getString("prompt","");
+        final String requestedThinking=call.getString("thinkingLevel","default");
         final String preferredModel=call.getString("model","");
         final String modelId=preferredModel==null ? "" : preferredModel.trim().replaceFirst("^models/", "");
         final String chatUrl=modelId.matches("[A-Za-z0-9._-]{1,100}")
@@ -792,6 +925,7 @@ public class AiStudioTextPlugin extends Plugin {
             requestId=call.getString("requestId","chat").replaceAll("[^a-zA-Z0-9_-]","");
             if(requestId.length()>35)requestId=requestId.substring(0,35);
             pending=call;
+            pendingThinkingLevel=requestedThinking==null?"default":requestedThinking.trim().toLowerCase(java.util.Locale.ROOT);
             startBackgroundGeneration();
             baseline="";latest="";lastStreamSnapshot="";polls=0;responseNodes=0;
             observedIdleSince=0L;consecutiveIdlePolls=0;
