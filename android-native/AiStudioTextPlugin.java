@@ -64,6 +64,7 @@ public class AiStudioTextPlugin extends Plugin {
     private String latest = "";
     private String lastStreamSnapshot = "";
     private boolean freshChatLoaded = false;
+    private AiStudioModelCatalogReader catalogReader;
     private String pendingThinkingLevel = "default";
     private int freshChatAttempt = 0;
     private long requestStart;
@@ -820,23 +821,13 @@ public class AiStudioTextPlugin extends Plugin {
     @PluginMethod
     public void listModels(PluginCall call) {
         getActivity().runOnUiThread(() -> {
-            if(pending!=null){call.reject("AI_STUDIO_BUSY: Đợi tạo nội dung xong rồi thử lại.");return;}
-            try{createSessionIfNeeded();}catch(Exception e){call.reject("AI_STUDIO_SESSION_FAILED");return;}
-            if(sessionWebView==null){call.reject("AI_STUDIO_SESSION_MISSING");return;}
-            sessionWebView.evaluateJavascript(MODEL_PICKER_OPEN_JS,ignored ->
-                handler.postDelayed(() -> {
-                    if(sessionWebView==null){call.reject("AI_STUDIO_SESSION_CLOSED");return;}
-                    sessionWebView.evaluateJavascript(MODEL_LIST_SCAN_JS,raw -> {
-                        try {
-                            JSONArray models=parse(raw).optJSONArray("models");
-                            if(models==null||models.length()==0){
-                                call.reject("AI_STUDIO_NO_MODELS: Đăng nhập AI Studio, mở trình chọn model rồi nhấn Tải danh sách Model.");
-                                return;
-                            }
-                            JSObject out=new JSObject();out.put("models",models);call.resolve(out);
-                        }catch(Exception e){call.reject("AI_STUDIO_MODEL_SCAN_FAILED");}
-                    });
-                },850L));
+            if(pending!=null){
+                call.reject("AI_STUDIO_BUSY: Đợi hoàn tất lượt trả lời hiện tại.");
+                return;
+            }
+            if(catalogReader!=null)catalogReader.cancel();
+            catalogReader=new AiStudioModelCatalogReader(getActivity(),handler,call);
+            catalogReader.start();
         });
     }
     private static final String THINKING_OPEN_JS = """
@@ -1202,6 +1193,7 @@ public class AiStudioTextPlugin extends Plugin {
     }
     @Override
     protected void handleOnDestroy(){
+        if(catalogReader!=null){catalogReader.cancel();catalogReader=null;}
         if(pending!=null)fail("AI_STUDIO_SESSION_CLOSED");
         if(sessionWebView!=null){
             if(sessionWebView.getParent() instanceof ViewGroup)

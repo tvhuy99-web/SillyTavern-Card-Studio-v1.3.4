@@ -89,6 +89,7 @@ jobs:
           PLUGIN_DIR="android/app/src/main/java/com/tvhuy99/cardstudio"
           mkdir -p "$PLUGIN_DIR"
           cp android-native/AiStudioTextPlugin.java "$PLUGIN_DIR/AiStudioTextPlugin.java"
+          cp android-native/AiStudioModelCatalogReader.java "$PLUGIN_DIR/AiStudioModelCatalogReader.java"
           cp android-native/AiStudioGenerationService.java "$PLUGIN_DIR/AiStudioGenerationService.java"
           cp android-native/WorldInfoEmbeddingNativePlugin.java "$PLUGIN_DIR/WorldInfoEmbeddingNativePlugin.java"
           cp android-native/EmbeddingGemma2LiteRTPlugin.java "$PLUGIN_DIR/EmbeddingGemma2LiteRTPlugin.java"
@@ -156,6 +157,7 @@ jobs:
               }
           }
           dependencies {
+              implementation 'androidx.webkit:webkit:1.16.0'
               implementation 'com.microsoft.onnxruntime:onnxruntime-android:1.29.0'
               implementation 'com.google.ai.edge.litertlm:litertlm-android:0.19.0'
           }
