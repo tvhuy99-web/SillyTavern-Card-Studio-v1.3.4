@@ -1,8 +1,8 @@
 // Extra AI Studio settings after the existing source-owned build transforms.
 const patches=[
   [
-    "aistudio_tool_model:\"default\",aistudio_thinking:\"default\",aistudio_tool_thinking:\"default\",gemini_model:",
-    "aistudio_tool_model:\"\",aistudio_thinking:\"default\",aistudio_tool_thinking:\"default\",gemini_model:"
+    "aistudio_tool_model:\"\",gemini_model:",
+    "aistudio_tool_model:\"default\",aistudio_thinking:\"default\",aistudio_tool_thinking:\"default\",gemini_model:"
   ],
   [
     "aistudio_model:\"gemini-2.5-flash\",aistudio_tool_model:\"default\"",
