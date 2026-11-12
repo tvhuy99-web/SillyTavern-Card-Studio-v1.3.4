@@ -63,6 +63,8 @@ public class AiStudioTextPlugin extends Plugin {
     private String baseline = "";
     private String latest = "";
     private String lastStreamSnapshot = "";
+    private String latestThinkingSummary = "";
+    private String lastStreamedThinkingSummary = "";
     private boolean freshChatLoaded = false;
     private AiStudioModelCatalogReader catalogReader;
     private String pendingThinkingLevel = "default";
@@ -329,7 +331,33 @@ public class AiStudioTextPlugin extends Plugin {
                   }
                 }catch(e){}
               }
-              return {text:answer,count:Math.max(count,fallbackNodes),
+              // Only the thinking summary visibly rendered in the current
+              // model turn can be read. Hidden chain-of-thought is never read.
+              let thinkingSummary='';
+              const thinkingSelectors=[
+                'ms-thinking-content','[data-testid*="thinking-summary"]',
+                '[data-testid*="thought-summary"]','[aria-label*="Thinking summary"]',
+                '[class*="thinking-summary"]','[class*="thought-summary"]',
+                'details[open][class*="think"]','details[open][class*="thought"]'
+              ].join(',');
+              for(const root of unique) {
+                try {
+                  const nodes=root.querySelectorAll(thinkingSelectors);
+                  for(const node of nodes) {
+                    if(!node.getClientRects().length)continue;
+                    const turn=node.closest('ms-chat-turn');
+                    if(turn) {
+                      const cls=String(turn.className||'')+' '+
+                        String(turn.querySelector('.chat-turn-container')?.className||'');
+                      if(!/model/i.test(cls))continue;
+                    }
+                    const value=String(node.innerText||'').trim();
+                    if(value.length<40||value===answer||answer.includes(value))continue;
+                    thinkingSummary=value.slice(0,18000);
+                  }
+                }catch(e){}
+              }
+              return {text:answer,thinkingSummary,count:Math.max(count,fallbackNodes),
                 method,modelTurns,cmarkNodes,rawNodes,
                 shadowRoots:seenShadows,iframeRoots:seenFrames,crossOriginFrames};
             },
@@ -404,7 +432,7 @@ public class AiStudioTextPlugin extends Plugin {
             read() {
               const output=this.output();
               const snap=this.snapshot(output);
-              return {text:output.text,...snap};
+              return {text:output.text,thinkingSummary:output.thinkingSummary||"",...snap};
             }
           };
           window.__STS_AI_TEXT_V2__=S;
@@ -918,7 +946,7 @@ public class AiStudioTextPlugin extends Plugin {
             pending=call;
             pendingThinkingLevel=requestedThinking==null?"default":requestedThinking.trim().toLowerCase(java.util.Locale.ROOT);
             startBackgroundGeneration();
-            baseline="";latest="";lastStreamSnapshot="";polls=0;responseNodes=0;
+            baseline="";latest="";lastStreamSnapshot="";latestThinkingSummary="";lastStreamedThinkingSummary="";polls=0;responseNodes=0;
             observedIdleSince=0L;consecutiveIdlePolls=0;
             freshChatLoaded=false;freshChatAttempt=0;
             everSawResponse=false;everSawBusy=false;submitClicked=false;bootstrapFailures=0;
@@ -1093,6 +1121,9 @@ public class AiStudioTextPlugin extends Plugin {
                         if(observedIdleSince==0L)observedIdleSince=SystemClock.elapsedRealtime();
                         consecutiveIdlePolls++;
                     }
+                    String thought=obj.optString("thinkingSummary","");
+                    boolean thoughtChanged=!thought.equals(latestThinkingSummary);
+                    if(thoughtChanged)latestThinkingSummary=thought;
                     String response=obj.optString("text","");
                     if(!response.isBlank()&&!response.equals(baseline)){
                         everSawResponse=true;
@@ -1127,10 +1158,12 @@ public class AiStudioTextPlugin extends Plugin {
                                     "elapsedMs",SystemClock.elapsedRealtime()-requestStart));
                             JSObject result=new JSObject();
                             result.put("text",latest);
+                            if(!latestThinkingSummary.isEmpty())result.put("reasoning",latestThinkingSummary);
                             done.resolve(result);
                             return;
                         }
                     }
+                    if(thoughtChanged && !latest.isEmpty())emitSnapshot(latest);
                     long t=SystemClock.elapsedRealtime();
                     if(t-lastCheckpoint>=5000L){
                         lastCheckpoint=t;
@@ -1155,17 +1188,20 @@ public class AiStudioTextPlugin extends Plugin {
         // AI Studio updates already-rendered Markdown as it streams. Treat
         // each observation as a replaceable snapshot instead of assuming that
         // each new observation extends the previous one byte-for-byte.
-        if(text.equals(lastStreamSnapshot))return;
+        if(text.equals(lastStreamSnapshot)&&latestThinkingSummary.equals(lastStreamedThinkingSummary))return;
         boolean revision=!text.startsWith(lastStreamSnapshot);
         if(revision && !lastStreamSnapshot.isEmpty()){
             trace("state","STREAM_REVISION","AI Studio revised previously rendered text; replacing preview",
                 details("previousChars",lastStreamSnapshot.length(),"newChars",text.length()));
         }
         lastStreamSnapshot=text;
+        lastStreamedThinkingSummary=latestThinkingSummary;
         JSObject event=new JSObject();
         event.put("requestId",requestId);
         event.put("text",text);
         event.put("replace",true);
+        event.put("reasoning",latestThinkingSummary);
+        event.put("replaceReasoning",true);
         event.put("totalChars",text.length());
         notifyListeners("textProgress",event);
     }

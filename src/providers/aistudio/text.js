@@ -43,7 +43,7 @@ async function run({ prompt, model, signal, requestId, thinkingLevel }) {
     const text = String(result?.text ?? '');
     if (!text.trim()) throw new Error('AI Studio phản hồi trống.');
     log('TEXT_RESULT', {requestId, responseChars:text.length}, 'script-success');
-    return text;
+    return {text, reasoning:String(result?.reasoning ?? "")};
   } catch (e) {
     log('TEXT_ERROR', {requestId, message:String(e?.message || e)}, 'error');
     throw e;
@@ -58,8 +58,8 @@ export function openAiStudioSession() {
 
 export function createAiStudioTextProvider() {
   async function generate({prompt, model, signal, thinkingLevel}) {
-    const text = await run({prompt, model, signal, thinkingLevel, requestId:makeId()});
-    return {response:{text}};
+    const result = await run({prompt, model, signal, thinkingLevel, requestId:makeId()});
+    return {response:{text:result.text}, reasoning:result.reasoning||undefined};
   }
 
   async function* stream(options) {
@@ -68,16 +68,20 @@ export function createAiStudioTextProvider() {
     const listenerAPI = cap.Plugins?.AIStudioText;
     if (!listenerAPI?.addListener) {
       log('STREAM_UNAVAILABLE', {requestId, message:'Native listener unavailable: returning complete answer'}, 'warn');
-      yield {text:await run({...options,requestId})};
+      const result=await run({...options,requestId});
+      yield {text:result.text,reasoning:result.reasoning||undefined,replaceReasoning:true};
       return;
     }
 
     let latestSnapshot = null;
+    let latestReasoning = null;
     let wake = null;
     let completed = false;
     let failure = null;
     let finalText = '';
+    let finalReasoning = '';
     let lastYielded = null;
+    let lastReasoning = null;
     const signal = options.signal;
     const wakeUp = () => {const callback = wake; wake = null; callback?.();};
     const listener = await listenerAPI.addListener('textProgress', event => {
@@ -87,22 +91,26 @@ export function createAiStudioTextProvider() {
       // Holding only the latest snapshot also avoids a slow UI backlog.
       if (event?.replace !== true) return;
       latestSnapshot = String(event?.text ?? '');
+      latestReasoning = typeof event?.reasoning==='string'?event.reasoning:null;
       wakeUp();
     });
 
     log('STREAM_ATTACHED', {requestId, message:'Live full-text snapshots enabled'});
     const job = run({...options,requestId}).then(
-      value => {finalText=value; completed=true; wakeUp();},
+      value => {finalText=value.text;finalReasoning=value.reasoning; completed=true; wakeUp();},
       error => {failure=error; completed=true; wakeUp();},
     );
     try {
       while (true) {
         if (latestSnapshot !== null) {
           const snapshot = latestSnapshot;
+          const thought = latestReasoning;
           latestSnapshot = null;
-          if (snapshot && snapshot !== lastYielded) {
+          latestReasoning = null;
+          if ((snapshot || thought) && (snapshot !== lastYielded || (thought !== null && thought !== lastReasoning))) {
             lastYielded = snapshot;
-            yield {text:snapshot, replaceText:true};
+            if(thought !== null)lastReasoning=thought;
+            yield {text:snapshot,replaceText:true,reasoning:thought===null?undefined:thought,replaceReasoning:thought!==null};
           }
           continue;
         }
@@ -111,9 +119,9 @@ export function createAiStudioTextProvider() {
         await new Promise(resolve => {wake=resolve;});
       }
       if (failure) throw failure;
-      if (finalText !== lastYielded) {
+      if (finalText !== lastYielded || finalReasoning !== (lastReasoning||'')) {
         lastYielded = finalText;
-        yield {text:finalText, replaceText:true};
+        yield {text:finalText,replaceText:true,reasoning:finalReasoning||undefined,replaceReasoning:true};
       }
       log('STREAM_FINAL', {requestId, responseChars:finalText.length}, 'script-success');
     } finally {

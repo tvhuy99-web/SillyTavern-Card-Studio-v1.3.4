@@ -275,7 +275,8 @@ export function createConversationService(deps) {
           content = chunk.replaceText === true
             ? String(chunk.text || '')
             : content + String(chunk.text || '');
-          if (chunk.reasoning) reasoning += chunk.reasoning;
+          if (chunk.replaceReasoning === true) reasoning = String(chunk.reasoning || "");
+          else if (chunk.reasoning) reasoning += chunk.reasoning;
           deps.liveStream.publish(message.id, 'main', content, reasoning || undefined);
         }
       } finally {
