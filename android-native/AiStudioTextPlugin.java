@@ -1259,6 +1259,11 @@ public class AiStudioTextPlugin extends Plugin {
                                     "elapsedMs",SystemClock.elapsedRealtime()-requestStart));
                             JSObject result=new JSObject();
                             result.put("text",latest);
+                            result.put("appliedThinking",confirmedThinkingLevel);
+                            trace("state","GENERATION_COMPLETED","AI Studio generation finished",
+                                details("requestedThinking",pendingThinkingLevel,
+                                    "appliedThinking",confirmedThinkingLevel,
+                                    "responseChars",latest.length()));
                             if(!latestThinkingSummary.isEmpty())result.put("reasoning",latestThinkingSummary);
                             done.resolve(result);
                             return;
