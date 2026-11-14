@@ -49,9 +49,17 @@ export function installAiStudioDiagnostics() {
     record: recordAiStudioDiagnostic,
     clear() { try { localStorage.removeItem(KEY); } catch {} },
   });
+  let bridgeRetryCount = 0;
   async function start() {
     const plugin = window.Capacitor?.Plugins?.AIStudioText;
-    if (!plugin?.addListener || handle || attaching) return;
+    if (!plugin?.addListener) {
+      if (bridgeRetryCount++ < 20) setTimeout(start, 1000);
+      else recordAiStudioDiagnostic('BRIDGE_UNAVAILABLE', {
+        message:'Native AIStudioText event bridge unavailable after 20 attempts. Verify Android APK plugin registration.'
+      }, 'error');
+      return;
+    }
+    if (handle || attaching) return;
     attaching = true;
     try {
       handle = await plugin.addListener('diagnostic', e => {
@@ -71,11 +79,15 @@ export function installAiStudioDiagnostics() {
       recordAiStudioDiagnostic('BRIDGE_READY', {message: 'Native log connected to System Console.'});
     } catch(e) {
       recordAiStudioDiagnostic('BRIDGE_ERROR', {message:String(e?.message || e)}, 'warn');
+      if (bridgeRetryCount++ < 20) setTimeout(start, 1000);
     } finally {
       attaching = false;
     }
   }
   start();
   window.addEventListener('pageshow', start);
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'visible') start();
+  });
   setTimeout(() => { for (const item of stored().slice(-45)) broadcast(item); }, 1800);
 }
