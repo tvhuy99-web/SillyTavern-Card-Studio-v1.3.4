@@ -37,11 +37,11 @@ function modelButton(node) {
   if (!(el instanceof HTMLButtonElement)) return null;
   if (String(el.textContent || '').trim() !== MODEL_BUTTON_LABEL) return null;
   // Restrict capture to the AI Studio card, not Gemini's API-key model button.
-  const card = el.closest('div.bg-slate-900\/50');
+  const card = el.closest('div[class*="bg-slate-900/50"]');
   return card && card.textContent?.includes('Mô hình Google AI Studio') ? el : null;
 }
 function parentCard(button) {
-  return button?.closest('div.bg-slate-900\/50') || null;
+  return button?.closest('div[class*="bg-slate-900/50"]') || null;
 }
 function writeStatus(button, kind, message, detail = '') {
   const state = { kind, message, detail, time: new Date().toLocaleTimeString('vi-VN') };
