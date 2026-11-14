@@ -928,29 +928,92 @@ public class AiStudioTextPlugin extends Plugin {
     private void configureThinking(PluginCall call,String prompt) {
         if(pending!=call)return;
         final String level=pendingThinkingLevel;
-        if("default".equals(level)){prepareText(call,prompt);return;}
-        if(!level.matches("minimal|low|medium|high")){fail("AI_STUDIO_THINKING_INVALID");return;}
-        if(sessionWebView==null){fail("AI_STUDIO_SESSION_LOST");return;}
-        sessionWebView.evaluateJavascript(THINKING_OPEN_JS,raw -> {
+        trace("state","THINKING_REQUESTED","Requested AI Studio thinking level",
+            details("requested",level,"requestId",requestId));
+        if("default".equals(level)){
+            confirmedThinkingLevel="web-default";
+            trace("state","THINKING_WEB_DEFAULT","Using thinking level from AI Studio page",
+                details("requested",level,"applied","web-default"));
+            prepareText(call,prompt);return;
+        }
+        if(!level.matches("minimal|low|medium|high")){
+            fail("AI_STUDIO_THINKING_INVALID: "+level);return;
+        }
+        openThinkingControl(call,prompt,0);
+    }
+
+    private void openThinkingControl(PluginCall call,String prompt,int attempt){
+        if(pending!=call||sessionWebView==null)return;
+        sessionWebView.evaluateJavascript(THINKING_OPEN_JS,raw->{
             if(pending!=call)return;
-            try {
-                if(!parse(raw).optBoolean("ok",false)){
-                    fail("AI_STUDIO_THINKING_UNAVAILABLE: Không tìm được mức suy nghĩ. Chọn Mặc định hoặc chỉnh trực tiếp trong AI Studio.");return;
+            JSONObject state;
+            try{state=parse(raw);}
+            catch(Exception e){fail("AI_STUDIO_THINKING_OPEN_ERROR: Không phân tích được giao diện suy nghĩ.");return;}
+            trace("state","THINKING_CONTROL_SCAN","Looking for thinking settings control",
+                details("requested",pendingThinkingLevel,"found",state.optBoolean("ok",false),
+                    "reason",state.optString("reason","none"),"attempt",attempt+1));
+            if(!state.optBoolean("ok",false)){
+                if(attempt==0){
+                    // Many AI Studio layouts hide thinking under Run settings.
+                    sessionWebView.evaluateJavascript(
+                        "JSON.stringify((function(){for(const b of document.querySelectorAll('button,[role=button],[aria-expanded]')){const s=((b.getAttribute('aria-label')||'')+' '+(b.textContent||'')).toLowerCase();if(/run settings|advanced settings|generation settings/.test(s)&&b.getClientRects().length){b.click();return {ok:true}}}return {ok:false}})())",
+                        opened->{
+                            if(pending!=call)return;
+                            trace("state","THINKING_SETTINGS_EXPAND","Tried expanding AI Studio Run settings",
+                                details("result",String.valueOf(opened).substring(0,Math.min(120,String.valueOf(opened).length()))));
+                            handler.postDelayed(()->openThinkingControl(call,prompt,1),650L);
+                        });
+                    return;
                 }
-            }catch(Exception e){fail("AI_STUDIO_THINKING_OPEN_ERROR");return;}
-            handler.postDelayed(() -> {
+                fail("AI_STUDIO_THINKING_UNAVAILABLE: Không tìm thấy điều khiển mức suy nghĩ của AI Studio ("
+                    +state.optString("reason","not-found")+"). Hãy bật hiển thị trang AI Studio để kiểm tra Run settings.");return;
+            }
+            handler.postDelayed(()->{
                 if(pending!=call||sessionWebView==null)return;
-                sessionWebView.evaluateJavascript(THINKING_SELECT_JS.replace("__STS_LEVEL__",JSONObject.quote(level)),out -> {
+                sessionWebView.evaluateJavascript(
+                    THINKING_SELECT_JS.replace("__STS_LEVEL__",JSONObject.quote(pendingThinkingLevel)),out->{
                     if(pending!=call)return;
-                    try {
-                        if(!parse(out).optBoolean("ok",false)){
-                            fail("AI_STUDIO_THINKING_NOT_SUPPORTED: Không chọn được mức suy nghĩ cho model này. Chọn Mặc định.");return;
-                        }
-                        trace("state","THINKING_CLICKED","Selected thinking option in AI Studio interface",details("level",level));
-                        prepareText(call,prompt);
-                    }catch(Exception e){fail("AI_STUDIO_THINKING_SELECT_ERROR");}
+                    JSONObject selected;
+                    try{selected=parse(out);}
+                    catch(Exception e){fail("AI_STUDIO_THINKING_SELECT_ERROR: Không đọc được danh sách mức.");return;}
+                    trace(selected.optBoolean("ok",false)?"state":"error",
+                        "THINKING_OPTION_CLICK","Thinking level option clicked",
+                        details("requested",pendingThinkingLevel,"clicked",selected.optBoolean("ok",false),
+                            "choice",selected.optString("choice","none")));
+                    if(!selected.optBoolean("ok",false)){
+                        fail("AI_STUDIO_THINKING_NOT_SUPPORTED: AI Studio không có mức '"
+                            +pendingThinkingLevel+"' trên model này.");return;
+                    }
+                    verifyThinkingControl(call,prompt,0);
                 });
-            },600L);
+            },650L);
+        });
+    }
+    private void verifyThinkingControl(PluginCall call,String prompt,int attempt){
+        if(pending!=call||sessionWebView==null)return;
+        sessionWebView.evaluateJavascript(
+            THINKING_VERIFY_JS.replace("__STS_LEVEL__",JSONObject.quote(pendingThinkingLevel)),raw->{
+            if(pending!=call)return;
+            JSONObject state;
+            try{state=parse(raw);}
+            catch(Exception e){fail("AI_STUDIO_THINKING_VERIFY_ERROR: Không đọc được trạng thái xác nhận.");return;}
+            if(state.optBoolean("ok",false)){
+                confirmedThinkingLevel=pendingThinkingLevel;
+                trace("state","THINKING_VERIFIED","AI Studio controls confirm thinking level",
+                    details("requested",pendingThinkingLevel,"applied",confirmedThinkingLevel,
+                        "evidence",state.optString("evidence","unknown")));
+                prepareText(call,prompt);
+            }else if(attempt<3){
+                trace("warn","THINKING_VERIFY_RETRY","Thinking selection not confirmed yet",
+                    details("requested",pendingThinkingLevel,"attempt",attempt+1,
+                        "reason",state.optString("reason","unverified")));
+                handler.postDelayed(()->verifyThinkingControl(call,prompt,attempt+1),550L);
+            }else{
+                trace("error","THINKING_UNVERIFIED","Thinking selection was not confirmed by website",
+                    details("requested",pendingThinkingLevel,"reason",state.optString("reason","unverified")));
+                fail("AI_STUDIO_THINKING_UNVERIFIED: Đã nhấn mức '"+pendingThinkingLevel+
+                    "' nhưng chưa xác nhận được AI Studio thực sự áp dụng. Đã dừng trước khi gửi lời nhắc.");
+            }
         });
     }
 
@@ -978,6 +1041,11 @@ public class AiStudioTextPlugin extends Plugin {
             if(requestId.length()>35)requestId=requestId.substring(0,35);
             pending=call;
             pendingThinkingLevel=requestedThinking==null?"default":requestedThinking.trim().toLowerCase(java.util.Locale.ROOT);
+            confirmedThinkingLevel="not-verified";
+            trace("state","GENERATION_SETTINGS","Native AI Studio generation received settings",
+                details("requestedThinking",pendingThinkingLevel,
+                    "requestedModel",modelId.isEmpty()?"web-default":modelId,
+                    "pageManagedModel",chatUrl.equals(URL),"promptChars",prompt.length()));
             startBackgroundGeneration();
             baseline="";latest="";lastStreamSnapshot="";latestThinkingSummary="";lastStreamedThinkingSummary="";polls=0;responseNodes=0;
             observedIdleSince=0L;consecutiveIdlePolls=0;
@@ -1254,6 +1322,7 @@ public class AiStudioTextPlugin extends Plugin {
         pending=null;
         stopBackgroundGeneration(false);
         trace("error","REQUEST_FAILED",message,details(
+            "requestedThinking",pendingThinkingLevel,"appliedThinking",confirmedThinkingLevel,
             "elapsedMs",SystemClock.elapsedRealtime()-requestStart,
             "polls",polls,"maxResponseNodes",responseNodes,
             "seenResponse",everSawResponse,"seenBusy",everSawBusy,
