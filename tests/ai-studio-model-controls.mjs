@@ -17,7 +17,10 @@ assert.match(read('.github/workflows/android-apk.yml'),/webkit:1\.16\.0/);
 assert.match(native,/MODEL_LIST_SCAN_JS/);
 assert.match(native,/private void configureThinking\(PluginCall call,String prompt\)/);
 assert.match(native,/AI_STUDIO_THINKING_NOT_SUPPORTED/);
-assert.match(provider,/thinkingLevel: resolveThinkingLevel\(thinkingLevel\)/);
+// The provider resolves thinking once for both native dispatch and diagnostics.
+assert.match(provider,/const resolvedThinking = resolveThinkingLevel\(thinkingLevel\)/);
+assert.match(provider,/thinkingLevel: resolvedThinking, requestId/);
+assert.match(provider,/sentThinking: resolvedThinking/);
 assert.match(gateway,/aistudio\.generate\(\{ model: resolved\.model, prompt, signal, thinkingLevel \}\)/);
 assert.match(transform,/Tải danh sách Model/);
 assert.match(transform,/Chat Model ID/);
