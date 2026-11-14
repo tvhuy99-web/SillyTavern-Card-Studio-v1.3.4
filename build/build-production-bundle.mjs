@@ -34,6 +34,7 @@ const INITIAL_VARIABLE_OUTPUT_URL = new URL('../assets/initial-variable-service-
 
 const M8_DOMAIN_ASSETS = [
   ['../src/diagnostics/aistudio-log.js', '../assets/m8/diagnostics/aistudio-log.js'],
+  ['../src/diagnostics/aistudio-model-controls.js', '../assets/m8/diagnostics/aistudio-model-controls.js'],
   ['../src/diagnostics/android-export-download.js', '../assets/m8/diagnostics/android-export-download.js'],
 ].map(([source, output]) => ({ source: new URL(source, import.meta.url), output: new URL(output, import.meta.url) }));
 

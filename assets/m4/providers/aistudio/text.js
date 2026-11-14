@@ -31,11 +31,15 @@ function resolveThinkingLevel(explicit){
   try{const s=JSON.parse(localStorage.getItem("sillyTavernStudio_globalConnection")||"{}");return String(s.aistudio_thinking||"default");}
   catch{return "default";}
 }
-async function run({ prompt, model, signal, requestId, thinkingLevel }) {
+async function run({ prompt, model, signal, requestId, thinkingLevel, mode = 'chat' }) {
   if (signal?.aborted) throw new DOMException('Stopped', 'AbortError');
   const cap = bridge();
-  log('TEXT_REQUEST', {requestId, promptChars: String(prompt || '').length,
-    modelNote: 'Chọn model trong trang AI Studio'});
+  const resolvedModel = resolveAiStudioWebModelId(model);
+  const resolvedThinking = resolveThinkingLevel(thinkingLevel);
+  log('TEXT_REQUEST', {requestId, mode, promptChars: String(prompt || '').length,
+    requestedModel: String(model ?? 'default'), sentModel: resolvedModel || 'web-default',
+    requestedThinking: String(thinkingLevel || 'from-saved-settings'),
+    sentThinking: resolvedThinking, nativeMethod: 'AIStudioText.generate'});
   const abort = () => {
     log('ABORT', {requestId, message:'User stopped generation'}, 'warn');
     cap.nativePromise('AIStudioText', 'cancel', {}).catch(() => {});
@@ -43,15 +47,17 @@ async function run({ prompt, model, signal, requestId, thinkingLevel }) {
   signal?.addEventListener('abort', abort, {once:true});
   try {
     const result = await cap.nativePromise('AIStudioText', 'generate', {
-      prompt: String(prompt ?? ''), model: resolveAiStudioWebModelId(model), thinkingLevel: resolveThinkingLevel(thinkingLevel), requestId,
+      prompt: String(prompt ?? ''), model: resolvedModel, thinkingLevel: resolvedThinking, requestId,
     });
     if (signal?.aborted) throw new DOMException('Stopped', 'AbortError');
     const text = String(result?.text ?? '');
     if (!text.trim()) throw new Error('AI Studio phản hồi trống.');
-    log('TEXT_RESULT', {requestId, responseChars:text.length}, 'script-success');
+    log('TEXT_RESULT', {requestId, mode, responseChars:text.length,
+      requestedThinking: resolvedThinking, nativeConfirmedThinking: String(result?.appliedThinking || 'see-native-log')}, 'script-success');
     return {text, reasoning:String(result?.reasoning ?? "")};
   } catch (e) {
-    log('TEXT_ERROR', {requestId, message:String(e?.message || e)}, 'error');
+    log('TEXT_ERROR', {requestId, mode, sentThinking:resolvedThinking, sentModel:resolvedModel || 'web-default',
+      message:String(e?.message || e)}, 'error');
     throw e;
   } finally {
     signal?.removeEventListener('abort', abort);
@@ -64,7 +70,7 @@ export function openAiStudioSession() {
 
 export function createAiStudioTextProvider() {
   async function generate({prompt, model, signal, thinkingLevel}) {
-    const result = await run({prompt, model, signal, thinkingLevel, requestId:makeId()});
+    const result = await run({prompt, model, signal, thinkingLevel, mode:'tool', requestId:makeId()});
     return {response:{text:result.text}, reasoning:result.reasoning||undefined};
   }
 
@@ -74,7 +80,7 @@ export function createAiStudioTextProvider() {
     const listenerAPI = cap.Plugins?.AIStudioText;
     if (!listenerAPI?.addListener) {
       log('STREAM_UNAVAILABLE', {requestId, message:'Native listener unavailable: returning complete answer'}, 'warn');
-      const result=await run({...options,requestId});
+      const result=await run({...options,mode:'chat',requestId});
       yield {text:result.text,reasoning:result.reasoning||undefined,replaceReasoning:true};
       return;
     }
@@ -102,7 +108,7 @@ export function createAiStudioTextProvider() {
     });
 
     log('STREAM_ATTACHED', {requestId, message:'Live full-text snapshots enabled'});
-    const job = run({...options,requestId}).then(
+    const job = run({...options,mode:'chat',requestId}).then(
       value => {finalText=value.text;finalReasoning=value.reasoning; completed=true; wakeUp();},
       error => {failure=error; completed=true; wakeUp();},
     );
