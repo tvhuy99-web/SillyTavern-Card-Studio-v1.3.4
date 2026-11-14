@@ -35,4 +35,46 @@ assert.equal(resolveAiStudioWebModelId('default'), '');
 assert.equal(resolveAiStudioWebModelId('web_default'), '');
 assert.equal(resolveAiStudioWebModelId('gemini-2.5-flash'), 'gemini-2.5-flash');
 assert.equal(resolveAiStudioWebModelId('my-custom-model-id'), 'my-custom-model-id');
+// Model discovery must mirror the reference WebView's cross-origin
+// fetch/XHR observation and never fail silently.
+assert.doesNotMatch(catalog,/origin!==location\.origin/);
+assert.match(catalog,/MODEL_LOAD_STARTED/);
+assert.match(catalog,/MODEL_LOAD_FAILED/);
+assert.match(catalog,/MODEL_SCAN/);
+assert.match(catalog,/MODEL_PAGE_NETWORK_ERROR/);
+assert.match(catalog,/MODEL_PAGE_HTTP_ERROR/);
+assert.match(catalog,/domCandidates/);
+assert.match(native,/MODEL_LOAD_CLICK/);
+assert.match(native,/THINKING_REQUESTED/);
+assert.match(native,/THINKING_OPTION_CLICK/);
+assert.match(native,/THINKING_VERIFIED/);
+assert.match(native,/THINKING_UNVERIFIED/);
+assert.match(native,/GENERATION_SETTINGS/);
+assert.match(native,/result\.put\("appliedThinking",confirmedThinkingLevel\)/);
+assert.match(provider,/sentThinking/);
+assert.match(read('build/transforms/m4-chat-generation.mjs'),/thinkingLevel:ns\(\)\.aistudio_thinking/);
+assert.match(transform,/SETTING_SAVED/);
+assert.match(read('src/app/entry.js'),/installAiStudioModelControls/);
+assert.match(read('build/build-production-bundle.mjs'),/aistudio-model-controls\.js/);
+const { normalizeAiStudioModelCatalog } = await import('../src/diagnostics/aistudio-model-controls.js');
+assert.deepEqual(normalizeAiStudioModelCatalog({models:[
+  {id:'gemini-3-flash-preview'}, {id:'gemini-3-flash-preview'},
+  {id:'gemini-embedding-001'}, {id:'gemini-2.5-pro'},
+]}).map(x=>x.id),['gemini-2.5-pro','gemini-3-flash-preview']);
+const calls=[];
+globalThis.Capacitor={
+  isNativePlatform:()=>true,
+  async nativePromise(plugin,method,args){
+    assert.equal(plugin,'AIStudioText');
+    assert.equal(method,'generate');
+    calls.push(args);
+    return {text:'OK',appliedThinking:'high'};
+  },
+};
+const provider2=(await import('../src/providers/aistudio/text.js')).createAiStudioTextProvider();
+const out=await provider2.generate({prompt:'Test',model:'default',thinkingLevel:'high'});
+assert.equal(out.response.text,'OK');
+assert.equal(calls[0].thinkingLevel,'high');
+assert.equal(calls[0].model,'');
+delete globalThis.Capacitor;
 console.log('AI Studio model and thinking UI integration: OK');
