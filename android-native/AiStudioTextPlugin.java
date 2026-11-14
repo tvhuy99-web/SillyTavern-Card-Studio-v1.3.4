@@ -68,6 +68,7 @@ public class AiStudioTextPlugin extends Plugin {
     private boolean freshChatLoaded = false;
     private AiStudioModelCatalogReader catalogReader;
     private String pendingThinkingLevel = "default";
+    private String confirmedThinkingLevel = "not-verified";
     private int freshChatAttempt = 0;
     private long requestStart;
     private long lastChanged;
@@ -850,11 +851,16 @@ public class AiStudioTextPlugin extends Plugin {
     public void listModels(PluginCall call) {
         getActivity().runOnUiThread(() -> {
             if(pending!=null){
-                call.reject("AI_STUDIO_BUSY: Đợi hoàn tất lượt trả lời hiện tại.");
+                trace("warn","MODEL_LOAD_BUSY","Cannot list models during an active chat generation",
+                    details("activeThinking",pendingThinkingLevel,"activeRequestId",requestId));
+                call.reject("AI_STUDIO_BUSY: Đang tạo câu trả lời. Hãy hủy hoặc hoàn thành lượt chat trước khi tải model.");
                 return;
             }
             if(catalogReader!=null)catalogReader.cancel();
-            catalogReader=new AiStudioModelCatalogReader(getActivity(),handler,call);
+            requestId="catalog-"+SystemClock.elapsedRealtime();
+            trace("state","MODEL_LOAD_CLICK","Native model catalog load invoked",details("busy",false));
+            catalogReader=new AiStudioModelCatalogReader(getActivity(),handler,call,
+                (level,stage,message,extra)->trace(level,stage,message,extra));
             catalogReader.start();
         });
     }
@@ -864,15 +870,17 @@ public class AiStudioTextPlugin extends Plugin {
             for(var el of document.querySelectorAll('button,[role="combobox"],mat-select,[role="button"],label,[aria-label]')){
               var name=[el.getAttribute('aria-label')||'',el.getAttribute('title')||'',
                 (el.textContent||'').trim().slice(0,85)].join(' ').toLowerCase();
-              if((name.includes('thinking level')||name.includes('thinking mode')||name.includes('mức suy nghĩ'))
+              if((name.includes('thinking level')||name.includes('thinking mode')||
+                  name.includes('thinking budget')||name.includes('reasoning effort')||
+                  name.includes('mức suy nghĩ'))
                 &&el.getClientRects().length){
                 var b=el.matches('button,[role="combobox"],mat-select,[role="button"]')?el:
                   (el.querySelector('button,[role="combobox"],mat-select,[role="button"]')||el);
-                b.click();return {ok:true};
+                b.click();return {ok:true,label:name.slice(0,90)};
               }
             }
-            return {ok:false};
-          }catch(e){return {ok:false};}
+            return {ok:false,reason:'thinking-control-not-visible'};
+          }catch(e){return {ok:false,reason:String(e.name||'exception')};}
         })())
         """;
     private static final String THINKING_SELECT_JS = """
@@ -885,13 +893,38 @@ public class AiStudioTextPlugin extends Plugin {
               if(!el.getClientRects().length)continue;
               var text=(el.getAttribute('aria-label')||el.textContent||'').trim().toLowerCase();
               if(names.some(n=>text===n||text.startsWith(n+' ')||text.startsWith(n+'('))){
-                el.click();return {ok:true};
+                el.click();return {ok:true,choice:text.slice(0,90)};
               }
             }
             return {ok:false};
           }catch(e){return {ok:false};}
         })(__STS_LEVEL__))
         """;
+    private static final String THINKING_VERIFY_JS = """
+        JSON.stringify((function(level){
+          try{
+            const words={minimal:['minimal','tối thiểu'],low:['low','thấp'],
+              medium:['medium','trung bình'],high:['high','cao']}[level]||[];
+            let candidates=0;
+            for(const el of document.querySelectorAll('[role="option"],[role="radio"],[role="menuitemradio"],[aria-selected],[aria-checked],button,[role="combobox"],mat-select')){
+              if(!el.getClientRects().length)continue;
+              const name=[el.getAttribute('aria-label')||'',el.getAttribute('title')||'',
+                (el.textContent||'').slice(0,120)].join(' ').trim().toLowerCase();
+              if(!words.some(w=>name===w||name.startsWith(w+' ')||name.endsWith(' '+w)||
+                  (name.includes('thinking')&&name.includes(w))))continue;
+              candidates++;
+              if(el.getAttribute('aria-selected')==='true'||el.getAttribute('aria-checked')==='true'||
+                  el.getAttribute('aria-pressed')==='true'||el.getAttribute('data-state')==='checked')
+                return {ok:true,evidence:'selected-control',candidates:candidates};
+              if((el.matches('[role="combobox"],mat-select')||name.includes('thinking level')||
+                  name.includes('thinking mode'))&&words.some(w=>name.includes(w)))
+                return {ok:true,evidence:'thinking-summary',candidates:candidates};
+            }
+            return {ok:false,reason:'no-selected-state',candidates:candidates};
+          }catch(e){return {ok:false,reason:String(e.name||'exception')};}
+        })(__STS_LEVEL__))
+        """;
+
     private void configureThinking(PluginCall call,String prompt) {
         if(pending!=call)return;
         final String level=pendingThinkingLevel;
