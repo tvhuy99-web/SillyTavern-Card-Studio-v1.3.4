@@ -281,7 +281,7 @@ final class AiStudioModelCatalogReader {
                     if(!id.matches("(?i)^gemini-[a-z0-9][a-z0-9._-]{2,110}$") || !isTextGenerationModel(id))continue;
                     found.put(id,new JSONObject().put("id",id).put("name",id));
                 }
-                if(data.optBoolean("loginHint",false)&&attempt==MAX_ATTEMPTS-1&&!found.isEmpty())
+                if(data.optBoolean("loginHint",false)&&attempt==MAX_ATTEMPTS-1&&found.isEmpty())
                     report("warn","MODEL_LOGIN_HINT","Page may display an authentication prompt");
             }catch(Exception e){
                 lastScriptError="eval:"+e.getClass().getSimpleName();
