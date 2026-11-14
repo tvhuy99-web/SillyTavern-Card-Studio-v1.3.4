@@ -142,7 +142,7 @@ final class AiStudioModelCatalogReader {
                   // services too. The reference app observes those responses.
                   // Only model IDs are retained, never the response bodies.
                   const mime=r.headers&&r.headers.get('content-type')||'';
-                  if(/json|text|javascript/.test(mime))r.clone().text().then(x=>observe(x,'fetch-response')).catch(()=>{});
+                  if(!/image|audio|video|font/.test(mime))r.clone().text().then(x=>observe(x,'fetch-response')).catch(()=>{});
                 }catch(e){}
               },()=>{});
               return response;
