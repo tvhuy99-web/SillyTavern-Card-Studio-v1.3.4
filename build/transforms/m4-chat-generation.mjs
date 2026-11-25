@@ -71,8 +71,8 @@ export function applyM4ChatGenerationTransform(source) {
     'getOpenRouterHeaders:Du,readResponseError:Ou,normalizeProxyUrl:qs,' +
     'getProxyUrl:ws,getProxyPassword:ks,getProxyLegacyMode:Ss,' +
     'geminiGenerateOnce:cl,createGeminiClient:sl,buildGeminiRequest:ll,safetySettings:kd});' +
-    'async function Sd(e,t,n,r,a,i){return __stsGenerationGateway.generateOnce({prompt:e,preset:t,model:n,source:r,proxyConfig:a,signal:i})}' +
-    'async function*Cd(e,t,n,r,a,i){yield* __stsGenerationGateway.stream({prompt:e,preset:t,signal:n,model:r,source:a,proxyConfig:i})}';
+    'async function Sd(e,t,n,r,a,i){return __stsGenerationGateway.generateOnce({prompt:e,preset:t,model:n,source:r,proxyConfig:a,signal:i,thinkingLevel:ns().aistudio_thinking||"default"})}' +
+    'async function*Cd(e,t,n,r,a,i){yield* __stsGenerationGateway.stream({prompt:e,preset:t,signal:n,model:r,source:a,proxyConfig:i,thinkingLevel:ns().aistudio_thinking||"default"})}';
 
   const generationStart = findExactlyOnce(code, 'async function Sd(', 'generation gateway/start');
   const generationEnd = code.indexOf('}var Ed=', generationStart);

@@ -13,6 +13,10 @@ const patches=[
     "Nd=()=>{let{showToast:e}=hl(),[t,n]=(0,b.useState)(ns()),[__stsAiStudioModels,__stsSetAiStudioModels]=(0,b.useState)(()=>{try{let m=JSON.parse(localStorage.getItem(\"sts_ai_studio_model_list\")||\"[]\");return Array.isArray(m)?m:[]}catch{return[]}}),[__stsAiStudioLoading,__stsSetAiStudioLoading]=(0,b.useState)(!1),"
   ],
   [
+    "let Y=(e,t)=>{n(n=>({...n,[e]:t}))},X=async()=>{h(!0)",
+    "let Y=(e,t)=>{n(n=>({...n,[e]:t}));if(/^aistudio_(model|tool_model|thinking|tool_thinking)$/.test(e)){rs({...ns(),[e]:t});window.__STS_AI_STUDIO_LOGS__?.record?.(\"SETTING_SAVED\",{field:e,value:t,source:ns().source,message:\"AI Studio setting saved immediately\"});}},X=async()=>{h(!0)"
+  ],
+  [
     "__stsGenerationGateway.generateOnce({prompt:e,model:t,source:\"aistudio\"})",
     "__stsGenerationGateway.generateOnce({prompt:e,model:t,source:\"aistudio\",thinkingLevel:ns().aistudio_tool_thinking||\"default\"})"
   ],
