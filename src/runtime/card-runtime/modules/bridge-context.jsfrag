@@ -59,7 +59,7 @@
         config: { main_api: BOOT.context.mainApi || 'openai', visual_novel_mode: Boolean(BOOT.context.visualNovelMode) },
         chat: { history: chatHistory, send: root.sendMessageAsUser, lastMessage: function () { return chatHistory[chatHistory.length - 1] || null; }, getHistory: function () { return clone(chatHistory); }, delete: function (range) { return root.deleteChatMessages(range); } },
         worldInfo: { get: function () { return clone(worldInfo); } },
-        util: { isMobile: function () { return root.is_mobile; }, delay: function (ms) { return new Promise(function (resolve) { setTimeout(resolve, ms); }); }, uuidv4: uuid, renderMarkdown: root.formatAsDisplayedMessage },
+        util: { isMobile: function () { return root.is_mobile; }, delay: function (milliseconds) { return new Promise(function (resolve) { setTimeout(resolve, milliseconds); }); }, uuidv4: uuid, renderMarkdown: root.formatAsDisplayedMessage },
         markdown: { render: root.formatAsDisplayedMessage }, files: { url: root.resolveCardAsset },
         commands: { registerCommand: function (name, callback) { root.eventOn('slash_' + name, callback); }, runCommand: root.executeSlashCommands },
         modules: { quickReply: {}, expression: {}, characterSelect: {} }, extensions: { quickReply: { enabled: true }, expression: { enabled: true }, characterSelect: { enabled: true } },

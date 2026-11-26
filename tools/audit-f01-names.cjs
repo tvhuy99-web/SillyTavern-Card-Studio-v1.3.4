@@ -142,3 +142,5 @@ console.log(JSON.stringify(report, null, 2));
 if (args.includes('--check-host') && (report.host.current !== 0 || report.host.currentTotal !== 0)) process.exitCode = 1;
 
 if (args.includes('--check-opaque') && bindingReview.unresolved !== 0) process.exitCode = 1;
+
+if (args.includes('--check-embedded-opaque') && (!report.embeddedRuntime || report.embeddedRuntime.review.unresolved !== 0)) process.exitCode = 1;
