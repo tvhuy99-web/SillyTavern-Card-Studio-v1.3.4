@@ -33,3 +33,22 @@
 - `src/features/rpg/ui/actions/action-suggestion-dialog.js` (550 lines, 1 factory) — Single cohesive ActionSuggestionDialog
 - `src/features/rpg/ui/database/rpg-database-editor.js` (542 lines, 1 factory) — Single cohesive RpgDatabaseEditor
 - `src/features/chat/session/session-list-screen.js` (509 lines, 1 factory) — Single cohesive SessionListScreen
+
+## R03 ordered UI composition ownership
+
+The 55.2 KB imported UI composition has been replaced by a 28-line orchestrator and ten stage owners under `src/app/composition/ui/`. The stage sequence deliberately retains the original initialization order rather than reordering potentially effectful factory calls.
+
+| Stage | Responsibility |
+|---|---|
+| editor-foundations | Shared primitives, toast context, early character editor sections |
+| catalog-editor | Character/RPG editing, dialog focus, lorebook manager and character screen |
+| preset-catalog | Preset/prompt configuration, lorebook library, persona screens |
+| settings | Connection and feature settings, speech provider, backup/runtime settings |
+| session-navigation | Session launch/import, chat header and quick connection |
+| message-view | Card frame, message and stream rendering, composer, shared diagnostic controls |
+| diagnostics | Log items, panels and diagnostic dialog |
+| world-info-dialogs | Relevance, dynamic World Info and chat dialogs |
+| rpg-actions | Action proposal/suggestion, variables and RPG table HUD |
+| application-shell | Chat HUD, route, lifecycle and top-level shell |
+
+Each stage destructures only its required domain and already initialized UI inputs. The catalog stage receives an explicit late reader for the model-test button initialized in the settings stage. All 151 original output bindings remain present and in order. All new sources are registered in the asset manifest; static tests use the manifest-derived composition owner list. The shared context and overall DI ABI are intentionally retained for R04/F04. The settings stage still has 74 domain inputs; this is a documented remaining dependency-contract concern, not a reason to create arbitrary micro-modules.
