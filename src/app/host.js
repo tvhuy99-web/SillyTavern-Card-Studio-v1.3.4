@@ -106,7 +106,7 @@ const __stsSessionWriteQueue=__stsCreateSessionWriteQueue(record=>__stsRepositor
 var Icon=__stsCreateIcon(jsxRuntime);
 var SectionNavigator=__stsCreateSectionNavigator(jsxRuntime);
 var AppHeader=__stsCreateAppHeader(jsxRuntime,Icon);
-var { normalizeLorebook: normalizeLorebook, parseLorebookFile: parseLorebookFile } = createLorebookFileCodec({jt: relaxedJson});
+var { normalizeLorebook: normalizeLorebook, parseLorebookFile: parseLorebookFile } = createLorebookFileCodec({relaxedJson});
 var __stsRepositories=__stsCreateEntityRepositories({normalizePreset:__stsNormalizePresetConfig,normalizePresetList:__stsNormalizePresetList});
 var listSavedSessions=__stsRepositories.sessions.list;
 var loadSessionById=__stsRepositories.sessions.get;
@@ -140,7 +140,7 @@ var {connections:__stsConnections,catalog:__stsCatalog}=__stsHostConnections;
 var { smartScanDefaults: smartScanDefaults, smartContextDefaults: smartContextDefaults, actionSuggestionPrompt: actionSuggestionPrompt, writingRefinementPrompt: writingRefinementPrompt, actionSuggestionDefaults: actionSuggestionDefaults, writingRefinementDefaults: writingRefinementDefaults, speechDefaults: speechDefaults } = createFeatureDefaults({});
 var getConnectionSettings=__stsConnections.getSettings;
 var saveConnectionSettings=__stsConnections.saveSettings;
-var { getSmartScanSettings: getSmartScanSettings, saveSmartScanSettings: saveSmartScanSettings, getSmartContextSettings: getSmartContextSettings, getActionSuggestionSettings: getActionSuggestionSettings, getWritingRefinementSettings: getWritingRefinementSettings } = createFeatureSettings({$o: smartContextSettingsKey, Go: actionSuggestionSettingsKey, Ho: smartScanSettingsKey, Jo: smartScanDefaults, Yo: smartContextDefaults, Zo: actionSuggestionDefaults, __stsMarkSmartScanStickySettingsSaved, __stsMigrateSmartScanStickySettings, es: writingRefinementDefaults, zo: writingRefinementSettingsKey, storage:guardedLocalStorage});
+var { getSmartScanSettings: getSmartScanSettings, saveSmartScanSettings: saveSmartScanSettings, getSmartContextSettings: getSmartContextSettings, getActionSuggestionSettings: getActionSuggestionSettings, getWritingRefinementSettings: getWritingRefinementSettings } = createFeatureSettings({smartContextSettingsKey, actionSuggestionSettingsKey, smartScanSettingsKey, smartScanDefaults, smartContextDefaults, actionSuggestionDefaults, __stsMarkSmartScanStickySettingsSaved, __stsMigrateSmartScanStickySettings, writingRefinementDefaults, writingRefinementSettingsKey, storage:guardedLocalStorage});
 var getProxyProfiles=__stsHostConnections.readProfiles;
 var saveProxyProfiles=__stsHostConnections.saveProfiles;
 var getOpenRouterCachedModels=__stsCatalog.readOpenRouter;
@@ -170,14 +170,14 @@ if (!__stsBackupRestoreService.isRestoreInProgress()) {
   try { __stsProxyPersistence.migrateLegacyState(); } catch { console.warn('[Proxy] Legacy storage migration could not be completed.'); }
 }
 installAiStudioDiagnostics({settingsStorage:guardedLocalStorage});
-var { parseRelaxedJson: parseRelaxedJson } = createRelaxedJsonParser({jt: relaxedJson});
+var { parseRelaxedJson: parseRelaxedJson } = createRelaxedJsonParser({relaxedJson});
 var { truncateText: truncateText, relativeTimeUnits: relativeTimeUnits } = createDisplayFormatting({});
 var { request: request } = createHttpTransport({ getConnectionSettings: getConnectionSettings });
 var generateProxyToolText=(...args)=>__stsHostGeneration.proxyToolText(...args);
 var fetchProxyModels=__stsHostConnections.loadProxyModels;
 var { Js: defaultMythicSystemPrompt, Ys: defaultMythicSafetySettings, Xs: formatRpgHybridTable, Qs: createRpgRowSnapshot, Zs: buildMythicPrompt, el: filterRpgDatabaseByActiveEntries, tl: parseRpgActions, nl: applyRpgActions } = createTableProcessing({As: parseRelaxedJson, Ce: HarmBlockThreshold, ke: HarmCategory});
 var { buildLinkedLorebookEntries: buildLinkedLorebookEntries } = createTableLorebookLinks({});
-var { initialState: initialSessionState } = createSessionDefaults({Eo: arenaSettingsKey, __stsDiagnosticsState});
+var { initialState: initialSessionState } = createSessionDefaults({arenaSettingsKey, __stsDiagnosticsState});
 var sessionStore=__stsCreateSessionStore({At: createStore,Bs: redactNetworkLog,Es: saveArenaSettings,It: withImmer,__stsDiagnosticsState,__stsRuntimeState,il: initialSessionState,rl: buildLinkedLorebookEntries});
 var createActiveGeminiClient = () => createGeminiClient({ GoogleGenAI: GoogleGenAI, getApiKey: nextGeminiKey });
 var buildActiveGeminiRequest = (prompt, preset, safetySettings) => buildGeminiRequest(prompt, preset, safetySettings, { thinkingLevel: ThinkingLevel.HIGH });

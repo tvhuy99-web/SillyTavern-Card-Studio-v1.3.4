@@ -2,7 +2,7 @@
 export function createRelaxedJsonParser(dependencies = {}) {
 function parseRelaxedJson(text) {
   try {
-    return dependencies.jt.default.parse(text);
+    return dependencies.relaxedJson.default.parse(text);
   } catch (error) {
     console.warn("JSON5 parse failed, falling back to JSON.parse", error);
     return JSON.parse(text);

@@ -23,7 +23,7 @@ const diagnostics=createRuntimeDiagnostics();
 const result=diagnostics.normalizeDiagnostic({messageId:0,details:{text:'x'.repeat(5000)}},{code:'CARD_RUNTIME_RPC_FAILED'});
 assert.equal(result.messageId,0);assert.equal(result.details.text.length,4000);assert.match(diagnostics.formatDiagnostic(result),/Message ID: 0/);
 const store=new Map([['scan','{"mode":"semantic"}']]);
-const settings=createFeatureSettings({storage:{getItem:key=>store.get(key),setItem:(key,value)=>store.set(key,value)},Ho:'scan',Jo:{enabled:true},__stsMigrateSmartScanStickySettings:value=>({...value,sticky:true}),__stsMarkSmartScanStickySettingsSaved:value=>({...value,saved:true})});
+const settings=createFeatureSettings({storage:{getItem:key=>store.get(key),setItem:(key,value)=>store.set(key,value)},smartScanSettingsKey:'scan',smartScanDefaults:{enabled:true},__stsMigrateSmartScanStickySettings:value=>({...value,sticky:true}),__stsMarkSmartScanStickySettingsSaved:value=>({...value,saved:true})});
 assert.deepEqual(settings.getSmartScanSettings(),{enabled:true,mode:'semantic',sticky:true});
 assert.equal(JSON.parse(store.get('scan')).sticky,true);
 settings.saveSmartScanSettings({enabled:false});assert.equal(JSON.parse(store.get('scan')).saved,true);

@@ -17,7 +17,7 @@ const second = {focus:()=>events.push('focus-second'),click:()=>events.push('cli
 first.closest = second.closest = () => ({querySelectorAll:()=>[first,second]});
 createRadioNavigation().handleRadioKeyDown({key:'ArrowRight',currentTarget:second,preventDefault:()=>events.push('prevent')});
 assert.deepEqual(events,['prevent','focus-first','click-first']);
-const lore = createLorebookFileCodec({jt:{default:{parse:JSON.parse}}});
+const lore = createLorebookFileCodec({relaxedJson:{default:{parse:JSON.parse}}});
 const data = {name:'World',entries:[{uid:'same',key:['dragon'],content:'A'},{uid:'same',key:'elf',content:'B'},{id:3,content:'C'},{content:'D'}]};
 const normalized = lore.normalizeLorebook(data);
 assert.deepEqual(normalized.entries.slice(0,3).map(entry=>entry.uid),['same','same_2','entry_3']);
@@ -36,7 +36,7 @@ const buffer={getChannelData:()=>channel};
 assert.equal(createAudioConversion().decodeRawPcmBuffer(rawPcm,{createBuffer:(channels,count,rate)=>{assert.deepEqual([channels,count,rate],[1,2,24000]);return buffer;}}),buffer);
 assert.deepEqual([...channel],[-1,32767/32768]);
 assert.equal(createSpeechEngine({HarmCategory:{},HarmBlockThreshold:{}}).sanitizeSpeechText('<thinking>secret</thinking> Hello **world**'),'Hello world');
-assert.deepEqual(createRelaxedJsonParser({jt:{default:{parse:JSON.parse}}}).parseRelaxedJson('{"ok":true}'),{ok:true});
+assert.deepEqual(createRelaxedJsonParser({relaxedJson:{default:{parse:JSON.parse}}}).parseRelaxedJson('{"ok":true}'),{ok:true});
 const preset=await createPresetFileCodec({fu:{temp:1},__stsNormalizePresetConfig:value=>value}).parsePresetFile(new File([JSON.stringify({temperature:0.5,openai_max_context:2048,prompts:[null,{content:42,enabled:true}]})],'test.json'));
 assert.equal(preset.temp,0.5);assert.equal(preset.truncation_length,2048);assert.equal(preset.prompts[0].content,'42');
 console.log('F01 readable local bindings: codec, UI navigation, linked lorebook, RPG and audio behavior OK');

@@ -52,7 +52,7 @@ export function createLorebookFileCodec(dependencies = {}) {
     let root;
     try {
       let text = (await file.text()).replace(/^\uFEFF/,"");
-      root = dependencies.jt.default.parse(text);
+      root = dependencies.relaxedJson.default.parse(text);
     } catch (error) {
       throw Error(`Không thể đọc lorebook "${file.name}": tệp JSON không hợp lệ.`, {cause: error});
     }

@@ -7,7 +7,7 @@ import { createRegexProcessing } from '../src/features/chat/regex-processing.js'
 import { createMarkdownRuntime } from '../src/vendor/markdown-runtime.js';
 import { mountApplication } from '../src/app/lifecycle/mount-application.js';
 import { useSmartContext } from '../src/features/chat/hooks/use-smart-context.js';
-const lore = createLorebookFileCodec({jt:{default:{parse:JSON.parse}}});
+const lore = createLorebookFileCodec({relaxedJson:{default:{parse:JSON.parse}}});
 const file = new File([JSON.stringify({name:'Test', entries:[{key:['dragon'],content:'A',enabled:true},{key:['elf'],content:'B'}]})],'world.json');
 const imported = await lore.parseLorebookFile(file);
 assert.equal(imported.name,'Test');assert.deepEqual(imported.book.entries[0].keys,['dragon']);

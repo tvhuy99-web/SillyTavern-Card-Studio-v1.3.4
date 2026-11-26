@@ -18,7 +18,7 @@ for (const marker of ['pl: ToastItem', 'mh: useDiagnostics', 'fh: useConversatio
 assert.ok(source.includes('CardFrame.displayName="InteractiveHtmlMessage"'));
 assert.ok(source.includes('CardPreviewDialog.displayName="FloatingStatusHUD"'));
 assert.doesNotMatch(source, /^(?:var|let|const|function)\s+[$A-Za-z_][\w$]?\s*(?:=|\()/m, 'no opaque direct top-level declarations in host');
-for (const marker of ['Eo: arenaSettingsKey', 'Co: readCardRuntimeEngineMode', 'Cs: getProxyForTools', 'get Wh(){return broadcastRuntimeMessage}']) assert.ok(source.includes(marker), marker);
+for (const marker of ['createSessionDefaults({arenaSettingsKey', 'Co: readCardRuntimeEngineMode', 'Cs: getProxyForTools', 'get Wh(){return broadcastRuntimeMessage}']) assert.ok(source.includes(marker), marker);
 // Every top-level destructured local has a descriptive name; old property keys are retained.
 for (const match of source.matchAll(/^var\s*\{([^}\n]+)\}\s*=/gm)) {
   for (const part of match[1].split(',')) {
