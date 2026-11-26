@@ -8,20 +8,20 @@ let attached = false, handle = null, visibilityHandle = null, attaching = false;
 
 function safe(value) {
   return String(value ?? '').replace(SECRET, '[REDACTED]')
-    .replace(/https?:\/\/[^\s,]+/g, x => {
-      try { const u = new URL(x); return u.origin + u.pathname; } catch { return '[URL]'; }
+    .replace(/https?:\/\/[^\s,]+/g, url => {
+      try { const parsedUrl = new URL(url); return parsedUrl.origin + parsedUrl.pathname; } catch { return '[URL]'; }
     }).slice(0, 1150);
 }
 function stored() {
   try {
-    const a = JSON.parse(localStorage.getItem(KEY) || '[]');
-    return Array.isArray(a) ? a.slice(-MAX) : [];
+    const events = JSON.parse(localStorage.getItem(KEY) || '[]');
+    return Array.isArray(events) ? events.slice(-MAX) : [];
   } catch { return []; }
 }
 function broadcast(item) {
   window.dispatchEvent(new CustomEvent(EVENT, { detail: {
     level: item.level, source: 'aistudio',
-    message: '[AI Studio][' + item.stage + '][#' + (item.requestId || '-') + '] ' + item.message + ' | ' + Object.entries(item.details).map(([k,v]) => k + '=' + String(v)).join(' '),
+    message: '[AI Studio][' + item.stage + '][#' + (item.requestId || '-') + '] ' + item.message + ' | ' + Object.entries(item.details).map(([key,value]) => key + '=' + String(value)).join(' '),
     payload: item.details,
   }}));
 }
@@ -31,9 +31,9 @@ export function recordAiStudioDiagnostic(stage, data = {}, level = 'state') {
   const item = {
     ts: new Date().toISOString(), stage: safe(stage), level: safe(level),
     requestId: safe(requestId), message: safe(message),
-    details: Object.fromEntries(Object.entries(details).slice(0, 22).map(([k,v]) => [
-      safe(k).slice(0, 48),
-      (typeof v === 'string' ? safe(v) : typeof v === 'number' || typeof v === 'boolean' ? v : safe(JSON.stringify(v))),
+    details: Object.fromEntries(Object.entries(details).slice(0, 22).map(([key,value]) => [
+      safe(key).slice(0, 48),
+      (typeof value === 'string' ? safe(value) : typeof value === 'number' || typeof value === 'boolean' ? value : safe(JSON.stringify(value))),
     ])),
   };
   try { localStorage.setItem(KEY, JSON.stringify([...stored(), item].slice(-MAX))); } catch {}
@@ -65,22 +65,22 @@ export function installAiStudioDiagnostics({settingsStorage = globalThis.localSt
     if ((handle && visibilityHandle) || attaching) return;
     attaching = true;
     try {
-      if (!handle) handle = await acquireNativeListener(plugin, 'diagnostic', e => {
-        recordAiStudioDiagnostic(e?.stage || 'NATIVE', {
-          requestId: e?.requestId, message: e?.message,
-          ...(e?.details && typeof e.details === 'object' ? e.details : {}),
-        }, e?.level || 'state');
+      if (!handle) handle = await acquireNativeListener(plugin, 'diagnostic', event => {
+        recordAiStudioDiagnostic(event?.stage || 'NATIVE', {
+          requestId: event?.requestId, message: event?.message,
+          ...(event?.details && typeof event.details === 'object' ? event.details : {}),
+        }, event?.level || 'state');
       });
       if (!visibilityHandle) {
-        visibilityHandle = await acquireNativeListener(plugin, 'pageVisibilityChanged', e => {
-          const visible = e?.visible === true;
+        visibilityHandle = await acquireNativeListener(plugin, 'pageVisibilityChanged', event => {
+          const visible = event?.visible === true;
           try { settingsStorage.setItem('sts_aistudio_show_page', visible ? 'true' : 'false'); } catch {}
           window.dispatchEvent(new CustomEvent('sts:aistudio-visibility', {detail:{visible}}));
         });
       }
       recordAiStudioDiagnostic('BRIDGE_READY', {message: 'Native log connected to System Console.'});
-    } catch(e) {
-      recordAiStudioDiagnostic('BRIDGE_ERROR', {message:String(e?.message || e)}, 'warn');
+    } catch(error) {
+      recordAiStudioDiagnostic('BRIDGE_ERROR', {message:String(error?.message || error)}, 'warn');
       if (bridgeRetryCount++ < 20) setTimeout(start, 1000);
     } finally {
       attaching = false;
