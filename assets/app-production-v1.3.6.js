@@ -107,7 +107,7 @@ import { createActionProposalPrompt } from './recovered/features/rpg/action-prop
 import { createApplicationLifecycle } from './recovered/app/lifecycle/application-lifecycle.js';
 
 // === 2. Repositories, Persistence & Cross-Tab Sync ===
-const __stsSessionWriteQueue=__stsCreateSessionWriteQueue(e=>__stsRepositories.saveExistingSession(e));
+const __stsSessionWriteQueue=__stsCreateSessionWriteQueue(record=>__stsRepositories.saveExistingSession(record));
 var Icon=__stsCreateIcon(jsxRuntime);
 var SectionNavigator=__stsCreateSectionNavigator(jsxRuntime);
 var AppHeader=__stsCreateAppHeader(jsxRuntime,Icon);
@@ -161,16 +161,16 @@ var getProxyLegacyMode=__stsHostConnections.readLegacyMode;
 var getProxyForTools=__stsHostConnections.getProxyForTools;
 var __stsCrossTabSync=__stsCreateCrossTabSync();
 var __stsSettingsRepository=__stsCreateSettingsRepository({crossTabSync:__stsCrossTabSync});
-var saveArenaSettings=e=>{__stsSettingsRepository.setJson(arenaSettingsKey,e)};
+var saveArenaSettings=settings=>{__stsSettingsRepository.setJson(arenaSettingsKey,settings)};
 var backupSettingKeys=["sillyTavernStudio_activeModel",geminiSettingsKey,geminiRotationKey,openRouterApiKeyStorageKey,proxyUrlKey,proxyPasswordKey,proxyLegacyModeKey,proxyForToolsKey,globalConnectionKey,smartScanSettingsKey,smartContextSettingsKey,actionSuggestionSettingsKey,writingRefinementSettingsKey,speechSettingsKey,proxyProfilesKey,geminiModelCatalogKey,openRouterModelCatalogKey,arenaSettingsKey,activePersonaIdKey,cardRuntimeCompatibilityKey,cardRuntimeEngineKey,"sillyTavernStudio_proxyRememberSecrets","sts_aistudio_show_page","sts_ai_studio_model_list"];
 var backupSettingKeySet=new Set(backupSettingKeys);
 var __stsBackupKeys={gemini:geminiSettingsKey,rotation:geminiRotationKey,openrouter:openRouterApiKeyStorageKey,profiles:proxyProfilesKey,password:proxyPasswordKey};
 var __stsBackupStorage={get local(){return globalThis.localStorage},get session(){return globalThis.sessionStorage},connections:recoveryConnections,proxy:recoveryProxy,keys:__stsBackupKeys};
 var __stsBackupRestoreService=__stsCreateBackupRestoreService({repositories:__stsRepositories,storage:__stsBackupStorage,backupOptions:{allowed:backupSettingKeySet,prefix:cardRuntimeStoragePrefix,keys:__stsBackupKeys,proxy:__stsProxyPersistence},crossTabSync:__stsCrossTabSync});
-__stsRepositories.setWriteGuard?.(op=>__stsBackupRestoreService.assertNotRestoring(op));
+__stsRepositories.setWriteGuard?.(operation=>__stsBackupRestoreService.assertNotRestoring(operation));
 __stsRepositories.setWriteCoordinator(__stsBackupRestoreService.runOrdinaryWrite);
-__stsSessionWriteQueue.setWriteGuard?.({assertWriteAllowed:op=>__stsBackupRestoreService.assertNotRestoring(op),getRestoreEpoch:()=>__stsBackupRestoreService.getRestoreEpoch(),subscribeRestoreLifecycle:fn=>__stsBackupRestoreService.subscribeRestoreLifecycle(fn)});
-__stsSettingsRepository.setWriteGuard?.(op=>__stsBackupRestoreService.assertNotRestoring(op));
+__stsSessionWriteQueue.setWriteGuard?.({assertWriteAllowed:operation=>__stsBackupRestoreService.assertNotRestoring(operation),getRestoreEpoch:()=>__stsBackupRestoreService.getRestoreEpoch(),subscribeRestoreLifecycle:listener=>__stsBackupRestoreService.subscribeRestoreLifecycle(listener)});
+__stsSettingsRepository.setWriteGuard?.(operation=>__stsBackupRestoreService.assertNotRestoring(operation));
 if (!__stsBackupRestoreService.isRestoreInProgress()) {
   try { __stsProxyPersistence.migrateLegacyState(); } catch { console.warn('[Proxy] Legacy storage migration could not be completed.'); }
 }
@@ -189,7 +189,7 @@ var buildActiveGeminiRequest = (prompt, preset, safetySettings) => buildGeminiRe
 var generateGeminiToolText = async (model, prompt, preset, safetySettings = [], signal) => ({ text: (await __stsGenerationGateway.generateOnce({ source: "gemini", model: model || preset.model || DEFAULT_GEMINI_MODEL, prompt, preset, safetySettings, signal })).response.text });
 var characterDialogueSafetySettings = DEFAULT_GEMINI_SAFETY_SETTINGS;
 var ToastContext=(0,React.createContext)(void 0);
-var useToast=()=>{let e=(0,React.useContext)(ToastContext);if(!e)throw Error("useToast must be used within a ToastProvider");return e};
+var useToast=()=>{let context=(0,React.useContext)(ToastContext);if(!context)throw Error("useToast must be used within a ToastProvider");return context};
 var ToastItem=__stsCreateToastItem(()=>({react: React, Icon: Icon, jsxRuntime}));
 var ToastProvider=__stsCreateToastProvider(()=>({b: React,dl: ToastContext,pl: ToastItem,wt: jsxRuntime}));
 var CharacterDialogueSection=__stsCreateCharacterDialogueSection(()=>({react: React, jsxRuntime, useToast, readProxyForTools: getProxyForTools, generateProxyText: generateProxyToolText, generateAiStudioToolText: __stsAiStudioToolText, resolveCurrentModel: getActiveModelDisplayName, TextArea: TextArea, CollapsibleSection: CollapsibleSection, LoadingIndicator: LoadingIndicator, readConnectionSettings: getConnectionSettings, createGeminiClient: createActiveGeminiClient, geminiSafetySettings: characterDialogueSafetySettings, CopyButton: CopyButton}));
@@ -214,7 +214,7 @@ var CharacterDetailSections=__stsCreateCharacterDetailSections(()=>({react: Reac
 var { Hl: encodeBase64Utf8, $l: createPngTextChunk, ql: resolveExportSpec, Kl: buildExportCard, Wl: isPngBytes, Jl: downloadBlob } = createCharacterExport({});
 var { useDialogFocus: useDialogFocus } = createDialogFocusHook({b: React});
 var FileNameDialog=__stsCreateFileNameDialog(()=>({useDialogFocus: useDialogFocus, react: React, jsxRuntime}));
-var estimateTokenCount=(e="")=>e?Math.ceil(e.length/4):0;
+var estimateTokenCount=(text="")=>text?Math.ceil(text.length/4):0;
 var CharacterTools=__stsCreateCharacterTools(()=>({react: React, jsxRuntime, lorebookStore, createPngTextChunk: createPngTextChunk, encodeBase64Utf8: encodeBase64Utf8, downloadBlob: downloadBlob, buildExportCard: buildExportCard, FileNameDialog: FileNameDialog, isPngBytes: isPngBytes, estimateTokens: estimateTokenCount, LoadingIndicator: LoadingIndicator, resolveExportSpec: resolveExportSpec}));
 var loadLibraryModule=loadOptionalModule;
 var { oc: isRecordObject, mc: mergeCardObjects, gc: normalizeCharacterCard, _c: parseCharacterFile } = createCharacterFileCodec({Mt: normalizeLorebook, jt: relaxedJson, l: wrapModule, nc: loadLibraryModule});
@@ -225,14 +225,14 @@ function EntrySelectionControl(...args){return __stsCreateEntrySelectionControl(
 var LorebookEntryDialog=__stsCreateLorebookEntryDialog(()=>({EntryPositionControl: EntryPositionControl, useDialogFocus: useDialogFocus, react: React, TextInput: TextInput, TextArea: TextArea, jsxRuntime, ToggleSwitch: ToggleSwitch}));
 var LorebookEntryCard=__stsCreateLorebookEntryCard(()=>({jsxRuntime, ToggleSwitch: ToggleSwitch}));
 var LorebookEntryList=__stsCreateLorebookEntryList(()=>({EntrySelectionControl: EntrySelectionControl, LorebookEntryDialog: LorebookEntryDialog, LorebookEntryCard: LorebookEntryCard, react: React, jsxRuntime}));
-var __stsEmbeddingService=__stsCreateEmbeddingService({getSettings:getSmartScanSettings,getGeminiApiKey:nextGeminiKey,hasGeminiApiKey:()=>{let e=getGeminiSettings();return!e.useDefault&&Array.isArray(e.keys)&&e.keys.some(e=>String(e).trim())},createGeminiClient:e=>new GoogleGenAI({apiKey:e}),addNetworkLog:e=>sessionStore.getState().addNetworkLog(e)});
-var loadEmbeddingIndex=(e,t)=>__stsEmbeddingService.loadIndex(e,t);
-var getEmbeddingIndex=(e,t)=>__stsEmbeddingService.getIndex(e,t);
-var embedQuery=(e,t)=>__stsEmbeddingService.embedQuery(e,t);
+var __stsEmbeddingService=__stsCreateEmbeddingService({getSettings:getSmartScanSettings,getGeminiApiKey:nextGeminiKey,hasGeminiApiKey:()=>{let settings=getGeminiSettings();return!settings.useDefault&&Array.isArray(settings.keys)&&settings.keys.some(key=>String(key).trim())},createGeminiClient:apiKey=>new GoogleGenAI({apiKey:apiKey}),addNetworkLog:entry=>sessionStore.getState().addNetworkLog(entry)});
+var loadEmbeddingIndex=(characterId,providerId)=>__stsEmbeddingService.loadIndex(characterId,providerId);
+var getEmbeddingIndex=(characterId,providerId)=>__stsEmbeddingService.getIndex(characterId,providerId);
+var embedQuery=(text,providerId)=>__stsEmbeddingService.embedQuery(text,providerId);
 var cosineSimilarity=__stsEmbeddingService.cosine;
 var hashEmbeddingText=__stsEmbeddingService.hashText;
 var getEmbeddingEntryText=__stsEmbeddingService.entryText;
-var syncLorebookEmbeddings=(e,t,n)=>__stsEmbeddingService.syncIndex(e,t,n);
+var syncLorebookEmbeddings=(characterId,entries,onProgress)=>__stsEmbeddingService.syncIndex(characterId,entries,onProgress);
 var { useEmbeddingSync: useEmbeddingSync } = createEmbeddingSyncHook({Fc: getEmbeddingIndex, Lc: loadEmbeddingIndex, Vc: syncLorebookEmbeddings, as: getSmartScanSettings, b: React, hl: useToast, qc: getEmbeddingEntryText, zc: hashEmbeddingText});
 var AttachLorebookDialog=__stsCreateAttachLorebookDialog(()=>({useDialogFocus: useDialogFocus, react: React, jsxRuntime}));
 var LorebookManager=__stsCreateLorebookManager(()=>({useEmbeddingSync: useEmbeddingSync, LorebookEntryList: LorebookEntryList, useDialogFocus: useDialogFocus, AttachLorebookDialog: AttachLorebookDialog, react: React, useToast, lorebookStore, jsxRuntime}));
@@ -265,7 +265,7 @@ var LorebookListItem=__stsCreateLorebookListItem(()=>({jsxRuntime}));
 var LorebookUploadControl=__stsCreateLorebookUploadControl(()=>({LoadingIndicator: LoadingIndicator, jsxRuntime}));
 var LorebookLibrary=__stsCreateLorebookLibrary(()=>({LorebookUploadControl: LorebookUploadControl, FileNameDialog: FileNameDialog, LorebookListItem: LorebookListItem, LorebookManager: LorebookManager, react: React, Icon: Icon, lorebookStore, jsxRuntime}));
 var defaultPersona={id:"default_persona_hai",name:"Hải",description:""};
-var resolveActivePersona=(e,t)=>e.find(e=>e.id===t)||null;
+var resolveActivePersona=(personas,personaId)=>personas.find(persona=>persona.id===personaId)||null;
 var personaStore=__stsCreatePersonaStore({createStore:createStore,immer:withImmer,repositories:__stsRepositories,defaultPersona:defaultPersona,selectionKey:activePersonaIdKey,resolveActive:resolveActivePersona,storage:guardedLocalStorage});
 var PersonaEditor=__stsCreatePersonaEditor(()=>({jsxRuntime, TextInput: TextInput, TextArea: TextArea}));
 var PersonaScreen=__stsCreatePersonaScreen(()=>({react: React, jsxRuntime, personaStore, PersonaEditor: PersonaEditor, LoadingIndicator: LoadingIndicator, ToggleSwitch: ToggleSwitch}));
@@ -275,7 +275,7 @@ var fetchOpenRouterModels=__stsHostConnections.loadOpenRouterModels;
 var { lodash: lodash } = createLodashRuntime({l: wrapModule, o: commonJsFactory});
 var { runIsolatedScript: runIsolatedScript, getVariable: getVariable, $u: executeUpdateVariableBlock, mutateVariable: mutateVariable } = createScriptExecution({Pu: lodash, nc: loadLibraryModule});
 var SYSTEM_LOG_EVENT="sillytavern:system-log";
-var dispatchSystemLog=(e,t,n,r,a)=>{let i=new CustomEvent(SYSTEM_LOG_EVENT,{detail:{level:e,source:t,message:n,stack:r,payload:a}});window.dispatchEvent(i)};
+var dispatchSystemLog=(level,source,message,stack,payload)=>{let event=new CustomEvent(SYSTEM_LOG_EVENT,{detail:{level:level,source:source,message:message,stack:stack,payload:payload}});window.dispatchEvent(event)};
 var { Vu: resolveCharacterName, Ku: resolvePromptOverride, Ju: expandBasicMacros, Xu: expandRandomMacros, Zu: extractRegexScripts } = createMacroProcessing({});
 var { processRegex: processRegex } = createRegexProcessing({Co: readCardRuntimeEngineMode});
 var { buildBaseSections: buildBaseSections, assemblePrompt: assemblePrompt } = createPromptAssembler({Co: readCardRuntimeEngineMode, Gu: mutateVariable, Js: defaultMythicSystemPrompt, Ju: expandBasicMacros, Ku: resolvePromptOverride, Lu: runIsolatedScript, Qs: createRpgRowSnapshot, Uu: getVariable, Vu: resolveCharacterName, Xs: formatRpgHybridTable, Xu: expandRandomMacros, Zs: buildMythicPrompt, Zu: extractRegexScripts, __stsBuildSmartStateBlock, __stsNormalizePromptVariableScopes, __stsReadGlobalVariables, el: filterRpgDatabaseByActiveEntries, gd: processRegex, nc: loadLibraryModule, qu: dispatchSystemLog});
@@ -298,7 +298,7 @@ var { Od: getAudioContext, Rd: decodeBase64Bytes, Pd: decodeRawPcmBuffer } = cre
 var { Md: speechSafetySettings, Ld: generateGeminiSpeech, Bd: stopNativeSpeech, Ud: speakNativeText, Hd: geminiSpeechVoices, $d: sanitizeSpeechText } = createSpeechEngine({Ce: HarmBlockThreshold, De: Modality, Od: getAudioContext, Pd: decodeRawPcmBuffer, Rd: decodeBase64Bytes, ke: HarmCategory, vo: GoogleGenAI, ys: nextGeminiKey});
 var SpeechContext=(0,React.createContext)(void 0);
 var SpeechProvider=__stsCreateSpeechProvider(()=>({settingsStorage:guardedLocalStorage,Bd: stopNativeSpeech,Gd: SpeechContext,Ld: generateGeminiSpeech,Ud: speakNativeText,b: React,hl: useToast,qo: speechSettingsKey,ts: speechDefaults,wt: jsxRuntime}));
-var useSpeech=()=>{let e=(0,React.useContext)(SpeechContext);if(void 0===e)throw Error("useTTS must be used within a TTSProvider");return e};
+var useSpeech=()=>{let context=(0,React.useContext)(SpeechContext);if(void 0===context)throw Error("useTTS must be used within a TTSProvider");return context};
 var SpeechSettings=__stsCreateSpeechSettings(()=>({sanitizeSpeechText: sanitizeSpeechText, SearchableSelect: SearchableSelect, Modality, geminiSpeechVoices: geminiSpeechVoices, speechSafetySettings: speechSafetySettings, getAudioContext: getAudioContext, decodeRawPcmBuffer: decodeRawPcmBuffer, decodeBase64Bytes: decodeBase64Bytes, speakNativeText: speakNativeText, react: React, useToast, NumberInput: NumberInput, useSpeech: useSpeech, GoogleGenAI, jsxRuntime, ToggleSwitch: ToggleSwitch, nextGeminiKey: nextGeminiKey}));
 var { Kd: MAX_AVATAR_BASE64_LENGTH, Wd: isPlainObject, Jd: assertBackupArray, Yd: encodeBufferToBase64, Xd: decodeBase64ToBuffer } = createBackupCodec({});
 var BackupSettings=__stsCreateBackupSettings(()=>({geminiSettingsKey: geminiSettingsKey, geminiRotationKey: geminiRotationKey, openRouterKeyStorageKey: openRouterApiKeyStorageKey, personaStore, proxyProfilesKey: proxyProfilesKey, backupSettingKeys: backupSettingKeys, proxyPasswordKey: proxyPasswordKey, cardRuntimeStoragePrefix: cardRuntimeStoragePrefix, arrayBufferToBase64: encodeBufferToBase64, backupRestoreService: __stsBackupRestoreService, connections: __stsConnections, diagnosticsState: __stsDiagnosticsState, proxyPersistence: __stsProxyPersistence, repositories: __stsRepositories, react: React, presetStore, useToast, characterStore, LoadingIndicator: LoadingIndicator, lorebookStore, jsxRuntime}));
@@ -314,7 +314,7 @@ var StoryImportControl=__stsCreateStoryImportControl(()=>({Icon: Icon, jsxRuntim
 var AdventureImportControl=__stsCreateAdventureImportControl(()=>({react: React, Icon: Icon, jsxRuntime}));
 var SessionListScreen=__stsCreateSessionListScreen(()=>({react: React, jsxRuntime, useToast, characterStore, presetStore, personaStore, executeVariableScript: executeUpdateVariableBlock, truncateText: truncateText, deleteSessionRecord: deleteSessionRecord, expandBasicMacros: expandBasicMacros, FileNameDialog: FileNameDialog, normalizeCharacterForSave: prepareCharacterRecord, listSavedSessions: listSavedSessions, expandRandomMacros: resolveCharacterName, isPlainObject: isPlainObject, saveSessionRecord: saveSessionRecord, extractRegexScripts: expandRandomMacros, resolveCharacterName: extractRegexScripts, diagnosticsState: __stsDiagnosticsState, mergeInitialVariableSources: __stsMergeInitialVariableSources, repositories: __stsRepositories, sessionPersistence: __stsSessionPersistence, StorySetupDialog: StorySetupDialog, resolveWorldInfo: resolveWorldInfo, CharacterLaunchCard: StoryImportControl, processRegex: processRegex, AdventureImportDropzone: AdventureImportControl, yamlParser: relaxedJson, deepMergeObject: mergeCardObjects, LoadingIndicator: LoadingIndicator, GreetingDialog: GreetingDialog, isRecordObject: isRecordObject, SessionListItem: SessionListItem}));
 var useDiagnostics=__stsCreateDiagnosticsHook({b: React,ol: sessionStore,zu: SYSTEM_LOG_EVENT});
-var countModelMessages=e=>e.filter(e=>"model"===e.role).length;
+var countModelMessages=messages=>messages.filter(message=>"model"===message.role).length;
 var useConversation=__stsCreateConversationHook({$c: embedQuery,$u: executeUpdateVariableBlock,As: parseRelaxedJson,Cs: getProxyForTools,Fc: getEmbeddingIndex,Gc: cosineSimilarity,Js: defaultMythicSystemPrompt,Ks: generateProxyToolText,Lc: loadEmbeddingIndex,Qs: createRpgRowSnapshot,get Wh(){return broadcastRuntimeMessage},Ys: defaultMythicSafetySettings,Zs: buildMythicPrompt,Zu: extractRegexScripts,__stsAiStudioToolText,__stsArenaState,__stsBuildConversationPrompt,__stsChatTurnPolicy,__stsCreateConversationService,__stsCreateUidSafeWorldInfoResolver,__stsGenerationGateway,__stsLiveStreamStore,__stsProcessAIResponse,__stsRuntimeState,__stsScanWorldInfo,__stsWriteGlobalVariables,_d: conversationSafetySettings,as: getSmartScanSettings,b: React,ch: resolveWorldInfo,cl: generateGeminiToolText,cs: getProxyProfiles,el: filterRpgDatabaseByActiveEntries,gd: processRegex,gh: countModelMessages,hl: useToast,mh: useDiagnostics,nl: applyRpgActions,ns: getConnectionSettings,ol: sessionStore,os: getSmartContextSettings,qu: dispatchSystemLog,rl: buildLinkedLorebookEntries,sn: lorebookStore,tl: parseRpgActions,vd: buildBaseSections,vo: GoogleGenAI,xd: assemblePrompt,ys: nextGeminiKey});
 var { yh: applySamplingOverrides, vh: isRuntimeRecordObject, xh: cloneRuntimeValue, _h: assertPayloadSize, wh: resolveMessageIndex, kh: resolveMessageRange, Sh: toInternalRole, Ch: toRuntimeMessage, Eh: toRuntimeMessages, Nh: normalizeRuntimeScope, Ah: runtimeVariableStorageKey, Ih: runtimeWebStorageKey, jh: readRuntimeRecord, Dh: writeRuntimeRecord } = createRuntimeCompatibilityData({__stsNormalizeRuntimeScope, __stsReadRuntimeRecord, __stsResolveRuntimeMessageIndex, __stsRuntimeVariableStorageKey, __stsRuntimeWebStorageKey, __stsWriteRuntimeRecord});
 var { storageKey: diagnosticStorageKey, createDiagnostic: createDiagnostic, normalizeDiagnostic: normalizeDiagnostic, formatDiagnostic: formatDiagnostic, appendDiagnostic: appendDiagnostic } = createRuntimeDiagnostics({});
@@ -348,7 +348,7 @@ var { commands: slashCommandHints } = createSlashCommandReference({});
 var ChatComposer=__stsCreateChatComposer(()=>({react: React, jsxRuntime, truncateText: truncateText, Icon: Icon, LoadingIndicator: LoadingIndicator, slashCommandHints: slashCommandHints}));
 var ImmersiveContainer=__stsCreateImmersiveContainer(jsxRuntime);
 var ChatVisualEffects=__stsCreateChatVisualEffects(()=>({react: React, jsxRuntime}));
-var formatTimestamp=e=>{let t=new Date(e);return`${t.getHours().toString().padStart(2,"0")}:${t.getMinutes().toString().padStart(2,"0")}:${t.getSeconds().toString().padStart(2,"0")}`};
+var formatTimestamp=timestamp=>{let date=new Date(timestamp);return`${date.getHours().toString().padStart(2,"0")}:${date.getMinutes().toString().padStart(2,"0")}:${date.getSeconds().toString().padStart(2,"0")}`};
 var LoadOlderButton=__stsCreateLoadOlderButton(jsxRuntime);
 var TokenCountControl=__stsCreateTokenCountControl(()=>({react: React, Icon: Icon, jsxRuntime}));
 var PromptSectionView=__stsCreatePromptSectionView(()=>({react: React, jsxRuntime, CopyButton: CopyButton}));

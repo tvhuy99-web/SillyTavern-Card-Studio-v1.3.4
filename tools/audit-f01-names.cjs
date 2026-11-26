@@ -68,8 +68,8 @@ const report = {
   baseline: baseline ? summarize(baseline) : null,
   current: summarize(current),
   reduction: baseline ? { count: baseline.count - current.count, percent: baseline.count ? Number(((baseline.count - current.count) / baseline.count * 100).toFixed(2)) : null } : null,
-  host: { baseline: baseline?.rows.find(row => row.file === 'src/app/host.js')?.topLevel ?? null, current: current.rows.find(row => row.file === 'src/app/host.js')?.topLevel ?? null },
+  host: { baseline: baseline?.rows.find(row => row.file === 'src/app/host.js')?.topLevel ?? null, current: current.rows.find(row => row.file === 'src/app/host.js')?.topLevel ?? null, baselineTotal: baseline?.rows.find(row => row.file === 'src/app/host.js')?.count ?? null, currentTotal: current.rows.find(row => row.file === 'src/app/host.js')?.count ?? null },
   files: current.rows.filter(row => row.count || before.get(row.file)).map(row => ({ file: row.file, baseline: baseline ? before.get(row.file) ?? 0 : null, count: row.count, topLevel: row.topLevel, ...(args.includes('--details') ? { bindings: row.bindings } : {}) })).sort((a, b) => b.count - a.count || a.file.localeCompare(b.file)),
 };
 console.log(JSON.stringify(report, null, 2));
-if (args.includes('--check-host') && report.host.current !== 0) process.exitCode = 1;
+if (args.includes('--check-host') && (report.host.current !== 0 || report.host.currentTotal !== 0)) process.exitCode = 1;

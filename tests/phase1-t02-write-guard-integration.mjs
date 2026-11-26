@@ -37,15 +37,15 @@ import {
 {
   const hostSrc = readFileSync(new URL('../src/app/host.js', import.meta.url), 'utf8');
   assert.ok(
-    hostSrc.includes('__stsRepositories.setWriteGuard?.(op=>__stsBackupRestoreService.assertNotRestoring(op))'),
+    hostSrc.includes('__stsRepositories.setWriteGuard?.(operation=>__stsBackupRestoreService.assertNotRestoring(operation))'),
     'host.js must wire writeGuard onto __stsRepositories',
   );
   assert.ok(
-    hostSrc.includes('__stsSessionWriteQueue.setWriteGuard?.({assertWriteAllowed:op=>__stsBackupRestoreService.assertNotRestoring(op),getRestoreEpoch:()=>__stsBackupRestoreService.getRestoreEpoch(),subscribeRestoreLifecycle:fn=>__stsBackupRestoreService.subscribeRestoreLifecycle(fn)})'),
+    hostSrc.includes('__stsSessionWriteQueue.setWriteGuard?.({assertWriteAllowed:operation=>__stsBackupRestoreService.assertNotRestoring(operation),getRestoreEpoch:()=>__stsBackupRestoreService.getRestoreEpoch(),subscribeRestoreLifecycle:listener=>__stsBackupRestoreService.subscribeRestoreLifecycle(listener)})'),
     'host.js must wire writeGuard + epoch + lifecycle onto __stsSessionWriteQueue',
   );
   assert.ok(
-    hostSrc.includes('__stsSettingsRepository.setWriteGuard?.(op=>__stsBackupRestoreService.assertNotRestoring(op))'),
+    hostSrc.includes('__stsSettingsRepository.setWriteGuard?.(operation=>__stsBackupRestoreService.assertNotRestoring(operation))'),
     'host.js must wire writeGuard onto __stsSettingsRepository',
   );
   assert.ok(
