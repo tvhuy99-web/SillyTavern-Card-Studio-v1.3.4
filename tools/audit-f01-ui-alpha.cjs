@@ -41,7 +41,7 @@ function fingerprint(content, bindingKeyAliases = {}) {
       if(ts.isObjectBindingPattern(node.parent)&&!node.dotDotDotToken) {
         const declaration=node.parent.parent;
         const property=node.propertyName||node.name;
-        if(ts.isVariableDeclaration(declaration)&&ts.isCallExpression(declaration.initializer)&&declaration.initializer.expression.getText(source)==='getDependencies'&&Object.hasOwn(bindingKeyAliases,property.getText(source)))emit('key:'+bindingKeyAliases[property.getText(source)],property);
+        if(ts.isVariableDeclaration(declaration)&&declaration.initializer&&ts.isCallExpression(declaration.initializer)&&declaration.initializer.expression.getText(source)==='getDependencies'&&Object.hasOwn(bindingKeyAliases,property.getText(source)))emit('key:'+bindingKeyAliases[property.getText(source)],property);
         else key(property);
       }
       if(node.dotDotDotToken) emit('rest',node.dotDotDotToken);
