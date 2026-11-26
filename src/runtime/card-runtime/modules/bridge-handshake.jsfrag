@@ -28,14 +28,7 @@
             return;
         }
         if (data.type === 'CARD_RUNTIME_RPC_RESULT') {
-            const pending = pendingRpc.get(data.requestId);
-            if (!pending) return;
-            clearTimeout(pending.timeout);
-            pendingRpc.delete(data.requestId);
-            if (data.ok) pending.resolve(data.result);
-            else {
-                pending.reject(new Error(data.error || 'Card runtime request failed.'));
-            }
+            rpcClient.receive(data);
             return;
         }
         if (data.type === 'CARD_RUNTIME_EVENT') {
@@ -54,22 +47,20 @@
             return;
         }
         if (data.type === 'HANDSHAKE_ACK') {
+            if (handshakeSettled) return;
             if (data.payload && Array.isArray(data.payload.chatHistory)) chatHistory = clone(data.payload.chatHistory);
             if (data.payload && data.payload.extensionSettings) extensionSettings = clone(data.payload.extensionSettings);
             if (data.payload && Array.isArray(data.payload.worldInfo)) worldInfo = clone(data.payload.worldInfo);
             if (data.payload && Array.isArray(data.payload.lorebookNames)) lorebookNames = Array.from(new Set(data.payload.lorebookNames.map(String)));
             applyVariableScopesPayload(data.payload && data.payload.variableScopes, 'handshake', true);
-            if (data.payload && Array.isArray(data.payload.worldInfo)) worldInfo = clone(data.payload.worldInfo);
             syncContext();
-            if (!handshakeSettled) {
-                handshakeSettled = true;
-                if (handshakeTimeout) { clearTimeout(handshakeTimeout); handshakeTimeout = 0; }
-                if (root.__cardRuntimeBootState) {
-                    root.__cardRuntimeBootState.phase = 'handshake-ready';
-                    root.__cardRuntimeBootState.handshakeReadyAt = Date.now();
-                }
-                readyResolve(true);
+            handshakeSettled = true;
+            if (handshakeTimeout) { clearTimeout(handshakeTimeout); handshakeTimeout = 0; }
+            if (root.__cardRuntimeBootState) {
+                root.__cardRuntimeBootState.phase = 'handshake-ready';
+                root.__cardRuntimeBootState.handshakeReadyAt = Date.now();
             }
+            readyResolve(true);
             setTimeout(function () {
                 emitEvent(root.tavern_events.CHAT_CHANGED, BOOT.context.chatId);
                 emitEvent(root.tavern_events.EXTENSION_SETTINGS_LOADED);
@@ -77,6 +68,34 @@
                 emitEvent(root.tavern_events.APP_READY);
             }, 0);
         }
-                if (data.type === 'EXECUTE_BUTTON_SCRIPT') emitEvent('btn_click_' + data.payload.buttonName);
+        if (data.type === 'EXECUTE_BUTTON_SCRIPT' && data.payload) emitEvent('btn_click_' + data.payload.buttonName);
     });
 
+
+    function failHandshake(error) {
+        if (handshakeSettled) return;
+        handshakeSettled = true;
+        if (handshakeTimeout) { clearTimeout(handshakeTimeout); handshakeTimeout = 0; }
+        readyReject(error);
+    }
+
+    function startHandshake() {
+        handshakeTimeout = setTimeout(function () {
+            if (handshakeSettled) return;
+            const message = 'Card Runtime handshake timed out before HANDSHAKE_ACK.';
+            if (root.__cardRuntimeBootState) {
+                root.__cardRuntimeBootState.phase = 'handshake-timeout';
+                root.__cardRuntimeBootState.handshakeTimeoutAt = Date.now();
+            }
+            failHandshake(new Error(message));
+            diagnostic('CARD_RUNTIME_RPC_TIMEOUT', 'handshake', 'bridge', message, { method: 'HANDSHAKE_INIT' });
+        }, 5000);
+        try {
+            root.parent.postMessage({ type: 'HANDSHAKE_INIT', payload: { messageId: BOOT.context.messageId } }, '*');
+        } catch (error) {
+            failHandshake(error);
+        }
+    }
+    root.addEventListener('pagehide', function (event) {
+        if (!event.persisted) failHandshake(new Error('Card runtime closed before handshake completed.'));
+    });

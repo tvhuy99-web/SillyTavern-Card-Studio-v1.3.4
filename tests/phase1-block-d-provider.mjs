@@ -1,0 +1,43 @@
+import assert from 'node:assert/strict';
+import { createMemoryStorage,createProxyPersistence,PROXY_PERSISTENCE_KEYS as K } from '../src/providers/proxy/persistence.js';
+import { createConnectionRepository,CONNECTION_KEYS as C } from '../src/providers/common/connection-repository.js';
+import { readBackupSetting,prepareBackupSettings,restoreBackupSettings } from '../src/app/persistence/backup-codec.js';
+import { createHostConnectionServices } from '../src/providers/common/host-provider-bindings.js';
+import { createSummaryGeneration } from '../src/features/chat/summary-generation.js';
+const keys={...C,profiles:K.profilesLegacy,password:K.proxyPasswordLegacy};
+function setup(){const local=createMemoryStorage(),session=createMemoryStorage(),host={localStorage:local,sessionStorage:session};return {local,session,host,connections:createConnectionRepository(host),proxy:createProxyPersistence(host),keys};}
+const a=setup(), b=setup();
+a.connections.saveGemini({useDefault:false,keys:['test-gemini']});a.connections.saveOpenRouterKey('test-openrouter');a.session.setItem(C.rotation,'3');
+a.proxy.setProfiles([{id:'p',url:'https://example.test',password:'test-proxy',protocol:'google_native'}]);
+a.proxy.setPassword('test-global');
+const selected=[C.gemini,C.openrouter,C.rotation,keys.profiles,keys.password];
+const settings=Object.fromEntries(selected.map(key=>[key,readBackupSetting(key,a)]));settings.unrelated='skip';
+const options={allowed:new Set(selected),prefix:'sillyTavernStudio_runtime_',keys,proxy:b.proxy};
+restoreBackupSettings(prepareBackupSettings(settings,options),b);
+assert.deepEqual(b.connections.getGemini(),a.connections.getGemini());assert.equal(b.connections.getOpenRouterKey(),'test-openrouter');assert.equal(b.session.getItem(C.rotation),'3');assert.equal(b.proxy.getPassword(),'test-global');assert.equal(b.proxy.getProfiles()[0].password,'test-proxy');
+assert.equal(b.local.getItem(C.gemini),null);assert.equal(b.local.getItem(C.openrouter),null);assert.equal(b.local.getItem('unrelated'),null);
+assert.throws(()=>prepareBackupSettings({[C.gemini]:'{"keys":[123]}'},options),/Gemini/);
+assert.throws(()=>prepareBackupSettings({[keys.profiles]:'{}'},options),/Proxy/);
+assert.throws(()=>prepareBackupSettings({[keys.profiles]:JSON.stringify([{id:'p',url:'https://one.test'},{id:'p',url:'https://two.test'}])},options),/Duplicate/);
+b.proxy.setProfiles([{id:'p',url:'https://other.test',protocol:'openai'}]);assert.equal(b.proxy.getProfiles()[0].password,'');
+b.proxy.setProfiles([{id:'__proto__',url:'https://example.test',password:'test-special',protocol:'google_native'}]);assert.equal(b.proxy.getProfiles()[0].password,'test-special');
+const snap=()=>[b.local.toJSON(),b.session.toJSON()];const baseline=snap();
+assert.throws(()=>b.proxy.setProfiles([{id:'p',url:'https://one.test'},{id:'p',url:'https://two.test'}]),/Không thể lưu/);assert.deepEqual(snap(),baseline);
+const set=b.session.setItem;let fail=true;b.session.setItem=(key,value)=>{if(fail&&key===K.profileSecretsSession){fail=false;throw Error('quota');}return set(key,value);};
+assert.throws(()=>b.proxy.setProfiles([{id:'new',url:'https://new.test',password:'test-new'}]),/Không thể lưu/);assert.deepEqual(snap(),baseline);
+b.connections.saveSettings({source:'proxy',proxy_profile_id:'__proto__',proxy_protocol:'openai'});
+const connection=createHostConnectionServices({host:b.host,connections:b.connections,proxyPersistence:b.proxy,request:()=>{throw Error('unexpected network');}});
+assert.equal(connection.getProxyProtocol(),'google_native');assert.equal(connection.getProxyPassword(),'test-special');
+b.connections.saveSettings({source:'proxy',proxy_profile_id:'missing'});assert.throws(()=>connection.getProxyPassword(),/không còn tồn tại/);assert.throws(()=>connection.getProxyUrl(),/không còn tồn tại/);
+const controller=new AbortController();let source='gemini', tool=false;const captured=[];
+const {generateSummary}=createSummaryGeneration({extractStoryContent:x=>x,getConnectionSettings:()=>({source,proxy_protocol:'google_native'}),getProxyForTools:()=>tool,generateGeminiToolText:async(...args)=>{captured.push(args.at(-1));return {text:' gemini '};},generateProxyToolText:async(...args)=>{captured.push(args.at(-1));return ' proxy ';},__stsAiStudioToolText:async(...args)=>{captured.push(args.at(-1));return ' studio ';}});
+assert.equal(await generateSummary([], 'C','',controller.signal),'gemini');tool=true;assert.equal(await generateSummary([], 'C','',controller.signal),'proxy');source='aistudio';assert.equal(await generateSummary([], 'C','',controller.signal),'studio');assert.deepEqual(captured,[controller.signal,controller.signal,controller.signal]);
+console.log('Block D provider: credential roundtrip, target ownership, rollback, summary cancellation routing OK.');
+// Restore's Web Storage phase is now compensated as a group, including keys
+// changed indirectly by the credential owners. The separate IDB commit remains.
+const restored=setup();restored.connections.saveGemini({useDefault:false,keys:['before']});restored.proxy.setProfiles([{id:'existing',url:'https://before.test',password:'before-password'}]);restored.local.setItem('unrelated','preserve');
+const backupBefore=[restored.local.toJSON(),restored.session.toJSON()];
+const orig=restored.local.setItem;let failOnce=true;restored.local.setItem=(key,value)=>{if(key==='last-setting'&&failOnce){failOnce=false;throw Error('quota');}return orig(key,value);};
+assert.throws(()=>restoreBackupSettings([[C.gemini,JSON.stringify({useDefault:false,keys:['after']})],[keys.profiles,JSON.stringify([{id:'new',url:'https://after.test',password:'after-password'}])],['last-setting','fail']],restored),/hoàn tác/);
+assert.deepEqual([restored.local.toJSON(),restored.session.toJSON()],backupBefore);
+console.log('Block D3: group Web Storage compensation PASS');

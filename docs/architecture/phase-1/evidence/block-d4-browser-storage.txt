@@ -1,0 +1,5 @@
+
+> sillytavern-card-studio@1.3.6 test:storage-browser
+> node tools/test-storage-browser.mjs
+
+exit=124

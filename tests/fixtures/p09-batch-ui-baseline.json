@@ -1,0 +1,981 @@
+[
+  {
+    "symbol": "un",
+    "name": "CopyButton",
+    "path": "src/ui/components/input-controls.js",
+    "dependencies": [
+      "b",
+      "wt"
+    ],
+    "originalChars": 1366,
+    "sourceSha256": "26c52066e72d2473ac5353a4236d7881666eec3b537e04362e269db8e4e0f9f9",
+    "cases": [
+      {
+        "scenario": "default",
+        "hash": "08eabc9d46cb02ab7f6d96cb618d5a2a02460e17d5c367bdb424a494b7b38268"
+      }
+    ]
+  },
+  {
+    "symbol": "uu",
+    "name": "InlineCopyButton",
+    "path": "src/ui/components/input-controls.js",
+    "dependencies": [
+      "b",
+      "wt"
+    ],
+    "originalChars": 1368,
+    "sourceSha256": "e4cb9108c269ba9fa3658f828caed9b1dd74ca3e40999ec4d16b9034691cfa71",
+    "cases": [
+      {
+        "scenario": "default",
+        "hash": "47dbb22f5f50ed2d45aa56f522cf10d9539323e462ee53e3750630d3f305feae"
+      }
+    ]
+  },
+  {
+    "symbol": "dn",
+    "name": "TextInput",
+    "path": "src/ui/components/input-controls.js",
+    "dependencies": [
+      "b",
+      "cn",
+      "un",
+      "wt"
+    ],
+    "originalChars": 709,
+    "sourceSha256": "fdaf60ee2a347ec6d1dc2c19780eaf75cc81aec18069f7646f528ea12b585cba",
+    "cases": [
+      {
+        "scenario": "default",
+        "hash": "160e602f4087c4d427980784395d730087dc7efb86446d53c2e073f3570f5889"
+      }
+    ]
+  },
+  {
+    "symbol": "hn",
+    "name": "TextArea",
+    "path": "src/ui/components/input-controls.js",
+    "dependencies": [
+      "b",
+      "cn",
+      "un",
+      "wt"
+    ],
+    "originalChars": 703,
+    "sourceSha256": "911c15469546ee8f3839ccd24dcb086ebe193816a9df33a9c40b46b331275f05",
+    "cases": [
+      {
+        "scenario": "default",
+        "hash": "72c1f0f22cd709a1a815ac7a7bf1158f8ae2cc0a0c280cbe96dfdf4cd1482c35"
+      }
+    ]
+  },
+  {
+    "symbol": "Cl",
+    "name": "SearchableSelect",
+    "path": "src/ui/components/input-controls.js",
+    "dependencies": [
+      "b",
+      "cn",
+      "wt"
+    ],
+    "originalChars": 766,
+    "sourceSha256": "dd756ad3307111f4b8b5b0fd7ac1b51838e73f2aea20aab4f8bcaf6cd2c53863",
+    "cases": [
+      {
+        "scenario": "default",
+        "hash": "e2a5b2993491a0d2af1b769de6e22bdfc0de8b0f8e47cb5dba7c0de5845c3c0e"
+      }
+    ]
+  },
+  {
+    "symbol": "nu",
+    "name": "NumberInput",
+    "path": "src/ui/components/input-controls.js",
+    "dependencies": [
+      "b",
+      "cn",
+      "wt"
+    ],
+    "originalChars": 917,
+    "sourceSha256": "e161ee682fb789525a00579fa845859b2837aeb62e55bfd9b1dfa033925d8a28",
+    "cases": [
+      {
+        "scenario": "default",
+        "hash": "3d30a4458f325cc4bf1f2feeb3f949f4474fb975f06fb53f2e0c3279482cc878"
+      }
+    ]
+  },
+  {
+    "symbol": "au",
+    "name": "StringListInput",
+    "path": "src/ui/components/input-controls.js",
+    "dependencies": [
+      "cn",
+      "un",
+      "wt"
+    ],
+    "originalChars": 2022,
+    "sourceSha256": "3dc2487b1ad057b0f78c7ef73214461cdc1a0eda843f3ab89ef0a5c1288df2f4",
+    "cases": [
+      {
+        "scenario": "default",
+        "hash": "e1d43a677ba606d70114a51f3725152ce861e8b649bd059358006c29a52444f3"
+      }
+    ]
+  },
+  {
+    "symbol": "cf",
+    "name": "ChatVisualEffects",
+    "path": "src/features/chat/ui/chat-controls.js",
+    "dependencies": [
+      "b",
+      "wt"
+    ],
+    "originalChars": 887,
+    "sourceSha256": "9f6de5dc99db6184509c3244324572cededd5ac2554e814479720e6182b4b186",
+    "cases": [
+      {
+        "scenario": "default",
+        "hash": "5c9ce5ebdc85546540cafc0d7f30e05c8500ba9e0653fc09a9b462dc2fccb53e"
+      }
+    ]
+  },
+  {
+    "symbol": "pl",
+    "name": "ToastItem",
+    "path": "src/ui/components/input-controls.js",
+    "dependencies": [
+      "b",
+      "kt",
+      "wt"
+    ],
+    "originalChars": 1284,
+    "sourceSha256": "3475cd8a6df1af5d057ba915ddd5f508b2aeb4eef965c859e5b9b9fa98724cb3",
+    "cases": [
+      {
+        "scenario": "default",
+        "hash": "47acbb6a3f039f482df56995f9b9d9eb467c66fff5e70afde0e0c65db48f0c55"
+      }
+    ]
+  },
+  {
+    "symbol": "pn",
+    "name": "CharacterCoreSection",
+    "path": "src/features/characters/ui/character-metadata-sections.js",
+    "dependencies": [
+      "dn",
+      "hn",
+      "ln",
+      "wt"
+    ],
+    "originalChars": 648,
+    "sourceSha256": "55fe845da8b0353f27568876f29c149d01a3b24388e60d433bda41bbd4bce526",
+    "cases": [
+      {
+        "scenario": "default",
+        "hash": "d4d4999d73b0704561f1fcb1b62b0eb6b35dd0de982f624ac764cecb170ecc7e"
+      }
+    ]
+  },
+  {
+    "symbol": "fl",
+    "name": "CharacterScenarioSection",
+    "path": "src/features/characters/ui/character-metadata-sections.js",
+    "dependencies": [
+      "hn",
+      "ln",
+      "wt"
+    ],
+    "originalChars": 608,
+    "sourceSha256": "a919a649a2bcc655877a8297fb98e506217eb68b8d54cf934210d8dce447b63f",
+    "cases": [
+      {
+        "scenario": "default",
+        "hash": "8ac7b1a3ab98ade50a1300b31b5ab3b27d428458a933290b31d532ee7c392370"
+      }
+    ]
+  },
+  {
+    "symbol": "vl",
+    "name": "CharacterLorebookSection",
+    "path": "src/features/characters/ui/character-metadata-sections.js",
+    "dependencies": [
+      "ln",
+      "wt"
+    ],
+    "originalChars": 2576,
+    "sourceSha256": "1054c5ca3562001f0c000b2742784c83c519bc50b3a241fdefc22f32558491ca",
+    "cases": [
+      {
+        "scenario": "default",
+        "hash": "224468402e6b09b5cde1675e66171142e70d859c69b33ee76370073ffaaff7ca"
+      }
+    ]
+  },
+  {
+    "symbol": "bl",
+    "name": "CharacterMetadataSection",
+    "path": "src/features/characters/ui/character-metadata-sections.js",
+    "dependencies": [
+      "b",
+      "dn",
+      "hn",
+      "ln",
+      "wt",
+      "yl"
+    ],
+    "originalChars": 3363,
+    "sourceSha256": "41a80cff04faf7ae5e20274bc8b14e21bc20a8440235f11afbe1998a15602496",
+    "cases": [
+      {
+        "scenario": "default",
+        "hash": "1719d0dddb376652f93af6dbafafb1ba7b44d19b4ad6a7a171f9e83cc169a8b3"
+      }
+    ]
+  },
+  {
+    "symbol": "xl",
+    "name": "RegexScriptEditor",
+    "path": "src/features/characters/ui/regex-script-editor.js",
+    "dependencies": [
+      "b",
+      "dn",
+      "hn",
+      "wt",
+      "yl"
+    ],
+    "originalChars": 2430,
+    "sourceSha256": "33e5e6c919b0513e6908a8b61aeef3f945d76cd082d6c1d920feb5b3818787e1",
+    "cases": [
+      {
+        "scenario": "default",
+        "hash": "672246b9fc2d8dfc2f3f7510e8fe202d1206b846c91bd50b30cc062519ebfeee"
+      }
+    ]
+  },
+  {
+    "symbol": "wl",
+    "name": "TavernScriptEditor",
+    "path": "src/features/characters/ui/tavern-script-editor.js",
+    "dependencies": [
+      "b",
+      "dn",
+      "hn",
+      "wt",
+      "yl"
+    ],
+    "originalChars": 2353,
+    "sourceSha256": "ddcaa5ab3dc45bb69bcb2ef70a967d07f6b9125dacee645033551a6fee811c42",
+    "cases": [
+      {
+        "scenario": "default",
+        "hash": "7cb5138d4e6e2fc7cf3db987ebef2686fb1abf15abbe1b4fdef9d695dd3e6d1f"
+      }
+    ]
+  },
+  {
+    "symbol": "_l",
+    "name": "RegexScriptList",
+    "path": "src/features/characters/ui/regex-script-editor.js",
+    "dependencies": [
+      "b",
+      "wt",
+      "xl"
+    ],
+    "originalChars": 1053,
+    "sourceSha256": "f1fa1cf9cccba09cfd18eb2bc2d1c89e381172439a825d25ec3973dcb57c2d82",
+    "cases": [
+      {
+        "scenario": "default",
+        "hash": "f6522a7c7ced35af7c6f7d1fe37901a6a7d2e262dea86477f4d3aad9764f9909"
+      }
+    ]
+  },
+  {
+    "symbol": "kl",
+    "name": "TavernScriptList",
+    "path": "src/features/characters/ui/tavern-script-editor.js",
+    "dependencies": [
+      "b",
+      "wl",
+      "wt"
+    ],
+    "originalChars": 1031,
+    "sourceSha256": "2e3afebd52bdd69e3912b033d539b713831418ba90e20c69229c29e7f2b25400",
+    "cases": [
+      {
+        "scenario": "default",
+        "hash": "240cb311386070afc0fa97108d6f401eab88a93419df14bde00a61dd6420a35e"
+      }
+    ]
+  },
+  {
+    "symbol": "Sl",
+    "name": "CharacterExtensionsSection",
+    "path": "src/features/characters/ui/character-extension-sections.js",
+    "dependencies": [
+      "_l",
+      "b",
+      "hn",
+      "kl",
+      "ln",
+      "wt"
+    ],
+    "originalChars": 1664,
+    "sourceSha256": "538023a9f6275484e5a0e05afcd5ad88bb2754388b2d44ffba2769c526d1527f",
+    "cases": [
+      {
+        "scenario": "default",
+        "hash": "f9f1bcf36bb3b8b7c3bf846234ef8b7f05e453e260d8587ad761c5e01bb329fc"
+      }
+    ]
+  },
+  {
+    "symbol": "gl",
+    "name": "CharacterDialogueSection",
+    "path": "src/features/characters/ui/character-greeting-editor.js",
+    "dependencies": [
+      "Cs",
+      "Ks",
+      "__stsAiStudioToolText",
+      "b",
+      "gs",
+      "hl",
+      "hn",
+      "ln",
+      "mn",
+      "ns",
+      "sl",
+      "ul",
+      "un",
+      "wt"
+    ],
+    "originalChars": 6674,
+    "sourceSha256": "3f007b79743dc0efe4a9431800699975255a7b9c9ddc6173b3f4bbdac2f72089",
+    "cases": [
+      {
+        "scenario": "default",
+        "hash": "35a7268917128be9d9b822d0728f5cfa63d0644c9463aec8b2c7be6b19dca11d"
+      }
+    ]
+  },
+  {
+    "symbol": "Ll",
+    "name": "CharacterDetailSections",
+    "path": "src/features/characters/ui/character-extension-sections.js",
+    "dependencies": [
+      "Ml",
+      "Sl",
+      "St",
+      "b",
+      "bl",
+      "fl",
+      "gl",
+      "pn",
+      "sn",
+      "vl",
+      "wt"
+    ],
+    "originalChars": 2081,
+    "sourceSha256": "1d8496ac70278a6cffbf4afcf3a9f310ccd10143ab105793d262fdf9dc01502a",
+    "cases": [
+      {
+        "scenario": "default",
+        "hash": "2fc4c51f8fa76f6e7398266cb7d6a4bd450a294f0bb7139309a6f59ff8cc8171"
+      }
+    ]
+  },
+  {
+    "symbol": "tu",
+    "name": "PresetBasicSection",
+    "path": "src/features/presets/ui/preset-generation-sections.js",
+    "dependencies": [
+      "dn",
+      "hn",
+      "ln",
+      "wt"
+    ],
+    "originalChars": 475,
+    "sourceSha256": "57e6697a07a10e4ef6bed87d0535bfee6b84cbef2a9a2243250cb352b1c0d6cc",
+    "cases": [
+      {
+        "scenario": "default",
+        "hash": "cb39dde60d6ea04cfdb325c27156d82fb86d96457b6d0e08b7b3a3b4fa2fa8f0"
+      }
+    ]
+  },
+  {
+    "symbol": "ru",
+    "name": "SamplingSection",
+    "path": "src/features/presets/ui/preset-generation-sections.js",
+    "dependencies": [
+      "Cl",
+      "ln",
+      "nu",
+      "wt"
+    ],
+    "originalChars": 2044,
+    "sourceSha256": "45f003c0dff2d5a378536a6a18738deb1936de21ba676435e83279322e89165e",
+    "cases": [
+      {
+        "scenario": "default",
+        "hash": "019a23af8cb90382da3be9e733896fedd2e389f20f669843a28467bc7529ad34"
+      }
+    ]
+  },
+  {
+    "symbol": "iu",
+    "name": "GenerationControlSection",
+    "path": "src/features/presets/ui/preset-generation-sections.js",
+    "dependencies": [
+      "au",
+      "dn",
+      "ln",
+      "wt",
+      "yl"
+    ],
+    "originalChars": 1129,
+    "sourceSha256": "e7e8c25ef152b221eed5b9ed84dc7893695de03387381810f8cf244e11fc76e5",
+    "cases": [
+      {
+        "scenario": "default",
+        "hash": "bf033bcdf817c0db1117bc93613d431e0345fc506ca263802565e47c0f0f7a74"
+      }
+    ]
+  },
+  {
+    "symbol": "ou",
+    "name": "InstructSection",
+    "path": "src/features/presets/ui/preset-generation-sections.js",
+    "dependencies": [
+      "dn",
+      "hn",
+      "ln",
+      "wt"
+    ],
+    "originalChars": 864,
+    "sourceSha256": "e0decb71d2191c4033df3cefbf51371f3bdb0ce51478d09cfa2c58e580ffac3e",
+    "cases": [
+      {
+        "scenario": "default",
+        "hash": "e8400eb850ddfa306c529a9b8de30cb87099e53be7d89e5c5acd74589564137a"
+      }
+    ]
+  },
+  {
+    "symbol": "su",
+    "name": "ExperimentalSection",
+    "path": "src/features/presets/ui/preset-generation-sections.js",
+    "dependencies": [
+      "b",
+      "hn",
+      "ln",
+      "nu",
+      "wt",
+      "yl"
+    ],
+    "originalChars": 1637,
+    "sourceSha256": "2be771fbfd5dd97dafe76b42751ed691ed3b861e5a19fe3bd79a2a6b5922a0f1",
+    "cases": [
+      {
+        "scenario": "default",
+        "hash": "0988b22ad55e71f581801d192e45f0bf9c1a8477ef4c0380bcc683a2f01a4a27"
+      }
+    ]
+  },
+  {
+    "symbol": "lu",
+    "name": "PresetConfiguration",
+    "path": "src/features/presets/ui/preset-generation-sections.js",
+    "dependencies": [
+      "b",
+      "iu",
+      "ou",
+      "ru",
+      "su",
+      "tu",
+      "wt"
+    ],
+    "originalChars": 305,
+    "sourceSha256": "39b09a3ae4b5896f0e655342b233c99b79c3dc87d3677a8578124c195ad91faa",
+    "cases": [
+      {
+        "scenario": "default",
+        "hash": "000c974ca715d7c2c304385f4ee311c70bd363d3a3542e2464d72e03371d0e97"
+      }
+    ]
+  },
+  {
+    "symbol": "pu",
+    "name": "PromptListItem",
+    "path": "src/features/presets/ui/prompt-manager.js",
+    "dependencies": [
+      "wt",
+      "yl"
+    ],
+    "originalChars": 3405,
+    "sourceSha256": "47bc1a6b81a060d0c44d4e2bc9c83b51d53549f9088d708c9a490d872be43a80",
+    "cases": [
+      {
+        "scenario": "default",
+        "hash": "c35d0a0fd2d6afbbfbd7a9f2a003a4244a94f8e3fce3c60e22cb264a02f335c3"
+      }
+    ]
+  },
+  {
+    "symbol": "mu",
+    "name": "PromptPreview",
+    "path": "src/features/presets/ui/prompt-preview.js",
+    "dependencies": [
+      "b",
+      "un",
+      "wt"
+    ],
+    "originalChars": 1247,
+    "sourceSha256": "ead41df8fbf4034b2410499f7f0fc4e16241d18dcaa1b97b39598a3cc3e77f12",
+    "cases": [
+      {
+        "scenario": "default",
+        "hash": "83f0766d0e2d9c4e280825b295a3076aeb2a94d26cfb014fb8f7503633705c72"
+      }
+    ]
+  },
+  {
+    "symbol": "hu",
+    "name": "PromptEditDialog",
+    "path": "src/features/presets/ui/prompt-editor.js",
+    "dependencies": [
+      "Xl",
+      "b",
+      "dn",
+      "hn",
+      "wt",
+      "yl"
+    ],
+    "originalChars": 2149,
+    "sourceSha256": "105cb7731807013c4523fbeac74bd420ff04927b40fd8f4488490f11f16dd027",
+    "cases": [
+      {
+        "scenario": "default",
+        "hash": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b"
+      },
+      {
+        "scenario": "open",
+        "hash": "9cd4ca30e894a5a84b0d6bc3541cbe9dc045722075555a19b6ff4679b527fdcf"
+      }
+    ]
+  },
+  {
+    "symbol": "wu",
+    "name": "PresetNameDialog",
+    "path": "src/features/presets/ui/prompt-editor.js",
+    "dependencies": [
+      "Xl",
+      "b",
+      "wt"
+    ],
+    "originalChars": 2407,
+    "sourceSha256": "47884d975d3a30e77c9626441bda54709fdaa0437e39ee5f95e9cc591d3326ce",
+    "cases": [
+      {
+        "scenario": "default",
+        "hash": "4f90b69efd25e40f62cb59e14b8c124d5f3a891c67d02e062f13795e7ee40b58"
+      }
+    ]
+  },
+  {
+    "symbol": "du",
+    "name": "MacroReference",
+    "path": "src/features/presets/ui/prompt-preview.js",
+    "dependencies": [
+      "b",
+      "cu",
+      "uu",
+      "wt"
+    ],
+    "originalChars": 1292,
+    "sourceSha256": "a83108ee3755ff285d837b7305e0124cb5927903eec79f813d005a798102a555",
+    "cases": [
+      {
+        "scenario": "default",
+        "hash": "1eeccd3254a516fad6a9b73c7c229c4fc0922795ff57cd3c1269f69d6a94cd64"
+      }
+    ]
+  },
+  {
+    "symbol": "gu",
+    "name": "PromptManager",
+    "path": "src/features/presets/ui/prompt-manager.js",
+    "dependencies": [
+      "Cc",
+      "b",
+      "du",
+      "hu",
+      "mu",
+      "pu",
+      "wt"
+    ],
+    "originalChars": 4017,
+    "sourceSha256": "b8ae958cfa986a348c1cff18a9e3f91bb20ece530b2cd67521ff35bc8abd4186",
+    "cases": [
+      {
+        "scenario": "default",
+        "hash": "7d047dbc3cbc0d4d97bfd1aa57dad1ce7c1a94c7e24130f1086fa27bc034c43d"
+      }
+    ]
+  },
+  {
+    "symbol": "Su",
+    "name": "LorebookListItem",
+    "path": "src/features/world-info/ui/lorebook-library.js",
+    "dependencies": [
+      "wt"
+    ],
+    "originalChars": 2104,
+    "sourceSha256": "fc124ac563be89ddddccb987d5cd5725f6ad4592f6d49b334ad9b3edd60199f9",
+    "cases": [
+      {
+        "scenario": "default",
+        "hash": "1f7b6f91aff884ff9fc50a67552a846d43e3bfb047c3c3a85ba9d1f37ff81a23"
+      }
+    ]
+  },
+  {
+    "symbol": "Cu",
+    "name": "LorebookUploadControl",
+    "path": "src/features/world-info/ui/lorebook-library.js",
+    "dependencies": [
+      "mn",
+      "wt"
+    ],
+    "originalChars": 1156,
+    "sourceSha256": "2189eac2bf89d5e84555cc1de8c5f7bddff0cac5cab88d92b8a67e7e68287d50",
+    "cases": [
+      {
+        "scenario": "default",
+        "hash": "75049d2e8185968a33ce7881b9271b329d24716442d730491eff488acdf7b858"
+      }
+    ]
+  },
+  {
+    "symbol": "Sc",
+    "name": "EntryPositionControl",
+    "path": "src/features/world-info/ui/lorebook-entry-editor.js",
+    "dependencies": [
+      "wt",
+      "xu"
+    ],
+    "originalChars": 1320,
+    "sourceSha256": "ee522f6a670da94cb23a0cef78efef1e7d4133f8158165fa013f57ef39a50ae4",
+    "cases": [
+      {
+        "scenario": "default",
+        "hash": "2a6f277fb8ea549c1fecc1c8d43df82889bec7e07b95970ed0682a5931a383c2"
+      }
+    ]
+  },
+  {
+    "symbol": "Nc",
+    "name": "LorebookEntryCard",
+    "path": "src/features/world-info/ui/lorebook-entry-item.js",
+    "dependencies": [
+      "wt",
+      "yl"
+    ],
+    "originalChars": 3955,
+    "sourceSha256": "4dc43438136420d3da2a71e710542324d6265bf1f28a18e4193d66fde879512c",
+    "cases": [
+      {
+        "scenario": "default",
+        "hash": "3d8044eface06e619bf66e98fb6b1bc3b998262d3b1ca66bd9e298a205fada31"
+      }
+    ]
+  },
+  {
+    "symbol": "Af",
+    "name": "ActiveWorldInfoEntry",
+    "path": "src/features/world-info/ui/dynamic-world-info.js",
+    "dependencies": [
+      "Sc",
+      "wt",
+      "yl"
+    ],
+    "originalChars": 2230,
+    "sourceSha256": "f261e3c458100467bd3838448c115453f71b492d9d8848da5db6ba07eb039711",
+    "cases": [
+      {
+        "scenario": "default",
+        "hash": "8f99d45c02ec08592ecb7d31b1875297162576454ba34e59c89ebb70d98f3da8"
+      }
+    ]
+  },
+  {
+    "symbol": "Tc",
+    "name": "LorebookEntryList",
+    "path": "src/features/world-info/ui/lorebook-entry-list.js",
+    "dependencies": [
+      "Cc",
+      "Ec",
+      "Nc",
+      "b",
+      "wt"
+    ],
+    "originalChars": 3899,
+    "sourceSha256": "60f64d077f1890a9b70511e172bb88a36855ebdcadbca41b72134aaf4f148888",
+    "cases": [
+      {
+        "scenario": "default",
+        "hash": "afc197c299d47cb7cca3d45b915349fbb7967949c072e6154af7fec2df63d72d"
+      }
+    ]
+  },
+  {
+    "symbol": "Ec",
+    "name": "LorebookEntryDialog",
+    "path": "src/features/world-info/ui/lorebook-entry-editor.js",
+    "dependencies": [
+      "Sc",
+      "Xl",
+      "b",
+      "dn",
+      "hn",
+      "wt",
+      "yl"
+    ],
+    "originalChars": 4428,
+    "sourceSha256": "bc8a7b55d118cd3a52be44d3969c95d7aa24448e055c236e123cffaa32481fa1",
+    "cases": [
+      {
+        "scenario": "default",
+        "hash": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b"
+      },
+      {
+        "scenario": "open",
+        "hash": "3bc920997db646185e15731e0c04eef34238b6035c23bdd5857b0c413eca3e3f"
+      }
+    ]
+  },
+  {
+    "symbol": "Yc",
+    "name": "AttachLorebookDialog",
+    "path": "src/features/world-info/ui/attach-lorebook-dialog.js",
+    "dependencies": [
+      "Xl",
+      "b",
+      "wt"
+    ],
+    "originalChars": 2476,
+    "sourceSha256": "6d75169d6f3c106a7d3567242890532c53d3c6d1ed36ca208a0b8cbbd0605953",
+    "cases": [
+      {
+        "scenario": "default",
+        "hash": "fb03708d8200774cfb7491091f3304d83859bfce2689aad177d0e999d1a282b6"
+      }
+    ]
+  },
+  {
+    "symbol": "Eu",
+    "name": "LorebookLibrary",
+    "path": "src/features/world-info/ui/lorebook-library.js",
+    "dependencies": [
+      "Cu",
+      "Ql",
+      "Su",
+      "Xc",
+      "b",
+      "kt",
+      "sn",
+      "wt"
+    ],
+    "originalChars": 3150,
+    "sourceSha256": "88400e386d387de75fda04327f9b044da7327e0bed8a8f8677f15ad03c432349",
+    "cases": [
+      {
+        "scenario": "default",
+        "hash": "33c49de38e681dcc82c83071bfc1ba5689356439c8c2861f04c9df50db87944c"
+      }
+    ]
+  },
+  {
+    "symbol": "dh",
+    "name": "StoryImportControl",
+    "path": "src/features/chat/ui/chat-controls.js",
+    "dependencies": [
+      "kt",
+      "wt"
+    ],
+    "originalChars": 1328,
+    "sourceSha256": "1f7aef5c3e5324d89480f757eb82b3f00f8472fe45c9a5f5011db0073650b5cb",
+    "cases": [
+      {
+        "scenario": "default",
+        "hash": "dcf5ba76b18461b6d1b8a697c6e0de642e2437ca22566aac99985f47f24e7d51"
+      }
+    ]
+  },
+  {
+    "symbol": "hh",
+    "name": "AdventureImportControl",
+    "path": "src/features/chat/ui/chat-controls.js",
+    "dependencies": [
+      "b",
+      "kt",
+      "wt"
+    ],
+    "originalChars": 983,
+    "sourceSha256": "fdaa706b646bc171b3834ce308c275add8c9c524eda8dbfdb2f9b8ba1580702a",
+    "cases": [
+      {
+        "scenario": "default",
+        "hash": "f4935922ab41477854175c102029c876e2f4d551dea6cbf1bb77f28ee9e78400"
+      }
+    ]
+  },
+  {
+    "symbol": "hf",
+    "name": "TokenCountControl",
+    "path": "src/features/chat/ui/chat-controls.js",
+    "dependencies": [
+      "b",
+      "kt",
+      "wt"
+    ],
+    "originalChars": 1110,
+    "sourceSha256": "4060169b04531195e8698f1aa4f1810346148b704e6c32b6e42dedfce897de53",
+    "cases": [
+      {
+        "scenario": "default",
+        "hash": "c50649a1cec37c3ef18ee35c468023a06100e2f11024d097012a4006d26b3f1a"
+      }
+    ]
+  },
+  {
+    "symbol": "Xg",
+    "name": "MessageMenu",
+    "path": "src/features/chat/ui/chat-controls.js",
+    "dependencies": [
+      "b",
+      "kt",
+      "wt"
+    ],
+    "originalChars": 1197,
+    "sourceSha256": "a62be2c6453cf956428c889eb48ed7083dbcd11b989c242f0540a415e9a06ac4",
+    "cases": [
+      {
+        "scenario": "default",
+        "hash": "8856c1b3e2dd835136b816f392d70ec72c7b575dddc761b44d5957083e05a8f2"
+      }
+    ]
+  },
+  {
+    "symbol": "Qg",
+    "name": "ThinkingPanel",
+    "path": "src/features/chat/ui/chat-controls.js",
+    "dependencies": [
+      "b",
+      "kt",
+      "wt"
+    ],
+    "originalChars": 741,
+    "sourceSha256": "1c6e3f6b7823127ed3550c5ac3d6db4ed7b21d022025968763cf1b9517bd52b2",
+    "cases": [
+      {
+        "scenario": "default",
+        "hash": "271736a68c2a7446cb52665b8ada40efc1f547e2c19f234d504e49bc9e81b835"
+      }
+    ]
+  },
+  {
+    "symbol": "Kf",
+    "name": "RpgNotification",
+    "path": "src/features/chat/ui/chat-controls.js",
+    "dependencies": [
+      "kt",
+      "ol",
+      "wt"
+    ],
+    "originalChars": 1357,
+    "sourceSha256": "aadfe98d5d109e2d47532a43e7f3495a1828a0f50c357776a4719e556d198484",
+    "cases": [
+      {
+        "scenario": "default",
+        "hash": "edec3a0f3257e32f2ea288904661bd89b0a935655971e23b3987cf3273b93f1a"
+      }
+    ]
+  },
+  {
+    "symbol": "Df",
+    "name": "AuthorNoteDialog",
+    "path": "src/features/chat/ui/chat-controls.js",
+    "dependencies": [
+      "Xl",
+      "b",
+      "wt"
+    ],
+    "originalChars": 1630,
+    "sourceSha256": "635a40aa8c568db84c0b3d8451ab7eb25ae3a3cf96c3fb3e34c11629715190db",
+    "cases": [
+      {
+        "scenario": "default",
+        "hash": "74b32b341d1801adbbb121a68f18bf0dbacbd8c5da084780512cf26cc7f94467"
+      }
+    ]
+  },
+  {
+    "symbol": "Wf",
+    "name": "StoryRevisionDialog",
+    "path": "src/features/chat/ui/chat-controls.js",
+    "dependencies": [
+      "Xl",
+      "b",
+      "mn",
+      "wt"
+    ],
+    "originalChars": 3296,
+    "sourceSha256": "9e0bc6e2b79a44b379f2f0cc6204e8fc7afa7c3072cfaaac176d0820d463db72",
+    "cases": [
+      {
+        "scenario": "default",
+        "hash": "175184285088f5308475890dc24e97ce190809ccb0656d298e97b81b5c5e169e"
+      }
+    ]
+  },
+  {
+    "symbol": "qf",
+    "name": "ErrorDecisionDialog",
+    "path": "src/features/chat/ui/chat-controls.js",
+    "dependencies": [
+      "Xl",
+      "b",
+      "wt"
+    ],
+    "originalChars": 2906,
+    "sourceSha256": "20a05290bd3a7c9ff5d9c0078673ba24e5aa5fb572cdfb55b1cd50d8c9787b38",
+    "cases": [
+      {
+        "scenario": "default",
+        "hash": "81fcb3a8f1af966e9b2078ee4a32e0df0376df633ef57f8eab1b69a6f9548b78"
+      }
+    ]
+  },
+  {
+    "symbol": "Ql",
+    "name": "FileNameDialog",
+    "path": "src/ui/components/file-name-dialog.js",
+    "dependencies": [
+      "Xl",
+      "b",
+      "wt"
+    ],
+    "originalChars": 2825,
+    "sourceSha256": "2540fc59a11020f13af8e4c9e0d67d49129b52fad05b7093821fdbe51121acc5",
+    "cases": [
+      {
+        "scenario": "default",
+        "hash": "d0e5df18c28dccf0f191c242b477f25275f09dac259abba837ba84fdee220b45"
+      }
+    ]
+  }
+]

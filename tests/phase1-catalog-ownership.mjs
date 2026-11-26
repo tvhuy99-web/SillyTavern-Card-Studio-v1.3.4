@@ -1,0 +1,53 @@
+import { readRecoveredHostView } from './helpers/recovered-host-view.mjs';
+import assert from 'node:assert/strict';
+import { readFile } from 'node:fs/promises';
+import { createCharacterMutations, createPersonaMutations, createPresetMutations } from '../src/features/catalog/catalog-mutations.js';
+import { createCatalogRpcHandlers, CATALOG_RPC_METHODS } from '../src/runtime/card-runtime/host/catalog-rpc.js';
+import { createEntityRepositories } from '../src/app/persistence/entity-repositories.js';
+const clone = structuredClone;
+const deferred = () => { let resolve; const promise = new Promise(r => resolve = r); return { promise, resolve }; };
+const char = { characters: [{fileName:'a',card:{name:'Same',description:'a'},avatarUrl:'blob:a'}, {fileName:'b',card:{name:'Same',description:'b'}}], activeCharacterFileName:'b' };
+const persona = { personas:[{id:'u',name:'U'}],activePersonaId:'u' };
+const preset = { presets:[{name:'P',prompts:[]},{name:'Q',prompts:[]}],activePresetName:'Q' };
+const bind = state => ({get:()=>state,set:fn=>fn(state)});
+const writes=[], revoked=[]; let gate=null, fail=false;
+const write=async (...args)=>{writes.push(args); if(gate) await gate.promise; if(fail) throw Error('write failed');};
+const repositories={characters:{put:v=>write('character',v)},removeCharacterAndSessions:id=>write('removeCharacter',id),personas:{put:v=>write('persona',v),remove:id=>write('removePersona',id)},presets:{put:v=>write('preset',v),add:v=>write('addPreset',v),remove:id=>write('removePreset',id)},renamePreset:async(name,newName)=>{await write('rename',name,newName);return {...preset.presets.find(p=>p.name===name),name:newName};}};
+Object.assign(char,createCharacterMutations({...bind(char),repositories,prepareRecord:async v=>v,revokeAvatar:id=>revoked.push(id)}),{setActiveCharacterFileName:id=>char.activeCharacterFileName=id,createNewCharacter:async(card)=>{char.characters.push({fileName:'new',card});char.activeCharacterFileName='new';return 'new';}});
+Object.assign(persona,createPersonaMutations({...bind(persona),repositories,resolveActive:(items,id)=>items.find(p=>p.id===id)||null,clearActive:()=>{}}));
+Object.assign(preset,createPresetMutations({...bind(preset),repositories,normalize:p=>({...p,normalized:true}),defaultPreset:{prompts:[1]},clone}));
+let state={card:{fileName:'b',name:'Same'},preset:{name:'Q'},persona:{id:'u'},setSessionData:v=>Object.assign(state,v)};
+let active=true, sessionSaves=0;
+const lease={assertCurrent(){if(!active)throw Error('inactive');}};
+const dispatch=createCatalogRpcHandlers({readState:()=>state,characters:()=>char,personas:()=>persona,presets:()=>preset,findCharacter:id=>char.characters.find(c=>c.fileName===id),describeCharacter:id=>clone(char.characters.find(c=>c.fileName===id)),normalizeCharacter:(name,c)=>({...c.raw,name}),safeName:(v,d)=>String(v||d),mergeSettings:(c,p)=>({c,p}),clone,saveSession:async()=>{sessionSaves++;},uuid:()=> 'id'});
+const rpc=(method,args)=>dispatch(method,args,lease);
+assert.equal(CATALOG_RPC_METHODS.length,11);
+// Replacing a different record never selects it, including same display name.
+await rpc('character.replace',{name:'a',character:{raw:{description:'updated'}}});
+assert.equal(char.activeCharacterFileName,'b'); assert.equal(char.characters[0].card.description,'updated'); assert.equal(state.card.fileName,'b'); assert.equal(sessionSaves,0);
+// A UI selection changed during an asynchronous mutation is not restored afterwards.
+gate=deferred(); const changing=rpc('character.replace',{name:'a',character:{raw:{description:'slow'}}}); await new Promise(setImmediate); char.activeCharacterFileName='a'; gate.resolve(); gate=null; await changing; assert.equal(char.activeCharacterFileName,'a');
+await rpc('character.select',{id:'b'}); assert.equal(char.activeCharacterFileName,'b');
+await rpc('character.replace',{name:'b',character:{raw:{description:'selected'}}}); assert.equal(state.card.description,'selected'); assert.equal(sessionSaves,1);
+fail=true; await assert.rejects(rpc('character.delete',{name:'a'}),/write failed/); assert.equal(char.characters.length,2); assert.equal(char.activeCharacterFileName,'b'); assert.deepEqual(revoked,[]); await char.deleteActiveCharacter(); assert.equal(char.error,'Failed to delete character'); fail=false;
+assert.equal(await rpc('character.delete',{name:'a'}),true); assert.equal(char.activeCharacterFileName,'b'); assert.deepEqual(revoked,['blob:a']); assert.equal(await rpc('character.delete',{name:'a'}),false);
+assert.equal((await rpc('character.create',{name:'New',character:{}})).fileName,'new');
+// A stale request already queued behind another mutation must not start a new write.
+gate=deferred(); const first=char.updateCharacterById('b',{name:'first'}); await new Promise(setImmediate); const queued=rpc('character.replace',{name:'b',character:{raw:{name:'stale'}}}); active=false; gate.resolve(); gate=null; await first; await assert.rejects(queued,/inactive/); active=true; assert.equal(char.characters.find(c=>c.fileName==='b').card.name,'first');
+await rpc('persona.replace',{id:'u',persona:{description:'changed'}}); assert.equal(state.persona.description,'changed'); fail=true; await assert.rejects(rpc('persona.create',{name:'Bad'}),/write failed/); fail=false; assert.equal(persona.personas.length,1); assert.equal((await rpc('persona.create',{name:'New'})).id,'persona_id'); assert.equal(await rpc('persona.delete',{id:'persona_id'}),true); assert.equal(persona.activePersonaId,'u');
+await rpc('preset.replace',{name:'P',preset:{temperature:0}}); assert.equal(preset.activePresetName,'Q'); assert.equal(state.preset.name,'Q');
+await rpc('preset.replace',{name:'Q',preset:{temperature:1}}); assert.equal(state.preset.normalized,true);
+const before=writes.length; const created=await rpc('preset.create',{name:'R',preset:{prompts:[2]}}); assert.deepEqual(created.prompts,[2]); assert.equal(writes.length,before+1); assert.equal(writes.at(-1)[0],'addPreset'); assert.equal(preset.activePresetName,'R');
+await assert.rejects(rpc('preset.create',{name:'R'}),/tồn tại/);
+fail=true; await assert.rejects(rpc('preset.rename',{name:'P',newName:'P2'}),/write failed/); assert.ok(preset.presets.some(p=>p.name==='P')); fail=false;
+await rpc('preset.rename',{name:'P',newName:'P2'}); assert.equal(preset.activePresetName,'R'); assert.equal(await rpc('preset.delete',{name:'P2'}),true); assert.equal(preset.activePresetName,'R');
+assert.equal(await rpc('preset.delete',{name:'R'}),true); assert.equal(preset.activePresetName,'Q');
+// Repository protocol: rename reads persisted record, add (not put) prevents destination overwrite,
+// and delete is queued in the same transaction. Simulate atomic commit and rollback.
+const data=new Map([['old',{name:'old',extra:'keep'}],['existing',{name:'existing'}]]); let transactionCount=0, failDelete=false;
+const db={async transaction(stores,mode,enqueue){transactionCount++; assert.deepEqual(stores,['presets','chatSessions']); assert.equal(mode,'readwrite');const draft=new Map(data);let req,result,cursorReq;const store={get:key=>req={result:draft.get(key)},add:v=>{if(draft.has(v.name))throw Error('ConstraintError');draft.set(v.name,v);},delete:key=>{if(failDelete)throw Error('delete failed');draft.delete(key);}};enqueue({objectStore:name=>name==='presets'?store:{openCursor:()=>cursorReq={result:null}}},v=>result=v,e=>{throw e;});req?.onsuccess();cursorReq?.onsuccess();data.clear();for(const [k,v] of draft)data.set(k,v);return result;}};
+const repos=createEntityRepositories({database:db,normalizePreset:p=>({...p}),normalizePresetList:p=>p});
+await assert.rejects(repos.renamePreset('old','existing'),/ConstraintError/); assert.ok(data.has('old')); failDelete=true; await assert.rejects(repos.renamePreset('old','new'),/delete failed/); assert.ok(data.has('old')); assert.ok(!data.has('new')); failDelete=false; assert.deepEqual(await repos.renamePreset('old','new'),{name:'new',extra:'keep'}); assert.ok(!data.has('old')); assert.equal(transactionCount,3);
+const bundle=readRecoveredHostView();
+assert.ok(bundle.includes('catalog: catalogRpc')); assert.ok(!bundle.includes('case"character.replace":{let')); assert.ok(!bundle.includes('case"preset.replace":{let')); assert.ok(!bundle.includes('await nn(t),await rn(n)'));
+console.log('Catalog identity, strict failures, queued leases, atomic preset rename: OK');

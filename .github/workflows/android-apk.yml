@@ -43,127 +43,34 @@ jobs:
           "$SDKMANAGER" --version
           "$SDKMANAGER" --sdk_root="$ANDROID_HOME" "platforms;android-36" "build-tools;36.0.0"
 
-      - name: Install web dependencies
-        run: npm install --no-audit --no-fund
-
-      - name: Test AI Studio response selectors and streaming
+      - name: Build portable compatibility fixture and run regression tests
         run: |
-          node tests/ai-studio-response-extractor.mjs
-          node tests/ai-studio-live-turns.mjs
-          node tests/ai-studio-background.mjs
-          node tests/ai-studio-model-controls.mjs
-          node tests/ai-studio-thinking-summary.mjs
-          node tests/m4-native-embedding-bridge.mjs
-          node tests/m4-embeddinggemma2-litert-bridge.mjs
-          node tests/m4-sticky-compat.mjs
-          node tests/android-export-download.mjs
+          npm run build:portable
+          npm test
+          npm run test:native-java
+          npm run test:android-overlay
 
-      - name: Build portable static web app
+      - name: Build official locked npm web payload
         run: |
           npm run build
-          test -s dist/index.html
-          test -d dist/assets
+          npm run test:npm-runtime
+          git diff --exit-code -- build/npm-runtime/package-lock.json
+          test -s dist-npm/index.html
+          test -s dist-npm/modules/app/entry.js
+          test -s dist-npm/npm-runtime-build.json
 
       # Keep the existing web project untouched: only build-time CI installs.
-      - name: Install Capacitor 8
-        run: npm install --no-save --no-audit --no-fund @capacitor/core@8 @capacitor/android@8 @capacitor/cli@8
-
-      - name: Configure Android app
-        run: |
-          cat > capacitor.config.json <<'JSON'
-          {
-            "appId": "com.tvhuy99.cardstudio",
-            "appName": "SillyTavern Card Studio",
-            "webDir": "dist"
-          }
-          JSON
+      # Pin exact Capacitor 8.0.0 packages for reproducible Android APK builds.
+      - name: Install Capacitor 8.0.0
+        run: npm install --no-save --no-audit --no-fund @capacitor/core@8.0.0 @capacitor/android@8.0.0 @capacitor/cli@8.0.0
 
       - name: Generate and sync Android project
         run: |
           npx cap add android
           npx cap sync android
 
-      - name: Register Android AI Studio and native World Info ONNX plugins
-        shell: bash
-        run: |
-          set -euo pipefail
-          PLUGIN_DIR="android/app/src/main/java/com/tvhuy99/cardstudio"
-          mkdir -p "$PLUGIN_DIR"
-          cp android-native/AiStudioTextPlugin.java "$PLUGIN_DIR/AiStudioTextPlugin.java"
-          cp android-native/AiStudioModelCatalogReader.java "$PLUGIN_DIR/AiStudioModelCatalogReader.java"
-          cp android-native/AiStudioGenerationService.java "$PLUGIN_DIR/AiStudioGenerationService.java"
-          cp android-native/WorldInfoEmbeddingNativePlugin.java "$PLUGIN_DIR/WorldInfoEmbeddingNativePlugin.java"
-          cp android-native/EmbeddingGemma2LiteRTPlugin.java "$PLUGIN_DIR/EmbeddingGemma2LiteRTPlugin.java"
-          cp android-native/AndroidExportFilePlugin.java "$PLUGIN_DIR/AndroidExportFilePlugin.java"
-          cat > "$PLUGIN_DIR/MainActivity.java" <<'JAVA'
-          package com.tvhuy99.cardstudio;
-
-          import android.os.Bundle;
-          import com.getcapacitor.BridgeActivity;
-
-          public class MainActivity extends BridgeActivity {
-              @Override
-              public void onCreate(Bundle savedInstanceState) {
-                  registerPlugin(AiStudioTextPlugin.class);
-                  registerPlugin(WorldInfoEmbeddingNativePlugin.class);
-                  registerPlugin(EmbeddingGemma2LiteRTPlugin.class);
-                  registerPlugin(AndroidExportFilePlugin.class);
-                  super.onCreate(savedInstanceState);
-              }
-          }
-          JAVA
-          python3 - <<'PY'
-          from pathlib import Path
-          manifest = Path("android/app/src/main/AndroidManifest.xml")
-          text = manifest.read_text()
-          permissions = [
-              "android.permission.FOREGROUND_SERVICE",
-              "android.permission.FOREGROUND_SERVICE_DATA_SYNC",
-              "android.permission.WAKE_LOCK",
-              "android.permission.POST_NOTIFICATIONS",
-          ]
-          for permission in permissions:
-              line = f'<uses-permission android:name="{permission}" />'
-              if line not in text:
-                  text = text.replace("<application", f"    {line}\n    <application", 1)
-          service = (
-              '<service android:name=".AiStudioGenerationService" '
-              'android:exported="false" android:stopWithTask="false" '
-              'android:foregroundServiceType="dataSync" />'
-          )
-          if service not in text:
-              text = text.replace("</application>", f"    {service}\n    </application>", 1)
-          # LiteRT-LM requires optional vendor OpenCL libraries to be
-          # visible on Android 12+. CPU-only phones must still install.
-          for lib in ("libOpenCL.so", "libvndksupport.so"):
-              declaration = f'<uses-native-library android:name="{lib}" android:required="false" />'
-              if declaration not in text:
-                  text = text.replace("</application>", f"    {declaration}\n    </application>", 1)
-          manifest.write_text(text)
-          PY
-
-      # Stable debug key copied from GeminiLiveTranslate. This is a PUBLIC
-      # DEBUG key, not a release signing key. Do NOT use for production releases.
-      - name: Add ARM64-only Android-native ONNX Runtime and LiteRT-LM
-        shell: bash
-        run: |
-          set -euo pipefail
-          cat >> android/app/build.gradle <<'GRADLE'
-          // Package native libraries only for 64-bit ARM devices.
-          android {
-              defaultConfig {
-                  ndk {
-                      abiFilters 'arm64-v8a'
-                  }
-              }
-          }
-          dependencies {
-              implementation 'androidx.webkit:webkit:1.16.0'
-              implementation 'com.microsoft.onnxruntime:onnxruntime-android:1.29.0'
-              implementation 'com.google.ai.edge.litertlm:litertlm-android:0.19.0'
-          }
-          GRADLE
-          test -s android-native/WorldInfoEmbeddingNativePlugin.java
+      - name: Apply versioned native overlay
+        run: python3 tools/prepare-android.py android
 
       - name: Configure stable debug signature and monotonic version
         shell: bash
@@ -226,6 +133,31 @@ jobs:
           print('ARM64-only ONNX Runtime + LiteRT-LM packaging verified.')
           PY
           grep -q 'EmbeddingGemma2LiteRTPlugin' android/app/src/main/java/com/tvhuy99/cardstudio/MainActivity.java
+
+      - name: Verify APK contains the exact npm release runtime
+        run: |
+          python3 - <<'PY'
+          import hashlib
+          import json
+          from pathlib import Path
+          from zipfile import ZipFile
+
+          dist = Path('dist-npm')
+          manifest = json.loads((dist / 'npm-runtime-build.json').read_text())
+          lock = Path('build/npm-runtime/package-lock.json').read_bytes()
+          assert manifest['lockSha256'] == hashlib.sha256(lock).hexdigest()
+          with ZipFile('android/app/build/outputs/apk/debug/app-debug.apk') as apk:
+              prefix = 'assets/public/'
+              assert apk.read(prefix + 'index.html') == (dist / 'index.html').read_bytes()
+              assert apk.read(prefix + 'modules/app/entry.js') == (dist / 'modules/app/entry.js').read_bytes()
+              assert apk.read(prefix + 'npm-runtime-build.json') == (dist / 'npm-runtime-build.json').read_bytes()
+              assert len(manifest['replacements']) == 6
+              for item in manifest['replacements']:
+                  data = apk.read(prefix + item['path'])
+                  assert hashlib.sha256(data).hexdigest() == item['sha256'], item['path']
+              assert prefix + 'assets/app-production-v1.3.6.js' not in apk.namelist()
+          print('APK contains all six locked package-backed runtime adapters; no portable application bundle.')
+          PY
 
       - name: Verify stable signing certificate
         shell: bash

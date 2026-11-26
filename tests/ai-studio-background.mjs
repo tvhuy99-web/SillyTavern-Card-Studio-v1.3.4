@@ -1,14 +1,14 @@
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 
-const native = fs.readFileSync(new URL('../android-native/AiStudioTextPlugin.java', import.meta.url),'utf8');
+const native = ['AiStudioTextPlugin.java','AiStudioDiagnostics.java','AiStudioWebViewController.java','AiStudioSessionController.java','AiStudioThinkingController.java','AiStudioGenerationController.java','AiStudioResponsePoller.java'].map(f => fs.readFileSync(new URL('../android-native/' + f, import.meta.url), 'utf8')).join('\n');
 const service = fs.readFileSync(new URL('../android-native/AiStudioGenerationService.java', import.meta.url),'utf8');
 const workflow = fs.readFileSync(new URL('../.github/workflows/android-apk.yml', import.meta.url),'utf8');
 
 // A user-initiated generation must start the FGS before pressing Home.
-assert.match(native, /pending=call;\s*pendingThinkingLevel=[^;]+;/);
-const generation = native.slice(native.indexOf('public void generate(PluginCall call)'), native.indexOf('private void prepareText('));
-assert.ok(generation.indexOf('pendingThinkingLevel=') < generation.indexOf('startBackgroundGeneration();'),
+assert.match(native, /pending\s*=\s*call;[\s\S]*?thinkingController\.resetForGeneration\(/);
+const generation = native.slice(native.indexOf('void startGeneration('), native.indexOf('private void prepareText('));
+assert.ok(generation.indexOf('thinkingController.resetForGeneration(') < generation.indexOf('startBackgroundGeneration('),
   'Native thinking setting must be parsed before starting the foreground service');
 assert.match(generation, /GENERATION_SETTINGS/);
 assert.match(native, /startForegroundService\(intent\)/);
@@ -38,17 +38,19 @@ assert.doesNotMatch(service, /getString\("prompt"|getString\("text"|getString\("
 
 // Generated APK must include a declared Android 14+ dataSync service, and
 // Android 13+ optional notifications permission.
-assert.match(workflow, /cp android-native\/AiStudioGenerationService\.java/);
-assert.match(workflow, /android\.permission\.FOREGROUND_SERVICE_DATA_SYNC/);
-assert.match(workflow, /android\.permission\.FOREGROUND_SERVICE/);
-assert.match(workflow, /android\.permission\.WAKE_LOCK/);
-assert.match(workflow, /android\.permission\.POST_NOTIFICATIONS/);
-assert.match(workflow, /android:foregroundServiceType="dataSync"/);
-assert.match(workflow, /android:stopWithTask="false"/);
+assert.match(workflow, /python3 tools\/prepare-android\.py android/);
+const overlay = fs.readFileSync(new URL('../tools/prepare-android.py', import.meta.url),'utf8');
+assert.match(overlay, /glob\("\*\.java"\)/);
+assert.match(overlay, /FOREGROUND_SERVICE_DATA_SYNC/);
+assert.match(overlay, /FOREGROUND_SERVICE/);
+assert.match(overlay, /WAKE_LOCK/);
+assert.match(overlay, /POST_NOTIFICATIONS/);
+assert.match(overlay, /"foregroundServiceType":"dataSync"/);
+assert.match(overlay, /"stopWithTask":"false"/);
 
 // Preserve previous text streaming, unique Google conversation and the
 // default-hidden/optional inline debug page.
-assert.match(native, /notifyListeners\("textProgress",event\)/);
+assert.match(native, /(?:notifyListeners|emitEvent)\("textProgress",\s*event\)/);
 assert.match(native, /NEW_CHAT_CONFIRMED/);
 assert.match(native, /getBoolean\(PREFS_SHOW_PAGE, false\)/);
 assert.match(native, /WEBVIEW_INLINE_VISIBLE/);

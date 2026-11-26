@@ -1,4 +1,4 @@
-import { runtimeState } from '../app/state/runtime-state.js?v=1.3.6-m5.1';
+import { runtimeState } from '../app/state/runtime-state.js';
 
 const STOP_TEXT_RE = /(?:^|\b)(?:stop|dừng)(?:\b|$)/i;
 const SEND_TEXT_RE = /(?:^|\b)(?:send|gửi)(?:\b|$)/i;

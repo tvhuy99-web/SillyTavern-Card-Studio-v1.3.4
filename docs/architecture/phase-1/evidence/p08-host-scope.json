@@ -1,0 +1,37 @@
+{
+  "syntaxDiagnostics": 0,
+  "counts": {
+    "__stsCreateHostRpcDispatcher": {
+      "occurrences": 2,
+      "unresolved": 0
+    },
+    "__stsCreateChatRpcHandlers": {
+      "occurrences": 2,
+      "unresolved": 0
+    },
+    "__stsCreateRuntimeGenerationTasks": {
+      "occurrences": 2,
+      "unresolved": 0
+    },
+    "__stsCreateRuntimeGenerationService": {
+      "occurrences": 2,
+      "unresolved": 0
+    },
+    "__stsHostRpc": {
+      "occurrences": 3,
+      "unresolved": 0
+    },
+    "__stsChatRpc": {
+      "occurrences": 3,
+      "unresolved": 0
+    },
+    "__stsLease": {
+      "occurrences": 3,
+      "unresolved": 0
+    },
+    "__stsAssertCurrent": {
+      "occurrences": 3,
+      "unresolved": 0
+    }
+  }
+}

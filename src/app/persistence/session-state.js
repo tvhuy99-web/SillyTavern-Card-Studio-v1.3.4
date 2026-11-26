@@ -2,19 +2,48 @@ import {
   needsMessageNormalization,
   normalizeMessagesOnLoad,
 } from '../../features/arena/state-machine.js';
-const NON_PERSISTENT_KEYS = Object.freeze([
-  'logs',
-  'initialDiagnosticLog',
-  'isLoading',
-  'isSummarizing',
-  'isInputLocked',
-  'isAutoLooping',
-  'error',
-  'abortControllers',
-  'quickReplies',
-  'scriptButtons',
-  'rpgNotification',
-]);
+export const sessionStateContract = Object.freeze({
+  identity: Object.freeze([
+    'sessionId', 'characterFileName', 'presetName', 'userPersonaId',
+    'lastMessageSnippet', 'lastUpdated', '__stsRecordGeneration',
+  ]),
+  persistent: Object.freeze([
+    'chatHistory',
+    'longTermSummaries',
+    'summaryChunkSize',
+    'summaryQueue',
+    'storyQueue',
+    'variables',
+    'extensionSettings',
+    'worldInfoState',
+    'worldInfoPinned',
+    'worldInfoPlacement',
+    'worldInfoRuntime',
+    'visualState',
+    'authorNote',
+    'lastStateBlock',
+    'rpgState',
+    'generatedLorebookEntries',
+    'isArenaMode',
+    'arenaModelId',
+    'arenaProvider',
+    'arenaProfileId',
+  ]),
+  runtimeOnly: Object.freeze([
+    'isLoading',
+    'isSummarizing',
+    'isInputLocked',
+    'isAutoLooping',
+    'error',
+    'abortControllers',
+    'quickReplies',
+    'scriptButtons',
+    'rpgNotification',
+  ]),
+  diagnosticsOnly: Object.freeze(['logs', 'initialDiagnosticLog']),
+});
+
+const NON_PERSISTENT_KEYS = Object.freeze([...sessionStateContract.runtimeOnly, ...sessionStateContract.diagnosticsOnly]);
 
 const INTERNAL_PIPELINE_RE = /<(think|thinking|thinking_requirements|step_outline|plan|inner_monologue|basic_confirmation|draft|revision_confirmation|draft_unit_plan)\b[^>]*>[\s\S]*?<\/\1>/gi;
 const CONTENT_RE = /<content\b[^>]*>([\s\S]*?)<\/content>/gi;
@@ -128,8 +157,8 @@ export function normalizeLoadedSession(input) {
   if (JSON.stringify(visual) !== JSON.stringify(record.visualState || {})) needsRewrite = true;
   record.visualState = visual;
 
-  if (record.arenaUserProfileId !== undefined && record.arenaProfileId === undefined) {
-    record.arenaProfileId = record.arenaUserProfileId;
+  if (Object.prototype.hasOwnProperty.call(record, 'arenaUserProfileId')) {
+    if (record.arenaProfileId === undefined) record.arenaProfileId = record.arenaUserProfileId;
     delete record.arenaUserProfileId;
     needsRewrite = true;
   }
@@ -149,11 +178,13 @@ export function createSessionSnapshot(state, overrides = {}, deps = {}) {
 
   return {
     sessionId: state.sessionId,
+    ...(state.__stsRecordGeneration ? { __stsRecordGeneration: state.__stsRecordGeneration } : {}),
     characterFileName: state.card.fileName || state.card.name,
     presetName: overrides.preset?.name ?? state.preset.name,
     userPersonaId: overrides.persona === undefined ? state.persona?.id || null : overrides.persona?.id || null,
     chatHistory: messages,
     longTermSummaries: overrides.longTermSummaries ?? state.longTermSummaries,
+    summaryChunkSize: overrides.summaryChunkSize ?? state.summaryChunkSize ?? null,
     summaryQueue: overrides.summaryQueue ?? state.summaryQueue,
     storyQueue: overrides.storyQueue ?? state.storyQueue,
     variables: overrides.variables ?? state.variables,
@@ -168,46 +199,11 @@ export function createSessionSnapshot(state, overrides = {}, deps = {}) {
     rpgState: overrides.rpgState ?? state.card.rpg_data,
     generatedLorebookEntries: overrides.generatedLorebookEntries ?? state.generatedLorebookEntries,
     isArenaMode: overrides.isArenaMode ?? state.isArenaMode,
-    arenaModelId: overrides.arenaModelId ?? state.arenaModelId,
-    arenaProvider: overrides.arenaProvider ?? state.arenaProvider,
-    arenaProfileId: overrides.arenaProfileId ?? state.arenaUserProfileId,
+    arenaModelId: overrides.arenaModelId === undefined ? state.arenaModelId : overrides.arenaModelId,
+    arenaProvider: overrides.arenaProvider === undefined ? state.arenaProvider : overrides.arenaProvider,
+    arenaProfileId: overrides.arenaProfileId === undefined ? state.arenaUserProfileId : overrides.arenaProfileId,
     lastMessageSnippet: snippet,
     lastUpdated: now,
   };
 }
 
-export const sessionStateContract = Object.freeze({
-  persistent: Object.freeze([
-    'chatHistory',
-    'longTermSummaries',
-    'summaryQueue',
-    'storyQueue',
-    'variables',
-    'extensionSettings',
-    'worldInfoState',
-    'worldInfoPinned',
-    'worldInfoPlacement',
-    'worldInfoRuntime',
-    'visualState',
-    'authorNote',
-    'lastStateBlock',
-    'rpgState',
-    'generatedLorebookEntries',
-    'isArenaMode',
-    'arenaModelId',
-    'arenaProvider',
-    'arenaProfileId',
-  ]),
-  runtimeOnly: Object.freeze([
-    'isLoading',
-    'isSummarizing',
-    'isInputLocked',
-    'isAutoLooping',
-    'error',
-    'abortControllers',
-    'quickReplies',
-    'scriptButtons',
-    'rpgNotification',
-  ]),
-  diagnosticsOnly: Object.freeze(['logs', 'initialDiagnosticLog']),
-});

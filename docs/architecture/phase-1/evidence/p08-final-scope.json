@@ -1,0 +1,30 @@
+{
+  "typescript": "5.8.3",
+  "syntaxDiagnostics": 0,
+  "entries": {
+    "__stsUtilityRpc": {
+      "references": 7,
+      "unresolved": 0
+    },
+    "__stsCreateUtilityRpcHandlers": {
+      "references": 2,
+      "unresolved": 0
+    },
+    "__stsCreateImmersiveContainer": {
+      "references": 2,
+      "unresolved": 0
+    },
+    "__stsCreateLoadingIndicator": {
+      "references": 2,
+      "unresolved": 0
+    },
+    "__stsCreateLoadOlderButton": {
+      "references": 2,
+      "unresolved": 0
+    },
+    "Qh": {
+      "references": 0,
+      "unresolved": 0
+    }
+  }
+}

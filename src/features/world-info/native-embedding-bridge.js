@@ -1,3 +1,4 @@
+import { getAndroidPlugin, ANDROID_PLUGINS } from '../../platform/android/native-bridge.js';
 // Bridge for the Android-native ONNX Runtime engine. Browser/web installations
 // retain their existing Transformers.js implementation. On an Android APK,
 // EmbeddingGemma sync must use the native engine or show an explicit error:
@@ -8,9 +9,7 @@ const TRANSFER_CHUNK_BYTES = 512 * 1024;
 const PROGRESS_INTERVAL_BYTES = 16 * 1024 * 1024;
 
 export function getNativeEmbeddingPlugin(host = globalThis) {
-  const capacitor = host?.Capacitor;
-  if (capacitor?.getPlatform?.() !== 'android') return null;
-  return capacitor.Plugins?.WorldInfoEmbeddingNative || null;
+  return getAndroidPlugin(ANDROID_PLUGINS.onnx, host);
 }
 
 // Convert Tensor<bigint> token IDs into plain JSON arrays. Never send document
@@ -72,52 +71,108 @@ async function getCachedFile(modelId, fileName, cacheStorage) {
     + ' trong Cache API. Hãy tải lại model trong Cài đặt Smart Scan, không đổi model tự động.');
 }
 
-// Transfer is bounded by 512 KiB per JS/native bridge call. The model can
-// exceed 200 MB; never call response.arrayBuffer() or hold it all in JS RAM.
-export async function copyCachedModelToNative(plugin, provider, onStage = () => {}, cacheStorage = globalThis.caches) {
-  const status = await plugin.status();
-  if (status.modelReady) {
-    onStage('ONNX native: trọng số đã được sao chép từ lần trước; tái sử dụng');
-    return;
+// Choose both responses from the same cache and model revision path. Never
+// combine graph/weights discovered in different caches or revisions.
+async function getCachedPair(modelId, cacheStorage) {
+  if (!cacheStorage?.keys) throw new Error('Cache API không khả dụng.');
+  const needle = '/' + modelId.toLowerCase() + '/';
+  for (const name of await cacheStorage.keys()) {
+    if (!/transformers/i.test(name) && name !== 'st-card-studio-embedding-models-v1') continue;
+    const cache = await cacheStorage.open(name);
+    const groups = new Map();
+    for (const request of await cache.keys()) {
+      const url = new URL(request.url);
+      if (!url.pathname.toLowerCase().includes(needle)) continue;
+      for (const fileName of [GRAPH_FILE, DATA_FILE]) {
+        const suffix = '/onnx/' + fileName;
+        if (!url.pathname.endsWith(suffix)) continue;
+        const key = url.origin + url.pathname.slice(0, -fileName.length) + url.search;
+        if (!groups.has(key)) groups.set(key, new Map());
+        groups.get(key).set(fileName, request);
+      }
+    }
+    for (const group of groups.values()) {
+      if (group.size !== 2) continue;
+      const graph = await cache.match(group.get(GRAPH_FILE));
+      const weights = await cache.match(group.get(DATA_FILE));
+      if (graph?.ok && graph.body?.getReader && weights?.ok && weights.body?.getReader) {
+        return [[GRAPH_FILE, graph], [DATA_FILE, weights]];
+      }
+      for (const response of [graph, weights]) { try { await response?.body?.cancel(); } catch {} }
+    }
   }
-  for (const [fileName, ready] of [[GRAPH_FILE, status.graphReady], [DATA_FILE, status.weightsReady]]) {
-    if (ready) continue;
-    const response = await getCachedFile(provider.modelId, fileName, cacheStorage);
-    const reader = response.body.getReader();
+  throw new Error('Không tìm thấy cặp graph/trọng số cùng phiên bản trong Cache API. Hãy tải lại model.');
+}
+
+function makeImportId() { return `onnx-${Date.now().toString(36)}-${Math.random().toString(36).slice(2)}`; }
+
+// Transfer is bounded by 512 KiB per JS/native bridge call; no full model buffer.
+async function transferFile(plugin, fileName, response, onStage, modelImportId) {
     let copied = 0;
     let nextNotice = PROGRESS_INTERVAL_BYTES;
     onStage('ONNX native: đang sao chép ' + fileName
       + ' từ Cache API vào vùng lưu trữ riêng (không tải lại qua mạng)');
-    await plugin.beginFile({ fileName });
+    const reader = response.body.getReader();
+    const target = { fileName, importId: makeImportId(), ...(modelImportId ? {modelImportId} : {}) };
+    let committed = false;
     try {
+      await plugin.beginFile(target);
       for (;;) {
         const { done, value } = await reader.read();
         if (done) break;
         const bytes = value instanceof Uint8Array ? value : new Uint8Array(value);
         for (let offset = 0; offset < bytes.length; offset += TRANSFER_CHUNK_BYTES) {
           const piece = bytes.subarray(offset, Math.min(offset + TRANSFER_CHUNK_BYTES, bytes.length));
-          await plugin.appendChunk({ fileName, base64: encodeBase64(piece) });
+          await plugin.appendChunk({ ...target, base64: encodeBase64(piece) });
           copied += piece.length;
           if (copied >= nextNotice) {
-            onStage('ONNX native: đã sao chép ' + Math.round(copied / 1048576)
-              + ' MiB của ' + fileName);
+            onStage('ONNX native: đã sao chép ' + Math.round(copied / 1048576) + ' MiB của ' + fileName);
             nextNotice += PROGRESS_INTERVAL_BYTES;
           }
         }
       }
-      const result = await plugin.finishFile({ fileName });
-      if (result.bytes !== copied) {
-        throw new Error('Số byte chuyển sang ONNX native không khớp: ' + fileName);
-      }
+      const result = await plugin.finishFile({...target, expectedBytes: copied});
+      if (result.bytes !== copied) throw new Error('Số byte chuyển sang ONNX native không khớp: ' + fileName);
+      committed = true;
       onStage('ONNX native: sao chép xong ' + fileName + ' (' + Math.round(copied / 1048576) + ' MiB)');
     } finally {
+      if (!committed) {
+        try { await plugin.abortFile?.(target); } catch {}
+        try { await reader.cancel(); } catch {}
+      }
       try { reader.releaseLock(); } catch {}
+    }
+}
+
+export async function copyCachedModelToNative(plugin, provider, onStage = () => {}, cacheStorage = globalThis.caches) {
+  const status = await plugin.status();
+  if (status.modelReady) {
+    onStage('ONNX native: trọng số đã được sao chép từ lần trước; tái sử dụng');
+    return;
+  }
+  if (status.modelSetImportVersion === 1) {
+    const pair = await getCachedPair(provider.modelId, cacheStorage);
+    const modelImportId = makeImportId();
+    let committed = false;
+    try {
+      await plugin.beginModelImport({modelImportId});
+      for (const [name, response] of pair) await transferFile(plugin, name, response, onStage, modelImportId);
+      await plugin.commitModelImport({modelImportId});
+      committed = true;
+    } finally {
+      if (!committed) {
+        try { await plugin.abortModelImport({modelImportId}); } catch {}
+        for (const [, response] of pair) { try { await response.body.cancel(); } catch {} }
+      }
+    }
+  } else {
+    // Compatibility with earlier APKs. New APKs publish the pair together.
+    for (const [name, ready] of [[GRAPH_FILE, status.graphReady], [DATA_FILE, status.weightsReady]]) {
+      if (!ready) await transferFile(plugin, name, await getCachedFile(provider.modelId, name, cacheStorage), onStage);
     }
   }
   const finalStatus = await plugin.status();
-  if (!finalStatus.modelReady) {
-    throw new Error('ONNX native chưa nhận đủ graph và trọng số, không thể suy luận.');
-  }
+  if (!finalStatus.modelReady) throw new Error('ONNX native chưa nhận đủ graph và trọng số, không thể suy luận.');
 }
 
 export async function createNativeEmbeddingGemmaRuntime({

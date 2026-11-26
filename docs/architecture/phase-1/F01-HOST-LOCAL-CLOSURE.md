@@ -1,0 +1,3 @@
+# F01 — Host local binding closure
+
+The previous AST report measured 394 short host bindings at baseline, of which 359 were top-level and 35 were local. This pass restores meaningful local names in storage callbacks, embedding service adapters, persona resolution, logging, speech context, message counting and timestamp formatting. It preserves the old dependency object keys and exported n/t aliases. The generated mirror is synchronized and the existing lexical wiring assertions follow the renamed callbacks. The AST host gate now checks both top-level and total short-name declarations. Full CI must validate that the host count is zero; no claim is made about complete repository-wide F01.

@@ -1,3 +1,4 @@
+import { readRecoveredHostView } from './helpers/recovered-host-view.mjs';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import {
@@ -27,26 +28,10 @@ const saved = markSmartScanStickySettingsSaved({ ...updated, aiStickyDuration: 5
 assert.equal(migrateSmartScanStickySettings(saved).aiStickyDuration, 5,
   'user can explicitly change the slider back to 5 later');
 
-// Exercise the actual legacy World Info resolver used by the APK, not a
-// simplified simulation. The minified module is extracted solely inside
-// this repository regression test, using known lexical function boundaries.
-const production = readFileSync(
-  new URL('../assets/app-production-v1.3.6.js', import.meta.url), 'utf8');
-const start = production.indexOf('lh=(e,t,n={},r={},a=0,i=new Set,o=!0)=>');
-const end = production.indexOf(',uh=({', start);
-assert.ok(start > 0 && end > start, 'legacy World Info resolver must be present');
-const source = production.slice(start, end);
-const legacyResolver = new Function(
-  'sh', 'oh',
-  'let ' + source + ';return ch;',
-)(
-  () => true,
-  (needle, haystack, regex = false, caseSensitive = false) => {
-    const hay = String(haystack || '');
-    const key = String(needle || '');
-    return caseSensitive ? hay.includes(key) : hay.toLowerCase().includes(key.toLowerCase());
-  },
-);
+// Exercise the actual extracted resolver, rather than evaluating a slice of a bundle.
+const production = readRecoveredHostView();
+const {createKeywordMatching} = await import('../src/features/world-info/keyword-matching.js');
+const legacyResolver = createKeywordMatching().resolveWorldInfo;
 const resolver = createUidSafeWorldInfoResolver(legacyResolver);
 
 const numericEntry = {
@@ -119,10 +104,10 @@ assert.equal(cooling.activeEntries.length, 0);
 // The generated production bundle must have the actual 3-turn default,
 // migrating getter, original semantic provider and the always-visible slider.
 assert.ok(production.includes('aiStickyDuration:3,system_prompt:'));
-assert.ok(production.includes('__stsMigrateSmartScanStickySettings(t)'));
-assert.ok(production.includes('__stsMarkSmartScanStickySettingsSaved(e)'));
-assert.ok(production.includes('resolveWorldInfo:__stsCreateUidSafeWorldInfoResolver(ch)'));
-assert.ok(production.includes('label:"AI Sticky Duration (lượt AI phản hồi)"'));
-assert.equal((production.match(/label:"AI Sticky Duration \(lượt AI phản hồi\)"/g) || []).length, 1);
+assert.match(production, /__stsMigrateSmartScanStickySettings\)?\(savedSettings\)/);
+assert.match(production, /__stsMarkSmartScanStickySettingsSaved\)?\(settings\)/);
+assert.ok(/resolveWorldInfo:\s*(?:dependencies\.)?__stsCreateUidSafeWorldInfoResolver\((?:dependencies\.)?resolveWorldInfo\)/.test(readRecoveredHostView()));
+assert.ok(/label:\s*"AI Sticky Duration \(lượt AI phản hồi\)"/.test(readFileSync(new URL('../src/ui/settings/sections/smart-scan-settings.js', import.meta.url), 'utf8')));
+assert.equal((readRecoveredHostView().match(/label:\s*"AI Sticky Duration \(lượt AI phản hồi\)"/g) || []).length, 1);
 
 console.log('World Info Sticky: 3-turn default, migration, numeric UID and actual resolver tests OK');

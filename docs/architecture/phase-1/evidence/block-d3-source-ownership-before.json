@@ -1,0 +1,374 @@
+{
+  "typescript": "5.8.3",
+  "sourceFiles": 156,
+  "parseErrors": [],
+  "scopeCandidatesReviewed": 6000,
+  "zeroReferenceCandidates": [
+    {
+      "file": "src/app/persistence/entity-repositories.js",
+      "name": "_editor",
+      "kind": "binding-element",
+      "line": 17,
+      "refs": 0
+    },
+    {
+      "file": "src/app/persistence/entity-repositories.js",
+      "name": "_generation",
+      "kind": "binding-element",
+      "line": 114,
+      "refs": 0
+    },
+    {
+      "file": "src/app/persistence/entity-repositories.js",
+      "name": "_editor",
+      "kind": "binding-element",
+      "line": 114,
+      "refs": 0
+    },
+    {
+      "file": "src/diagnostics/ui/diagnostic-panels.js",
+      "name": "e",
+      "kind": "binding-element",
+      "line": 35,
+      "refs": 0
+    },
+    {
+      "file": "src/features/catalog/character-file.js",
+      "name": "n",
+      "kind": "binding-element",
+      "line": 15,
+      "refs": 0
+    },
+    {
+      "file": "src/features/catalog/ui/catalog-screens.js",
+      "name": "t",
+      "kind": "binding-element",
+      "line": 5,
+      "refs": 0
+    },
+    {
+      "file": "src/features/catalog/ui/character-sections.js",
+      "name": "propAvailableLorebooks",
+      "kind": "binding-element",
+      "line": 17,
+      "refs": 0
+    },
+    {
+      "file": "src/features/catalog/ui/character-sections.js",
+      "name": "propOnImport",
+      "kind": "binding-element",
+      "line": 17,
+      "refs": 0
+    },
+    {
+      "file": "src/features/chat/hooks/use-response-pipeline.js",
+      "name": "t",
+      "kind": "binding-element",
+      "line": 2,
+      "refs": 0
+    },
+    {
+      "file": "src/features/chat/hooks/use-session-persistence.js",
+      "name": "x",
+      "kind": "binding-element",
+      "line": 2,
+      "refs": 0
+    },
+    {
+      "file": "src/features/chat/hooks/use-session-persistence.js",
+      "name": "T",
+      "kind": "binding-element",
+      "line": 2,
+      "refs": 0
+    },
+    {
+      "file": "src/features/chat/hooks/use-slash-commands.js",
+      "name": "c",
+      "kind": "binding-element",
+      "line": 2,
+      "refs": 0
+    },
+    {
+      "file": "src/features/chat/ui/message-rendering.js",
+      "name": "b",
+      "kind": "binding-element",
+      "line": 43,
+      "refs": 0
+    },
+    {
+      "file": "src/features/chat/ui/message-rendering.js",
+      "name": "l",
+      "kind": "binding-element",
+      "line": 48,
+      "refs": 0
+    },
+    {
+      "file": "src/features/chat/ui/message-rendering.js",
+      "name": "v",
+      "kind": "binding-element",
+      "line": 54,
+      "refs": 0
+    },
+    {
+      "file": "src/features/chat/ui/message-rendering.js",
+      "name": "b",
+      "kind": "binding-element",
+      "line": 67,
+      "refs": 0
+    },
+    {
+      "file": "src/features/chat/ui/session-screens.js",
+      "name": "t",
+      "kind": "binding-element",
+      "line": 6,
+      "refs": 0
+    },
+    {
+      "file": "src/features/chat/ui/session-screens.js",
+      "name": "s",
+      "kind": "binding-element",
+      "line": 26,
+      "refs": 0
+    },
+    {
+      "file": "src/features/chat/ui/session-screens.js",
+      "name": "l",
+      "kind": "binding-element",
+      "line": 32,
+      "refs": 0
+    },
+    {
+      "file": "src/features/chat/ui/session-screens.js",
+      "name": "n",
+      "kind": "binding-element",
+      "line": 72,
+      "refs": 0
+    },
+    {
+      "file": "src/features/chat/ui/session-screens.js",
+      "name": "r",
+      "kind": "binding-element",
+      "line": 78,
+      "refs": 0
+    },
+    {
+      "file": "src/features/chat/ui/session-screens.js",
+      "name": "y",
+      "kind": "binding-element",
+      "line": 90,
+      "refs": 0
+    },
+    {
+      "file": "src/features/chat/ui/session-screens.js",
+      "name": "v",
+      "kind": "binding-element",
+      "line": 90,
+      "refs": 0
+    },
+    {
+      "file": "src/features/world-info/ui/world-info-screens.js",
+      "name": "a",
+      "kind": "binding-element",
+      "line": 11,
+      "refs": 0
+    },
+    {
+      "file": "src/features/world-info/ui/world-info-screens.js",
+      "name": "i",
+      "kind": "binding-element",
+      "line": 11,
+      "refs": 0
+    },
+    {
+      "file": "src/runtime/card-runtime/core.template.js",
+      "name": "TAVERN_VERSION",
+      "kind": "local-pure-value",
+      "line": 12,
+      "refs": 0
+    },
+    {
+      "file": "src/runtime/card-runtime/core.template.js",
+      "name": "asObject",
+      "kind": "local-function",
+      "line": 53,
+      "refs": 0
+    },
+    {
+      "file": "src/runtime/card-runtime/core.template.js",
+      "name": "uuid",
+      "kind": "local-function",
+      "line": 61,
+      "refs": 0
+    },
+    {
+      "file": "src/runtime/card-runtime/core.template.js",
+      "name": "unsupported",
+      "kind": "local-function",
+      "line": 302,
+      "refs": 0
+    },
+    {
+      "file": "src/runtime/card-runtime/frame-context.js",
+      "name": "xp",
+      "kind": "local-pure-value",
+      "line": 5,
+      "refs": 0
+    },
+    {
+      "file": "src/ui/settings/provider-sections.js",
+      "name": "createAiStudioCatalog",
+      "kind": "binding-element",
+      "line": 105,
+      "refs": 0
+    },
+    {
+      "file": "src/ui/settings/provider-sections.js",
+      "name": "setAiStudioLoading",
+      "kind": "binding-element",
+      "line": 105,
+      "refs": 0
+    },
+    {
+      "file": "src/ui/settings/provider-sections.js",
+      "name": "setAiStudioModels",
+      "kind": "binding-element",
+      "line": 105,
+      "refs": 0
+    },
+    {
+      "file": "src/ui/settings/provider-sections.js",
+      "name": "catalog",
+      "kind": "binding-element",
+      "line": 191,
+      "refs": 0
+    },
+    {
+      "file": "src/ui/settings/provider-sections.js",
+      "name": "setPingError",
+      "kind": "binding-element",
+      "line": 191,
+      "refs": 0
+    },
+    {
+      "file": "src/ui/settings/provider-sections.js",
+      "name": "setPingLoading",
+      "kind": "binding-element",
+      "line": 191,
+      "refs": 0
+    },
+    {
+      "file": "src/ui/settings/provider-sections.js",
+      "name": "setPingStatus",
+      "kind": "binding-element",
+      "line": 191,
+      "refs": 0
+    },
+    {
+      "file": "src/ui/settings/settings-screens.js",
+      "name": "Yt",
+      "kind": "binding-element",
+      "line": 37,
+      "refs": 0
+    },
+    {
+      "file": "src/ui/settings/settings-screens.js",
+      "name": "Zt",
+      "kind": "binding-element",
+      "line": 37,
+      "refs": 0
+    },
+    {
+      "file": "src/ui/settings/settings-screens.js",
+      "name": "an",
+      "kind": "binding-element",
+      "line": 37,
+      "refs": 0
+    },
+    {
+      "file": "src/ui/settings/settings-screens.js",
+      "name": "tn",
+      "kind": "binding-element",
+      "line": 37,
+      "refs": 0
+    },
+    {
+      "file": "src/vendor/google-genai-runtime.js",
+      "name": "n",
+      "kind": "binding-element",
+      "line": 5,
+      "refs": 0
+    },
+    {
+      "file": "src/vendor/google-genai-runtime.js",
+      "name": "n",
+      "kind": "binding-element",
+      "line": 5,
+      "refs": 0
+    },
+    {
+      "file": "src/vendor/google-genai-runtime.js",
+      "name": "e",
+      "kind": "binding-element",
+      "line": 5,
+      "refs": 0
+    },
+    {
+      "file": "src/vendor/google-genai-runtime.js",
+      "name": "n",
+      "kind": "binding-element",
+      "line": 5,
+      "refs": 0
+    },
+    {
+      "file": "src/vendor/google-genai-runtime.js",
+      "name": "e",
+      "kind": "binding-element",
+      "line": 5,
+      "refs": 0
+    },
+    {
+      "file": "src/vendor/google-genai-runtime.js",
+      "name": "t",
+      "kind": "binding-element",
+      "line": 5,
+      "refs": 0
+    },
+    {
+      "file": "src/vendor/google-genai-runtime.js",
+      "name": "n",
+      "kind": "binding-element",
+      "line": 5,
+      "refs": 0
+    },
+    {
+      "file": "src/vendor/google-genai-runtime.js",
+      "name": "r",
+      "kind": "binding-element",
+      "line": 5,
+      "refs": 0
+    },
+    {
+      "file": "src/vendor/react-state-runtime.js",
+      "name": "At",
+      "kind": "local-pure-value",
+      "line": 6,
+      "refs": 0
+    },
+    {
+      "file": "src/vendor/react-state-runtime.js",
+      "name": "It",
+      "kind": "local-pure-value",
+      "line": 6,
+      "refs": 0
+    }
+  ],
+  "unreachableFromLiteralRoots": [
+    "src/runtime/card-runtime/bridge/rpc-client.js",
+    "src/runtime/card-runtime/core.template.js"
+  ],
+  "limitations": [
+    "Zero lexical references is not proof of dead code. Review exports, eval, generated scripts, side effects, tests and external consumers before removal.",
+    "Literal root reachability does not model computed imports or generated build-time modules.",
+    "Vendor code is inventoried but not automatically edited."
+  ]
+}

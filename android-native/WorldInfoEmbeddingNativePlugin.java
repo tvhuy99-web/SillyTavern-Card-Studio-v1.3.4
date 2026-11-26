@@ -18,16 +18,12 @@ import java.io.FileOutputStream;
 import java.io.OutputStream;
 import java.io.IOException;
 import java.nio.LongBuffer;
-import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 
 import ai.onnxruntime.OnnxTensor;
 import ai.onnxruntime.OnnxValue;
@@ -54,32 +50,68 @@ public class WorldInfoEmbeddingNativePlugin extends Plugin {
     private static final int MAX_BATCH = 4;
     private static final int DIMENSIONS = 768;
 
-    private final ExecutorService background = Executors.newSingleThreadExecutor();
+    private final NativeSerialWorker background = new NativeSerialWorker("WorldInfoEmbeddingNativePlugin");
     private OrtEnvironment environment;
     private OrtSession session;
     private String sessionBackend;
     private OutputStream writer;
     private String activeName;
+    private String activeImportId;
     private long bytesWritten;
     private MessageDigest importDigest;
+    private String modelImportId;
+    private NativeOnnxModelSet modelSet;
 
     private interface Job { void run() throws Exception; }
 
     private void execute(PluginCall call, Job job) {
-        background.execute(() -> {
+        background.submit(() -> {
             try { job.run(); }
             catch (Throwable error) {
                 Log.e(TAG, "Native embedding operation failed", error);
                 call.reject(error.getMessage() == null ? error.getClass().getSimpleName()
                     : error.getMessage(), new Exception(error));
             }
-        });
+        }, () -> call.reject(background.isClosed() ? "NATIVE_PLUGIN_CLOSED" : "NATIVE_PLUGIN_UNAVAILABLE"));
     }
 
-    private File modelDir() throws IOException {
-        File dir = new File(getContext().getFilesDir(), "worldinfo-ort/embeddinggemma-q4-v1/onnx");
-        if (!dir.isDirectory() && !dir.mkdirs()) throw new IOException("Cannot create native model directory");
-        return dir;
+    private NativeOnnxModelSet modelFiles() {
+        if (modelSet == null) modelSet = new NativeOnnxModelSet(new File(getContext().getFilesDir(), "worldinfo-ort/embeddinggemma-q4-v1/onnx"));
+        return modelSet;
+    }
+    private File modelDir() throws IOException { return modelFiles().recover(); }
+    private File importDir() throws IOException { return modelImportId == null ? modelDir() : modelFiles().staging(); }
+    private void requireModelOwner(PluginCall call) {
+        if (!java.util.Objects.equals(modelImportId, call.getString("modelImportId"))) throw new IllegalStateException("No matching native model import");
+    }
+
+    @PluginMethod
+    public void beginModelImport(PluginCall call) {
+        execute(call, () -> {
+            String id = call.getString("modelImportId");
+            if (id == null || !id.matches("[A-Za-z0-9_-]{1,80}")) throw new IllegalArgumentException("Invalid model import ID");
+            if (modelImportId != null || writer != null || session != null) throw new IllegalStateException("Another native model operation is active");
+            modelFiles().begin();
+            modelImportId = id;
+            call.resolve();
+        });
+    }
+    @PluginMethod
+    public void commitModelImport(PluginCall call) {
+        execute(call, () -> {
+            requireModelOwner(call);
+            if (modelImportId == null || activeName != null) throw new IllegalStateException("Finish both model files first");
+            modelFiles().commit(); modelImportId = null; call.resolve();
+        });
+    }
+    @PluginMethod
+    public void abortModelImport(PluginCall call) {
+        execute(call, () -> {
+            if (modelImportId != null && modelImportId.equals(call.getString("modelImportId"))) {
+                closeWriter(); modelFiles().abort(); modelImportId = null;
+            }
+            call.resolve();
+        });
     }
 
     private String checkedName(PluginCall call) {
@@ -93,14 +125,14 @@ public class WorldInfoEmbeddingNativePlugin extends Plugin {
     private boolean fileReady(File dir, String name) {
         File file = new File(dir, name);
         File marker = new File(dir, name + ".ok");
-        return file.isFile() && marker.isFile()
-            && file.length() >= (GRAPH.equals(name) ? 1024 : 1024 * 1024);
+        return NativeModelFiles.onnxReady(file, marker, GRAPH.equals(name) ? 1024 : 1024 * 1024);
     }
 
     private void closeWriter() {
         if (writer != null) try { writer.close(); } catch (IOException ignored) {}
         writer = null;
         activeName = null;
+        activeImportId = null;
         bytesWritten = 0;
         importDigest = null;
     }
@@ -118,6 +150,8 @@ public class WorldInfoEmbeddingNativePlugin extends Plugin {
             JSObject result = new JSObject();
             boolean graph = fileReady(dir, GRAPH);
             boolean weights = fileReady(dir, WEIGHTS);
+            result.put("modelSetImportVersion", 1);
+            result.put("modelImportActive", modelImportId != null);
             result.put("graphReady", graph);
             result.put("weightsReady", weights);
             result.put("modelReady", graph && weights);
@@ -131,20 +165,23 @@ public class WorldInfoEmbeddingNativePlugin extends Plugin {
     @PluginMethod
     public void beginFile(PluginCall call) {
         execute(call, () -> {
+            requireModelOwner(call);
             String name = checkedName(call);
             if (session != null) throw new IllegalStateException("Unload ONNX before replacing model files");
-            File dir = modelDir();
+            File dir = importDir();
             if (dir.getUsableSpace() < 4L * 1024 * 1024) {
                 throw new IOException("Not enough storage space to import ONNX model");
             }
+            String importId = call.getString("importId");
+            if (importId != null && !importId.matches("[A-Za-z0-9_-]{1,80}")) throw new IllegalArgumentException("Invalid native import ID");
+            if (activeName != null && (activeImportId != null || importId != null)) throw new IllegalStateException("Another native model import is active");
             closeWriter();
             File target = new File(dir, name + ".part");
             if (target.exists() && !target.delete()) throw new IOException("Cannot clear stale native import");
-            File marker = new File(dir, name + ".ok");
-            if (marker.exists() && !marker.delete()) throw new IOException("Cannot clear model marker");
             writer = new BufferedOutputStream(new FileOutputStream(target), 128 * 1024);
             importDigest = MessageDigest.getInstance("SHA-256");
             activeName = name;
+            activeImportId = importId;
             bytesWritten = 0;
             call.resolve();
         });
@@ -153,8 +190,9 @@ public class WorldInfoEmbeddingNativePlugin extends Plugin {
     @PluginMethod
     public void appendChunk(PluginCall call) {
         execute(call, () -> {
+            requireModelOwner(call);
             String name = checkedName(call);
-            if (writer == null || !name.equals(activeName)) {
+            if (writer == null || !name.equals(activeName) || !java.util.Objects.equals(activeImportId, call.getString("importId"))) {
                 throw new IllegalStateException("No active native import for " + name);
             }
             String encoded = call.getString("base64");
@@ -177,34 +215,46 @@ public class WorldInfoEmbeddingNativePlugin extends Plugin {
     @PluginMethod
     public void finishFile(PluginCall call) {
         execute(call, () -> {
+            requireModelOwner(call);
             String name = checkedName(call);
-            if (writer == null || !name.equals(activeName)) {
+            if (writer == null || !name.equals(activeName) || !java.util.Objects.equals(activeImportId, call.getString("importId"))) {
                 throw new IllegalStateException("No active native import for " + name);
             }
             long size = bytesWritten;
+            Long expected = call.getLong("expectedBytes");
+            if (expected != null && expected != size) throw new IOException("Native model byte count mismatch");
             if (size < (GRAPH.equals(name) ? 1024 : 1024 * 1024)) {
                 throw new IOException("Native model file appears incomplete (" + size + " bytes)");
             }
             writer.flush();
             writer.close();
             writer = null;
-            File dir = modelDir();
+            File dir = importDir();
             File partial = new File(dir, name + ".part");
             File target = new File(dir, name);
-            if (target.exists() && !target.delete()) throw new IOException("Cannot replace previous ONNX weights");
-            if (!partial.renameTo(target)) throw new IOException("Cannot finish native ONNX copy");
             byte[] hash = importDigest.digest();
             StringBuilder sha = new StringBuilder(hash.length * 2);
             for (byte value : hash) sha.append(String.format(java.util.Locale.ROOT, "%02x", value & 0xff));
-            try (FileOutputStream stream = new FileOutputStream(new File(dir, name + ".ok"))) {
-                stream.write((size + ":" + sha.toString()).getBytes(StandardCharsets.UTF_8));
-                stream.getFD().sync();
-            }
+            NativeModelFiles.commit(partial, target, new File(dir, name + ".ok"), size + ":" + sha, size);
             closeWriter();
             JSObject result = new JSObject();
             result.put("bytes", size);
             result.put("sha256", sha.toString());
             call.resolve(result);
+        });
+    }
+
+    @PluginMethod
+    public void abortFile(PluginCall call) {
+        execute(call, () -> {
+            requireModelOwner(call);
+            String name = checkedName(call);
+            if (name.equals(activeName) && java.util.Objects.equals(activeImportId, call.getString("importId"))) {
+                closeWriter();
+                File partial = new File(importDir(), name + ".part");
+                if (partial.exists() && !partial.delete()) throw new IOException("Cannot remove partial model import");
+            }
+            call.resolve();
         });
     }
 
@@ -216,6 +266,7 @@ public class WorldInfoEmbeddingNativePlugin extends Plugin {
             if (!"CPU".equals(backend) && !"XNNPACK".equals(backend)) {
                 throw new IllegalArgumentException("Native backend must be CPU or XNNPACK");
             }
+            if (activeName != null || modelImportId != null) throw new IllegalStateException("Finish native model import before loading");
             File dir = modelDir();
             if (!fileReady(dir, GRAPH) || !fileReady(dir, WEIGHTS)) {
                 throw new IOException("Native model missing: copy cached Q4 graph and weights first");
@@ -358,23 +409,20 @@ public class WorldInfoEmbeddingNativePlugin extends Plugin {
         execute(call, () -> {
             closeSession();
             closeWriter();
-            File dir = modelDir();
-            for (String name : Arrays.asList(GRAPH, WEIGHTS)) {
-                for (String suffix : Arrays.asList("", ".ok", ".part")) {
-                    File file = new File(dir, name + suffix);
-                    if (file.exists() && !file.delete()) {
-                        throw new IOException("Unable to delete native file " + name + suffix);
-                    }
-                }
-            }
+            modelFiles().delete(); modelImportId = null;
             call.resolve();
         });
     }
 
     @Override
     protected void handleOnDestroy() {
-        background.execute(() -> { closeWriter(); closeSession(); });
-        background.shutdown();
+        background.close(() -> {
+            closeWriter(); closeSession();
+            if (modelImportId != null) {
+                try { modelFiles().abort(); } catch (IOException failure) { Log.w(TAG, "Cannot remove staged model", failure); }
+                modelImportId = null;
+            }
+        });
         super.handleOnDestroy();
     }
 }

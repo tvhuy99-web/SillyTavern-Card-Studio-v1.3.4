@@ -1,0 +1,107 @@
+[
+  {
+    "file": "src/diagnostics/ui/diagnostic-panels.js",
+    "name": "e",
+    "kind": "binding-element",
+    "line": 35,
+    "refs": 0
+  },
+  {
+    "file": "src/features/catalog/ui/catalog-screens.js",
+    "name": "t",
+    "kind": "binding-element",
+    "line": 5,
+    "refs": 0
+  },
+  {
+    "file": "src/features/chat/hooks/use-slash-commands.js",
+    "name": "c",
+    "kind": "binding-element",
+    "line": 2,
+    "refs": 0
+  },
+  {
+    "file": "src/features/chat/ui/message-rendering.js",
+    "name": "b",
+    "kind": "binding-element",
+    "line": 44,
+    "refs": 0
+  },
+  {
+    "file": "src/features/chat/ui/message-rendering.js",
+    "name": "l",
+    "kind": "binding-element",
+    "line": 49,
+    "refs": 0
+  },
+  {
+    "file": "src/features/chat/ui/message-rendering.js",
+    "name": "v",
+    "kind": "binding-element",
+    "line": 55,
+    "refs": 0
+  },
+  {
+    "file": "src/features/chat/ui/message-rendering.js",
+    "name": "b",
+    "kind": "binding-element",
+    "line": 68,
+    "refs": 0
+  },
+  {
+    "file": "src/features/chat/ui/session-screens.js",
+    "name": "t",
+    "kind": "binding-element",
+    "line": 7,
+    "refs": 0
+  },
+  {
+    "file": "src/features/chat/ui/session-screens.js",
+    "name": "s",
+    "kind": "binding-element",
+    "line": 27,
+    "refs": 0
+  },
+  {
+    "file": "src/features/chat/ui/session-screens.js",
+    "name": "n",
+    "kind": "binding-element",
+    "line": 73,
+    "refs": 0
+  },
+  {
+    "file": "src/features/chat/ui/session-screens.js",
+    "name": "r",
+    "kind": "binding-element",
+    "line": 79,
+    "refs": 0
+  },
+  {
+    "file": "src/features/chat/ui/session-screens.js",
+    "name": "y",
+    "kind": "binding-element",
+    "line": 91,
+    "refs": 0
+  },
+  {
+    "file": "src/features/chat/ui/session-screens.js",
+    "name": "v",
+    "kind": "binding-element",
+    "line": 91,
+    "refs": 0
+  },
+  {
+    "file": "src/features/world-info/ui/world-info-screens.js",
+    "name": "a",
+    "kind": "binding-element",
+    "line": 11,
+    "refs": 0
+  },
+  {
+    "file": "src/features/world-info/ui/world-info-screens.js",
+    "name": "i",
+    "kind": "binding-element",
+    "line": 11,
+    "refs": 0
+  }
+]

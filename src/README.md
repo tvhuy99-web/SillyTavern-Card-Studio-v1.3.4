@@ -1,21 +1,15 @@
-# Source migration workspace
+# Application source
 
-The `src/` tree is the source-of-truth for migrated subsystems. The legacy minified bundle remains a transitional input only for areas that have not yet been extracted.
+`src/` is the source of truth for the active application. `app/entry.js` initializes the runtime; `app/host.js` is the transitional composition root with recovered dependency aliases. The named library interface is `platform/library-runtime.js`; recovered third-party snapshots live in `vendor/`. Historical `legacy/` input and `build/transforms/` have been deleted. Do not add host-patching transforms.
 
-Current owned areas:
-- `features/presets/`: prompt/preset normalization boundaries;
-- `providers/proxy/`: proxy metadata/credential persistence and chat generation;
-- `providers/openrouter/` + `providers/gemini/` + `providers/common/`: source-owned chat generation gateway;
-- `features/chat/`: chat-turn policy, conversation orchestration and AI/RPG response processing;
-- `features/world-info/` + `features/prompts/`: Smart Scan selection, multi-provider semantic embedding/index ownership, and prompt orchestration;
-- `features/arena/`: Arena state-machine and retry/result invariants;
-- `app/state/` + `app/persistence/`: runtime-state and persistent-session ownership;
-- `diagnostics/`: diagnostics-only bounded state and source-owned Gemini model-list diagnostics;
-- `ui/runtime-guard.js`: service-driven runtime UI recovery;
-- `ui/model-connection-test.js`: source-owned model test control enhancer;
-- `ui/styles/accessibility.css`: accessibility/performance presentation policy;
-- `runtime/card-runtime/`: modular Card Runtime source and compatibility surface.
+- `app/state/`, `app/persistence/`: state and persistence boundaries.
+- `providers/`: credentials, provider routing, generation and model catalogs.
+- `features/`: domain services and feature UI.
+- `ui/components/`, `ui/shell/`, `ui/settings/`: shared UI and navigation.
+- `runtime/card-runtime/`: iframe runtime, bridge and host handlers.
+- `platform/`: environment and library contracts.
+- `diagnostics/`: diagnostics and logging.
 
-Do not copy the whole legacy bundle into `src/`. Move a subsystem only after its ownership/state boundary is explicit and its old patch can be removed.
+Build modes: `npm run build` creates supported `dist/` with the existing portable asset URLs. `npm run build:source` creates direct source-relative ESM in `dist-source/`; no generated input JavaScript is required. `npm run build:npm` creates experimental `dist-npm/` using the installed and locked npm libraries. These new modes are not release defaults until actual browser/package acceptance. See `docs/architecture/phase-1/DEPENDENCIES.md`.
 
-M7 invariant: runtime logic must not be authored directly under `assets/`. Runtime assets are generated from `src/`/`build/` or are retained vendor/static files. The minified legacy bundle is build-only input under `legacy/` and is not shipped as a runtime asset.
+Recovered UI factories share the same React instance; original JSX and full naming recovery are not complete. Do not author application logic in generated `assets/`. Run the portable build, all regressions, and source-native bootstrap before delivery.

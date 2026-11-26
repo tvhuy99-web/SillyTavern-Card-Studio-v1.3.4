@@ -1,0 +1,12 @@
+
+> sillytavern-card-studio@1.3.6 test:app-browser
+> node tools/test-app-browser.mjs
+
+file:///mnt/data/a-final-work/STCS-Phase1-Block-A-Continuation/tools/test-app-browser.mjs:41
+  if(!report.ok)throw Error(report.error);
+                      ^
+
+Error: Browser application acceptance timed out without result
+    at file:///mnt/data/a-final-work/STCS-Phase1-Block-A-Continuation/tools/test-app-browser.mjs:41:23
+
+Node.js v22.16.0

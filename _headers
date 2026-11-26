@@ -14,9 +14,6 @@
 /version.json
   Cache-Control: no-store
 
-/COMPATIBILITY-FIX-REPORT.md
-  Cache-Control: no-store
-
 /assets/*
   Cache-Control: public, max-age=0, must-revalidate
 

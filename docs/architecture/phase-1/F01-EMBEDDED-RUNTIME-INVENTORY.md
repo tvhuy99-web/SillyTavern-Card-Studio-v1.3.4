@@ -1,0 +1,3 @@
+# F01: Embedded runtime naming inventory
+
+CI at 2a9549e confirmed 78 short lexical bindings in the composed classic iframe program, of which 74 are conventional and four were unreviewed (`i` in three storage loops and `ms` in the delay helper). Those four bindings have now been renamed to `index` and `milliseconds` in the source fragments and generated outputs. `--check-embedded-opaque` verifies zero unreviewed candidates separately from the original 155-file inventory. This preserves localforage fallback behavior, iterator argument order, and public delay API. Full CI is required for the new gate.

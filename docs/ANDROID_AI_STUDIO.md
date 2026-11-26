@@ -305,3 +305,31 @@ Diagnostics: `BACKGROUND_SERVICE_STARTED`, `APP_BACKGROUND`,
 `BACKGROUND_SERVICE_FAILED`. The optional `getBackgroundStatus` bridge
 returns request ID, active state, and response length without exposing the
 model's text.
+
+## Block B native source layout
+
+`android-native/MainActivity.java`, `capacitor.config.json`,
+`android-native/config/native-dependencies.gradle` and `tools/prepare-android.py`
+now own the source overlay. The workflow generates and syncs the Capacitor
+project, then applies this overlay. It does not maintain a second Java source
+copy in YAML. To prepare an existing generated project locally (after installing
+Capacitor and running `npx cap add android` / `npx cap sync android`):
+
+```sh
+npm run build
+python3 tools/prepare-android.py android
+npm run test:native-java
+npm run test:android-overlay
+```
+
+The last two commands require JDK 21 and Python 3 respectively. They test JVM-only
+helpers, Java syntax and a generated-project fixture; they do **not** compile an
+APK or exercise Android APIs. The Android Actions workflow must still assemble
+and verify the signed APK, and real devices must exercise login, WebView display,
+background behavior, export and model runtimes. The debug key is unchanged.
+
+The new JS adapter supplies `requestId` to AI Studio `cancel`. The native plugin
+matches it to the active request; an omitted ID retains the old session-wide
+cancel contract. Pair the new web assets with the new APK to obtain the new
+cancellation guarantees. Cancel stops local observation and foreground service;
+it does not guarantee that the website/server stops generating.

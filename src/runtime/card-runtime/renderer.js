@@ -11,8 +11,8 @@ const CARD_RUNTIME_URL_REPLACEMENTS = Object.freeze([
 
 export function normalizeCardRuntimeMarkup(value) {
   let next = String(value == null ? '' : value);
-  for (const [from, to] of CARD_RUNTIME_URL_REPLACEMENTS) {
-    next = next.split(from).join(to);
+  for (const [sourceUrl, targetUrl] of CARD_RUNTIME_URL_REPLACEMENTS) {
+    next = next.split(sourceUrl).join(targetUrl);
   }
   return next;
 }

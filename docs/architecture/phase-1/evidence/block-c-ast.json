@@ -1,0 +1,63 @@
+{
+  "typescript": "5.8.3",
+  "file": "assets/app-production-v1.3.6.js",
+  "syntaxDiagnostics": 0,
+  "migrated": true,
+  "removedCandidates": [
+    "Pc",
+    "Mc",
+    "Hc",
+    "Bc",
+    "Uc",
+    "Wc",
+    "jc",
+    "Ac",
+    "Ic",
+    "Dc",
+    "Oc",
+    "Rc"
+  ],
+  "removedTopLevel": [],
+  "unresolvedRemoved": [],
+  "unresolvedKc": [],
+  "embedding": [
+    {
+      "name": "Gc",
+      "declarationOffset": 26282,
+      "references": [
+        {
+          "offset": 34804,
+          "owner": null
+        }
+      ],
+      "reachableFromOutsideCandidateGroup": true
+    },
+    {
+      "name": "zc",
+      "declarationOffset": 26319,
+      "references": [
+        {
+          "offset": 26667,
+          "owner": null
+        }
+      ],
+      "reachableFromOutsideCandidateGroup": true
+    },
+    {
+      "name": "qc",
+      "declarationOffset": 26358,
+      "references": [
+        {
+          "offset": 26646,
+          "owner": null
+        }
+      ],
+      "reachableFromOutsideCandidateGroup": true
+    }
+  ],
+  "modelTestVs": [],
+  "limitations": [
+    "Lexical symbol resolution, not runtime coverage or proof of no eval/side effects.",
+    "Candidate group only; not a whole-program dead-code elimination analysis."
+  ]
+}

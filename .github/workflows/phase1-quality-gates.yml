@@ -1,0 +1,172 @@
+name: Phase 1 Quality Gates (E11.3)
+
+on:
+  push:
+    branches: [main, 'refactor/**', 'phase1-*']
+  pull_request:
+  workflow_dispatch:
+    inputs:
+      run_browser_acceptance:
+        description: 'Run headless Chromium acceptance tests (requires Chromium/Chrome on runner)'
+        required: false
+        type: boolean
+        default: true
+      run_npm_runtime:
+        description: 'Run npm-backed runtime build and dependency audit (requires npm network access)'
+        required: false
+        type: boolean
+        default: true
+
+permissions:
+  contents: read
+
+jobs:
+  core-quality-gates:
+    name: Build, Boundary, Regression & Overlay Gates
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Build portable static bundle
+        run: npm run build:portable
+
+      - name: Build source-native ESM layout
+        run: npm run build:source
+
+      - name: Enforce module graph & architecture boundaries (E03.5 / G05)
+        run: npm run audit:boundaries
+
+      - name: Run Phase 1 quality gate auditor (E10 / E11)
+        run: npm run audit:quality
+
+      - name: Run unit & contract regression suite
+        run: npm test
+
+      - name: Verify source-native ESM bootstrap
+        run: npm run test:source-bootstrap
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+
+      - name: Run native Java contract tests
+        run: npm run test:native-java
+
+      - name: Verify Android native overlay contracts
+        run: npm run test:android-overlay
+
+      - name: Verify retained vendor asset integrity
+        run: npm run verify:vendor
+
+  # Optional job for runners with Chromium/Chrome installed (unlocks BLK-002: G08, G09, G10, G12).
+  browser-acceptance:
+    name: Browser & Storage Acceptance (Optional — Chromium)
+    needs: core-quality-gates
+    if: github.event_name != 'workflow_dispatch' || inputs.run_browser_acceptance
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Build portable and source-native targets
+        run: |
+          npm run build:portable
+          npm run build:source
+
+      - name: Verify Chromium/Chrome binary
+        run: google-chrome --version
+
+      - name: Run browser application & IndexedDB acceptance (portable dist)
+        env:
+          CHROME_BIN: google-chrome
+        run: |
+          npm run test:app-browser
+          npm run test:storage-browser
+
+      - name: Run browser application & IndexedDB acceptance (source-native dist-source)
+        env:
+          APP_DIST: dist-source
+          CHROME_BIN: google-chrome
+        run: |
+          npm run test:app-browser
+          npm run test:storage-browser
+
+  # Run npm acceptance on CI; manual runs may opt out (unlocks BLK-001: E01.2, E01.3, G11, G13).
+  npm-runtime-gate:
+    name: Package-Backed npm Runtime Build
+    needs: core-quality-gates
+    if: github.event_name != 'workflow_dispatch' || inputs.run_npm_runtime
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Inventory F01 lexical bindings against the pre-F01 baseline (AST)
+        run: |
+          git fetch --no-tags --depth=1 origin ab71bcd1c877807b631c6900c7d2312787733b9c
+          npm install --prefix "$RUNNER_TEMP/f01-audit" --no-save --package-lock=false --ignore-scripts --no-audit --no-fund typescript@5.8.3
+          TYPESCRIPT_PATH="$RUNNER_TEMP/f01-audit/node_modules/typescript" node tools/audit-f01-names.cjs --baseline ab71bcd1c877807b631c6900c7d2312787733b9c --check-host --check-host-aliases --check-opaque --embedded-runtime --check-embedded-opaque --details > "$RUNNER_TEMP/f01-inventory.json"
+          cat "$RUNNER_TEMP/f01-inventory.json"
+
+      - name: Verify F01 UI renames preserve AST binding and literal structure
+        run: |
+          git fetch --no-tags --depth=1 origin decccad6022412ea4b1457c229ed6dcf95e804ea
+          TYPESCRIPT_PATH="$RUNNER_TEMP/f01-audit/node_modules/typescript" node tools/audit-f01-ui-alpha.cjs decccad6022412ea4b1457c229ed6dcf95e804ea
+
+      - name: Run canonical locked npm release build
+        run: |
+          npm run build
+          git diff --exit-code -- build/npm-runtime/package-lock.json
+
+      - name: Audit npm dependency lockfile and licenses
+        run: npm run audit:npm-dependencies
+
+      - name: Run package-backed runtime parity tests
+        run: npm run test:npm-runtime
+
+      - name: Verify package-backed bootstrap
+        env:
+          APP_DIST: dist-npm
+        run: npm run test:source-bootstrap
+
+      - name: Verify Chromium/Chrome binary for npm runtime
+        run: google-chrome --version
+
+      - name: Run browser application & IndexedDB acceptance (package-backed dist-npm)
+        env:
+          APP_DIST: dist-npm
+          CHROME_BIN: google-chrome
+        run: |
+          npm run test:app-browser
+          npm run test:storage-browser
+
+      - name: Publish genuine lockfile and dependency evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: npm-runtime-acceptance-evidence
+          path: |
+            build/npm-runtime/package-lock.json
+            dist-npm/npm-dependency-evidence.json
+            dist-npm/npm-runtime-build.json
+          if-no-files-found: error

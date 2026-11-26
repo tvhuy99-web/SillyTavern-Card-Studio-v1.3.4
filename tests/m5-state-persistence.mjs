@@ -46,6 +46,7 @@ assert.equal(diagnosticsState.snapshot().systemLog[0].message, 'fresh', 'active 
 
 const state = {
   sessionId: 's1',
+  __stsRecordGeneration: 'fixture-generation',
   card: { fileName: 'char.png', name: 'Char', rpg_data: { hp: 1 } },
   preset: { name: 'Default' },
   persona: { id: 'p1' },
@@ -147,5 +148,18 @@ assert.equal(normalized.record.chatHistory[1].arena.modelB.completed, true);
 assert.ok(sessionStateContract.persistent.includes('chatHistory'));
 assert.ok(sessionStateContract.runtimeOnly.includes('abortControllers'));
 assert.ok(sessionStateContract.diagnosticsOnly.includes('logs'));
+
+// Persisted field ownership is declared once; explicit null clears an Arena selection.
+assert.deepEqual(Object.keys(snapshot).sort(), [...sessionStateContract.identity, ...sessionStateContract.persistent].sort());
+const clearedArena = createSessionSnapshot(state, { arenaModelId: null, arenaProvider: null, arenaProfileId: null });
+assert.equal(clearedArena.arenaModelId, null);
+assert.equal(clearedArena.arenaProvider, null);
+assert.equal(clearedArena.arenaProfileId, null);
+const oldProfile = normalizeLoadedSession({ ...snapshot, arenaUserProfileId: 'old', arenaProfileId: null, futureField: 'keep' });
+assert.equal(oldProfile.record.arenaProfileId, null);
+assert.equal('arenaUserProfileId' in oldProfile.record, false);
+assert.equal(oldProfile.record.futureField, 'keep');
+assert.equal(oldProfile.needsRewrite, true);
+assert.equal(normalizeLoadedSession(oldProfile.record).needsRewrite, false);
 
 console.log('M5 state/persistence tests: OK');

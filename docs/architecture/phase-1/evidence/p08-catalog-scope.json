@@ -1,0 +1,22 @@
+{
+  "__stsCreateCharacterMutations": {
+    "occurrences": 2,
+    "unresolved": 0
+  },
+  "__stsCreatePersonaMutations": {
+    "occurrences": 2,
+    "unresolved": 0
+  },
+  "__stsCreatePresetMutations": {
+    "occurrences": 2,
+    "unresolved": 0
+  },
+  "__stsCreateCatalogRpcHandlers": {
+    "occurrences": 2,
+    "unresolved": 0
+  },
+  "__stsCatalogRpc": {
+    "occurrences": 3,
+    "unresolved": 0
+  }
+}

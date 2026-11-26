@@ -21,10 +21,11 @@ export function createOpenRouterGenerationProvider(deps) {
     };
   }
 
-  async function generate({ model, prompt, preset, signal }) {
+  async function generate({ model, prompt, preset, signal, credentials, purpose }) {
     const body = payload(model, prompt, preset, false);
-    const headers = deps.getHeaders();
-    deps.addNetworkLog({
+    const headers = deps.getHeaders(credentials?.openRouterApiKey || undefined);
+    if (purpose === 'connection-test' && !/^Bearer\s+(?!undefined(?:\s|$)|null(?:\s|$))\S+/i.test(headers.Authorization || headers.authorization || '')) throw new Error('API Key OpenRouter chưa được cấu hình.');
+    if (purpose !== 'connection-test') deps.addNetworkLog({
       id: networkLogId('or'),
       timestamp: Date.now(),
       url: ENDPOINT,

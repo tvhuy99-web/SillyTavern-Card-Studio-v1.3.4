@@ -2,6 +2,8 @@
     let worldInfo = clone(BOOT.worldInfo || []);
     let extensionSettings = clone(BOOT.extensionSettings || {});
     const scopeCache = new Map(Object.entries(BOOT.variableScopes || {}).map(function (entry) { return [entry[0], clone(asObject(entry[1]))]; }));
+    const pendingScopeWrites = new Map();
+    let scopeWriteSequence = 0;
     const schemaCache = new Map();
     let activeScriptId = 'default';
     let activeScriptName = 'default';
@@ -85,7 +87,13 @@
         if (source === 'handshake') variableHandshakeApplied = true;
         if (!variableScopes || typeof variableScopes !== 'object') return false;
         Object.entries(variableScopes).forEach(function (entry) {
-            scopeCache.set(entry[0], clone(asObject(entry[1])));
+            const value = clone(asObject(entry[1]));
+            const journal = pendingScopeWrites.get(entry[0]);
+            if (journal) {
+                journal.confirmed = value;
+                journal.remoteRevision += 1;
+                refreshScopeWrite(entry[0], journal);
+            } else scopeCache.set(entry[0], value);
         });
         if (Object.prototype.hasOwnProperty.call(variableScopes, 'chat')) {
             const live = syncLiveChatVariables(source || 'scope-payload');
@@ -129,24 +137,43 @@
         }
         return clone(asObject(variables));
     }
+    // Keep the most recent optimistic write visible. Older failures must not
+    // restore an intermediate value over a newer write or host update.
+    function refreshScopeWrite(key, journal) {
+        const latest = Array.from(journal.pending.values()).filter(function (entry) { return entry.id > journal.acknowledged; }).pop();
+        scopeCache.set(key, latest ? latest.value : journal.confirmed);
+    }
     function persistScope(option, variables) {
         const normalized = normalizeOption(option);
         if (normalized.type === 'script' && !normalized.script_id) normalized.script_id = activeScriptId || 'default';
         if (normalized.type === 'message' && normalized.message_id === undefined) normalized.message_id = 'latest';
         const key = scopeKey(normalized);
-        const previous = clone(scopeValue(normalized));
         const clean = validateScopeValue(key, variables);
-        scopeCache.set(key, clean);
+        let journal = pendingScopeWrites.get(key);
+        if (!journal) {
+            journal = { confirmed: clone(scopeValue(normalized)), remoteRevision: 0, acknowledged: 0, pending: new Map() };
+            pendingScopeWrites.set(key, journal);
+        }
+        const entry = { id: ++scopeWriteSequence, value: clean, remoteRevision: journal.remoteRevision };
+        journal.pending.set(entry.id, entry);
+        refreshScopeWrite(key, journal);
         if (normalized.type === 'chat') syncLiveChatVariables('persist');
         emitEvent('mvu-variable-update-started', { scope: normalized, variables: clone(clean) });
-        rpc('variables.replace', { option: normalized, variables: clean }, 30000).then(function () {
-            emitEvent('mvu-variable-update-ended', { scope: normalized, variables: clone(clean), stat_data: root.stat_data });
-        }).catch(function (error) {
-            scopeCache.set(key, previous);
-            if (normalized.type === 'chat') syncLiveChatVariables('rollback');
-            emitEvent('mvu-variable-update-ended', { scope: normalized, variables: clone(previous), error: error && error.message });
-            log('warn', 'Could not persist ' + key + ' variables; local state was rolled back: ' + error.message);
-        });
+        function settle(error) {
+            journal.pending.delete(entry.id);
+            if (!error && entry.id > journal.acknowledged) {
+                journal.acknowledged = entry.id;
+                // A host broadcast received since submission is authoritative.
+                if (journal.remoteRevision === entry.remoteRevision) journal.confirmed = entry.value;
+            }
+            refreshScopeWrite(key, journal);
+            if (journal.pending.size === 0) pendingScopeWrites.delete(key);
+            if (normalized.type === 'chat') syncLiveChatVariables(error ? 'rollback' : 'persist-confirmed');
+            const current = clone(scopeCache.get(key));
+            emitEvent('mvu-variable-update-ended', Object.assign({ scope: normalized, variables: current, stat_data: root.stat_data }, error ? { error: error.message || String(error) } : {}));
+            if (error) log('warn', 'Could not persist ' + key + ' variables: ' + (error.message || String(error)));
+        }
+        rpc('variables.replace', { option: normalized, variables: clean }, 30000).then(function () { settle(null); }, settle);
         return clone(clean);
     }
     root.getVariables = function (option) {

@@ -1,0 +1,33 @@
+# Phase 1 Architectural Finalization — Task Board
+
+Baseline: `STCS-Phase1-Block-D-92` (`14a26bde516278938f27efdce5cd81b5a2165a7b`) | Branch: `refactor/phase1-finalization`
+
+| Task ID | Scope | Agent | Reviewer | Status | Notes / Evidence |
+|---|---|---|---|---|---|
+| E00.1–E00.4 | Freeze D-92 baseline, Node 18 globals preload, zero-dep boundary checker, tracking docs | Agent 00 / 01 | Agent 14 | VERIFIED (Node) / BLOCKED (Browser) | `npm test` 82/82 PASS; Browser: `BLK-002` |
+| E01.1–E01.5 / T03 | Genuine npm runtime `package-lock.json`, `npm ci`, package-backed build & vendor cutover | Agent 02 | Agent 14 | BLOCKED | `BLK-001` (offline sandbox, no npm registry / `esbuild`) |
+| E02 | Semantic source recovery (props, state, hooks, handlers, dependencies — not beautify-only) | Agents 05, 06, 07, 08 | Agent 14 | VERIFIED | Completed across all 14 UI factory modules (120 DI factories) + `application-lifecycle.js`, `use-session-persistence.js`, and canonical domain/provider modules; `tests/phase1-e02-readability.mjs` & `tests/phase1-batch-ui-recovery.mjs` (51 components / 53 hashes) PASS. |
+| E03.1–E03.5 / S04 | Composition Root cleanup, complete two-sided semantic dependency contracts across ALL 120 DI factories (`transitionalLegacyKeyFactories: 0`), `audit:boundaries` | Agent 00 / 04 / 06 / 08 / 11 | Agent 14 | VERIFIED | 120 `compositionRootDiFactories` (`legacyKeyCount: 0`), 3 `statefulOrLifecycleFactories` (`providers.js`), `0` `transitionalLegacyKeyFactories`; `npm run audit:boundaries` exit 0 (161 nodes, 227 edges, 0 cycles, 0 violations). |
+| E04.1–E04.4 | Consolidate `legacy-response-utils`, `legacy-generation-adapters`, `legacy-transport`, contract matrix | Agent 05 | Agent 14 | VERIFIED (Contract) | 3 legacy files deleted; `tests/phase1-e04-provider-matrix.mjs` PASS; live provider tests `BLK-004` |
+| E05.2 (G07) | Migrate 7 ModelTest consumers to `ModelTestButton`, delete `src/ui/model-connection-test.js` | Agent 06 | Agent 14 | VERIFIED | DOM Enhancer & `window.__STS_MODEL_CONNECTION_TEST__` deleted; `tests/phase1-e05-no-dom-enhancer.mjs` PASS; browser visual `BLK-002` |
+| E06.1–E06.5 / S01–S03 / T01–T02 | P0 Durable Backup Recovery, Cross-storage rollback, Stale-snapshot rejection, Web Locks ownership & **Centralized Production Write-Guard Integration (`host` → `hook` → `repositories`/`queue`/`settings`)** | Agent 07 | Agent 14 | VERIFIED (Node) / BLOCKED (Browser) | **T01/T02**: Wired centralized write-ownership boundary from `__stsBackupRestoreService` (`isRestoreInProgress`, `assertNotRestoring`, monotonic `getRestoreEpoch`, `subscribeRestoreLifecycle`) via `src/app/host.js` into `__stsRepositories` (guarding all normal Character/Preset/Lorebook/Persona/Session writes while using a separate `restoreRecords` path and `rollbackRestoredRecords` for recovery; ordinary `mergeRecords` is guarded), `__stsSessionWriteQueue` (invalidating pre-restore queued writes on restore/rollback start), `__stsSettingsRepository` (guarding `setRaw`/`remove`/`setMany`), and `__stsCreateChatSessionHook` → `use-session-persistence.js` → `createSessionSaveCoordinator` (cancelling timers & discarding pre-restore dirty state, blocking explicit save during restore/pending recovery, resuming cleanly after completion). `tests/phase1-t02-write-guard-integration.mjs` & `tests/phase1-e06-restart-recovery.mjs` PASS; Chromium multi-tab `BLK-002`. |
+| E07.2 | Canonical Prompt Engine consolidation & deletion of `legacy-prompt-builder.js` | Agent 08 | Agent 14 | VERIFIED | `story-content.js` & `prompt-assembler.js` live; `tests/phase1-e07-prompt-parity.mjs` PASS |
+| E08.1–E08.5 | Source-native `core-builder.js` (fix B08), 53-method RPC manifest & permission/timeout tests | Agent 09 | Agent 14 | VERIFIED (Node) / BLOCKED (Browser) | `tests/phase1-e08-rpc-manifest.mjs` PASS (53 methods: 31 safe, 22 full-only); browser card suite `BLK-002` |
+| E09.1–E09.3 | Extract 2 inline JS from `AiStudioTextPlugin.java`, fix `clearWatchdog()`, unify JS `native-bridge.js`, pin Capacitor 8.0.0 | Agent 10 | Agent 14 | VERIFIED (Static/Overlay) | `npm run test:android-overlay` & `tests/phase1-e09-android-bridge.mjs` PASS; APK/device `BLK-003` |
+| E10.1–E10.5 / S05 | Dead-code cleanup, all unused export dispositions (`unjustifiedUnusedExportsCount: 0`), dynamic factory & 11-domain semantic ownership audit | Agent 00 / 11 | Agent 14 | VERIFIED (Current Cutovers) | `npm run audit:quality` scans 151 canonical modules / 495 exports (`0` unjustified unused exports), dynamically classifies 123 factories (`120` clean DI, `3` lifecycle, `0` transitional legacy-key), verifies 11 business domains with honest static-analysis limitations. Portable `assets/` mirrors retained until E01 cutover (`BLK-001`). |
+| E11.1–E11.5 / S06–S07 / T04 | CI workflow `.github/workflows/phase1-quality-gates.yml`, Independent Integrated Acceptance, External Environment Blockers | Agent 11 / 14 | Agent 00 | VERIFIED (Sandbox Scope) / BLOCKED (External) | 7 PASS / 0 FAIL / 7 BLOCKED (`BLK-001`..`BLK-004`). Zero Phase 2/3 scope creep. |
+
+## Follow-up from 69bec7d (U01–U06)
+
+| Task | Status | Evidence |
+|---|---|---|
+| U01 | TESTED (Node) / BLOCKED (browser) | Guarded connection, proxy, feature, model catalog, runtime and settings paths; separate recovery ports; ordinary entity import and editor claim protected. |
+| U02 | TESTED (Node) | Discarded queue item returns `status: discarded`; coordinator returns false. |
+| U03 | TESTED (Node) / BLOCKED (real multi-tab) | Local transaction drain before backup staging; shared Web Locks vs exclusive restore protocol simulation. Synchronous Web Storage remains advisory. |
+| U04 | TESTED (supported checks) | Expanded T02 regression, full Node suite, build, boundary, quality, native Java and overlay checks. No independent human review or real-browser validation claimed. |
+| U05 | BLOCKED | Registry DNS EAI_AGAIN; workflow now defaults to running npm acceptance on manual dispatch and uploads genuine lockfile/evidence after successful build. |
+| U06 | BLOCKED | Chromium timed out; Android SDK/device and live provider acceptance not run. |
+
+## Connected CI follow-up (2026-11-26)
+
+U05 / E01: genuine tracked lockfile, clean npm ci, npm runtime parity and mounted Chromium/IndexedDB verified on 5e623a3 ([run 45801131779](https://github.com/tvhuy99-web/SillyTavern-Card-Studio-v1.3.4/actions/runs/45801131779)). Default release build, Netlify and Capacitor cutover implemented; fresh integrated CI and APK evidence pending. U06: automated browser and Android compilation verified on prior release, initial APK trial reported good; full device/upgrade, live provider and remaining scenario coverage not verified.

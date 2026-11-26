@@ -8,9 +8,9 @@ import android.view.Gravity;
 import android.view.View;
 import android.view.ViewGroup;
 import android.webkit.CookieManager;
-import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
+import android.webkit.RenderProcessGoneDetail;
 import android.webkit.WebResourceRequest;
 import android.webkit.WebResourceError;
 import android.webkit.WebResourceResponse;
@@ -34,7 +34,7 @@ import java.util.Collections;
  * catalog discovery. Never reads/exposes credentials or model response text.
  */
 final class AiStudioModelCatalogReader {
-    private static final String ORIGIN = "https://aistudio.google.com";
+    private static final String ORIGIN = AiStudioWebViewPolicy.ORIGIN;
     private static final String PAGE = ORIGIN + "/u/0/prompts/new_chat";
     private static final long TIMEOUT_MS = 18_000L;
     private static final int MAX_ATTEMPTS = 10;
@@ -47,6 +47,7 @@ final class AiStudioModelCatalogReader {
     private boolean done;
     private boolean pickerOpened;
     private boolean pageLoaded;
+    private boolean scanStarted;
     private int scans;
     private String lastPath = "not-loaded";
     private String lastReadiness = "unknown";
@@ -177,7 +178,7 @@ final class AiStudioModelCatalogReader {
 
     AiStudioModelCatalogReader(Activity activity, Handler handler, PluginCall call, DiagnosticSink sink) {
         this.activity = activity;
-        this.handler = handler;
+        this.handler = new Handler(handler.getLooper());
         this.call = call;
         this.sink = sink;
     }
@@ -186,6 +187,7 @@ final class AiStudioModelCatalogReader {
     void start() {
         if(!WebViewFeature.isFeatureSupported(WebViewFeature.DOCUMENT_START_SCRIPT)) {
             report("error","MODEL_WEBVIEW_UNSUPPORTED","WebView lacks document-start JavaScript");
+            done = true;
             call.reject("AI_STUDIO_MODEL_DISCOVERY_UNSUPPORTED: Android System WebView không hỗ trợ DOCUMENT_START_SCRIPT. Hãy cập nhật Android System WebView.");
             return;
         }
@@ -195,18 +197,7 @@ final class AiStudioModelCatalogReader {
             ViewGroup root = activity.findViewById(android.R.id.content);
             if(root==null)throw new IllegalStateException("No activity root");
             view = new WebView(activity);
-            WebSettings settings=view.getSettings();
-            settings.setJavaScriptEnabled(true);
-            settings.setDomStorageEnabled(true);
-            settings.setDatabaseEnabled(true);
-            settings.setAllowFileAccess(false);
-            settings.setAllowContentAccess(false);
-            settings.setLoadsImagesAutomatically(false);
-            settings.setCacheMode(WebSettings.LOAD_DEFAULT);
-            settings.setMediaPlaybackRequiresUserGesture(true);
-            settings.setMixedContentMode(WebSettings.MIXED_CONTENT_NEVER_ALLOW);
-            CookieManager.getInstance().setAcceptCookie(true);
-            CookieManager.getInstance().setAcceptThirdPartyCookies(view,true);
+            AiStudioWebViewPolicy.configure(view, true);
             WebViewCompat.addDocumentStartJavaScript(view,DOCUMENT_START,Collections.singleton(ORIGIN));
             int height=Math.max(800,activity.getResources().getDisplayMetrics().heightPixels);
             host=new FrameLayout(activity);
@@ -224,9 +215,9 @@ final class AiStudioModelCatalogReader {
                     if(done)return;
                     lastPath=safePath(url);
                     report("state","MODEL_PAGE_FINISHED","AI Studio catalog navigation finished","hostPath",lastPath);
-                    if(pageLoaded||url==null||!url.startsWith(ORIGIN))return;
+                    if(pageLoaded||!AiStudioOrigin.isStudioUrl(url))return;
                     pageLoaded=true;
-                    handler.postDelayed(()->scan(0),700L);
+                    handler.postDelayed(AiStudioModelCatalogReader.this::beginScan,700L);
                 }
                 @Override public void onReceivedError(WebView page,WebResourceRequest request,WebResourceError error){
                     if(!request.isForMainFrame())return;
@@ -240,6 +231,11 @@ final class AiStudioModelCatalogReader {
                     report("warn","MODEL_PAGE_HTTP_ERROR","AI Studio main-frame HTTP error",
                         "status",response.getStatusCode(),"hostPath",safePath(request.getUrl().toString()));
                 }
+                @Override public boolean onRenderProcessGone(WebView page, RenderProcessGoneDetail detail){
+                    mainFrameProblem="renderer-gone";
+                    finish("renderer-gone");
+                    return true;
+                }
                 @Override public void onReceivedSslError(WebView page,SslErrorHandler handler,SslError error){
                     handler.cancel();
                     mainFrameProblem="ssl:"+error.getPrimaryError();
@@ -249,7 +245,7 @@ final class AiStudioModelCatalogReader {
             });
             view.loadUrl(PAGE);
             handler.postDelayed(()->{if(!done)finish("timeout");},TIMEOUT_MS);
-            handler.postDelayed(()->{if(!done&&!pageLoaded)scan(0);},3500L);
+            handler.postDelayed(this::beginScan,3500L);
         }catch(Exception e){
             done=true;
             cleanup();
@@ -258,10 +254,20 @@ final class AiStudioModelCatalogReader {
         }
     }
 
+    private void beginScan() {
+        if (done || scanStarted) return;
+        scanStarted = true;
+        scan(0);
+    }
+
     private void scan(int attempt) {
         if(done||view==null)return;
+        if (!AiStudioOrigin.isStudioUrl(view.getUrl())) {
+            handler.postDelayed(() -> scan(attempt), 900L);
+            return;
+        }
         scans=attempt+1;
-        view.evaluateJavascript("JSON.stringify(window.__STS_MODEL_CATALOG_V2__?.discover()||{models:[],error:'document-start-not-injected',host:location.hostname,ready:document.readyState})",raw->{
+        AiStudioWebViewPolicy.evaluate(view, "JSON.stringify(window.__STS_MODEL_CATALOG_V2__?.discover()||{models:[],error:'document-start-not-injected',host:location.hostname,ready:document.readyState})",raw->{
             if(done)return;
             try{
                 Object value=new JSONTokener(raw==null?"null":raw).nextValue();
@@ -292,7 +298,7 @@ final class AiStudioModelCatalogReader {
                 "scriptError",lastScriptError);
             if(!pickerOpened){
                 pickerOpened=true;
-                view.evaluateJavascript("JSON.stringify(window.__STS_MODEL_CATALOG_V2__?.openPicker()||{opened:false,error:'document-start-not-injected'})",pickerRaw->{
+                AiStudioWebViewPolicy.evaluate(view, "JSON.stringify(window.__STS_MODEL_CATALOG_V2__?.openPicker()||{opened:false,error:'document-start-not-injected'})",pickerRaw->{
                     if(done)return;
                     String pickerResult="unreadable";
                     try{
@@ -361,13 +367,10 @@ final class AiStudioModelCatalogReader {
     }
 
     private void cleanup(){
+        handler.removeCallbacksAndMessages(null);
         WebView old=view;view=null;
         FrameLayout wrapper=host;host=null;
-        if(old!=null){
-            try{old.stopLoading();}catch(Exception ignored){}
-            try{((ViewGroup)old.getParent()).removeView(old);}catch(Exception ignored){}
-            try{old.destroy();}catch(Exception ignored){}
-        }
+        try { AiStudioWebViewPolicy.destroy(old); } catch (Exception ignored) {}
         if(wrapper!=null){
             try{((ViewGroup)wrapper.getParent()).removeView(wrapper);}catch(Exception ignored){}
             wrapper.removeAllViews();

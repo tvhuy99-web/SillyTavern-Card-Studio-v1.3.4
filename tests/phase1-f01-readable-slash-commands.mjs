@@ -1,0 +1,32 @@
+import assert from 'node:assert/strict';
+import { createSlashCommands } from '../src/runtime/card-runtime/host/slash-commands.js';
+const readVariable=(variables,path)=>variables[path];
+const mutateVariable=(variables,operation,path,value)=>{
+  const next={...variables};
+  if(operation==='set') next[path]=value;
+  else if(operation==='delete') delete next[path];
+  else if(operation==='add') next[path]=(next[path]??0)+value;
+  else if(operation==='sub') next[path]=(next[path]??0)-value;
+  return next;
+};
+const slash=createSlashCommands({expandRandomMacros:text=>text,getVariable:readVariable,mutateVariable});
+assert.deepEqual(Object.keys(slash),["tokenizeSlashCommand","expandSlashMacros","compareSlashValues","slashCommandHandlers"]);
+assert.deepEqual(slash.tokenizeSlashCommand('send "hello world" name=value'),['send','hello world','name=value']);
+assert.deepEqual(slash.tokenizeSlashCommand("echo 'a b' c"),['echo','a b','c']);
+assert.equal(slash.compareSlashValues('10','gt','2'),true);
+assert.equal(slash.compareSlashValues('abc','includes','bc'),true);
+assert.equal(slash.compareSlashValues('a','unknown','b'),false);
+const sent=[];const context={characterName:'Hero',userPersonaName:'Reader',variables:{hp:1},setVariables(value){this.variables=value;},sendMessage(text,role){sent.push({text,role});}};
+assert.equal(slash.expandSlashMacros('{{char}}/{{user}}/{{dice:1d1}}/{{getvar::hp}}',context),'Hero/Reader/1/1');
+// Existing macro pipeline resolves getvar before setvar within a single expansion.
+assert.equal(slash.expandSlashMacros('{{setvar::hp::3}}{{getvar::hp}}',context),'1');
+assert.equal(context.variables.hp,'3');
+assert.equal(slash.expandSlashMacros('{{getvar::hp}}',context),'3');
+assert.equal(await slash.slashCommandHandlers.setvar(['key=hp','value=4'],context),'4');
+assert.equal(await slash.slashCommandHandlers.incvar(['hp','2'],context),'6');
+assert.equal(await slash.slashCommandHandlers.getvar(['hp'],context),'6');
+await slash.slashCommandHandlers.send([],context,'Hello');assert.deepEqual(sent,[{text:'Hello',role:'user'}]);
+await slash.slashCommandHandlers.flushvar(['hp'],context);assert.equal(context.variables.hp,undefined);
+const execution={labels:{next:5},pc:0};await slash.slashCommandHandlers.goto(['next'],context,'',execution);assert.equal(execution.pc,5);
+assert.equal(await slash.slashCommandHandlers.pass([],context,'value'),'value');
+console.log('F01 readable slash command bindings: parsing, macros and handler contracts OK');

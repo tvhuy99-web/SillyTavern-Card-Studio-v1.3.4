@@ -60,9 +60,9 @@
 
     function uuid() {
         if (root.crypto && typeof root.crypto.randomUUID === 'function') return root.crypto.randomUUID();
-        return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
-            const r = Math.random() * 16 | 0;
-            return (c === 'x' ? r : (r & 3 | 8)).toString(16);
+        return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (placeholder) {
+            const randomNibble = Math.random() * 16 | 0;
+            return (placeholder === 'x' ? randomNibble : (randomNibble & 3 | 8)).toString(16);
         });
     }
 
@@ -306,64 +306,22 @@
             return Promise.reject(new Error(message));
         };
     }
-    root.isAdmin = function () { return false; };
-    root.getExtensionType = function () { return 'third-party'; };
-    root.getExtensionStatus = function (id) { return { id: id, installed: id === 'third-party/JS-Slash-Runner', enabled: id === 'third-party/JS-Slash-Runner', type: 'third-party' }; };
-    root.getExtensionInstallationInfo = root.getExtensionStatus;
-    root.isInstalledExtension = function (id) { return id === 'third-party/JS-Slash-Runner' || id === 'JS-Slash-Runner'; };
-    ['installExtension', 'uninstallExtension', 'reinstallExtension', 'updateExtension', 'importRawCharacter', 'importRawChat', 'importRawPreset', 'importRawWorldbook', 'importRawTavernRegex'].forEach(function (name) { root[name] = unsupported(name); });
-    root.getCharacterNames = function () { return [BOOT.context.name2]; };
-    root.getCharacterIds = function () { return [0]; };
-    root.getCurrentCharacterName = function () { return BOOT.context.name2; };
-    root.getCurrentCharacterId = function () { return 0; };
-    root.getCharacter = function (idOrName) {
-        if (idOrName === undefined || idOrName === 0 || idOrName === BOOT.context.name2) return Promise.resolve(clone(BOOT.characterCard));
-        return Promise.resolve(null);
-    };
     root.getCharData = function () { return clone(BOOT.characterCard); };
     root.getCharAvatarPath = function () { return BOOT.characterAvatar; };
     root.RawCharacter = class RawCharacter { constructor(data) { Object.assign(this, clone(data || BOOT.characterCard)); } };
     root.getChatHistoryBrief = function () { return Promise.resolve([{ file_name: BOOT.context.chatId, last_mes: chatHistory.length ? chatHistory[chatHistory.length - 1].message : '' }]); };
     root.getChatHistoryDetail = function () { return Promise.resolve(clone(chatHistory)); };
-    ['createCharacter', 'createOrReplaceCharacter', 'deleteCharacter', 'replaceCharacter', 'updateCharacterWith'].forEach(function (name) { root[name] = unsupported(name); });
-
-    root.getPersonaNames = function () { return [BOOT.context.name1]; };
-    root.getPersonaIds = function () { return [BOOT.context.personaId || 'current']; };
-    root.getCurrentPersonaName = function () { return BOOT.context.name1; };
-    root.getCurrentPersonaId = function () { return BOOT.context.personaId || 'current'; };
-    root.getPersonaAvatarPath = function () { return BOOT.userAvatar; };
-    root.getPersona = function () { return Promise.resolve({ id: root.getCurrentPersonaId(), name: BOOT.context.name1, avatar: BOOT.userAvatar }); };
-    ['createPersona', 'createOrReplacePersona', 'deletePersona', 'replacePersona', 'updatePersonaWith'].forEach(function (name) { root[name] = unsupported(name); });
-
-    root.getPresetNames = function () { return BOOT.context.presetName ? [BOOT.context.presetName] : []; };
-    root.getLoadedPresetName = function () { return BOOT.context.presetName || ''; };
-    root.getPreset = function () { return rpc('preset.get', {}, 30000); };
-    root.loadPreset = function (name) { return rpc('preset.load', { name: name }, 60000); };
     root.default_preset = {};
     root.isPresetNormalPrompt = function () { return true; };
     root.isPresetSystemPrompt = function (prompt) { return Boolean(prompt && prompt.role === 'system'); };
     root.isPresetPlaceholderPrompt = function (prompt) { return Boolean(prompt && prompt.marker); };
-    ['createPreset', 'createOrReplacePreset', 'deletePreset', 'renamePreset', 'replacePreset', 'updatePresetWith', 'setPreset'].forEach(function (name) { root[name] = unsupported(name); });
-
-/*__STS_MODULE_WORLDBOOK__*//*__STS_MODULE_REGEX__*//*__STS_MODULE_AUDIO__*//*__STS_MODULE_STORAGE__*//*__STS_MODULE_BRIDGE_NETWORK__*//*__STS_MODULE_ACCESSIBILITY__*//*__STS_MODULE_SCRIPTS__*//*__STS_MODULE_VARIABLES_MVU__*//*__STS_MODULE_BRIDGE_CONTEXT__*//*__STS_MODULE_HUD__*//*__STS_MODULE_BRIDGE_HANDSHAKE__*/    root.EjsTemplate = { setFeatures: function() {} };
+/*__STS_MODULE_WORLDBOOK__*//*__STS_MODULE_REGEX__*//*__STS_MODULE_AUDIO__*//*__STS_MODULE_STORAGE__*//*__STS_MODULE_BRIDGE_NETWORK__*//*__STS_MODULE_ACCESSIBILITY__*//*__STS_MODULE_SCRIPTS__*//*__STS_MODULE_VARIABLES_MVU__*//*__STS_COMPATIBILITY_CATALOG__*/ /*__STS_MODULE_BRIDGE_CONTEXT__*//*__STS_MODULE_HUD__*//*__STS_MODULE_BRIDGE_HANDSHAKE__*/
 /*__STS_COMPATIBILITY_API__*/
     if (root.z && root.z.ZodType) {
         root.z.ZodType.prototype.prefault = root.z.ZodType.prototype.default;
     }
     
-    root.parent.postMessage({ type: 'HANDSHAKE_INIT', payload: { messageId: BOOT.context.messageId } }, '*');
-    handshakeTimeout = setTimeout(function () {
-        if (handshakeSettled) return;
-        handshakeSettled = true;
-        handshakeTimeout = 0;
-        const message = 'Card Runtime handshake timed out before HANDSHAKE_ACK.';
-        if (root.__cardRuntimeBootState) {
-            root.__cardRuntimeBootState.phase = 'handshake-timeout';
-            root.__cardRuntimeBootState.handshakeTimeoutAt = Date.now();
-        }
-        diagnostic('CARD_RUNTIME_RPC_TIMEOUT', 'handshake', 'bridge', message, { method: 'HANDSHAKE_INIT' });
-        readyReject(new Error(message));
-    }, 5000);
+    startHandshake();
 })();
     return root.__cardRuntimeHandshakeReady;
   };

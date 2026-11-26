@@ -5,11 +5,19 @@ on:
     paths:
       - 'assets/**'
       - 'build/**'
+      - 'tools/**'
+      - 'scripts/**'
+      - 'android-native/**'
+      - '_headers'
+      - '_redirects'
+      - 'api-unavailable.json'
+      - 'package-lock.json'
       - 'src/**'
       - 'tests/**'
-      - 'legacy/**'
       - 'index.html'
       - 'package.json'
+      - 'capacitor.config.json'
+      - '.github/workflows/android-apk.yml'
       - 'version.json'
       - '.github/workflows/bundle-regression.yml'
   workflow_dispatch:
@@ -18,7 +26,7 @@ permissions:
   contents: read
 
 jobs:
-  bundle-transforms:
+  source-build:
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
@@ -28,105 +36,106 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '22'
-      - name: Build static production bundle and runtime assets
-        run: node build/build-production-bundle.mjs
-      - name: Verify generated assets are committed
+      - name: Build portable static app
+        run: npm run build:portable
+      - name: Verify all generated assets are committed
         run: |
-          git diff --exit-code -- assets/app-entry-v1.3.6.js
-          git diff --exit-code -- assets/app-production-v1.3.6.js
-          git diff --exit-code -- assets/prompt-normalizer-v1.3.6.js
-          git diff --exit-code -- assets/proxy-persistence-service-v1.3.6.js
-          git diff --exit-code -- assets/smart-state-service-v1.3.6.js
-          git diff --exit-code -- assets/variable-scope-service-v1.3.6.js
-          git diff --exit-code -- assets/initial-variable-service-v1.3.6.js
-          git diff --exit-code -- assets/card-runtime-core-builder-v1.3.6.js
-          git diff --exit-code -- assets/card-runtime-renderer-v1.3.6.js
-          git diff --exit-code -- assets/m4
-          git diff --exit-code -- assets/m5
-          git diff --exit-code -- assets/m6
-          git diff --exit-code -- assets/m7
-      - name: Parse generated runtime modules
+          git diff --exit-code -- assets
+          test -z "$(git ls-files --others --exclude-standard -- assets)"
+      - name: Verify retained vendor integrity
+        run: npm run verify:vendor
+      - name: Run all regression tests
+        run: npm test
+      - name: Build direct source ESM deployment
+        run: npm run build:source && npm run test:source-bootstrap
+      - name: Ensure source build did not modify portable assets
+        run: git diff --exit-code -- assets
+
+  native-contracts:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+      - run: npm run test:native-java
+      - run: npm run test:android-overlay
+
+  browser-acceptance:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Build portable static app
+        run: npm run build:portable
+      - name: Check Chromium/Chrome availability
+        run: google-chrome --version
+      - name: Browser application acceptance
+        env:
+          CHROME_BIN: google-chrome
+        run: npm run test:app-browser
+      - name: Browser IndexedDB migration and transaction acceptance
+        env:
+          CHROME_BIN: google-chrome
+        run: npm run test:storage-browser
+      - name: Build direct source deployment
+        run: npm run build:source
+      - name: Browser direct-source application and IndexedDB acceptance
+        env:
+          APP_DIST: dist-source
+          CHROME_BIN: google-chrome
+        run: npm run test:app-browser && npm run test:storage-browser
+
+  # Extra manual repeat of the mandatory locked npm gate in phase1-quality-gates.yml.
+  npm-runtime-acceptance:
+    if: github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install isolated runtime dependencies
         run: |
-          node --check assets/app-entry-v1.3.6.js
-          node tests/check-production-syntax.mjs
-          node --check assets/prompt-normalizer-v1.3.6.js
-          node --check assets/proxy-persistence-service-v1.3.6.js
-          node --check assets/smart-state-service-v1.3.6.js
-          node --check assets/variable-scope-service-v1.3.6.js
-          node --check assets/initial-variable-service-v1.3.6.js
-          node --check assets/card-runtime-core-builder-v1.3.6.js
-          node --check assets/card-runtime-renderer-v1.3.6.js
-          node --check assets/m4/providers/common/generation-utils.js
-          node --check assets/m4/providers/common/generation-gateway.js
-          node --check assets/m4/providers/proxy/generation.js
-          node --check assets/m4/providers/openrouter/generation.js
-          node --check assets/m4/providers/gemini/generation.js
-          node --check assets/m4/features/chat/turn-policy.js
-          node --check assets/m4/features/chat/conversation-service.js
-          node --check assets/m4/features/chat/live-stream-store.js
-          node --check assets/m4/features/world-info/embedding-service.js
-          node --check assets/m4/features/world-info/smart-scan-service.js
-          node --check assets/m4/features/world-info/sticky-compat.js
-          node --check assets/m4/features/prompts/prompt-service.js
-          node --check assets/m4/features/chat/response-processor.js
-          node --check assets/m5/app/state/runtime-state.js
-          node --check assets/m5/app/persistence/session-state.js
-          node --check assets/m5/diagnostics/state.js
-          node --check assets/m5/features/arena/state-machine.js
-          node --check assets/m5/ui/runtime-guard.js
-          node --check assets/m6/ui/model-connection-test.js
-          node --check assets/m7/diagnostics/gemini-model-list.js
-      - name: Test M2/M3 architecture boundaries
-        run: node tests/architecture-m2-m3.mjs
-      - name: Test Smart State service
-        run: node tests/smart-state-service.mjs
-      - name: Test Variable Scope service
-        run: node tests/variable-scope-service.mjs
-      - name: Test Initial Variable service
-        run: node tests/initial-variable-service.mjs
-      - name: Test M4 architecture boundaries
-        run: node tests/architecture-m4.mjs
-      - name: Test M4 generation gateway
-        run: node tests/m4-generation-gateway.mjs
-      - name: Test M4 chat turn policy
-        run: node tests/m4-chat-turn-policy.mjs
-      - name: Test M4 conversation service
-        run: node tests/m4-conversation-service.mjs
-      - name: Test M4 live stream store
-        run: node tests/m4-live-stream-store.mjs
-      - name: Test M4 Smart Scan service
-        run: node tests/m4-smart-scan-service.mjs
-      - name: Test M4 World Info Sticky UID compatibility
-        run: node tests/m4-sticky-compat.mjs
-      - name: Test M4 embedding service
-        run: node tests/m4-embedding-service.mjs
-      - name: Test M4 prompt service
-        run: node tests/m4-prompt-service.mjs
-      - name: Test M4 response processor
-        run: node tests/m4-response-processor.mjs
-      - name: Test M5 architecture boundaries
-        run: node tests/architecture-m5.mjs
-      - name: Test M5 state and persistence
-        run: node tests/m5-state-persistence.mjs
-      - name: Test M5 Arena state machine
-        run: node tests/m5-arena-state.mjs
-      - name: Test M6 UI/accessibility boundaries
-        run: node tests/architecture-m6.mjs
-      - name: Test M7 cleanup boundaries
-        run: node tests/architecture-m7.mjs
-      - name: Test scoped preset normalizer
-        run: node tests/prompt-normalizer.mjs
-      - name: Test owned proxy persistence
-        run: node tests/proxy-persistence.mjs
-      - name: Test Card Runtime extraction
-        run: node tests/card-runtime-extraction.mjs
-      - name: Test Card Runtime bootstrap contract
-        run: node tests/card-runtime-bootstrap-contract.mjs
-      - name: Test Card Runtime surface gaps
-        run: node tests/runtime-surface-gaps.mjs
-      - name: Test Arena state transform
-        run: node tests/arena-state-transform.mjs
-      - name: Test Arena cancellation transform
-        run: node tests/arena-cancellation-transform.mjs
-      - name: Test core reliability transform
-        run: node tests/core-reliability-transform.mjs
+          npm ci --prefix build/npm-runtime --no-audit --no-fund
+          git diff --exit-code -- build/npm-runtime/package-lock.json
+          npm ls --prefix build/npm-runtime --all
+      - name: Record actual registry lock and installed license metadata
+        run: node tools/audit-npm-dependencies.mjs > npm-dependency-evidence.json
+      - name: Upload dependency evidence for review
+        uses: actions/upload-artifact@v4
+        with:
+          name: npm-dependency-evidence
+          path: |
+            build/npm-runtime/package-lock.json
+            npm-dependency-evidence.json
+          if-no-files-found: error
+      - name: Build package-backed runtime
+        run: npm run build:npm
+      - name: Test actual package runtime
+        run: npm run test:npm-runtime
+      - name: Bootstrap package-backed application graph
+        env:
+          APP_DIST: dist-npm
+        run: npm run test:source-bootstrap
+      - name: Verify portable assets unchanged
+        run: git diff --exit-code -- assets
+      - name: Browser acceptance for package runtime
+        env:
+          APP_DIST: dist-npm
+          CHROME_BIN: google-chrome
+        run: npm run test:app-browser
+      - name: Package-backed IndexedDB acceptance
+        env:
+          APP_DIST: dist-npm
+          CHROME_BIN: google-chrome
+        run: npm run test:storage-browser

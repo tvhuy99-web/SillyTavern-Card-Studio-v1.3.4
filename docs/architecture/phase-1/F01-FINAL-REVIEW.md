@@ -1,0 +1,3 @@
+# F01 final review
+
+The previous CI inventory confirmed 136 short lexical bindings remain (2,114 / 2,250 removed, 93.96%). This pass renames genuine opaque locals in AI Studio requests, model scan status, connection controls and history comparison. Existing runtime field names and request behavior are preserved. The CI inventory now emits binding names and source line numbers to distinguish real minifier remnants from meaningful abbreviations. The active phase1 branch pattern is explicitly included in quality gate push triggers. No claim of F01 completion until remaining bindings and compatibility contracts are reviewed.

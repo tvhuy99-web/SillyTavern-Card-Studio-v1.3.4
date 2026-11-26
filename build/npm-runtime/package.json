@@ -1,0 +1,17 @@
+{
+  "name": "stcs-npm-runtime-build",
+  "private": true,
+  "type": "module",
+  "dependencies": {
+    "react": "19.2.7",
+    "react-dom": "19.2.7",
+    "zustand": "5.0.11",
+    "immer": "11.1.3",
+    "json5": "2.2.3",
+    "@google/genai": "1.52.0",
+    "lodash": "4.18.1",
+    "marked": "17.0.3",
+    "dompurify": "3.4.12",
+    "esbuild": "0.25.12"
+  }
+}

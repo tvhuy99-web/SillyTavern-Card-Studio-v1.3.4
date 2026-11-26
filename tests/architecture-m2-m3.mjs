@@ -1,3 +1,5 @@
+import { renderOwnedModule } from '../build/asset-manifest.mjs';
+import { readRecoveredHostView } from './helpers/recovered-host-view.mjs';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 
@@ -6,7 +8,7 @@ const exists = path => fs.existsSync(new URL('../' + path, import.meta.url));
 
 const index = read('index.html');
 const entry = read('assets/app-entry-v1.3.6.js');
-const production = read('assets/app-production-v1.3.6.js');
+const production = readRecoveredHostView();
 const promptSource = read('src/features/presets/prompt-normalizer.js');
 const promptGenerated = read('assets/prompt-normalizer-v1.3.6.js');
 const proxySource = read('src/providers/proxy/persistence.js');
@@ -14,7 +16,9 @@ const proxyGenerated = read('assets/proxy-persistence-service-v1.3.6.js');
 const rendererSource = read('src/runtime/card-runtime/renderer.js');
 const rendererGenerated = read('assets/card-runtime-renderer-v1.3.6.js');
 const coreTemplate = read('src/runtime/card-runtime/core.template.js');
+const coreBuilderSource = read('src/runtime/card-runtime/core-builder.js');
 const coreBuilder = read('assets/card-runtime-core-builder-v1.3.6.js');
+const hostSource = read('src/app/host.js');
 const initialVariableSource = read('src/features/state/initial-variable-service.js');
 const initialVariableGenerated = read('assets/initial-variable-service-v1.3.6.js');
 
@@ -47,15 +51,15 @@ for (const forbiddenCode of [
 }
 
 assert.ok(production.includes('prompt-normalizer-v1.3.6.js'));
-assert.ok(production.includes('proxy-persistence-service-v1.3.6.js?v=1.3.6-m2-final'));
-assert.ok(production.includes('card-runtime-core-builder-v1.3.6.js?v=1.3.6-m3.10'));
-assert.ok(production.includes('card-runtime-renderer-v1.3.6.js?v=1.3.6-m3.10'));
-assert.ok(production.includes('initial-variable-service-v1.3.6.js?v=1.3.6-initvar-3'));
-assert.ok(production.includes('smart-state-service-v1.3.6.js?v=1.3.6-smartstate-2'));
+assert.ok(production.includes('proxy-persistence-service-v1.3.6.js'));
+assert.ok(production.includes('card-runtime-core-builder-v1.3.6.js'));
+assert.ok(production.includes('card-runtime-renderer-v1.3.6.js'));
+assert.ok(production.includes('initial-variable-service-v1.3.6.js'));
+assert.ok(production.includes('smart-state-service-v1.3.6.js'));
 assert.ok(production.includes('__stsBuildSmartStateBlock'));
 assert.ok(production.includes('__stsInspectInitialVariablePipeline'));
 assert.ok(production.includes('__stsSelectInitialVariableOpening'));
-assert.ok(production.includes('variableDiagnostics:a.snapshot.variableDiagnostics'));
+assert.ok(/variableDiagnostics:\s*(?:activeSnapshot|a)\.snapshot\.variableDiagnostics/.test(production));
 assert.ok(production.includes('__stsBuildCardRuntimeCoreScript'));
 assert.ok(production.includes('__stsBuildCardRuntimeRendererScript'));
 assert.ok(production.includes('__stsNormalizeCardRuntimeMarkup'));
@@ -65,8 +69,11 @@ assert.ok(!production.includes('root.__STS_START_CARD_RUNTIME__ = function start
 assert.equal(promptGenerated, promptSource);
 assert.equal(proxyGenerated, proxySource);
 assert.equal(rendererGenerated, rendererSource);
-assert.equal(initialVariableGenerated, initialVariableSource);
-assert.ok(coreBuilder.includes('__STS_START_CARD_RUNTIME__'));
+assert.equal(initialVariableGenerated, renderOwnedModule('src/features/state/initial-variable-service.js', 'assets/initial-variable-service-v1.3.6.js', initialVariableSource));
+assert.equal(coreBuilder, coreBuilderSource);
+assert.ok(hostSource.includes("from '../runtime/card-runtime/core-builder.js'"));
+assert.ok(!hostSource.includes('../../assets/card-runtime-core-builder'));
+assert.ok(coreBuilderSource.includes('__STS_START_CARD_RUNTIME__'));
 assert.ok(!coreBuilder.includes('/*__STS_COMPATIBILITY_API__*/'));
 assert.ok(coreTemplate.length < 30000, 'Card Runtime core template must stay small');
 

@@ -1,0 +1,49 @@
+[
+  {
+    "name": "react-state-runtime",
+    "rawBytes": 229809,
+    "exports": [
+      "$",
+      "At",
+      "E",
+      "I",
+      "It",
+      "M",
+      "ae",
+      "b",
+      "c",
+      "jt",
+      "k",
+      "l",
+      "o",
+      "oe",
+      "v",
+      "w",
+      "wt",
+      "z"
+    ],
+    "dependencies": [],
+    "sha256": "c08c7515ec93e5c6b4f7071d37ebf149876aae2f26d1c21f8d5b30ffe3603a54"
+  },
+  {
+    "name": "google-genai-runtime",
+    "rawBytes": 266446,
+    "exports": [
+      "Ce",
+      "De",
+      "ke",
+      "vo",
+      "xe"
+    ],
+    "dependencies": [
+      [
+        "react-state-runtime",
+        [
+          "o",
+          "l"
+        ]
+      ]
+    ],
+    "sha256": "1b4feea4bfa0a626b2207e129cc4c42307eea48329a9cb3d2d2f0e4c43dad558"
+  }
+]

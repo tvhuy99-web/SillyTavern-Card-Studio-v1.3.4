@@ -12,7 +12,7 @@ export function canSelect(side) {
   return sideStatus(side) === 'success' && Boolean(String(side?.content || '').trim());
 }
 
-export function normalizeSideOnLoad(side) {
+function normalizeSideOnLoad(side) {
   if (!side || typeof side !== 'object') return side;
   let status = sideStatus(side);
   if (status === 'pending') status = 'stopped';
@@ -64,7 +64,7 @@ function mainModel(connection) {
     ? connection.gemini_model
     : connection.source === 'proxy'
       ? connection.proxy_model
-      : connection.openrouter_model;
+      : connection.source === 'aistudio' ? connection.aistudio_model : connection.openrouter_model;
 }
 
 export function prepareRetry(arena, sideName, connection, arenaSettings = {}) {
@@ -129,7 +129,7 @@ export function resolveProxyConfig(provider, profileId, profiles) {
   if (provider !== 'proxy' || !profileId) return undefined;
   const profile = (Array.isArray(profiles) ? profiles : []).find(item => item.id === profileId);
   if (!profile) throw new Error('Cấu hình Proxy Arena không còn tồn tại: ' + profileId);
-  return { url: profile.url, password: profile.password, legacyMode: profile.legacyMode };
+  return { url: profile.url, password: profile.password, legacyMode: profile.legacyMode, ...(profile.protocol ? { protocol: profile.protocol } : {}) };
 }
 
 export function isAbortLike(error, signal) {

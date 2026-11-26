@@ -1,3 +1,5 @@
+import { abortError, awaitAbortable } from '../../core/async/cancellation.js';
+
 export function createConversationService(deps) {
   const now = deps.now || (() => Date.now());
   const createAbortController = deps.createAbortController || (() => new AbortController());
@@ -9,7 +11,14 @@ export function createConversationService(deps) {
     else setTimeout(resolve, 0);
   }));
 
-  function updateArena(messageId, slot, updater) {
+  function captureOwnership(state) {
+    const sessionId = state.sessionId;
+    const revision = deps.getSessionRevision?.();
+    return () => deps.getState().sessionId === sessionId && deps.getSessionRevision?.() === revision;
+  }
+
+  function updateArena(messageId, slot, updater, ownsSession) {
+    if (!ownsSession()) return;
     const message = deps.getState().messages.find(item => item.id === messageId);
     if (!message?.arena) return;
     deps.updateMessage(messageId, { arena: updater(message.arena, slot) });
@@ -45,7 +54,7 @@ export function createConversationService(deps) {
         let result;
         try {
           result = await Promise.race([
-            iterator.next(),
+            awaitAbortable(() => iterator.next(), controller.signal),
             new Promise((_, reject) => {
               timeoutId = setTimeout(
                 () => reject(streamTimeoutError(label, timeoutMs, chunkCount)),
@@ -105,7 +114,7 @@ export function createConversationService(deps) {
     }
   }
 
-  async function scanWorldInfo(state, content, options, turn) {
+  async function scanWorldInfo(state, content, options, turn, assertActive) {
     const generatedEntries = state.generatedLorebookEntries || [];
     const context = deps.turnPolicy.buildContext(
       Array.isArray(state.messages) ? [...state.messages] : [],
@@ -124,6 +133,7 @@ export function createConversationService(deps) {
         forceActiveUids: options?.forceActiveUids,
       });
     } catch (error) {
+      assertActive();
       const message = error instanceof Error ? error.message : String(error);
       console.error('[World Info] Scan failed unexpectedly:', error);
       deps.logSystemMessage?.(
@@ -133,6 +143,7 @@ export function createConversationService(deps) {
       );
       scan = { activeEntries: [], updatedRuntimeState: state.worldInfoRuntime };
     }
+    assertActive();
     scan = {
       ...scan,
       activeEntries: Array.isArray(scan?.activeEntries) ? scan.activeEntries : [],
@@ -152,7 +163,16 @@ export function createConversationService(deps) {
     return { scan, generatedEntries };
   }
 
-  async function createPrompt(state, turn, scan, generatedEntries, forcedContent) {
+  function applyPromptVariables(prompt) {
+    if (prompt?.updatedVariables && typeof prompt.updatedVariables === 'object') {
+      deps.setSessionData({ variables: prompt.updatedVariables });
+    }
+    if (prompt?.updatedGlobalVariables && typeof prompt.updatedGlobalVariables === 'object') {
+      deps.replaceGlobalVariables?.(prompt.updatedGlobalVariables);
+    }
+  }
+
+  async function createPrompt(state, turn, scan, generatedEntries, forcedContent, assertActive) {
     if (forcedContent) {
       return { fullPrompt: '', rpgSnapshot: undefined, structuredPrompt: undefined };
     }
@@ -162,18 +182,14 @@ export function createConversationService(deps) {
       activeEntries: scan.activeEntries,
       generatedEntries,
     });
-    if (prompt?.updatedVariables && typeof prompt.updatedVariables === 'object') {
-      deps.setSessionData({ variables: prompt.updatedVariables });
-    }
-    if (prompt?.updatedGlobalVariables && typeof prompt.updatedGlobalVariables === 'object') {
-      deps.replaceGlobalVariables?.(prompt.updatedGlobalVariables);
-    }
+    assertActive();
+    applyPromptVariables(prompt);
     deps.logPrompt(prompt.structuredPrompt);
     return prompt;
   }
 
   async function streamArenaSide({
-    messageId, slot, model, provider, proxyConfig, prompt, preset, controller,
+    messageId, slot, model, provider, proxyConfig, prompt, preset, controller, ownsSession,
   }) {
     const signal = controller.signal;
     let content = '';
@@ -186,25 +202,27 @@ export function createConversationService(deps) {
         controller,
         `${provider || 'default'}:${model || slot}`,
       )) {
-        if (signal.aborted) break;
+        if (signal.aborted || !ownsSession()) break;
         content = chunk.replaceText === true
           ? String(chunk.text || '')
           : content + String(chunk.text || '');
         deps.liveStream.publish(messageId, slot, content);
       }
       updateArena(messageId, slot, (arena, side) =>
-        deps.arenaState.withResult(arena, side, content, signal));
+        deps.arenaState.withResult(arena, side, content, signal), ownsSession);
+      return ownsSession() && !signal.aborted && Boolean(content.trim());
     } catch (error) {
       updateArena(messageId, slot, (arena, side) =>
-        deps.arenaState.withError(arena, side, error, signal, content));
+        deps.arenaState.withError(arena, side, error, signal, content), ownsSession);
+      return false;
     } finally {
       updateArena(messageId, slot, (arena, side) =>
-        deps.arenaState.complete(arena, side));
+        deps.arenaState.complete(arena, side), ownsSession);
       deps.liveStream.clear(messageId, slot);
     }
   }
 
-  async function generateArena(state, message, prompt) {
+  async function generateArena(state, message, prompt, controller, ownsSession) {
     const connection = deps.getConnectionSettings();
     const pair = deps.arenaState.describePair(message.arena, { ...state, ...connection });
     const profiles = deps.getProxyProfiles();
@@ -216,6 +234,9 @@ export function createConversationService(deps) {
     );
     const controllerA = createAbortController();
     const controllerB = createAbortController();
+    const abortSides = () => { controllerA.abort(); controllerB.abort(); };
+    controller.signal.addEventListener('abort', abortSides, { once: true });
+    if (controller.signal.aborted) abortSides();
     deps.addAbortController(controllerA);
     deps.addAbortController(controllerB);
     try {
@@ -228,7 +249,7 @@ export function createConversationService(deps) {
           proxyConfig: mainProxyConfig,
           prompt,
           preset: state.preset,
-          controller: controllerA,
+          controller: controllerA, ownsSession,
         }),
         streamArenaSide({
           messageId: message.id,
@@ -238,17 +259,18 @@ export function createConversationService(deps) {
           proxyConfig: challengerProxyConfig,
           prompt,
           preset: state.preset,
-          controller: controllerB,
+          controller: controllerB, ownsSession,
         }),
       ]);
     } finally {
+      controller.signal.removeEventListener('abort', abortSides);
       deps.removeAbortController(controllerA);
       deps.removeAbortController(controllerB);
     }
-    deps.playSound('ai');
+    if (ownsSession() && !controller.signal.aborted) deps.playSound('ai');
   }
 
-  async function generateSingle(state, message, prompt, controller) {
+  async function generateSingle(state, message, prompt, controller, ownsSession, assertActive) {
     let content = '';
     // AI Studio uses a native WebView and must show live text even if the
     // character preset disables API streaming. No change for other providers.
@@ -265,13 +287,13 @@ export function createConversationService(deps) {
           ? connection.gemini_model
           : source === 'proxy'
             ? connection.proxy_model
-            : connection.openrouter_model;
+            : source === 'aistudio' ? connection.aistudio_model : connection.openrouter_model;
         for await (const chunk of watchStream(
           stream,
           controller,
           `${source}:${model || 'default'}`,
         )) {
-          if (controller.signal.aborted) break;
+          if (controller.signal.aborted || !ownsSession()) break;
           content = chunk.replaceText === true
             ? String(chunk.text || '')
             : content + String(chunk.text || '');
@@ -280,7 +302,7 @@ export function createConversationService(deps) {
           deps.liveStream.publish(message.id, 'main', content, reasoning || undefined);
         }
       } finally {
-        deps.updateMessage(message.id, {
+        if (ownsSession()) deps.updateMessage(message.id, {
           content,
           reasoning_content: reasoning || undefined,
         });
@@ -288,16 +310,23 @@ export function createConversationService(deps) {
       }
     } else {
       deps.updateMessage(message.id, { content: '...' });
-      const result = await deps.generationGateway.generateOnce({
-        prompt, preset: state.preset,
-      });
+      let result;
+      try {
+        result = await awaitAbortable(() => deps.generationGateway.generateOnce({
+          prompt, preset: state.preset, signal: controller.signal,
+        }), controller.signal);
+        assertActive();
+      } catch (error) {
+        if (ownsSession() && controller.signal.aborted) deps.updateMessage(message.id, { content: '' });
+        throw error;
+      }
       content = result.response.text || '';
       deps.updateMessage(message.id, {
         content,
         reasoning_content: result.reasoning,
       });
     }
-    if (!controller.signal.aborted) {
+    if (ownsSession() && !controller.signal.aborted) {
       await deps.processAIResponse(content, message.id, false);
     }
   }
@@ -306,21 +335,26 @@ export function createConversationService(deps) {
     const initialState = deps.getState();
     if (!initialState.card || !initialState.preset || !String(rawContent ?? '').trim()) return;
 
+    const ownsSession = captureOwnership(initialState);
     deps.setError(null);
     deps.setLoading(true);
     const controller = createAbortController();
     deps.addAbortController(controller);
+    const assertActive = () => {
+      if (!ownsSession() || controller.signal.aborted) throw abortError();
+    };
 
     let succeeded = true;
     try {
       // Let React/Zustand paint the busy state before preprocessing, rewind work,
       // state snapshots, Smart Scan, or prompt construction can occupy the main thread.
       await yieldToBrowser();
-      if (controller.signal.aborted) return false;
+      assertActive();
 
       if (typeof options.beforeTurn === 'function') {
         const prepared = await options.beforeTurn({ signal: controller.signal });
-        if (prepared === false || controller.signal.aborted) return false;
+        assertActive();
+        if (prepared === false) return false;
       }
 
       const state = deps.getState();
@@ -336,12 +370,13 @@ export function createConversationService(deps) {
       deps.addMessage(turn.userMessage);
 
       const { scan, generatedEntries } = await scanWorldInfo(
-        state, content, options, turn,
+        state, content, options, turn, assertActive,
       );
       const prompt = await createPrompt(
-        state, turn, scan, generatedEntries, options?.forcedContent,
+        state, turn, scan, generatedEntries, options?.forcedContent, assertActive,
       );
 
+      assertActive();
       const compactedHistory = deps.turnPolicy.compactModelMessages(
         deps.getState().messages,
         { keepLatest: false },
@@ -372,14 +407,14 @@ export function createConversationService(deps) {
           await deps.processAIResponse(forcedContent, message.id, true);
         }
       } else if (state.isArenaMode && state.arenaModelId) {
-        await generateArena(state, message, prompt.fullPrompt);
+        await generateArena(state, message, prompt.fullPrompt, controller, ownsSession);
       } else {
-        await generateSingle(state, message, prompt.fullPrompt, controller);
+        await generateSingle(state, message, prompt.fullPrompt, controller, ownsSession, assertActive);
       }
     } catch (error) {
       succeeded = false;
       const streamTimedOut = error?.code === 'STREAM_IDLE_TIMEOUT';
-      if (streamTimedOut || !deps.turnPolicy.isAbortLike(error, controller.signal)) {
+      if (ownsSession() && (streamTimedOut || !deps.turnPolicy.isAbortLike(error, controller.signal))) {
         console.error(error);
         const message = error instanceof Error ? error.message : String(error);
         deps.setError('Lỗi: ' + message);
@@ -387,10 +422,60 @@ export function createConversationService(deps) {
       }
     } finally {
       deps.removeAbortController(controller);
-      if (deps.runtimeSize() === 0) deps.setLoading(false);
+      if (ownsSession() && deps.runtimeSize() === 0) deps.setLoading(false);
     }
-    return succeeded && !controller.signal.aborted;
+    return succeeded && ownsSession() && !controller.signal.aborted;
   }
 
-  return Object.freeze({ send });
+  // Retry uses the exact same streaming and Arena status path as an initial turn.
+  // Preserve the original turn's model/profile snapshot and active lorebook UIDs.
+  async function retryArena(messageId, sideName) {
+    const state = deps.getState();
+    const message = state.messages.find(item => item.id === messageId);
+    if (!message?.arena || !['A', 'B'].includes(sideName)) return false;
+    const ownsSession = captureOwnership(state);
+    const retry = deps.arenaState.prepareRetry(message.arena, sideName, deps.getConnectionSettings(), {
+      modelId: state.arenaModelId, provider: state.arenaProvider, userProfileId: state.arenaUserProfileId,
+    });
+    if (!retry.model) {
+      deps.notify?.('Không xác định được Model ID để thử lại.', 'error');
+      return false;
+    }
+    const controller = createAbortController();
+    deps.addAbortController(controller);
+    deps.updateMessage(messageId, { arena: retry.arena });
+    deps.setLoading(true);
+    let enteredStream = false;
+    try {
+      await yieldToBrowser();
+      if (!ownsSession() || controller.signal.aborted) throw abortError();
+      const generatedEntries = state.generatedLorebookEntries || [];
+      const activeUids = new Set(message.activeLorebookUids || []);
+      const entries = [
+        ...(state.card?.char_book?.entries || []),
+        ...(deps.getLorebooks?.() || []).flatMap(book => book.book?.entries || []),
+        ...generatedEntries,
+      ];
+      const prompt = await deps.buildPrompt({ state, messages: state.messages.filter(item => item.id !== messageId),
+        activeEntries: entries.filter(entry => entry.uid && activeUids.has(entry.uid)), generatedEntries });
+      if (!ownsSession() || controller.signal.aborted) throw abortError();
+      applyPromptVariables(prompt);
+      const proxyConfig = deps.arenaState.resolveProxyConfig(retry.provider, retry.profileId, deps.getProxyProfiles());
+      enteredStream = true;
+      return await streamArenaSide({ messageId, slot: retry.slot, model: retry.model, provider: retry.provider,
+        proxyConfig, prompt: prompt.fullPrompt, preset: state.preset, controller, ownsSession });
+    } catch (error) {
+      updateArena(messageId, retry.slot, (arena, slot) => deps.arenaState.withError(arena, slot, error, controller.signal), ownsSession);
+      return false;
+    } finally {
+      if (!enteredStream) {
+        updateArena(messageId, retry.slot, (arena, slot) => deps.arenaState.complete(arena, slot), ownsSession);
+        deps.liveStream.clear(messageId, retry.slot);
+      }
+      deps.removeAbortController(controller);
+      if (ownsSession() && deps.runtimeSize() === 0) deps.setLoading(false);
+    }
+  }
+
+  return Object.freeze({ send, retryArena });
 }

@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import vm from 'node:vm';
 
-const source = fs.readFileSync(new URL('../android-native/AiStudioTextPlugin.java', import.meta.url), 'utf8');
+const source = fs.readFileSync(new URL('../android-native/AiStudioPageScripts.java', import.meta.url), 'utf8');
 const block = source.match(/INSTALL_JS = """\n([\s\S]*?)\n        """;/);
 assert.ok(block, 'native AI Studio JavaScript bootstrap exists');
 

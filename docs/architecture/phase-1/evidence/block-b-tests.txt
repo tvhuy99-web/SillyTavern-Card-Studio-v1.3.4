@@ -1,0 +1,156 @@
+
+> sillytavern-card-studio@1.3.6 test
+> node tools/run-tests.mjs
+
+Android background AI Studio FGS lifecycle regression: OK
+PASS tests/ai-studio-background.mjs
+AI Studio live snapshots and per-turn new conversation checks: OK
+PASS tests/ai-studio-live-turns.mjs
+AI Studio model and thinking UI integration: OK
+PASS tests/ai-studio-model-controls.mjs
+AI Studio native response selector regression: OK
+PASS tests/ai-studio-response-extractor.mjs
+AI Studio visible thinking summary snapshot test OK
+PASS tests/ai-studio-thinking-summary.mjs
+Android export download: SAF interception regression OK
+PASS tests/android-export-download.mjs
+M2/M3 architecture boundary checks: OK
+PASS tests/architecture-m2-m3.mjs
+M4 architecture boundary checks: OK
+PASS tests/architecture-m4.mjs
+M5 architecture boundary checks: OK
+PASS tests/architecture-m5.mjs
+M6 UI/accessibility architecture checks: OK
+PASS tests/architecture-m6.mjs
+M7 cleanup architecture checks: OK
+PASS tests/architecture-m7.mjs
+arena cancellation transform tests: OK (7 strict replacements)
+PASS tests/arena-cancellation-transform.mjs
+arena state bundle transform tests: OK (19 strict replacements)
+PASS tests/arena-state-transform.mjs
+card runtime bootstrap contract tests: OK
+PASS tests/card-runtime-bootstrap-contract.mjs
+card runtime extraction tests: OK
+PASS tests/card-runtime-extraction.mjs
+All emitted production JavaScript modules: syntax OK
+PASS tests/check-production-syntax.mjs
+core reliability bundle transform tests: OK (18 strict replacements; production integration + syntax verified)
+PASS tests/core-reliability-transform.mjs
+initial variable service tests: OK
+PASS tests/initial-variable-service.mjs
+M4 chat turn policy tests: OK
+PASS tests/m4-chat-turn-policy.mjs
+[World Info] Scan failed unexpectedly: Error: unexpected scan failure
+    at deps.scanWorldInfo (file:///mnt/data/block-b-work/STCS-Phase1-Block-A-94/tests/m4-conversation-service.mjs:231:42)
+    at scanWorldInfo (file:///mnt/data/block-b-work/STCS-Phase1-Block-A-94/src/features/chat/conversation-service.js:126:25)
+    at Object.send (file:///mnt/data/block-b-work/STCS-Phase1-Block-A-94/src/features/chat/conversation-service.js:372:48)
+    at async file:///mnt/data/block-b-work/STCS-Phase1-Block-A-94/tests/m4-conversation-service.mjs:232:14
+Error: Luồng gemini:main không nhận dữ liệu mới trong 0 giây.
+    at streamTimeoutError (file:///mnt/data/block-b-work/STCS-Phase1-Block-A-94/src/features/chat/conversation-service.js:28:19)
+    at Timeout.<anonymous> (file:///mnt/data/block-b-work/STCS-Phase1-Block-A-94/src/features/chat/conversation-service.js:60:30)
+    at listOnTimeout (node:internal/timers:588:17)
+    at process.processTimers (node:internal/timers:523:7) {
+  code: 'STREAM_IDLE_TIMEOUT'
+}
+M4 conversation service tests: OK
+PASS tests/m4-conversation-service.mjs
+M4 embedding service checks: OK
+PASS tests/m4-embedding-service.mjs
+M4 EmbeddingGemma 2 LiteRT bridge checks: OK
+PASS tests/m4-embeddinggemma2-litert-bridge.mjs
+M4 generation gateway tests: OK
+PASS tests/m4-generation-gateway.mjs
+M4 live stream store checks: OK
+PASS tests/m4-live-stream-store.mjs
+Android native EmbeddingGemma bridge checks: OK
+PASS tests/m4-native-embedding-bridge.mjs
+M4 prompt service checks: OK
+PASS tests/m4-prompt-service.mjs
+M4 response processor checks: OK
+PASS tests/m4-response-processor.mjs
+[Smart Scan] Error: Error: selection offline
+    at Object.callSelectionModel (file:///mnt/data/block-b-work/STCS-Phase1-Block-A-94/tests/m4-smart-scan-service.mjs:146:45)
+    at scanWorldInfo (file:///mnt/data/block-b-work/STCS-Phase1-Block-A-94/src/features/world-info/smart-scan-service.js:239:47)
+    at async file:///mnt/data/block-b-work/STCS-Phase1-Block-A-94/tests/m4-smart-scan-service.mjs:140:18
+[Smart Scan] Error: Error: model no longer available
+    at Object.callSelectionModel (file:///mnt/data/block-b-work/STCS-Phase1-Block-A-94/tests/m4-smart-scan-service.mjs:176:45)
+    at scanWorldInfo (file:///mnt/data/block-b-work/STCS-Phase1-Block-A-94/src/features/world-info/smart-scan-service.js:239:47)
+    at file:///mnt/data/block-b-work/STCS-Phase1-Block-A-94/tests/m4-smart-scan-service.mjs:174:24
+[Smart Scan] JSON Parse Failed. Trying regex fallback... SyntaxError: Unexpected token '\', "\n["a"]\n" is not valid JSON
+    at parse (<anonymous>)
+    at parseSelection (file:///mnt/data/block-b-work/STCS-Phase1-Block-A-94/src/features/world-info/smart-scan-service.js:26:20)
+    at scanWorldInfo (file:///mnt/data/block-b-work/STCS-Phase1-Block-A-94/src/features/world-info/smart-scan-service.js:243:28)
+    at async file:///mnt/data/block-b-work/STCS-Phase1-Block-A-94/tests/m4-smart-scan-service.mjs:203:18
+M4 Smart Scan service checks: OK
+PASS tests/m4-smart-scan-service.mjs
+World Info Sticky: 3-turn default, migration, numeric UID and actual resolver tests OK
+PASS tests/m4-sticky-compat.mjs
+M5 Arena state-machine tests: OK
+PASS tests/m5-arena-state.mjs
+M5 state/persistence tests: OK
+PASS tests/m5-state-persistence.mjs
+51 recovered components, 53 baseline element-tree comparisons
+PASS tests/phase1-batch-ui-recovery.mjs
+[System] Global Error Hunters (Multi-layer) initialized.
+Block A: emitted ESM bootstrap reaches React root lookup; 71 UI factories and original memo comparators OK (DOM stub, no mount).
+PASS tests/phase1-block-a-bootstrap.mjs
+Block A domains: actual codecs, macro/regex, Markdown, provider tree, summary leases and session actions OK.
+PASS tests/phase1-block-a-domains.mjs
+Block A catalog: shared queues, collision-safe create, failed reload recovery, host provider bindings and optional module error contract OK.
+PASS tests/phase1-block-a-final-catalog.mjs
+Block A runtime: all 53 emitted routes, frame events, prompt guards, subscription protocol and story queue leases OK.
+PASS tests/phase1-block-a-final-runtime.mjs
+Block A: 5 application stores with original Zustand/Immer, reload, subscription, late binding and session invalidation OK.
+PASS tests/phase1-block-a-stores.mjs
+Block B bridge lifecycle: scoped AI Studio cancellation, stream teardown, ONNX import ID and SAF blob ownership PASS
+PASS tests/phase1-block-b-bridge-lifecycle.mjs
+Phase 1 build ownership and source entry: OK
+PASS tests/phase1-build-boundary.mjs
+Phase 1 Card Runtime ownership and RPC lifecycle: OK
+PASS tests/phase1-card-runtime-ownership.mjs
+Catalog identity, strict failures, queued leases, atomic preset rename: OK
+PASS tests/phase1-catalog-ownership.mjs
+Connection repository, legacy storage, rotation and isolated probe targets: OK
+PASS tests/phase1-connection-repository.mjs
+P07 embedding ownership, provider snapshots, hash parity and transaction protocol: OK
+PASS tests/phase1-embedding-ownership.mjs
+Host RPC ownership, replay window, session lease, message mutations and per-frame generation: OK
+PASS tests/phase1-host-rpc-ownership.mjs
+Lorebook serialized mutations, embedded ownership, extension lifecycle, imports and chat session RPC: OK
+PASS tests/phase1-lorebook-runtime-ownership.mjs
+Phase 1 model catalog, timeout and production wiring: OK
+PASS tests/phase1-model-catalog.mjs
+P05 persistence ownership, commit/abort protocol and transaction boundaries: OK
+PASS tests/phase1-persistence-contract.mjs
+Provider catalogs: pagination, cache, stale responses, protocol, subscriptions and generated integration: OK
+PASS tests/phase1-provider-catalogs.mjs
+Phase 1 provider contracts, probes, protocols and cancellation: OK
+PASS tests/phase1-provider-contract.mjs
+P09 connection settings: 7 baseline trees, all providers, draft inputs, Proxy protocol, profile selection, Apply, lazy binding: OK
+PASS tests/phase1-recovered-connection-settings.mjs
+P09 controls: 13 legacy tree snapshots, model selection, table editing, navigation, action and build wiring: OK
+PASS tests/phase1-recovered-ui-controls.mjs
+Recovered UI primitives: layout classes, labels, events, accessibility and stable factory integration: OK
+PASS tests/phase1-recovered-ui-primitives.mjs
+P09 shell: 60 legacy element trees, keyboard navigation, switches, chat routing and shell state: OK
+PASS tests/phase1-recovered-ui-shell.mjs
+Runtime utility routes, strict imports, stale guards, JSON/JSONL and provider model ownership: OK
+PASS tests/phase1-runtime-import-ownership.mjs
+Phase 1 runtime state ownership and storage compatibility: OK
+PASS tests/phase1-runtime-state-ownership.mjs
+P05/P06 session lifecycle, autosave queue, abort and stale response boundaries: OK
+Arena retry shared stream, original model/profile, lorebook, early cancellation, same-ID autosave: OK
+PASS tests/phase1-session-lifecycle.mjs
+React-owned model tests: explicit drafts, cancellation, redaction, protocol endpoint, HTTP errors and stale results OK
+PASS tests/phase1-settings-owned-probes.mjs
+prompt normalizer and preset boundary tests: OK
+PASS tests/prompt-normalizer.mjs
+proxy persistence ownership tests: OK
+PASS tests/proxy-persistence.mjs
+runtime surface gap tests: OK
+PASS tests/runtime-surface-gaps.mjs
+Smart State service checks: OK
+PASS tests/smart-state-service.mjs
+Variable scope service checks: OK
+PASS tests/variable-scope-service.mjs
+62/62 test files passed

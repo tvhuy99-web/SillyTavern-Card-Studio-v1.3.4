@@ -1,0 +1,1874 @@
+[
+  {
+    "type": "svg",
+    "props": {
+      "xmlns": "http://www.w3.org/2000/svg",
+      "className": "h-4 w-4",
+      "viewBox": "0 0 24 24",
+      "fill": "none",
+      "stroke": "currentColor",
+      "strokeWidth": "1.8",
+      "strokeLinecap": "round",
+      "strokeLinejoin": "round",
+      "aria-hidden": "true",
+      "children": {
+        "type": "path",
+        "props": {
+          "d": "M7 3h10a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2Zm-3 5H3a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h9a2 2 0 0 0 2-2v-1M12 7v6m-3-3h6"
+        }
+      }
+    }
+  },
+  {
+    "type": "svg",
+    "props": {
+      "xmlns": "http://www.w3.org/2000/svg",
+      "className": "h-4 w-4",
+      "viewBox": "0 0 24 24",
+      "fill": "none",
+      "stroke": "currentColor",
+      "strokeWidth": "1.8",
+      "strokeLinecap": "round",
+      "strokeLinejoin": "round",
+      "aria-hidden": "true",
+      "children": {
+        "type": "path",
+        "props": {
+          "d": "M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8Zm7 8a7 7 0 0 0-14 0"
+        }
+      }
+    }
+  },
+  {
+    "type": "svg",
+    "props": {
+      "xmlns": "http://www.w3.org/2000/svg",
+      "className": "h-4 w-4",
+      "viewBox": "0 0 24 24",
+      "fill": "none",
+      "stroke": "currentColor",
+      "strokeWidth": "1.8",
+      "strokeLinecap": "round",
+      "strokeLinejoin": "round",
+      "aria-hidden": "true",
+      "children": {
+        "type": "path",
+        "props": {
+          "d": "M4 6h10m4 0h2M4 12h2m4 0h10M4 18h7m4 0h5M14 3v6M6 9v6m5 0v6"
+        }
+      }
+    }
+  },
+  {
+    "type": "svg",
+    "props": {
+      "xmlns": "http://www.w3.org/2000/svg",
+      "className": "h-4 w-4",
+      "viewBox": "0 0 24 24",
+      "fill": "none",
+      "stroke": "currentColor",
+      "strokeWidth": "1.8",
+      "strokeLinecap": "round",
+      "strokeLinejoin": "round",
+      "aria-hidden": "true",
+      "children": {
+        "type": "path",
+        "props": {
+          "d": "M4 4.5A2.5 2.5 0 0 1 6.5 2H11v18H6.5A2.5 2.5 0 0 0 4 22V4.5Zm16 0A2.5 2.5 0 0 0 17.5 2H13v18h4.5A2.5 2.5 0 0 1 20 22V4.5Z"
+        }
+      }
+    }
+  },
+  {
+    "type": "svg",
+    "props": {
+      "xmlns": "http://www.w3.org/2000/svg",
+      "className": "h-4 w-4",
+      "viewBox": "0 0 24 24",
+      "fill": "none",
+      "stroke": "currentColor",
+      "strokeWidth": "1.8",
+      "strokeLinecap": "round",
+      "strokeLinejoin": "round",
+      "aria-hidden": "true",
+      "children": {
+        "type": "path",
+        "props": {
+          "d": "M21 15a4 4 0 0 1-4 4H8l-5 3v-7a4 4 0 0 1-1-2.7V7a4 4 0 0 1 4-4h11a4 4 0 0 1 4 4v8Z"
+        }
+      }
+    }
+  },
+  {
+    "type": "svg",
+    "props": {
+      "xmlns": "http://www.w3.org/2000/svg",
+      "className": "h-4 w-4",
+      "viewBox": "0 0 24 24",
+      "fill": "none",
+      "stroke": "currentColor",
+      "strokeWidth": "1.8",
+      "strokeLinecap": "round",
+      "strokeLinejoin": "round",
+      "aria-hidden": "true",
+      "children": {
+        "type": "path",
+        "props": {
+          "d": "M12 15.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7Zm7.4-3.5a7.5 7.5 0 0 0-.1-1l2-1.5-2-3.4-2.4 1a8 8 0 0 0-1.8-1L14.8 3h-4l-.4 2.7a8 8 0 0 0-1.8 1L6.2 5.6l-2 3.4 2 1.6a8 8 0 0 0 0 2.1l-2 1.6 2 3.4 2.4-1a8 8 0 0 0 1.8 1l.4 2.7h4l.4-2.7a8 8 0 0 0 1.8-1l2.4 1 2-3.4-2-1.6v-.7Z"
+        }
+      }
+    }
+  },
+  {
+    "type": "svg",
+    "props": {
+      "xmlns": "http://www.w3.org/2000/svg",
+      "className": "h-4 w-4",
+      "viewBox": "0 0 24 24",
+      "fill": "none",
+      "stroke": "currentColor",
+      "strokeWidth": "1.8",
+      "strokeLinecap": "round",
+      "strokeLinejoin": "round",
+      "aria-hidden": "true",
+      "children": {
+        "type": "path",
+        "props": {
+          "d": "M19 12H5m6-6-6 6 6 6"
+        }
+      }
+    }
+  },
+  {
+    "type": "svg",
+    "props": {
+      "xmlns": "http://www.w3.org/2000/svg",
+      "className": "h-4 w-4",
+      "viewBox": "0 0 24 24",
+      "fill": "none",
+      "stroke": "currentColor",
+      "strokeWidth": "1.8",
+      "strokeLinecap": "round",
+      "strokeLinejoin": "round",
+      "aria-hidden": "true",
+      "children": {
+        "type": "path",
+        "props": {
+          "d": "M20 7h-5V2M4 17h5v5m10-7a8 8 0 0 1-13.7 2L4 17m16-10-1.3-1A8 8 0 0 0 5 8"
+        }
+      }
+    }
+  },
+  {
+    "type": "svg",
+    "props": {
+      "xmlns": "http://www.w3.org/2000/svg",
+      "className": "h-4 w-4",
+      "viewBox": "0 0 24 24",
+      "fill": "none",
+      "stroke": "currentColor",
+      "strokeWidth": "1.8",
+      "strokeLinecap": "round",
+      "strokeLinejoin": "round",
+      "aria-hidden": "true",
+      "children": {
+        "type": "path",
+        "props": {
+          "d": "M5 4h14v16H5zM8 8h.01M16 8h.01M8 16h.01M16 16h.01M12 12h.01"
+        }
+      }
+    }
+  },
+  {
+    "type": "svg",
+    "props": {
+      "xmlns": "http://www.w3.org/2000/svg",
+      "className": "h-4 w-4",
+      "viewBox": "0 0 24 24",
+      "fill": "none",
+      "stroke": "currentColor",
+      "strokeWidth": "1.8",
+      "strokeLinecap": "round",
+      "strokeLinejoin": "round",
+      "aria-hidden": "true",
+      "children": {
+        "type": "path",
+        "props": {
+          "d": "m12 3 1.1 3.4L16.5 7.5l-3.4 1.1L12 12l-1.1-3.4-3.4-1.1 3.4-1.1L12 3Zm6 9 .7 2.3L21 15l-2.3.7L18 18l-.7-2.3L15 15l2.3-.7L18 12ZM6 13l.9 2.6L9.5 16.5l-2.6.9L6 20l-.9-2.6-2.6-.9 2.6-.9L6 13Z"
+        }
+      }
+    }
+  },
+  {
+    "type": "svg",
+    "props": {
+      "xmlns": "http://www.w3.org/2000/svg",
+      "className": "h-4 w-4",
+      "viewBox": "0 0 24 24",
+      "fill": "none",
+      "stroke": "currentColor",
+      "strokeWidth": "1.8",
+      "strokeLinecap": "round",
+      "strokeLinejoin": "round",
+      "aria-hidden": "true",
+      "children": {
+        "type": "path",
+        "props": {
+          "d": "M6 6l12 12M18 6 6 18"
+        }
+      }
+    }
+  },
+  {
+    "type": "svg",
+    "props": {
+      "xmlns": "http://www.w3.org/2000/svg",
+      "className": "h-4 w-4",
+      "viewBox": "0 0 24 24",
+      "fill": "none",
+      "stroke": "currentColor",
+      "strokeWidth": "1.8",
+      "strokeLinecap": "round",
+      "strokeLinejoin": "round",
+      "aria-hidden": "true",
+      "children": {
+        "type": "path",
+        "props": {
+          "d": "m22 2-7 20-4-9-9-4 20-7Zm-11 11 4-4"
+        }
+      }
+    }
+  },
+  {
+    "type": "svg",
+    "props": {
+      "xmlns": "http://www.w3.org/2000/svg",
+      "className": "h-4 w-4",
+      "viewBox": "0 0 24 24",
+      "fill": "none",
+      "stroke": "currentColor",
+      "strokeWidth": "1.8",
+      "strokeLinecap": "round",
+      "strokeLinejoin": "round",
+      "aria-hidden": "true",
+      "children": {
+        "type": "path",
+        "props": {
+          "d": "M7 7h10v10H7z"
+        }
+      }
+    }
+  },
+  {
+    "type": "svg",
+    "props": {
+      "xmlns": "http://www.w3.org/2000/svg",
+      "className": "h-4 w-4",
+      "viewBox": "0 0 24 24",
+      "fill": "none",
+      "stroke": "currentColor",
+      "strokeWidth": "1.8",
+      "strokeLinecap": "round",
+      "strokeLinejoin": "round",
+      "aria-hidden": "true",
+      "children": {
+        "type": "path",
+        "props": {
+          "d": "m21 21-4.3-4.3m2.3-5.2a7.5 7.5 0 1 1-15 0 7.5 7.5 0 0 1 15 0Z"
+        }
+      }
+    }
+  },
+  {
+    "type": "svg",
+    "props": {
+      "xmlns": "http://www.w3.org/2000/svg",
+      "className": "h-4 w-4",
+      "viewBox": "0 0 24 24",
+      "fill": "none",
+      "stroke": "currentColor",
+      "strokeWidth": "1.8",
+      "strokeLinecap": "round",
+      "strokeLinejoin": "round",
+      "aria-hidden": "true",
+      "children": {
+        "type": "path",
+        "props": {
+          "d": "m5 12 4 4L19 6"
+        }
+      }
+    }
+  },
+  {
+    "type": "svg",
+    "props": {
+      "xmlns": "http://www.w3.org/2000/svg",
+      "className": "h-4 w-4",
+      "viewBox": "0 0 24 24",
+      "fill": "none",
+      "stroke": "currentColor",
+      "strokeWidth": "1.8",
+      "strokeLinecap": "round",
+      "strokeLinejoin": "round",
+      "aria-hidden": "true",
+      "children": {
+        "type": "path",
+        "props": {
+          "d": "M12 22a10 10 0 1 0 0-20 10 10 0 0 0 0 20Zm0-14v5m0 3h.01"
+        }
+      }
+    }
+  },
+  {
+    "type": "svg",
+    "props": {
+      "xmlns": "http://www.w3.org/2000/svg",
+      "className": "h-4 w-4",
+      "viewBox": "0 0 24 24",
+      "fill": "none",
+      "stroke": "currentColor",
+      "strokeWidth": "1.8",
+      "strokeLinecap": "round",
+      "strokeLinejoin": "round",
+      "aria-hidden": "true",
+      "children": {
+        "type": "path",
+        "props": {
+          "d": "M12 3 2.5 20h19L12 3Zm0 6v5m0 3h.01"
+        }
+      }
+    }
+  },
+  {
+    "type": "svg",
+    "props": {
+      "xmlns": "http://www.w3.org/2000/svg",
+      "className": "h-4 w-4",
+      "viewBox": "0 0 24 24",
+      "fill": "none",
+      "stroke": "currentColor",
+      "strokeWidth": "1.8",
+      "strokeLinecap": "round",
+      "strokeLinejoin": "round",
+      "aria-hidden": "true",
+      "children": {
+        "type": "path",
+        "props": {
+          "d": "M12 22a10 10 0 1 0 0-20 10 10 0 0 0 0 20Zm0-9v5m0-9h.01"
+        }
+      }
+    }
+  },
+  {
+    "type": "svg",
+    "props": {
+      "xmlns": "http://www.w3.org/2000/svg",
+      "className": "h-4 w-4",
+      "viewBox": "0 0 24 24",
+      "fill": "none",
+      "stroke": "currentColor",
+      "strokeWidth": "1.8",
+      "strokeLinecap": "round",
+      "strokeLinejoin": "round",
+      "aria-hidden": "true",
+      "children": {
+        "type": "path",
+        "props": {
+          "d": "M5 12h.01M12 12h.01M19 12h.01"
+        }
+      }
+    }
+  },
+  {
+    "type": "svg",
+    "props": {
+      "xmlns": "http://www.w3.org/2000/svg",
+      "className": "h-4 w-4",
+      "viewBox": "0 0 24 24",
+      "fill": "none",
+      "stroke": "currentColor",
+      "strokeWidth": "1.8",
+      "strokeLinecap": "round",
+      "strokeLinejoin": "round",
+      "aria-hidden": "true",
+      "children": {
+        "type": "path",
+        "props": {
+          "d": "M12 3v12m-5-5 5 5 5-5M5 21h14"
+        }
+      }
+    }
+  },
+  {
+    "type": "svg",
+    "props": {
+      "xmlns": "http://www.w3.org/2000/svg",
+      "className": "h-4 w-4",
+      "viewBox": "0 0 24 24",
+      "fill": "none",
+      "stroke": "currentColor",
+      "strokeWidth": "1.8",
+      "strokeLinecap": "round",
+      "strokeLinejoin": "round",
+      "aria-hidden": "true",
+      "children": {
+        "type": "path",
+        "props": {
+          "d": "M12 21V9m-5 5 5-5 5 5M5 3h14"
+        }
+      }
+    }
+  },
+  {
+    "type": "svg",
+    "props": {
+      "xmlns": "http://www.w3.org/2000/svg",
+      "className": "h-4 w-4",
+      "viewBox": "0 0 24 24",
+      "fill": "none",
+      "stroke": "currentColor",
+      "strokeWidth": "1.8",
+      "strokeLinecap": "round",
+      "strokeLinejoin": "round",
+      "aria-hidden": "true",
+      "children": {
+        "type": "path",
+        "props": {
+          "d": "M4 7h16m-10 4v6m4-6v6M9 7l1-3h4l1 3m3 0-1 14H7L6 7"
+        }
+      }
+    }
+  },
+  {
+    "type": "svg",
+    "props": {
+      "xmlns": "http://www.w3.org/2000/svg",
+      "className": "h-4 w-4",
+      "viewBox": "0 0 24 24",
+      "fill": "none",
+      "stroke": "currentColor",
+      "strokeWidth": "1.8",
+      "strokeLinecap": "round",
+      "strokeLinejoin": "round",
+      "aria-hidden": "true",
+      "children": {
+        "type": "path",
+        "props": {
+          "d": "M4 10v4h4l5 4V6L8 10H4Zm12-1a4 4 0 0 1 0 6m2.5-8.5a8 8 0 0 1 0 11"
+        }
+      }
+    }
+  },
+  {
+    "type": "svg",
+    "props": {
+      "xmlns": "http://www.w3.org/2000/svg",
+      "className": "h-4 w-4",
+      "viewBox": "0 0 24 24",
+      "fill": "none",
+      "stroke": "currentColor",
+      "strokeWidth": "1.8",
+      "strokeLinecap": "round",
+      "strokeLinejoin": "round",
+      "aria-hidden": "true",
+      "children": {
+        "type": "path",
+        "props": {
+          "d": "m9 7 8 5-8 5V7Z"
+        }
+      }
+    }
+  },
+  {
+    "type": "svg",
+    "props": {
+      "xmlns": "http://www.w3.org/2000/svg",
+      "className": "h-4 w-4",
+      "viewBox": "0 0 24 24",
+      "fill": "none",
+      "stroke": "currentColor",
+      "strokeWidth": "1.8",
+      "strokeLinecap": "round",
+      "strokeLinejoin": "round",
+      "aria-hidden": "true",
+      "children": {
+        "type": "path",
+        "props": {
+          "d": "M9 7v10m6-10v10"
+        }
+      }
+    }
+  },
+  {
+    "type": "svg",
+    "props": {
+      "xmlns": "http://www.w3.org/2000/svg",
+      "className": "h-4 w-4",
+      "viewBox": "0 0 24 24",
+      "fill": "none",
+      "stroke": "currentColor",
+      "strokeWidth": "1.8",
+      "strokeLinecap": "round",
+      "strokeLinejoin": "round",
+      "aria-hidden": "true",
+      "children": {
+        "type": "path",
+        "props": {
+          "d": "m7 7 7 5-7 5V7Zm9 0v10"
+        }
+      }
+    }
+  },
+  {
+    "type": "svg",
+    "props": {
+      "xmlns": "http://www.w3.org/2000/svg",
+      "className": "h-4 w-4",
+      "viewBox": "0 0 24 24",
+      "fill": "none",
+      "stroke": "currentColor",
+      "strokeWidth": "1.8",
+      "strokeLinecap": "round",
+      "strokeLinejoin": "round",
+      "aria-hidden": "true",
+      "children": {
+        "type": "path",
+        "props": {
+          "d": "M6 2h8l4 4v16H6V2Zm8 0v5h5M9 13h6m-6 4h6"
+        }
+      }
+    }
+  },
+  {
+    "type": "svg",
+    "props": {
+      "xmlns": "http://www.w3.org/2000/svg",
+      "className": "h-4 w-4",
+      "viewBox": "0 0 24 24",
+      "fill": "none",
+      "stroke": "currentColor",
+      "strokeWidth": "1.8",
+      "strokeLinecap": "round",
+      "strokeLinejoin": "round",
+      "aria-hidden": "true",
+      "children": {
+        "type": "path",
+        "props": {
+          "d": "m6 9 6 6 6-6"
+        }
+      }
+    }
+  },
+  {
+    "type": "svg",
+    "props": {
+      "xmlns": "http://www.w3.org/2000/svg",
+      "className": "h-4 w-4",
+      "viewBox": "0 0 24 24",
+      "fill": "none",
+      "stroke": "currentColor",
+      "strokeWidth": "1.8",
+      "strokeLinecap": "round",
+      "strokeLinejoin": "round",
+      "aria-hidden": "true",
+      "children": {
+        "type": "path",
+        "props": {
+          "d": "m9 6 6 6-6 6"
+        }
+      }
+    }
+  },
+  {
+    "type": "svg",
+    "props": {
+      "xmlns": "http://www.w3.org/2000/svg",
+      "className": "h-4 w-4",
+      "viewBox": "0 0 24 24",
+      "fill": "none",
+      "stroke": "currentColor",
+      "strokeWidth": "1.8",
+      "strokeLinecap": "round",
+      "strokeLinejoin": "round",
+      "aria-hidden": "true",
+      "children": {
+        "type": "path",
+        "props": {
+          "d": "m14.7 6.3 3-3a4 4 0 0 0-5 5l-8.2 8.2a2.1 2.1 0 0 0 3 3l8.2-8.2a4 4 0 0 0 5-5l-3 3-3-3Z"
+        }
+      }
+    }
+  },
+  {
+    "type": "svg",
+    "props": {
+      "xmlns": "http://www.w3.org/2000/svg",
+      "className": "h-4 w-4",
+      "viewBox": "0 0 24 24",
+      "fill": "none",
+      "stroke": "currentColor",
+      "strokeWidth": "1.8",
+      "strokeLinecap": "round",
+      "strokeLinejoin": "round",
+      "aria-hidden": "true",
+      "children": {
+        "type": "path",
+        "props": {
+          "d": "M20 7h-5V2M4 17h5v5m10-7a8 8 0 0 1-13.7 2L4 17m16-10-1.3-1A8 8 0 0 0 5 8"
+        }
+      }
+    }
+  },
+  {
+    "type": "svg",
+    "props": {
+      "xmlns": "http://www.w3.org/2000/svg",
+      "className": "h-4 w-4",
+      "viewBox": "0 0 24 24",
+      "fill": "none",
+      "stroke": "currentColor",
+      "strokeWidth": "1.8",
+      "strokeLinecap": "round",
+      "strokeLinejoin": "round",
+      "aria-hidden": "true",
+      "children": {
+        "type": "path",
+        "props": {
+          "d": "M12 5v14M5 12h14"
+        }
+      }
+    }
+  },
+  {
+    "type": "svg",
+    "props": {
+      "xmlns": "http://www.w3.org/2000/svg",
+      "className": "h-4 w-4",
+      "viewBox": "0 0 24 24",
+      "fill": "none",
+      "stroke": "currentColor",
+      "strokeWidth": "1.8",
+      "strokeLinecap": "round",
+      "strokeLinejoin": "round",
+      "aria-hidden": "true",
+      "children": {
+        "type": "path",
+        "props": {
+          "d": "M5 3h12l2 2v16H5V3Zm3 0v6h8V3m-8 18v-7h8v7"
+        }
+      }
+    }
+  },
+  {
+    "type": "svg",
+    "props": {
+      "xmlns": "http://www.w3.org/2000/svg",
+      "className": "h-4 w-4",
+      "viewBox": "0 0 24 24",
+      "fill": "none",
+      "stroke": "currentColor",
+      "strokeWidth": "1.8",
+      "strokeLinecap": "round",
+      "strokeLinejoin": "round",
+      "aria-hidden": "true",
+      "children": {
+        "type": "path",
+        "props": {
+          "d": "M8 8h11v13H8V8Zm-3 8H3V3h11v2"
+        }
+      }
+    }
+  },
+  {
+    "type": "svg",
+    "props": {
+      "xmlns": "http://www.w3.org/2000/svg",
+      "className": "h-4 w-4",
+      "viewBox": "0 0 24 24",
+      "fill": "none",
+      "stroke": "currentColor",
+      "strokeWidth": "1.8",
+      "strokeLinecap": "round",
+      "strokeLinejoin": "round",
+      "aria-hidden": "true",
+      "children": {
+        "type": "path",
+        "props": {
+          "d": "m9 7-5 5 5 5m-5-5h10a6 6 0 0 1 6 6"
+        }
+      }
+    }
+  },
+  {
+    "type": "svg",
+    "props": {
+      "xmlns": "http://www.w3.org/2000/svg",
+      "className": "h-4 w-4",
+      "viewBox": "0 0 24 24",
+      "fill": "none",
+      "stroke": "currentColor",
+      "strokeWidth": "1.8",
+      "strokeLinecap": "round",
+      "strokeLinejoin": "round",
+      "aria-hidden": "true",
+      "children": {
+        "type": "path",
+        "props": {
+          "d": "M8 3H3v5m13-5h5v5M8 21H3v-5m13 5h5v-5"
+        }
+      }
+    }
+  },
+  {
+    "type": "svg",
+    "props": {
+      "xmlns": "http://www.w3.org/2000/svg",
+      "className": "h-4 w-4",
+      "viewBox": "0 0 24 24",
+      "fill": "none",
+      "stroke": "currentColor",
+      "strokeWidth": "1.8",
+      "strokeLinecap": "round",
+      "strokeLinejoin": "round",
+      "aria-hidden": "true",
+      "children": {
+        "type": "path",
+        "props": {
+          "d": "M8 8H3V3m13 5h5V3M8 16H3v5m13-5h5v5"
+        }
+      }
+    }
+  },
+  {
+    "type": "svg",
+    "props": {
+      "xmlns": "http://www.w3.org/2000/svg",
+      "className": "h-4 w-4",
+      "viewBox": "0 0 24 24",
+      "fill": "none",
+      "stroke": "currentColor",
+      "strokeWidth": "1.8",
+      "strokeLinecap": "round",
+      "strokeLinejoin": "round",
+      "aria-hidden": "true",
+      "children": {
+        "type": "path",
+        "props": {
+          "d": "M5 6h14M5 12h14M5 18h14"
+        }
+      }
+    }
+  },
+  {
+    "type": "svg",
+    "props": {
+      "xmlns": "http://www.w3.org/2000/svg",
+      "className": "h-4 w-4",
+      "viewBox": "0 0 24 24",
+      "fill": "none",
+      "stroke": "currentColor",
+      "strokeWidth": "1.8",
+      "strokeLinecap": "round",
+      "strokeLinejoin": "round",
+      "aria-hidden": "true",
+      "children": {
+        "type": "path",
+        "props": {
+          "d": "m12 3 1.1 3.4L16.5 7.5l-3.4 1.1L12 12l-1.1-3.4-3.4-1.1 3.4-1.1L12 3Zm6 9 .7 2.3L21 15l-2.3.7L18 18l-.7-2.3L15 15l2.3-.7L18 12ZM6 13l.9 2.6L9.5 16.5l-2.6.9L6 20l-.9-2.6-2.6-.9 2.6-.9L6 13Z"
+        }
+      }
+    }
+  },
+  {
+    "type": "svg",
+    "props": {
+      "xmlns": "http://www.w3.org/2000/svg",
+      "className": "custom",
+      "viewBox": "0 0 24 24",
+      "fill": "none",
+      "stroke": "currentColor",
+      "strokeWidth": "1.8",
+      "strokeLinecap": "round",
+      "strokeLinejoin": "round",
+      "aria-hidden": "true",
+      "children": {
+        "type": "path",
+        "props": {
+          "d": "M7 3h10a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2Zm-3 5H3a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h9a2 2 0 0 0 2-2v-1M12 7v6m-3-3h6"
+        }
+      }
+    }
+  },
+  {
+    "type": "header",
+    "props": {
+      "className": "app-header bg-slate-800/50 shadow-lg sticky top-0 z-40",
+      "children": {
+        "type": "div",
+        "props": {
+          "className": "app-header-inner container mx-auto px-4 sm:px-6 lg:px-8",
+          "children": {
+            "type": "div",
+            "props": {
+              "className": "flex items-center justify-between h-16 gap-4",
+              "children": [
+                {
+                  "type": "div",
+                  "props": {
+                    "className": "flex items-center min-w-0",
+                    "children": [
+                      {
+                        "type": "div",
+                        "props": {
+                          "className": "app-brand-mark",
+                          "children": {
+                            "type": "Icon",
+                            "props": {
+                              "name": "brand",
+                              "className": "h-6 w-6"
+                            }
+                          }
+                        }
+                      },
+                      {
+                        "type": "div",
+                        "props": {
+                          "className": "min-w-0",
+                          "children": [
+                            {
+                              "type": "h1",
+                              "props": {
+                                "className": "text-lg sm:text-xl font-bold text-white truncate",
+                                "children": "SillyTavern Card Studio"
+                              }
+                            },
+                            {
+                              "type": "p",
+                              "props": {
+                                "className": "hidden sm:block text-[11px] text-slate-400 tracking-wide",
+                                "children": "Không gian sáng tạo nhân vật, preset và thế giới"
+                              }
+                            }
+                          ]
+                        }
+                      }
+                    ]
+                  }
+                },
+                {
+                  "type": "div",
+                  "props": {
+                    "className": "app-version",
+                    "title": "Phiên bản ứng dụng 1.3.6",
+                    "children": [
+                      {
+                        "type": "span",
+                        "props": {
+                          "className": "app-version__dot",
+                          "aria-hidden": "true"
+                        }
+                      },
+                      {
+                        "type": "span",
+                        "props": {
+                          "children": "v1.3.6"
+                        }
+                      }
+                    ]
+                  }
+                }
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  {
+    "type": "button",
+    "props": {
+      "type": "button",
+      "className": "flex items-center justify-between bg-slate-700/50 p-3 rounded-lg  cursor-pointer focus:outline-none focus:ring-2 focus:ring-sky-500 focus:ring-offset-2 focus:ring-offset-slate-900 ",
+      "role": "switch",
+      "aria-checked": true,
+      "aria-label": "Enabled",
+      "aria-description": "Help",
+      "onClick": "[callback]",
+      "children": [
+        {
+          "type": "div",
+          "props": {
+            "className": "flex-grow mr-3",
+            "aria-hidden": "true",
+            "children": {
+              "type": "Tooltip",
+              "props": {
+                "text": "Help",
+                "children": {
+                  "type": "span",
+                  "props": {
+                    "className": "text-sm font-medium text-slate-300",
+                    "children": "Enabled"
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "type": "div",
+          "props": {
+            "className": "bg-sky-500 relative inline-flex h-5 w-9 flex-shrink-0 rounded-full border-2 border-transparent transition-colors ease-in-out",
+            "aria-hidden": "true",
+            "children": {
+              "type": "span",
+              "props": {
+                "className": "translate-x-4 inline-block h-4 w-4 rounded-full bg-white shadow ring-0 transition-transform ease-in-out"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "type": "button",
+    "props": {
+      "type": "button",
+      "disabled": true,
+      "className": "flex items-center justify-between bg-slate-700/50 p-3 rounded-lg  cursor-pointer focus:outline-none focus:ring-2 focus:ring-sky-500 focus:ring-offset-2 focus:ring-offset-slate-900 opacity-50 cursor-not-allowed",
+      "role": "switch",
+      "aria-checked": false,
+      "aria-label": "Disabled",
+      "onClick": "[callback]",
+      "children": [
+        {
+          "type": "div",
+          "props": {
+            "className": "flex-grow mr-3",
+            "aria-hidden": "true",
+            "children": {
+              "type": "Tooltip",
+              "props": {
+                "children": {
+                  "type": "span",
+                  "props": {
+                    "className": "text-sm font-medium text-slate-500",
+                    "children": "Disabled"
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "type": "div",
+          "props": {
+            "className": "bg-slate-600 relative inline-flex h-5 w-9 flex-shrink-0 rounded-full border-2 border-transparent transition-colors ease-in-out",
+            "aria-hidden": "true",
+            "children": {
+              "type": "span",
+              "props": {
+                "className": "translate-x-0 inline-block h-4 w-4 rounded-full bg-white shadow ring-0 transition-transform ease-in-out"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "type": "button",
+    "props": {
+      "type": "button",
+      "className": "flex items-center justify-between extra cursor-pointer focus:outline-none focus:ring-2 focus:ring-sky-500 focus:ring-offset-2 focus:ring-offset-slate-900 ",
+      "role": "switch",
+      "aria-checked": false,
+      "aria-label": "Toggle",
+      "onClick": "[callback]",
+      "children": [
+        {
+          "type": "div",
+          "props": {
+            "className": "flex-grow mr-3",
+            "aria-hidden": "true",
+            "children": {
+              "type": "Tooltip",
+              "props": {}
+            }
+          }
+        },
+        {
+          "type": "div",
+          "props": {
+            "className": "bg-slate-600 relative inline-flex h-5 w-9 flex-shrink-0 rounded-full border-2 border-transparent transition-colors ease-in-out",
+            "aria-hidden": "true",
+            "children": {
+              "type": "span",
+              "props": {
+                "className": "translate-x-0 inline-block h-4 w-4 rounded-full bg-white shadow ring-0 transition-transform ease-in-out"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "type": "button",
+    "props": {
+      "role": "tab",
+      "id": "preset-subtab-chat",
+      "aria-controls": "preset-subtabpanel-chat",
+      "aria-selected": true,
+      "tabIndex": 0,
+      "onClick": "[callback]",
+      "onKeyDown": "[callback]",
+      "className": "px-4 py-2 text-sm font-medium rounded-md   focus:outline-none bg-sky-600 text-white",
+      "children": "Chat"
+    }
+  },
+  {
+    "type": "button",
+    "props": {
+      "role": "tab",
+      "id": "preset-subtab-chat",
+      "aria-controls": "preset-subtabpanel-chat",
+      "aria-selected": false,
+      "tabIndex": -1,
+      "onClick": "[callback]",
+      "onKeyDown": "[callback]",
+      "className": "px-4 py-2 text-sm font-medium rounded-md   focus:outline-none text-slate-400 hover:text-white hover:bg-slate-700",
+      "children": "Chat"
+    }
+  },
+  {
+    "type": "button",
+    "props": {
+      "role": "tab",
+      "id": "settings-subtab-chat",
+      "aria-controls": "settings-subtabpanel-chat",
+      "aria-selected": true,
+      "tabIndex": 0,
+      "onClick": "[callback]",
+      "onKeyDown": "[callback]",
+      "className": "settings-nav-button px-4 py-2 text-sm font-medium rounded-md focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400 is-active bg-sky-600 text-white",
+      "children": [
+        {
+          "type": "span",
+          "props": {
+            "className": "settings-nav-button__dot",
+            "aria-hidden": "true"
+          }
+        },
+        {
+          "type": "span",
+          "props": {
+            "children": "Chat"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "type": "button",
+    "props": {
+      "role": "tab",
+      "id": "settings-subtab-chat",
+      "aria-controls": "settings-subtabpanel-chat",
+      "aria-selected": false,
+      "tabIndex": -1,
+      "onClick": "[callback]",
+      "onKeyDown": "[callback]",
+      "className": "settings-nav-button px-4 py-2 text-sm font-medium rounded-md focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400 text-slate-300 bg-slate-700 hover:bg-slate-600",
+      "children": [
+        {
+          "type": "span",
+          "props": {
+            "className": "settings-nav-button__dot",
+            "aria-hidden": "true"
+          }
+        },
+        {
+          "type": "span",
+          "props": {
+            "children": "Chat"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "type": "button",
+    "props": {
+      "role": "tab",
+      "aria-selected": true,
+      "aria-controls": "tabpanel-chat",
+      "id": "tab-chat",
+      "tabIndex": 0,
+      "onClick": "[callback]",
+      "onKeyDown": "[callback]",
+      "disabled": false,
+      "className": "app-main-tab flex-shrink-0 whitespace-nowrap px-4 py-2 text-sm md:text-base font-medium rounded-lg focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400 bg-slate-800 text-sky-400 ",
+      "children": [
+        {
+          "type": "Icon",
+          "props": {
+            "name": "chat",
+            "className": "h-4 w-4"
+          }
+        },
+        {
+          "type": "span",
+          "props": {
+            "children": "Chat"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "type": "button",
+    "props": {
+      "role": "tab",
+      "aria-selected": false,
+      "aria-controls": "tabpanel-chat",
+      "id": "tab-chat",
+      "tabIndex": -1,
+      "onClick": "[callback]",
+      "onKeyDown": "[callback]",
+      "disabled": false,
+      "className": "app-main-tab flex-shrink-0 whitespace-nowrap px-4 py-2 text-sm md:text-base font-medium rounded-lg focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400 text-slate-400 hover:text-white ",
+      "children": [
+        {
+          "type": "Icon",
+          "props": {
+            "name": "chat",
+            "className": "h-4 w-4"
+          }
+        },
+        {
+          "type": "span",
+          "props": {
+            "children": "Chat"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "type": "button",
+    "props": {
+      "role": "tab",
+      "aria-selected": false,
+      "aria-controls": "tabpanel-settings",
+      "id": "tab-settings",
+      "tabIndex": -1,
+      "onClick": "[callback]",
+      "onKeyDown": "[callback]",
+      "disabled": true,
+      "className": "app-main-tab flex-shrink-0 whitespace-nowrap px-4 py-2 text-sm md:text-base font-medium rounded-lg focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400 text-slate-400 hover:text-white cursor-not-allowed text-slate-600",
+      "children": [
+        {
+          "type": "Icon",
+          "props": {
+            "name": "settings",
+            "className": "h-4 w-4"
+          }
+        },
+        {
+          "type": "span",
+          "props": {
+            "children": "Settings"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "type": "div",
+    "props": {
+      "className": "app-shell min-h-screen bg-slate-900 font-sans flex flex-col",
+      "children": [
+        {
+          "type": "Header",
+          "props": {}
+        },
+        {
+          "type": "main",
+          "props": {
+            "id": "main-content",
+            "className": "app-main container mx-auto px-2 sm:px-4 md:px-6 lg:px-8 py-4 md:py-6 flex flex-col flex-grow",
+            "children": [
+              {
+                "type": "div",
+                "props": {
+                  "className": "app-main-tabs-wrap border-b border-slate-700 mb-6",
+                  "children": {
+                    "type": "nav",
+                    "props": {
+                      "role": "tablist",
+                      "className": "app-main-tabs flex gap-2 overflow-x-auto overscroll-x-contain",
+                      "aria-label": "Điều hướng chính",
+                      "children": [
+                        {
+                          "type": "MainTab",
+                          "props": {
+                            "tabId": "character",
+                            "currentTab": "character",
+                            "onClick": "[callback]",
+                            "children": "Nhân vật"
+                          }
+                        },
+                        {
+                          "type": "MainTab",
+                          "props": {
+                            "tabId": "preset",
+                            "currentTab": "character",
+                            "onClick": "[callback]",
+                            "children": "Preset"
+                          }
+                        },
+                        {
+                          "type": "MainTab",
+                          "props": {
+                            "tabId": "lorebook",
+                            "currentTab": "character",
+                            "onClick": "[callback]",
+                            "children": "Sổ tay Thế giới"
+                          }
+                        },
+                        {
+                          "type": "MainTab",
+                          "props": {
+                            "tabId": "chat",
+                            "currentTab": "character",
+                            "onClick": "[callback]",
+                            "children": "Trò chuyện"
+                          }
+                        },
+                        {
+                          "type": "MainTab",
+                          "props": {
+                            "tabId": "settings",
+                            "currentTab": "character",
+                            "onClick": "[callback]",
+                            "children": "Cài đặt"
+                          }
+                        }
+                      ]
+                    }
+                  }
+                }
+              },
+              {
+                "type": "div",
+                "props": {
+                  "role": "tabpanel",
+                  "id": "tabpanel-character",
+                  "aria-labelledby": "tab-character",
+                  "className": "app-tab-panel flex-grow flex flex-col focus:outline-none",
+                  "tabIndex": 0,
+                  "children": {
+                    "type": "Characters",
+                    "props": {}
+                  }
+                }
+              }
+            ]
+          }
+        }
+      ]
+    }
+  },
+  {
+    "type": "div",
+    "props": {
+      "className": "app-shell min-h-screen bg-slate-900 font-sans flex flex-col",
+      "children": [
+        {
+          "type": "Header",
+          "props": {}
+        },
+        {
+          "type": "main",
+          "props": {
+            "id": "main-content",
+            "className": "app-main container mx-auto px-2 sm:px-4 md:px-6 lg:px-8 py-4 md:py-6 flex flex-col flex-grow",
+            "children": [
+              {
+                "type": "div",
+                "props": {
+                  "className": "app-main-tabs-wrap border-b border-slate-700 mb-6",
+                  "children": {
+                    "type": "nav",
+                    "props": {
+                      "role": "tablist",
+                      "className": "app-main-tabs flex gap-2 overflow-x-auto overscroll-x-contain",
+                      "aria-label": "Điều hướng chính",
+                      "children": [
+                        {
+                          "type": "MainTab",
+                          "props": {
+                            "tabId": "character",
+                            "currentTab": "preset",
+                            "onClick": "[callback]",
+                            "children": "Nhân vật"
+                          }
+                        },
+                        {
+                          "type": "MainTab",
+                          "props": {
+                            "tabId": "preset",
+                            "currentTab": "preset",
+                            "onClick": "[callback]",
+                            "children": "Preset"
+                          }
+                        },
+                        {
+                          "type": "MainTab",
+                          "props": {
+                            "tabId": "lorebook",
+                            "currentTab": "preset",
+                            "onClick": "[callback]",
+                            "children": "Sổ tay Thế giới"
+                          }
+                        },
+                        {
+                          "type": "MainTab",
+                          "props": {
+                            "tabId": "chat",
+                            "currentTab": "preset",
+                            "onClick": "[callback]",
+                            "children": "Trò chuyện"
+                          }
+                        },
+                        {
+                          "type": "MainTab",
+                          "props": {
+                            "tabId": "settings",
+                            "currentTab": "preset",
+                            "onClick": "[callback]",
+                            "children": "Cài đặt"
+                          }
+                        }
+                      ]
+                    }
+                  }
+                }
+              },
+              {
+                "type": "div",
+                "props": {
+                  "role": "tabpanel",
+                  "id": "tabpanel-preset",
+                  "aria-labelledby": "tab-preset",
+                  "className": "app-tab-panel flex-grow flex flex-col focus:outline-none",
+                  "tabIndex": 0,
+                  "children": {
+                    "type": "Presets",
+                    "props": {}
+                  }
+                }
+              }
+            ]
+          }
+        }
+      ]
+    }
+  },
+  {
+    "type": "div",
+    "props": {
+      "className": "app-shell min-h-screen bg-slate-900 font-sans flex flex-col",
+      "children": [
+        {
+          "type": "Header",
+          "props": {}
+        },
+        {
+          "type": "main",
+          "props": {
+            "id": "main-content",
+            "className": "app-main container mx-auto px-2 sm:px-4 md:px-6 lg:px-8 py-4 md:py-6 flex flex-col flex-grow",
+            "children": [
+              {
+                "type": "div",
+                "props": {
+                  "className": "app-main-tabs-wrap border-b border-slate-700 mb-6",
+                  "children": {
+                    "type": "nav",
+                    "props": {
+                      "role": "tablist",
+                      "className": "app-main-tabs flex gap-2 overflow-x-auto overscroll-x-contain",
+                      "aria-label": "Điều hướng chính",
+                      "children": [
+                        {
+                          "type": "MainTab",
+                          "props": {
+                            "tabId": "character",
+                            "currentTab": "lorebook",
+                            "onClick": "[callback]",
+                            "children": "Nhân vật"
+                          }
+                        },
+                        {
+                          "type": "MainTab",
+                          "props": {
+                            "tabId": "preset",
+                            "currentTab": "lorebook",
+                            "onClick": "[callback]",
+                            "children": "Preset"
+                          }
+                        },
+                        {
+                          "type": "MainTab",
+                          "props": {
+                            "tabId": "lorebook",
+                            "currentTab": "lorebook",
+                            "onClick": "[callback]",
+                            "children": "Sổ tay Thế giới"
+                          }
+                        },
+                        {
+                          "type": "MainTab",
+                          "props": {
+                            "tabId": "chat",
+                            "currentTab": "lorebook",
+                            "onClick": "[callback]",
+                            "children": "Trò chuyện"
+                          }
+                        },
+                        {
+                          "type": "MainTab",
+                          "props": {
+                            "tabId": "settings",
+                            "currentTab": "lorebook",
+                            "onClick": "[callback]",
+                            "children": "Cài đặt"
+                          }
+                        }
+                      ]
+                    }
+                  }
+                }
+              },
+              {
+                "type": "div",
+                "props": {
+                  "role": "tabpanel",
+                  "id": "tabpanel-lorebook",
+                  "aria-labelledby": "tab-lorebook",
+                  "className": "app-tab-panel flex-grow flex flex-col focus:outline-none",
+                  "tabIndex": 0,
+                  "children": {
+                    "type": "Lorebooks",
+                    "props": {}
+                  }
+                }
+              }
+            ]
+          }
+        }
+      ]
+    }
+  },
+  {
+    "type": "div",
+    "props": {
+      "className": "app-shell min-h-screen bg-slate-900 font-sans flex flex-col",
+      "children": [
+        {
+          "type": "Header",
+          "props": {}
+        },
+        {
+          "type": "main",
+          "props": {
+            "id": "main-content",
+            "className": "app-main container mx-auto px-2 sm:px-4 md:px-6 lg:px-8 py-4 md:py-6 flex flex-col flex-grow",
+            "children": [
+              {
+                "type": "div",
+                "props": {
+                  "className": "app-main-tabs-wrap border-b border-slate-700 mb-6",
+                  "children": {
+                    "type": "nav",
+                    "props": {
+                      "role": "tablist",
+                      "className": "app-main-tabs flex gap-2 overflow-x-auto overscroll-x-contain",
+                      "aria-label": "Điều hướng chính",
+                      "children": [
+                        {
+                          "type": "MainTab",
+                          "props": {
+                            "tabId": "character",
+                            "currentTab": "chat",
+                            "onClick": "[callback]",
+                            "children": "Nhân vật"
+                          }
+                        },
+                        {
+                          "type": "MainTab",
+                          "props": {
+                            "tabId": "preset",
+                            "currentTab": "chat",
+                            "onClick": "[callback]",
+                            "children": "Preset"
+                          }
+                        },
+                        {
+                          "type": "MainTab",
+                          "props": {
+                            "tabId": "lorebook",
+                            "currentTab": "chat",
+                            "onClick": "[callback]",
+                            "children": "Sổ tay Thế giới"
+                          }
+                        },
+                        {
+                          "type": "MainTab",
+                          "props": {
+                            "tabId": "chat",
+                            "currentTab": "chat",
+                            "onClick": "[callback]",
+                            "children": "Trò chuyện"
+                          }
+                        },
+                        {
+                          "type": "MainTab",
+                          "props": {
+                            "tabId": "settings",
+                            "currentTab": "chat",
+                            "onClick": "[callback]",
+                            "children": "Cài đặt"
+                          }
+                        }
+                      ]
+                    }
+                  }
+                }
+              },
+              {
+                "type": "div",
+                "props": {
+                  "role": "tabpanel",
+                  "id": "tabpanel-chat",
+                  "aria-labelledby": "tab-chat",
+                  "className": "app-tab-panel flex-grow flex flex-col focus:outline-none",
+                  "tabIndex": 0,
+                  "children": {
+                    "type": "Chat",
+                    "props": {
+                      "activeSessionId": "session-1",
+                      "onSessionSelect": "[callback]",
+                      "onCloseSession": "[callback]"
+                    }
+                  }
+                }
+              }
+            ]
+          }
+        }
+      ]
+    }
+  },
+  {
+    "type": "div",
+    "props": {
+      "className": "app-shell min-h-screen bg-slate-900 font-sans flex flex-col",
+      "children": [
+        {
+          "type": "Header",
+          "props": {}
+        },
+        {
+          "type": "main",
+          "props": {
+            "id": "main-content",
+            "className": "app-main container mx-auto px-2 sm:px-4 md:px-6 lg:px-8 py-4 md:py-6 flex flex-col flex-grow",
+            "children": [
+              {
+                "type": "div",
+                "props": {
+                  "className": "app-main-tabs-wrap border-b border-slate-700 mb-6",
+                  "children": {
+                    "type": "nav",
+                    "props": {
+                      "role": "tablist",
+                      "className": "app-main-tabs flex gap-2 overflow-x-auto overscroll-x-contain",
+                      "aria-label": "Điều hướng chính",
+                      "children": [
+                        {
+                          "type": "MainTab",
+                          "props": {
+                            "tabId": "character",
+                            "currentTab": "settings",
+                            "onClick": "[callback]",
+                            "children": "Nhân vật"
+                          }
+                        },
+                        {
+                          "type": "MainTab",
+                          "props": {
+                            "tabId": "preset",
+                            "currentTab": "settings",
+                            "onClick": "[callback]",
+                            "children": "Preset"
+                          }
+                        },
+                        {
+                          "type": "MainTab",
+                          "props": {
+                            "tabId": "lorebook",
+                            "currentTab": "settings",
+                            "onClick": "[callback]",
+                            "children": "Sổ tay Thế giới"
+                          }
+                        },
+                        {
+                          "type": "MainTab",
+                          "props": {
+                            "tabId": "chat",
+                            "currentTab": "settings",
+                            "onClick": "[callback]",
+                            "children": "Trò chuyện"
+                          }
+                        },
+                        {
+                          "type": "MainTab",
+                          "props": {
+                            "tabId": "settings",
+                            "currentTab": "settings",
+                            "onClick": "[callback]",
+                            "children": "Cài đặt"
+                          }
+                        }
+                      ]
+                    }
+                  }
+                }
+              },
+              {
+                "type": "div",
+                "props": {
+                  "role": "tabpanel",
+                  "id": "tabpanel-settings",
+                  "aria-labelledby": "tab-settings",
+                  "className": "app-tab-panel flex-grow flex flex-col focus:outline-none",
+                  "tabIndex": 0,
+                  "children": {
+                    "type": "Settings",
+                    "props": {}
+                  }
+                }
+              }
+            ]
+          }
+        }
+      ]
+    }
+  },
+  {
+    "type": "div",
+    "props": {
+      "className": "app-shell min-h-screen bg-slate-900 font-sans flex flex-col",
+      "children": [
+        {
+          "type": "Header",
+          "props": {}
+        },
+        {
+          "type": "main",
+          "props": {
+            "id": "main-content",
+            "className": "app-main container mx-auto px-2 sm:px-4 md:px-6 lg:px-8 py-4 md:py-6 flex flex-col flex-grow",
+            "children": [
+              {
+                "type": "div",
+                "props": {
+                  "className": "app-main-tabs-wrap border-b border-slate-700 mb-6",
+                  "children": {
+                    "type": "nav",
+                    "props": {
+                      "role": "tablist",
+                      "className": "app-main-tabs flex gap-2 overflow-x-auto overscroll-x-contain",
+                      "aria-label": "Điều hướng chính",
+                      "children": [
+                        {
+                          "type": "MainTab",
+                          "props": {
+                            "tabId": "character",
+                            "currentTab": "unknown",
+                            "onClick": "[callback]",
+                            "children": "Nhân vật"
+                          }
+                        },
+                        {
+                          "type": "MainTab",
+                          "props": {
+                            "tabId": "preset",
+                            "currentTab": "unknown",
+                            "onClick": "[callback]",
+                            "children": "Preset"
+                          }
+                        },
+                        {
+                          "type": "MainTab",
+                          "props": {
+                            "tabId": "lorebook",
+                            "currentTab": "unknown",
+                            "onClick": "[callback]",
+                            "children": "Sổ tay Thế giới"
+                          }
+                        },
+                        {
+                          "type": "MainTab",
+                          "props": {
+                            "tabId": "chat",
+                            "currentTab": "unknown",
+                            "onClick": "[callback]",
+                            "children": "Trò chuyện"
+                          }
+                        },
+                        {
+                          "type": "MainTab",
+                          "props": {
+                            "tabId": "settings",
+                            "currentTab": "unknown",
+                            "onClick": "[callback]",
+                            "children": "Cài đặt"
+                          }
+                        }
+                      ]
+                    }
+                  }
+                }
+              },
+              {
+                "type": "div",
+                "props": {
+                  "role": "tabpanel",
+                  "id": "tabpanel-unknown",
+                  "aria-labelledby": "tab-unknown",
+                  "className": "app-tab-panel flex-grow flex flex-col focus:outline-none",
+                  "tabIndex": 0,
+                  "children": null
+                }
+              }
+            ]
+          }
+        }
+      ]
+    }
+  },
+  {
+    "type": "div",
+    "props": {
+      "className": "app-shell min-h-screen bg-slate-900 font-sans flex flex-col",
+      "children": [
+        {
+          "type": "Header",
+          "props": {}
+        },
+        {
+          "type": "main",
+          "props": {
+            "id": "main-content",
+            "className": "app-main container mx-auto px-2 sm:px-4 md:px-6 lg:px-8 py-4 md:py-6 flex flex-col flex-grow",
+            "children": [
+              {
+                "type": "div",
+                "props": {
+                  "className": "app-main-tabs-wrap border-b border-slate-700 mb-6",
+                  "children": {
+                    "type": "nav",
+                    "props": {
+                      "role": "tablist",
+                      "className": "app-main-tabs flex gap-2 overflow-x-auto overscroll-x-contain",
+                      "aria-label": "Điều hướng chính",
+                      "children": [
+                        {
+                          "type": "MainTab",
+                          "props": {
+                            "tabId": "character",
+                            "currentTab": "character",
+                            "onClick": "[callback]",
+                            "children": "Nhân vật"
+                          }
+                        },
+                        {
+                          "type": "MainTab",
+                          "props": {
+                            "tabId": "preset",
+                            "currentTab": "character",
+                            "onClick": "[callback]",
+                            "children": "Preset"
+                          }
+                        },
+                        {
+                          "type": "MainTab",
+                          "props": {
+                            "tabId": "lorebook",
+                            "currentTab": "character",
+                            "onClick": "[callback]",
+                            "children": "Sổ tay Thế giới"
+                          }
+                        },
+                        {
+                          "type": "MainTab",
+                          "props": {
+                            "tabId": "chat",
+                            "currentTab": "character",
+                            "onClick": "[callback]",
+                            "children": "Trò chuyện"
+                          }
+                        },
+                        {
+                          "type": "MainTab",
+                          "props": {
+                            "tabId": "settings",
+                            "currentTab": "character",
+                            "onClick": "[callback]",
+                            "children": "Cài đặt"
+                          }
+                        }
+                      ]
+                    }
+                  }
+                }
+              },
+              {
+                "type": "div",
+                "props": {
+                  "role": "tabpanel",
+                  "id": "tabpanel-character",
+                  "aria-labelledby": "tab-character",
+                  "className": "app-tab-panel flex-grow flex flex-col focus:outline-none",
+                  "tabIndex": 0,
+                  "children": {
+                    "type": "Characters",
+                    "props": {}
+                  }
+                }
+              }
+            ]
+          }
+        }
+      ]
+    }
+  },
+  {
+    "type": "SessionList",
+    "props": {
+      "onSessionSelect": "[callback]"
+    }
+  },
+  {
+    "type": "ChatSession",
+    "props": {
+      "sessionId": "session-1",
+      "onBack": "[callback]"
+    }
+  }
+]

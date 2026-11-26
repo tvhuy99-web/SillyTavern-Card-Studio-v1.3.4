@@ -1,0 +1,20 @@
+import assert from 'node:assert/strict';
+import { readFile } from 'node:fs/promises';
+import { createImmersiveContainer, createLoadOlderButton, createLoadingIndicator } from '../src/ui/components/recovered-primitives.js';
+const jsx = (type, props) => ({type, props});
+const runtime = {jsx, jsxs:jsx};
+const Container = createImmersiveContainer(runtime), More = createLoadOlderButton(runtime), Loading = createLoadingIndicator(runtime);
+const child = {type:'content'};
+assert.deepEqual(Container({children:child,isImmersive:true,globalClass:'custom'}),jsx('div',{className:'fixed inset-0 z-50 bg-slate-900 flex flex-col custom',children:child}));
+assert.deepEqual(Container({children:child,isImmersive:false}),jsx('div',{className:'bg-slate-800/50 rounded-xl shadow-lg flex flex-col flex-grow h-[80vh] min-h-0 relative overflow-hidden ',children:child}));
+assert.equal(More({visibleCount:10,totalCount:10}),null);
+let stopped=0, loaded=0;
+const button=More({visibleCount:10,totalCount:14,onLoadMore:()=>loaded++}).props.children;
+assert.deepEqual(button.props.children,['Tải thêm ',4,' dòng cũ hơn... (Còn ',4,')']);
+assert.equal(button.props.className,'text-[10px] bg-slate-800 hover:bg-slate-700 text-slate-400 border border-slate-700 rounded-full px-4 py-1 ');
+button.props.onClick({stopPropagation(){stopped++;}}); assert.equal(loaded,1);assert.equal(stopped,1);
+assert.deepEqual(More({visibleCount:1,totalCount:100,step:5}).props.children.props.children,['Tải thêm ',5,' dòng cũ hơn... (Còn ',99,')']);
+const status=Loading({});assert.equal(status.props.role,'status');assert.equal(status.props['aria-live'],'polite');assert.equal(status.props.children[0].props.children,'Đang tải...');assert.equal(status.props.children[1].props['aria-hidden'],'true');assert.equal(status.props.children[1].props.children.length,2);assert.equal(status.props.children[2].props.children,'Đang tải...');assert.equal(Loading({message:''}).props.children[2],'');assert.equal(Loading({message:'Custom'}).props.children[2].props.children,'Custom');
+const bundle=(await Promise.all(['../assets/app-production-v1.3.6.js','../assets/recovered/app/composition/persistence-composition.js','../assets/recovered/app/composition/provider-composition.js','../assets/recovered/app/composition/store-composition.js','../assets/recovered/app/composition/conversation-composition.js','../assets/recovered/app/composition/runtime-composition.js','../assets/recovered/app/composition/ui-composition.js'].map(p=>readFile(new URL(p,import.meta.url),'utf8')))).join('\n');
+for(const marker of ['ImmersiveContainer=__stsCreateImmersiveContainer(jsxRuntime)','LoadOlderButton=__stsCreateLoadOlderButton(jsxRuntime)','LoadingIndicator=__stsCreateLoadingIndicator(jsxRuntime)']){assert.equal(bundle.split(marker).length-1,1);assert.ok(bundle.indexOf('jsxRuntime')<bundle.indexOf(marker));}
+console.log('Recovered UI primitives: layout classes, labels, events, accessibility and stable factory integration: OK');

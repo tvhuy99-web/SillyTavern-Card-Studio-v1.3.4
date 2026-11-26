@@ -1,8 +1,9 @@
 import { copyFile, readFile, writeFile } from 'node:fs/promises';
+import { createRpcClient } from '../src/runtime/card-runtime/bridge/rpc-client.js';
 
 const CORE_TEMPLATE_URL = new URL('../src/runtime/card-runtime/core.template.js', import.meta.url);
 const RENDERER_SOURCE_URL = new URL('../src/runtime/card-runtime/renderer.js', import.meta.url);
-const CORE_BUILDER_OUTPUT_URL = new URL('../assets/card-runtime-core-builder-v1.3.6.js', import.meta.url);
+const CORE_BUILDER_OUTPUT_URL = new URL('../src/runtime/card-runtime/core-builder.js', import.meta.url);
 const RENDERER_OUTPUT_URL = new URL('../assets/card-runtime-renderer-v1.3.6.js', import.meta.url);
 
 const CORE_MODULE_FRAGMENTS = [
@@ -25,10 +26,14 @@ const CORE_MODULE_FRAGMENTS = [
   { name: "BRIDGE_HANDSHAKE", token: "/*__STS_MODULE_BRIDGE_HANDSHAKE__*/", url: new URL("../src/runtime/card-runtime/modules/bridge-handshake.jsfrag", import.meta.url) },
 ];
 
-const COMPATIBILITY_FRAGMENTS = [
+// Catalog APIs must exist before the TavernHelper facade captures them.
+const CATALOG_FRAGMENTS = [
   '../src/runtime/card-runtime/compat/catalog-characters.jsfrag',
   '../src/runtime/card-runtime/compat/personas-presets.jsfrag',
   '../src/runtime/card-runtime/compat/extensions-imports.jsfrag',
+].map(path => new URL(path, import.meta.url));
+
+const COMPATIBILITY_FRAGMENTS = [
   '../src/runtime/card-runtime/compat/services.jsfrag',
   '../src/runtime/card-runtime/compat/variables-worldbook.jsfrag',
   '../src/runtime/card-runtime/compat/context-exposure.jsfrag',
@@ -40,10 +45,6 @@ function replaceExactlyOnce(source, oldText, newText, label) {
   const second = source.indexOf(oldText, first + oldText.length);
   if (second >= 0) throw new Error(`[card runtime build] ${label}: token matched more than once`);
   return source.slice(0, first) + newText + source.slice(first + oldText.length);
-}
-
-function toClassicRuntimeSource(source) {
-  return source;
 }
 
 function makeCoreBuilderModule(classicCoreSource) {
@@ -133,35 +134,34 @@ export function buildCardRuntimeCoreScript(boot) {
 export const CARD_RUNTIME_CORE_SOURCE_BYTES = CARD_RUNTIME_CORE_SOURCE.length;
 `;
 }
-export async function buildCardRuntimeAssets() {
+export async function buildCardRuntimeAssets({ coreOutput = CORE_BUILDER_OUTPUT_URL, rendererOutput = RENDERER_OUTPUT_URL } = {}) {
   let core = await readFile(CORE_TEMPLATE_URL, 'utf8');
   const coreTemplateBytes = core.length;
   for (const fragment of CORE_MODULE_FRAGMENTS) {
     const source = await readFile(fragment.url, 'utf8');
     core = replaceExactlyOnce(core, fragment.token, source, 'module/' + fragment.name);
   }
-  const fragments = [];
-  for (const url of COMPATIBILITY_FRAGMENTS) fragments.push(await readFile(url, 'utf8'));
-
-  const token = '/*__STS_COMPATIBILITY_API__*/';
-  const first = core.indexOf(token);
-  if (first < 0 || core.indexOf(token, first + token.length) >= 0) {
-    throw new Error('Card Runtime compatibility API token must appear exactly once.');
+  // The iframe is a classic script (including opaque-origin safe mode). Embed
+  // the same self-contained factory exercised by normal ESM unit tests.
+  core = replaceExactlyOnce(core, '/*__STS_RPC_CLIENT_FACTORY__*/', createRpcClient.toString(), 'rpc client factory');
+  async function compose(token, urls) {
+    const fragments = await Promise.all(urls.map(url => readFile(url, 'utf8')));
+    core = replaceExactlyOnce(core, token, fragments.join('\n'), token);
   }
-
-  core = core.slice(0, first) + fragments.join('') + core.slice(first + token.length);
-  const classicCore = toClassicRuntimeSource(core);
+  await compose('/*__STS_COMPATIBILITY_CATALOG__*/', CATALOG_FRAGMENTS);
+  await compose('/*__STS_COMPATIBILITY_API__*/', COMPATIBILITY_FRAGMENTS);
+  const classicCore = core;
   const coreBuilder = makeCoreBuilderModule(classicCore);
 
-  await writeFile(CORE_BUILDER_OUTPUT_URL, coreBuilder, 'utf8');
-  await copyFile(RENDERER_SOURCE_URL, RENDERER_OUTPUT_URL);
+  await writeFile(coreOutput, coreBuilder, 'utf8');
+  if (rendererOutput) await copyFile(RENDERER_SOURCE_URL, rendererOutput);
 
   return {
     coreSourceBytes: classicCore.length,
     coreTemplateBytes,
     coreBuilderBytes: coreBuilder.length,
     coreModuleFragments: CORE_MODULE_FRAGMENTS.length,
-    compatibilityFragments: fragments.length,
+    compatibilityFragments: CATALOG_FRAGMENTS.length + COMPATIBILITY_FRAGMENTS.length,
     iframeModuleImportRequired: false,
   };
 }

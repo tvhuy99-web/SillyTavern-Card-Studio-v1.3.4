@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import vm from 'node:vm';
-import { buildCardRuntimeCoreScript } from '../assets/card-runtime-core-builder-v1.3.6.js';
+import { buildCardRuntimeCoreScript } from '../src/runtime/card-runtime/core-builder.js';
 import { buildCardRuntimeRendererScript } from '../assets/card-runtime-renderer-v1.3.6.js';
 
 function bootPayload() {

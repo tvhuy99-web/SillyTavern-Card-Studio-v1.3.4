@@ -160,7 +160,7 @@ export function createChatTurnPolicy(options = {}) {
         ? connection.gemini_model
         : connection.source === 'proxy'
           ? connection.proxy_model
-          : connection.openrouter_model
+          : connection.source === 'aistudio' ? connection.aistudio_model : connection.openrouter_model
     ) || 'Model A';
     const challengerProvider = state.arenaProvider || 'gemini';
     return {

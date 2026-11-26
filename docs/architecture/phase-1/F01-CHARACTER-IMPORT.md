@@ -1,0 +1,3 @@
+# F01 — Character import local names
+
+The preceding AST inventory counted 140 short bindings in character-file.js after the first service rename. This pass restores local names and readable control flow in JSON normalization, legacy script conversion, PNG metadata and embedded asset extraction, CHARX decompression and avatar selection. Existing size limits, path checks, storage fields, dependency keys, factory keys and dynamic import paths are retained. A new regression tests JSON and PNG parsing, CHARX with a mocked archive, path traversal rejection, embedded assets and legacy compatibility. CI remains necessary; this is not a security redesign.

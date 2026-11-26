@@ -1,3 +1,11 @@
+import { modelContextContent } from '../chat/turn-policy.js';
+import { summaryChunkSize } from '../chat/history-policy.js';
+import {
+  assemblePrompt,
+  buildBaseSections,
+  createPromptAssembler,
+} from './prompt-assembler.js';
+
 const modelContextCache = new WeakMap();
 
 function cachedModelContextContent(message) {
@@ -23,18 +31,25 @@ async function yieldToBrowser() {
   });
 }
 
-import { modelContextContent } from '../chat/turn-policy.js';
-
-export async function buildConversationPrompt(input, deps) {
+export async function buildConversationPrompt(input, deps = {}) {
   const state = input.state;
   const generatedEntries = input.generatedEntries ?? state.generatedLorebookEntries ?? [];
   const lorebooks = [
     ...(deps.lorebooks || []),
     { name: 'Session Generated', book: { entries: generatedEntries } },
   ];
+  const needsDefaultAssembler = !deps.buildBaseSections || !deps.buildPromptCore;
+  const assembler = needsDefaultAssembler
+    ? createPromptAssembler(deps.assemblerDeps || deps)
+    : null;
+  const resolveBaseSections = deps.buildBaseSections
+    || (assembler ? assembler.buildBaseSections : buildBaseSections);
+  const runPromptCore = deps.buildPromptCore
+    || (assembler ? assembler.assemblePrompt : assemblePrompt);
+
   const started = nowMs();
-  const { baseSections } = deps.buildBaseSections(state.card, state.preset, 0, state.persona);
-  const chunkSize = deps.getSummaryChunkSize?.() || 12;
+  const { baseSections } = resolveBaseSections(state.card, state.preset, 0, state.persona);
+  const chunkSize = summaryChunkSize({ summarization_chunk_size: deps.getSummaryChunkSize?.() || 12 }, state);
   const sourceMessages = input.messages || [...(state.messages || []), input.userMessage].filter(Boolean);
   const messages = sourceMessages.map(message => {
     if (message?.role !== 'model') return message;
@@ -43,11 +58,11 @@ export async function buildConversationPrompt(input, deps) {
   });
 
   const preparedAt = nowMs();
-  // Always yield before the legacy prompt core. This guarantees that a click-triggered
+  // Always yield before prompt core execution. This guarantees that a click-triggered
   // loading state has a chance to paint before regex/EJS/World Info processing begins.
   await yieldToBrowser();
   const coreStarted = nowMs();
-  const result = await deps.buildPromptCore(
+  const result = await runPromptCore(
     baseSections,
     messages,
     state.authorNote,
@@ -63,7 +78,7 @@ export async function buildConversationPrompt(input, deps) {
     input.activeEntries,
     state.worldInfoPlacement,
     state.preset,
-    state.visualState.disableInteractiveMode,
+    state.visualState?.disableInteractiveMode,
     state.persona?.description || '',
   );
   const finishedAt = nowMs();
