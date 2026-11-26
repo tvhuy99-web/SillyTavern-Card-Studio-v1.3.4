@@ -15,7 +15,7 @@ import {
   createDurableRecoveryStore,
 } from '../src/app/persistence/backup-restore-service.js';
 import { createApplicationLifecycle } from '../src/app/lifecycle/application-lifecycle.js';
-import { createBackupSettings } from '../src/ui/settings/settings-screens.js';
+import { createBackupSettings } from '../src/ui/settings/sections/backup-settings.js';
 import { SETTINGS_STORAGE_KEYS } from '../src/app/state/settings-repository.js';
 import {
   PROXY_PERSISTENCE_KEYS,

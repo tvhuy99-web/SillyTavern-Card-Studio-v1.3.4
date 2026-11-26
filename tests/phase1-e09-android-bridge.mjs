@@ -134,10 +134,10 @@ const decodeJavaTextBlock = block =>
 
 // 4. AiStudioTextPlugin.java uses AiStudioPageScripts constants and targeted clearWatchdog()
 {
-  const pluginSrc = read('android-native/AiStudioTextPlugin.java');
+  const pluginSrc = ['AiStudioTextPlugin.java','AiStudioDiagnostics.java','AiStudioWebViewController.java','AiStudioSessionController.java','AiStudioThinkingController.java','AiStudioGenerationController.java','AiStudioResponsePoller.java'].map(f => read('android-native/' + f)).join('\n');
   assert.match(pluginSrc, /AiStudioPageScripts\.NEW_CHAT_READINESS_JS/);
   assert.match(pluginSrc, /AiStudioPageScripts\.RUN_SETTINGS_EXPAND_JS/);
-  const watchdogMatch = pluginSrc.match(/private void clearWatchdog\(\)\s*\{([\s\S]*?)\}/);
+  const watchdogMatch = pluginSrc.match(/(?:private\s+)?void clearWatchdog\(\)\s*\{([\s\S]*?)\}/);
   assert.ok(watchdogMatch, 'clearWatchdog() method must exist');
   assert.match(watchdogMatch[1], /handler\.removeCallbacks\(requestWatchdog\)/);
   assert.doesNotMatch(watchdogMatch[1], /removeCallbacksAndMessages\(null\)/);

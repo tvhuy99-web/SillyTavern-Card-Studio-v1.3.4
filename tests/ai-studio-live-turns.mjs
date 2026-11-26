@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import { createAiStudioTextProvider } from '../src/providers/aistudio/text.js';
 
-const native = fs.readFileSync(new URL('../android-native/AiStudioTextPlugin.java', import.meta.url), 'utf8');
+const native = ['AiStudioTextPlugin.java','AiStudioDiagnostics.java','AiStudioWebViewController.java','AiStudioSessionController.java','AiStudioThinkingController.java','AiStudioGenerationController.java','AiStudioResponsePoller.java'].map(f => fs.readFileSync(new URL('../android-native/' + f, import.meta.url), 'utf8')).join('\n');
 const panel = fs.readFileSync(new URL('../android-native/AiStudioPanel.java', import.meta.url), 'utf8');
 const completion = fs.readFileSync(new URL('../android-native/AiStudioCompletionPolicy.java', import.meta.url), 'utf8');
 const service = fs.readFileSync(new URL('../src/features/chat/conversation-service.js', import.meta.url), 'utf8');
@@ -32,15 +32,15 @@ assert.match(native, /WEBVIEW_HIDDEN_OFFSCREEN/);
 assert.match(native, /WEBVIEW_INLINE_VISIBLE/);
 assert.match(panel, /hidePanelButton\.setText\("Ẩn AI Studio"\)/);
 assert.doesNotMatch(native, /AlertDialog|sessionDialog|showWindow\(\)/);
-assert.match(native, /applyPanelPresentation\(isPageDisplayEnabled\(\),"generate"\)/);
+assert.match(native, /applyPanelPresentation\((?:webViewController\.)?isPageDisplayEnabled\(\),\s*"generate"\)/);
 assert.match(completion, /CONFIRMED_IDLE_MS = 7_000L/);
-assert.match(native, /if\(busy\)\{/);
+assert.match(native, /if\s*\(busy\)\s*\{/);
 assert.match(completion, /return !busy && confirmedIdle >= idleRequirement/);
 assert.match(native, /AiStudioCompletionPolicy\.isTerminal/);
 assert.match(completion, /consecutiveIdlePolls >= 4/);
 assert.doesNotMatch(native, /if\(stable>\(everSawBusy&&!busy\?1700L:5000L\)\)/);
 assert.match(native, /AI_STUDIO_NOT_READY_HIDDEN/);
-const sections = fs.readFileSync(new URL('../src/ui/settings/provider-sections.js', import.meta.url), 'utf8');
+const sections = fs.readFileSync(new URL('../src/ui/settings/provider-sections/aistudio-section.js', import.meta.url), 'utf8');
 const screen = fs.readFileSync(new URL('../src/ui/settings/connection-settings-screen.js', import.meta.url), 'utf8');
 assert.match(sections, /Hiển thị trang web AI Studio/);
 assert.match(sections, /checked: aiStudioVisible/);
@@ -50,7 +50,7 @@ for (const source of ['gemini','openrouter','proxy','aistudio']) assert.ok(scree
 assert.match(screen, /value: settings\.source, onChange: ([\w$]+) => updateSetting\("source", \1\.target\.value\)/);
 for (const note of ['Dùng phiên Google / AI Studio trong WebView Android (thử nghiệm)', 'Hãy chọn mô hình trực tiếp trên trang AI Studio', 'Mặc định tắt. Bật khi cần đăng nhập, chọn mô hình hoặc kiểm tra lỗi']) assert.ok(!sections.includes(note));
 
-assert.match(native,/event\.put\("replace",true\)/);
+assert.match(native,/event\.put\("replace",\s*true\)/);
 assert.match(service,/connectionSource === 'aistudio'/);
 assert.match(service,/chunk\.replaceText === true/);
 

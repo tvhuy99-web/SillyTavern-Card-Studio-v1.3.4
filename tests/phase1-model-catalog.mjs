@@ -17,11 +17,11 @@ let complete; host.Capacitor.nativePromise=()=>new Promise(resolve=>{complete=re
 await assert.rejects(createAiStudioModelCatalog(host,{timeoutMs:5}).load(),/AI_STUDIO_MODEL_TIMEOUT/);
 complete({models:[{id:'gemini-2.5-pro'}]}); await new Promise(resolve=>setTimeout(resolve,10));
 assert.deepEqual(catalog.read(),[],'late native result after timeout must not mutate cache');
-const production=await readFile(new URL('../assets/app-production-v1.3.6.js',import.meta.url),'utf8');
+const production=(await Promise.all(['../assets/app-production-v1.3.6.js','../assets/recovered/app/composition/persistence-composition.js','../assets/recovered/app/composition/provider-composition.js','../assets/recovered/app/composition/store-composition.js','../assets/recovered/app/composition/conversation-composition.js','../assets/recovered/app/composition/runtime-composition.js','../assets/recovered/app/composition/ui-composition.js'].map(p=>readFile(new URL(p,import.meta.url),'utf8')))).join('\n');
 assert.ok(!production.includes('window.__STS_MODEL_CONNECTION_TEST__'));
 assert.ok(production.includes('testModel:__stsGenerationGateway.testModel'));
 assert.ok(production.includes('__stsModelTestButton=__stsCreateModelTestButton(jsxRuntime,React)'));
-const sections=await readFile(new URL('../assets/m6/ui/settings/provider-sections.js',import.meta.url),'utf8');
+const sections=(await Promise.all(['gemini-section.js','openrouter-section.js','aistudio-section.js','proxy-section.js'].map(f=>readFile(new URL('../assets/m6/ui/settings/provider-sections/'+f,import.meta.url),'utf8')))).join('\n');
 for (const field of ['aistudio_model','aistudio_tool_model','proxy_model','proxy_tool_model']) {
   const provider=field.startsWith('aistudio')?'aistudio':'proxy';
   assert.match(sections,new RegExp(`ModelSelect,\\s*\\{\\s*provider: "${provider}", label: "(?:Chat|Tool) Model ID", value: settings\\.${field}`));

@@ -83,7 +83,7 @@ assert.ok(prod.includes('saveSessionRecord=__stsRepositories.sessions.put'));
 assert.ok(prod.includes('createCharacterMutations({ get, set, repositories'));
 assert.ok(readFileSync(new URL('../src/features/catalog/catalog-mutations.js',import.meta.url),'utf8').includes('await repositories.removeCharacterAndSessions(id)'));
 assert.ok(readFileSync(new URL('../src/app/persistence/backup-restore-service.js',import.meta.url),'utf8').includes('await (repositories.restoreRecords ?? repositories.mergeRecords)(staged.records,'));
-assert.ok(/await\s+(?:__stsBackupRestoreService|backupRestoreService)\.restore\(rawBackup\)/.test(readFileSync(new URL('../src/ui/settings/settings-screens.js',import.meta.url),'utf8')));
+assert.ok(/await\s+(?:__stsBackupRestoreService|backupRestoreService)\.restore\(rawBackup\)/.test(readFileSync(new URL('../src/ui/settings/sections/backup-settings.js',import.meta.url),'utf8')));
 assert.ok(/await\s+(?:__stsRepositories|repositories)\.mergeRecords\(\{\s*characters:\s*\[\s*await\s+(?:Qt|normalizeCharacterForSave)\(/.test(prod));
 assert.ok(!prod.includes('await Jt(i)}}catch{}await Wt('));
 console.log('P05 persistence ownership, commit/abort protocol and transaction boundaries: OK');

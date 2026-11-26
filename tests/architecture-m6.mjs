@@ -39,7 +39,7 @@ assert.ok(switchSource.includes("role: 'switch'"));
 assert.ok(!switchSource.includes('onKeyDown:'));
 assert.ok(!switchSource.includes('aria-disabled'));
 
-const loreSource = read('src/features/world-info/ui/lorebook-controls.js').split('export function createLorebookEntryCard')[1].split('export function createActiveWorldInfoEntry')[0];
+const loreSource = read('src/features/world-info/ui/lorebook-entry-item.js');
 assert.ok(production.includes('LorebookEntryCard=__stsCreateLorebookEntryCard('));
 assert.match(loreSource, /jsxRuntime\.jsxs\)\("article",\s*\{\s*"aria-labelledby":/);
 assert.match(loreSource, /jsxRuntime\.jsxs\)\("h3",\s*\{\s*id:/);
@@ -66,7 +66,7 @@ assert.ok(
   'interactive regex pipeline must never run on the active streaming message',
 );
 
-const promptSource = read('src/features/presets/ui/preset-sections.js').split('export function createPromptListItem')[1].split('export function createPromptPreview')[0];
+const promptSource = read('src/features/presets/ui/prompt-manager.js').split('export function createPromptManager')[0];
 assert.ok(production.includes('PromptListItem=__stsCreatePromptListItem('));
 assert.match(promptSource, /ariaLabel:\s*(?:undefined|void 0),[\s\S]*?checked:\s*propPrompt\.enabled\s*\?\?\s*(?:false|!1)/);
 

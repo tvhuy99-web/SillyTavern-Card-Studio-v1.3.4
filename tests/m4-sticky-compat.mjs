@@ -107,7 +107,7 @@ assert.ok(production.includes('aiStickyDuration:3,system_prompt:'));
 assert.match(production, /__stsMigrateSmartScanStickySettings\)?\(savedSettings\)/);
 assert.match(production, /__stsMarkSmartScanStickySettingsSaved\)?\(settings\)/);
 assert.ok(/resolveWorldInfo:\s*(?:dependencies\.)?__stsCreateUidSafeWorldInfoResolver\((?:dependencies\.)?resolveWorldInfo\)/.test(readRecoveredHostView()));
-assert.ok(/label:\s*"AI Sticky Duration \(lượt AI phản hồi\)"/.test(readFileSync(new URL('../src/ui/settings/settings-screens.js', import.meta.url), 'utf8')));
+assert.ok(/label:\s*"AI Sticky Duration \(lượt AI phản hồi\)"/.test(readFileSync(new URL('../src/ui/settings/sections/smart-scan-settings.js', import.meta.url), 'utf8')));
 assert.equal((readRecoveredHostView().match(/label:\s*"AI Sticky Duration \(lượt AI phản hồi\)"/g) || []).length, 1);
 
 console.log('World Info Sticky: 3-turn default, migration, numeric UID and actual resolver tests OK');

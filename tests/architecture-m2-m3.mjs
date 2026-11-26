@@ -1,3 +1,4 @@
+import { renderOwnedModule } from '../build/asset-manifest.mjs';
 import { readRecoveredHostView } from './helpers/recovered-host-view.mjs';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
@@ -68,7 +69,7 @@ assert.ok(!production.includes('root.__STS_START_CARD_RUNTIME__ = function start
 assert.equal(promptGenerated, promptSource);
 assert.equal(proxyGenerated, proxySource);
 assert.equal(rendererGenerated, rendererSource);
-assert.equal(initialVariableGenerated, initialVariableSource);
+assert.equal(initialVariableGenerated, renderOwnedModule('src/features/state/initial-variable-service.js', 'assets/initial-variable-service-v1.3.6.js', initialVariableSource));
 assert.equal(coreBuilder, coreBuilderSource);
 assert.ok(hostSource.includes("from '../runtime/card-runtime/core-builder.js'"));
 assert.ok(!hostSource.includes('../../assets/card-runtime-core-builder'));

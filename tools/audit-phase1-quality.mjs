@@ -575,7 +575,7 @@ function classifyFactories(srcFiles) {
 
 function checkDurableRecovery() {
   const restoreServicePath = path.join(ROOT, 'src/app/persistence/backup-restore-service.js');
-  const settingsScreensPath = path.join(ROOT, 'src/ui/settings/settings-screens.js');
+  const settingsScreensPath = path.join(ROOT, 'src/ui/settings/sections/backup-settings.js');
 
   const restoreSrc = fs.existsSync(restoreServicePath)
     ? stripComments(fs.readFileSync(restoreServicePath, 'utf8'))

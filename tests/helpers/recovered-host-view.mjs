@@ -4,7 +4,28 @@
 import { readFileSync } from 'node:fs';
 import { copiedAssets, productionOutput } from '../../build/asset-manifest.mjs';
 const read = path => readFileSync(new URL('../../' + path, import.meta.url), 'utf8');
-const owners = [productionOutput, ...copiedAssets.filter(([source]) => [
+const INCLUDED_PREFIXES = [
+  'src/diagnostics/ui/',
+  'src/ui/settings/',
+  'src/ui/card-runtime/',
+  'src/features/chat/session/',
+  'src/features/chat/story/',
+  'src/features/chat/ui/',
+  'src/features/arena/ui/',
+  'src/features/speech/ui/',
+  'src/features/rpg/ui/',
+  'src/features/catalog/ui/',
+  'src/features/characters/ui/',
+  'src/features/presets/ui/',
+  'src/features/personas/ui/',
+  'src/features/world-info/ui/',
+  'src/features/world-info/embedding/',
+  'src/features/prompts/',
+  'src/features/state/',
+  'src/app/persistence/',
+  'src/app/composition/',
+];
+const EXACT_OWNERS = new Set([
   'src/app/state/application-stores.js', 'src/features/chat/hooks/session-hooks.js',
   'src/core/parse-relaxed-json.js',
   'src/ui/components/display-formatting.js',
@@ -14,13 +35,8 @@ const owners = [productionOutput, ...copiedAssets.filter(([source]) => [
   'src/providers/common/http-transport.js',
   'src/providers/gemini/config.js',
   'src/diagnostics/network-redaction.js',
-  'src/features/prompts/story-content.js',
-  'src/features/prompts/prompt-assembler.js',
   'src/features/rpg/rpg-import.js',
-  'src/ui/settings/gemini-catalog-hook.js',
   'src/ui/components/dialog-focus.js',
-  'src/features/world-info/ui/embedding-sync-hook.js',
-  'src/features/prompts/macro-reference.js',
   'src/features/presets/preset-file.js',
   'src/ui/components/radio-navigation.js',
   'src/features/chat/summary-generation.js',
@@ -31,7 +47,6 @@ const owners = [productionOutput, ...copiedAssets.filter(([source]) => [
   'src/runtime/card-runtime/host/slash-command-reference.js',
   'src/features/rpg/action-proposal-prompt.js',
   'src/app/lifecycle/application-lifecycle.js',
-
   'src/features/chat/hooks/use-diagnostics.js',
   'src/features/chat/hooks/use-response-pipeline.js',
   'src/features/chat/hooks/use-smart-scan.js',
@@ -52,29 +67,23 @@ const owners = [productionOutput, ...copiedAssets.filter(([source]) => [
   'src/app/state/persona-store.js',
   'src/features/world-info/lorebook-file.js',
   'src/app/state/settings-keys.js',
-  'src/features/state/default-feature-settings.js',
-  'src/features/state/feature-settings.js',
   'src/features/rpg/table-processing.js',
   'src/features/catalog/character-export.js',
   'src/features/catalog/character-file.js',
   'src/vendor/lodash-runtime.js',
-  'src/features/state/script-execution.js',
-  'src/features/prompts/macro-processing.js',
   'src/features/chat/regex-processing.js',
   'src/features/speech/audio-conversion.js',
   'src/features/speech/speech-engine.js',
-  'src/app/persistence/backup-codec.js',
   'src/features/world-info/keyword-matching.js',
   'src/runtime/card-runtime/host/slash-commands.js',
   'src/runtime/card-runtime/frame-context.js',
   'src/vendor/markdown-runtime.js',
   'src/vendor/html-sanitizer-runtime.js',
-
-  'src/ui/shell/providers.js', 'src/features/catalog/ui/catalog-screens.js',
-  'src/features/rpg/ui/rpg-screens.js', 'src/features/world-info/ui/world-info-screens.js',
-  'src/ui/settings/settings-screens.js', 'src/features/chat/ui/session-screens.js',
-  'src/features/chat/ui/message-rendering.js', 'src/diagnostics/ui/diagnostic-panels.js',
-].includes(source)).map(([, output]) => output)];
+  'src/ui/shell/providers.js',
+]);
+const owners = [productionOutput, ...copiedAssets
+  .filter(([source]) => source.endsWith('.js') && (EXACT_OWNERS.has(source) || INCLUDED_PREFIXES.some(p => source.startsWith(p))))
+  .map(([, output]) => output)];
 export function readRecoveredHostView() {
   return owners.map(path => read(path).replace(/\(0, dependencies\.([$\w]+)\)/g, '$1').replace(/\bdependencies\.([$\w]+)/g, '$1')).join('\n');
 }

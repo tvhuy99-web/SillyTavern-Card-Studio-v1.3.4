@@ -35,7 +35,7 @@ import {
 // 1. Static + structural production wiring assertions on host.js & use-session-persistence.js
 // ============================================================================
 {
-  const hostSrc = readFileSync(new URL('../src/app/host.js', import.meta.url), 'utf8');
+  const hostSrc = ['src/app/host.js','src/app/composition/persistence-composition.js','src/app/composition/provider-composition.js','src/app/composition/store-composition.js','src/app/composition/conversation-composition.js','src/app/composition/runtime-composition.js','src/app/composition/ui-composition.js'].map(f => readFileSync(new URL('../' + f, import.meta.url), 'utf8')).join('\n');
   assert.ok(
     hostSrc.includes('__stsRepositories.setWriteGuard?.(operation=>__stsBackupRestoreService.assertNotRestoring(operation))'),
     'host.js must wire writeGuard onto __stsRepositories',

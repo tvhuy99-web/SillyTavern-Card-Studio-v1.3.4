@@ -87,6 +87,7 @@ if(require.main===module){
     'src/diagnostics/ui/diagnostic-panels.js'
   ];
   for(const file of files){
+    if(!fs.existsSync(path.join(root,file))){console.log('F01 alpha-equivalence SKIP (decomposed in F02; verify via tools/audit-f02-modules.cjs --factory-parity): '+file);continue;}
     const before=execFileSync('git',['show',baseline+':'+file],{cwd:root,encoding:'utf8',maxBuffer:4*1024*1024});
     const after=fs.readFileSync(path.join(root,file),'utf8');
     const aliases=file==='src/ui/shell/providers.js'?{"b":"react","dl":"toastContext","pl":"ToastNotification","wt":"jsxRuntime","Bd":"stopNativeSpeech","Gd":"speechContext","Ld":"generateGeminiSpeech","Ud":"speakNativeText","hl":"useToast","qo":"speechSettingsKey","ts":"speechDefaults","Xf":"cardPopupContext","Xl":"useDialogFocus","Yg":"htmlSanitizer"}:{};

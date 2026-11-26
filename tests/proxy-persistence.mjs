@@ -53,7 +53,7 @@ imported.importProfilesFromBackup(exportedProfiles);
 assert.equal(imported.getProfiles()[0].id, 'p2');
 assert.equal(imported.getProfiles()[0].password, 'temporary');
 
-const sections = fs.readFileSync(new URL('../src/ui/settings/provider-sections.js', import.meta.url), 'utf8');
+const sections = fs.readFileSync(new URL('../src/ui/settings/provider-sections/proxy-section.js', import.meta.url), 'utf8');
 const settings = fs.readFileSync(new URL('../src/app/persistence/backup-codec.js', import.meta.url), 'utf8');
 assert.match(sections,/Ghi nhớ Password/);
 assert.match(settings,/exportProfilesForBackup/);

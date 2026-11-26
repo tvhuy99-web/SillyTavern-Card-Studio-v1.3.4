@@ -1,6 +1,9 @@
 import { buildProbeTarget, createModelTestButton } from './model-test-button.js';
 import { useConnectionSettings } from './settings-controller.js';
-import { renderGeminiSection, renderOpenRouterSection, renderAiStudioSection, renderProxySection } from './provider-sections.js';
+import { renderGeminiSection } from './provider-sections/gemini-section.js';
+import { renderOpenRouterSection } from './provider-sections/openrouter-section.js';
+import { renderAiStudioSection } from './provider-sections/aistudio-section.js';
+import { renderProxySection } from './provider-sections/proxy-section.js';
 // Transitional React factory: the legacy host supplies its existing React instance and bindings lazily.
 export function createConnectionSettingsScreen(jsxRuntime, react, getDependencies) {
     const ModelTestButton = createModelTestButton(jsxRuntime, react);

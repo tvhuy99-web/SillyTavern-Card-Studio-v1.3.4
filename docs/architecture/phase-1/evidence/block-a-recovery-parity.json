@@ -62,7 +62,7 @@
   {
     "symbol": "ec",
     "name": "CharacterTools",
-    "path": "src/features/catalog/ui/catalog-screens.js",
+    "path": "src/features/characters/ui/character-tools.js",
     "dependencies": [
       "$l",
       "Hl",
@@ -88,7 +88,7 @@
   {
     "symbol": "eu",
     "name": "CharacterScreen",
-    "path": "src/features/catalog/ui/catalog-screens.js",
+    "path": "src/features/characters/ui/character-screen.js",
     "dependencies": [
       "Ll",
       "Qc",
@@ -113,7 +113,7 @@
   {
     "symbol": "ku",
     "name": "PresetScreen",
-    "path": "src/features/catalog/ui/catalog-screens.js",
+    "path": "src/features/presets/ui/preset-screen.js",
     "dependencies": [
       "Ql",
       "_u",
@@ -138,7 +138,7 @@
   {
     "symbol": "Iu",
     "name": "PersonaEditor",
-    "path": "src/features/catalog/ui/catalog-screens.js",
+    "path": "src/features/personas/ui/persona-screen.js",
     "dependencies": [
       "dn",
       "hn",
@@ -155,7 +155,7 @@
   {
     "symbol": "ju",
     "name": "PersonaScreen",
-    "path": "src/features/catalog/ui/catalog-screens.js",
+    "path": "src/features/personas/ui/persona-screen.js",
     "dependencies": [
       "Au",
       "Iu",
@@ -175,7 +175,7 @@
   {
     "symbol": "Tl",
     "name": "RpgDatabaseEditor",
-    "path": "src/features/rpg/ui/rpg-screens.js",
+    "path": "src/features/rpg/ui/database/rpg-database-editor.js",
     "dependencies": [
       "Cl",
       "Nl",
@@ -200,7 +200,7 @@
   {
     "symbol": "Pl",
     "name": "MythicConfigurationDialog",
-    "path": "src/features/rpg/ui/rpg-screens.js",
+    "path": "src/features/rpg/ui/mythic/mythic-configuration-dialog.js",
     "dependencies": [
       "As",
       "Cl",
@@ -226,7 +226,7 @@
   {
     "symbol": "Ml",
     "name": "CharacterRpgSection",
-    "path": "src/features/rpg/ui/rpg-screens.js",
+    "path": "src/features/rpg/ui/character-rpg-section.js",
     "dependencies": [
       "Nl",
       "Pl",
@@ -247,7 +247,7 @@
   {
     "symbol": "Pf",
     "name": "ActionProposal",
-    "path": "src/features/rpg/ui/rpg-screens.js",
+    "path": "src/features/rpg/ui/actions/action-proposal.js",
     "dependencies": [
       "b",
       "kt",
@@ -264,7 +264,7 @@
   {
     "symbol": "Mf",
     "name": "ActionSuggestionDialog",
-    "path": "src/features/rpg/ui/rpg-screens.js",
+    "path": "src/features/rpg/ui/actions/action-suggestion-dialog.js",
     "dependencies": [
       "Bm",
       "Pf",
@@ -293,7 +293,7 @@
   {
     "symbol": "Lf",
     "name": "VariableTree",
-    "path": "src/features/rpg/ui/rpg-screens.js",
+    "path": "src/features/rpg/ui/variables/variable-tree.js",
     "dependencies": [
       "b",
       "wt"
@@ -309,7 +309,7 @@
   {
     "symbol": "Ff",
     "name": "VariableHud",
-    "path": "src/features/rpg/ui/rpg-screens.js",
+    "path": "src/features/rpg/ui/variables/variable-hud.js",
     "dependencies": [
       "Lf",
       "kt",
@@ -326,7 +326,7 @@
   {
     "symbol": "Uf",
     "name": "RpgTableRow",
-    "path": "src/features/rpg/ui/rpg-screens.js",
+    "path": "src/features/rpg/ui/database/rpg-table-row.js",
     "dependencies": [
       "Bf",
       "kt",
@@ -343,7 +343,7 @@
   {
     "symbol": "Hf",
     "name": "RpgTableEditor",
-    "path": "src/features/rpg/ui/rpg-screens.js",
+    "path": "src/features/rpg/ui/database/rpg-table-editor.js",
     "dependencies": [
       "Uf",
       "b",
@@ -363,7 +363,7 @@
   {
     "symbol": "$f",
     "name": "RpgImportDialog",
-    "path": "src/features/rpg/ui/rpg-screens.js",
+    "path": "src/features/rpg/ui/rpg-import-dialog.js",
     "dependencies": [
       "As",
       "b",
@@ -382,7 +382,7 @@
   {
     "symbol": "Gf",
     "name": "RpgHud",
-    "path": "src/features/rpg/ui/rpg-screens.js",
+    "path": "src/features/rpg/ui/rpg-hud.js",
     "dependencies": [
       "$f",
       "Hf",
@@ -405,7 +405,7 @@
   {
     "symbol": "Cc",
     "name": "EntrySelectionControl",
-    "path": "src/features/world-info/ui/world-info-screens.js",
+    "path": "src/features/world-info/ui/lorebook-entry-list.js",
     "dependencies": [
       "wt"
     ],
@@ -420,7 +420,7 @@
   {
     "symbol": "Xc",
     "name": "LorebookManager",
-    "path": "src/features/world-info/ui/world-info-screens.js",
+    "path": "src/features/world-info/ui/lorebook-manager.js",
     "dependencies": [
       "Jc",
       "Tc",
@@ -442,7 +442,7 @@
   {
     "symbol": "__stsEmbeddingProviderStatus",
     "name": "EmbeddingProviderStatus",
-    "path": "src/features/world-info/ui/world-info-screens.js",
+    "path": "src/features/world-info/ui/embedding-provider-status.js",
     "dependencies": [
       "__stsEmbeddingService",
       "b",
@@ -459,7 +459,7 @@
   {
     "symbol": "Tf",
     "name": "RelevanceTestDialog",
-    "path": "src/features/world-info/ui/world-info-screens.js",
+    "path": "src/features/world-info/ui/relevance-test-dialog.js",
     "dependencies": [
       "$c",
       "Fc",
@@ -482,7 +482,7 @@
   {
     "symbol": "If",
     "name": "DynamicWorldInfoDialog",
-    "path": "src/features/world-info/ui/world-info-screens.js",
+    "path": "src/features/world-info/ui/dynamic-world-info.js",
     "dependencies": [
       "Af",
       "Jc",
@@ -504,7 +504,7 @@
   {
     "symbol": "jf",
     "name": "GenerateEntryDialog",
-    "path": "src/features/world-info/ui/world-info-screens.js",
+    "path": "src/features/world-info/ui/generate-entry-dialog.js",
     "dependencies": [
       "b",
       "mn",
@@ -522,7 +522,7 @@
   {
     "symbol": "Td",
     "name": "SmartScanSettings",
-    "path": "src/ui/settings/settings-screens.js",
+    "path": "src/ui/settings/sections/smart-scan-settings.js",
     "dependencies": [
       "Cl",
       "Jo",
@@ -550,7 +550,7 @@
   {
     "symbol": "Ad",
     "name": "SmartContextSettings",
-    "path": "src/ui/settings/settings-screens.js",
+    "path": "src/ui/settings/sections/smart-context-settings.js",
     "dependencies": [
       "$o",
       "Cl",
@@ -573,7 +573,7 @@
   {
     "symbol": "Id",
     "name": "ActionSuggestionSettings",
-    "path": "src/ui/settings/settings-screens.js",
+    "path": "src/ui/settings/sections/action-suggestion-settings.js",
     "dependencies": [
       "Cl",
       "Go",
@@ -597,7 +597,7 @@
   {
     "symbol": "jd",
     "name": "LiterarySettings",
-    "path": "src/ui/settings/settings-screens.js",
+    "path": "src/ui/settings/sections/literary-settings.js",
     "dependencies": [
       "Cl",
       "Cs",
@@ -622,7 +622,7 @@
   {
     "symbol": "Vd",
     "name": "SpeechSettings",
-    "path": "src/ui/settings/settings-screens.js",
+    "path": "src/ui/settings/sections/speech-settings.js",
     "dependencies": [
       "$d",
       "Cl",
@@ -653,7 +653,7 @@
   {
     "symbol": "Qd",
     "name": "BackupSettings",
-    "path": "src/ui/settings/settings-screens.js",
+    "path": "src/ui/settings/sections/backup-settings.js",
     "dependencies": [
       "Au",
       "Jd",
@@ -694,7 +694,7 @@
   {
     "symbol": "Zd",
     "name": "CardRuntimeSettings",
-    "path": "src/ui/settings/settings-screens.js",
+    "path": "src/ui/settings/sections/card-runtime-settings.js",
     "dependencies": [
       "Co",
       "So",
@@ -716,7 +716,7 @@
   {
     "symbol": "th",
     "name": "SettingsScreen",
-    "path": "src/ui/settings/settings-screens.js",
+    "path": "src/ui/settings/settings-screen.js",
     "dependencies": [
       "Ad",
       "Id",
@@ -742,7 +742,7 @@
   {
     "symbol": "nh",
     "name": "GreetingDialog",
-    "path": "src/features/chat/ui/session-screens.js",
+    "path": "src/features/chat/session/greeting-dialog.js",
     "dependencies": [
       "Is",
       "b",
@@ -759,7 +759,7 @@
   {
     "symbol": "ah",
     "name": "StorySetupDialog",
-    "path": "src/features/chat/ui/session-screens.js",
+    "path": "src/features/chat/story/story-setup-dialog.js",
     "dependencies": [
       "Au",
       "Kt",
@@ -781,7 +781,7 @@
   {
     "symbol": "uh",
     "name": "SessionListItem",
-    "path": "src/features/chat/ui/session-screens.js",
+    "path": "src/features/chat/session/session-list-item.js",
     "dependencies": [
       "b",
       "js",
@@ -799,7 +799,7 @@
   {
     "symbol": "ph",
     "name": "SessionListScreen",
-    "path": "src/features/chat/ui/session-screens.js",
+    "path": "src/features/chat/session/session-list-screen.js",
     "dependencies": [
       "$u",
       "Au",
@@ -846,7 +846,7 @@
   {
     "symbol": "cp",
     "name": "ArenaSettingsDialog",
-    "path": "src/features/chat/ui/session-screens.js",
+    "path": "src/features/arena/ui/arena-settings-dialog.js",
     "dependencies": [
       "Ko",
       "Ru",
@@ -880,7 +880,7 @@
   {
     "symbol": "up",
     "name": "ChatSettingsDialog",
-    "path": "src/features/chat/ui/session-screens.js",
+    "path": "src/features/chat/ui/chat-settings-dialog.js",
     "dependencies": [
       "Xl",
       "b",
@@ -899,7 +899,7 @@
   {
     "symbol": "dp",
     "name": "QuickConnectionDialog",
-    "path": "src/features/chat/ui/session-screens.js",
+    "path": "src/ui/settings/quick-connection-dialog.js",
     "dependencies": [
       "Au",
       "Ko",
@@ -932,7 +932,7 @@
   {
     "symbol": "hp",
     "name": "SpeechControls",
-    "path": "src/features/chat/ui/session-screens.js",
+    "path": "src/features/speech/ui/speech-controls.js",
     "dependencies": [
       "kt",
       "qd",
@@ -949,7 +949,7 @@
   {
     "symbol": "pp",
     "name": "QuickConnectionBadge",
-    "path": "src/features/chat/ui/session-screens.js",
+    "path": "src/ui/settings/quick-connection-badge.js",
     "dependencies": [
       "gs",
       "kt",
@@ -967,7 +967,7 @@
   {
     "symbol": "mp",
     "name": "ChatHeader",
-    "path": "src/features/chat/ui/session-screens.js",
+    "path": "src/features/chat/ui/chat-header.js",
     "dependencies": [
       "b",
       "cp",
@@ -990,7 +990,7 @@
   {
     "symbol": "sf",
     "name": "ChatComposer",
-    "path": "src/features/chat/ui/session-screens.js",
+    "path": "src/features/chat/ui/chat-composer.js",
     "dependencies": [
       "Is",
       "b",
@@ -1010,7 +1010,7 @@
   {
     "symbol": "Of",
     "name": "ChatDialogs",
-    "path": "src/features/chat/ui/session-screens.js",
+    "path": "src/features/chat/ui/chat-dialogs.js",
     "dependencies": [
       "Cs",
       "Df",
@@ -1036,7 +1036,7 @@
   {
     "symbol": "Jf",
     "name": "ChatSessionScreen",
-    "path": "src/features/chat/ui/session-screens.js",
+    "path": "src/features/chat/ui/chat-session-screen.js",
     "dependencies": [
       "As",
       "Cs",
@@ -1084,7 +1084,7 @@
   {
     "symbol": "Dp",
     "name": "StreamingHtmlPreview",
-    "path": "src/features/chat/ui/message-rendering.js",
+    "path": "src/features/chat/ui/streaming/streaming-html-preview.js",
     "dependencies": [
       "b",
       "wt"
@@ -1100,7 +1100,7 @@
   {
     "symbol": "__stsLiveStreamText",
     "name": "LiveStreamText",
-    "path": "src/features/chat/ui/message-rendering.js",
+    "path": "src/features/chat/ui/streaming/live-stream-text.js",
     "dependencies": [
       "__stsLiveStreamStore",
       "b",
@@ -1117,7 +1117,7 @@
   {
     "symbol": "Zg",
     "name": "StreamingThinkingPanel",
-    "path": "src/features/chat/ui/message-rendering.js",
+    "path": "src/features/chat/ui/messages/thinking-panel.js",
     "dependencies": [
       "Bm",
       "Qg",
@@ -1137,7 +1137,7 @@
   {
     "symbol": "tf",
     "name": "ArenaResponsePanel",
-    "path": "src/features/chat/ui/message-rendering.js",
+    "path": "src/features/arena/ui/arena-response-panel.js",
     "dependencies": [
       "ef",
       "wt"
@@ -1153,7 +1153,7 @@
   {
     "symbol": "rf",
     "name": "ReadAloudButton",
-    "path": "src/features/chat/ui/message-rendering.js",
+    "path": "src/features/chat/ui/messages/read-aloud-button.js",
     "dependencies": [
       "bd",
       "hl",
@@ -1172,7 +1172,7 @@
   {
     "symbol": "jp",
     "name": "CardFrame",
-    "path": "src/features/chat/ui/message-rendering.js",
+    "path": "src/ui/card-runtime/card-frame.js",
     "dependencies": [
       "Ap",
       "Au",
@@ -1213,7 +1213,7 @@
   {
     "symbol": "ef",
     "name": "ArenaResponseSide",
-    "path": "src/features/chat/ui/message-rendering.js",
+    "path": "src/features/arena/ui/arena-response-side.js",
     "dependencies": [
       "Zg",
       "__stsArenaState",
@@ -1232,7 +1232,7 @@
   {
     "symbol": "nf",
     "name": "ChatMessage",
-    "path": "src/features/chat/ui/message-rendering.js",
+    "path": "src/features/chat/ui/messages/chat-message.js",
     "dependencies": [
       "Au",
       "Bm",
@@ -1258,7 +1258,7 @@
   {
     "symbol": "af",
     "name": "MessageList",
-    "path": "src/features/chat/ui/message-rendering.js",
+    "path": "src/features/chat/ui/messages/message-list.js",
     "dependencies": [
       "Co",
       "Dp",
@@ -1286,7 +1286,7 @@
   {
     "symbol": "zf",
     "name": "CardPreviewDialog",
-    "path": "src/features/chat/ui/message-rendering.js",
+    "path": "src/ui/card-runtime/card-preview-dialog.js",
     "dependencies": [
       "b",
       "kt",
@@ -1303,7 +1303,7 @@
   {
     "symbol": "Vf",
     "name": "ChatHud",
-    "path": "src/features/chat/ui/message-rendering.js",
+    "path": "src/features/chat/ui/chat-hud.js",
     "dependencies": [
       "Ff",
       "Gf",
@@ -1325,7 +1325,7 @@
   {
     "symbol": "pf",
     "name": "PromptSectionView",
-    "path": "src/diagnostics/ui/diagnostic-panels.js",
+    "path": "src/diagnostics/ui/prompt-log-panel.js",
     "dependencies": [
       "b",
       "un",
@@ -1342,7 +1342,7 @@
   {
     "symbol": "mf",
     "name": "SystemLogPanel",
-    "path": "src/diagnostics/ui/diagnostic-panels.js",
+    "path": "src/diagnostics/ui/system-log-panel.js",
     "dependencies": [
       "Bh",
       "Fh",
@@ -1363,7 +1363,7 @@
   {
     "symbol": "ff",
     "name": "NetworkLogPanel",
-    "path": "src/diagnostics/ui/diagnostic-panels.js",
+    "path": "src/diagnostics/ui/network-log-panel.js",
     "dependencies": [
       "b",
       "df",
@@ -1381,7 +1381,7 @@
   {
     "symbol": "bf",
     "name": "SmartScanLogPanel",
-    "path": "src/diagnostics/ui/diagnostic-panels.js",
+    "path": "src/diagnostics/ui/world-info-log-panel.js",
     "dependencies": [
       "b",
       "df",
@@ -1399,7 +1399,7 @@
   {
     "symbol": "xf",
     "name": "MythicLogPanel",
-    "path": "src/diagnostics/ui/diagnostic-panels.js",
+    "path": "src/diagnostics/ui/mythic-log-panel.js",
     "dependencies": [
       "b",
       "df",
@@ -1417,7 +1417,7 @@
   {
     "symbol": "_f",
     "name": "SummaryLogPanel",
-    "path": "src/diagnostics/ui/diagnostic-panels.js",
+    "path": "src/diagnostics/ui/summary-log-panel.js",
     "dependencies": [
       "b",
       "kt",
@@ -1437,7 +1437,7 @@
   {
     "symbol": "wf",
     "name": "WorldInfoLogPanel",
-    "path": "src/diagnostics/ui/diagnostic-panels.js",
+    "path": "src/diagnostics/ui/world-info-log-panel.js",
     "dependencies": [
       "b",
       "df",
@@ -1455,7 +1455,7 @@
   {
     "symbol": "Sf",
     "name": "PromptLogPanel",
-    "path": "src/diagnostics/ui/diagnostic-panels.js",
+    "path": "src/diagnostics/ui/prompt-log-panel.js",
     "dependencies": [
       "b",
       "df",
@@ -1475,7 +1475,7 @@
   {
     "symbol": "Cf",
     "name": "ResponseLogPanel",
-    "path": "src/diagnostics/ui/diagnostic-panels.js",
+    "path": "src/diagnostics/ui/response-log-panel.js",
     "dependencies": [
       "b",
       "df",
@@ -1493,7 +1493,7 @@
   {
     "symbol": "Ef",
     "name": "WorldInfoScanPanel",
-    "path": "src/diagnostics/ui/diagnostic-panels.js",
+    "path": "src/diagnostics/ui/world-info-log-panel.js",
     "dependencies": [
       "b",
       "kt",
@@ -1510,7 +1510,7 @@
   {
     "symbol": "Nf",
     "name": "DiagnosticsDialog",
-    "path": "src/diagnostics/ui/diagnostic-panels.js",
+    "path": "src/diagnostics/ui/diagnostics-dialog.js",
     "dependencies": [
       "Cf",
       "Ef",
@@ -1536,7 +1536,7 @@
   {
     "symbol": "gf",
     "name": "NetworkLogItem",
-    "path": "src/diagnostics/ui/diagnostic-panels.js",
+    "path": "src/diagnostics/ui/network-log-panel.js",
     "dependencies": [
       "Bs",
       "b",
@@ -1555,7 +1555,7 @@
   {
     "symbol": "yf",
     "name": "SmartScanLogItem",
-    "path": "src/diagnostics/ui/diagnostic-panels.js",
+    "path": "src/diagnostics/ui/world-info-log-panel.js",
     "dependencies": [
       "b",
       "un",
@@ -1572,7 +1572,7 @@
   {
     "symbol": "vf",
     "name": "MythicLogItem",
-    "path": "src/diagnostics/ui/diagnostic-panels.js",
+    "path": "src/diagnostics/ui/mythic-log-panel.js",
     "dependencies": [
       "b",
       "kt",
@@ -1591,7 +1591,7 @@
   {
     "symbol": "sn",
     "name": "LorebookStore",
-    "path": "src/app/state/application-stores.js",
+    "path": "src/app/state/lorebook-store.js",
     "dependencies": [
       "At",
       "It",
@@ -1609,7 +1609,7 @@
   {
     "symbol": "ol",
     "name": "SessionStore",
-    "path": "src/app/state/application-stores.js",
+    "path": "src/app/state/session-store.js",
     "dependencies": [
       "At",
       "Bs",
@@ -1628,7 +1628,7 @@
   {
     "symbol": "kc",
     "name": "CharacterStore",
-    "path": "src/app/state/application-stores.js",
+    "path": "src/app/state/character-store.js",
     "dependencies": [
       "At",
       "It",
@@ -1649,7 +1649,7 @@
   {
     "symbol": "bu",
     "name": "PresetStore",
-    "path": "src/app/state/application-stores.js",
+    "path": "src/app/state/preset-store.js",
     "dependencies": [
       "At",
       "It",
@@ -1669,7 +1669,7 @@
   {
     "symbol": "Au",
     "name": "PersonaStore",
-    "path": "src/app/state/application-stores.js",
+    "path": "src/app/state/persona-store.js",
     "dependencies": [
       "At",
       "It",
@@ -1689,7 +1689,7 @@
   {
     "symbol": "mh",
     "name": "DiagnosticsHook",
-    "path": "src/features/chat/hooks/session-hooks.js",
+    "path": "src/features/chat/hooks/use-diagnostics.js",
     "dependencies": [
       "b",
       "ol",
@@ -1703,7 +1703,7 @@
   {
     "symbol": "fh",
     "name": "ConversationHook",
-    "path": "src/features/chat/hooks/session-hooks.js",
+    "path": "src/features/chat/hooks/use-conversation.js",
     "dependencies": [
       "$c",
       "$u",
@@ -1763,7 +1763,7 @@
   {
     "symbol": "lp",
     "name": "ChatSessionHook",
-    "path": "src/features/chat/hooks/session-hooks.js",
+    "path": "src/features/chat/hooks/use-chat-session.js",
     "dependencies": [
       "$h",
       "Ah",

@@ -163,7 +163,7 @@
   {
     "symbol": "pn",
     "name": "CharacterCoreSection",
-    "path": "src/features/catalog/ui/character-sections.js",
+    "path": "src/features/characters/ui/character-metadata-sections.js",
     "dependencies": [
       "dn",
       "hn",
@@ -182,7 +182,7 @@
   {
     "symbol": "fl",
     "name": "CharacterScenarioSection",
-    "path": "src/features/catalog/ui/character-sections.js",
+    "path": "src/features/characters/ui/character-metadata-sections.js",
     "dependencies": [
       "hn",
       "ln",
@@ -200,7 +200,7 @@
   {
     "symbol": "vl",
     "name": "CharacterLorebookSection",
-    "path": "src/features/catalog/ui/character-sections.js",
+    "path": "src/features/characters/ui/character-metadata-sections.js",
     "dependencies": [
       "ln",
       "wt"
@@ -217,7 +217,7 @@
   {
     "symbol": "bl",
     "name": "CharacterMetadataSection",
-    "path": "src/features/catalog/ui/character-sections.js",
+    "path": "src/features/characters/ui/character-metadata-sections.js",
     "dependencies": [
       "b",
       "dn",
@@ -238,7 +238,7 @@
   {
     "symbol": "xl",
     "name": "RegexScriptEditor",
-    "path": "src/features/catalog/ui/character-sections.js",
+    "path": "src/features/characters/ui/regex-script-editor.js",
     "dependencies": [
       "b",
       "dn",
@@ -258,7 +258,7 @@
   {
     "symbol": "wl",
     "name": "TavernScriptEditor",
-    "path": "src/features/catalog/ui/character-sections.js",
+    "path": "src/features/characters/ui/tavern-script-editor.js",
     "dependencies": [
       "b",
       "dn",
@@ -278,7 +278,7 @@
   {
     "symbol": "_l",
     "name": "RegexScriptList",
-    "path": "src/features/catalog/ui/character-sections.js",
+    "path": "src/features/characters/ui/regex-script-editor.js",
     "dependencies": [
       "b",
       "wt",
@@ -296,7 +296,7 @@
   {
     "symbol": "kl",
     "name": "TavernScriptList",
-    "path": "src/features/catalog/ui/character-sections.js",
+    "path": "src/features/characters/ui/tavern-script-editor.js",
     "dependencies": [
       "b",
       "wl",
@@ -314,7 +314,7 @@
   {
     "symbol": "Sl",
     "name": "CharacterExtensionsSection",
-    "path": "src/features/catalog/ui/character-sections.js",
+    "path": "src/features/characters/ui/character-extension-sections.js",
     "dependencies": [
       "_l",
       "b",
@@ -335,7 +335,7 @@
   {
     "symbol": "gl",
     "name": "CharacterDialogueSection",
-    "path": "src/features/catalog/ui/character-sections.js",
+    "path": "src/features/characters/ui/character-greeting-editor.js",
     "dependencies": [
       "Cs",
       "Ks",
@@ -364,7 +364,7 @@
   {
     "symbol": "Ll",
     "name": "CharacterDetailSections",
-    "path": "src/features/catalog/ui/character-sections.js",
+    "path": "src/features/characters/ui/character-extension-sections.js",
     "dependencies": [
       "Ml",
       "Sl",
@@ -390,7 +390,7 @@
   {
     "symbol": "tu",
     "name": "PresetBasicSection",
-    "path": "src/features/presets/ui/preset-sections.js",
+    "path": "src/features/presets/ui/preset-generation-sections.js",
     "dependencies": [
       "dn",
       "hn",
@@ -409,7 +409,7 @@
   {
     "symbol": "ru",
     "name": "SamplingSection",
-    "path": "src/features/presets/ui/preset-sections.js",
+    "path": "src/features/presets/ui/preset-generation-sections.js",
     "dependencies": [
       "Cl",
       "ln",
@@ -428,7 +428,7 @@
   {
     "symbol": "iu",
     "name": "GenerationControlSection",
-    "path": "src/features/presets/ui/preset-sections.js",
+    "path": "src/features/presets/ui/preset-generation-sections.js",
     "dependencies": [
       "au",
       "dn",
@@ -448,7 +448,7 @@
   {
     "symbol": "ou",
     "name": "InstructSection",
-    "path": "src/features/presets/ui/preset-sections.js",
+    "path": "src/features/presets/ui/preset-generation-sections.js",
     "dependencies": [
       "dn",
       "hn",
@@ -467,7 +467,7 @@
   {
     "symbol": "su",
     "name": "ExperimentalSection",
-    "path": "src/features/presets/ui/preset-sections.js",
+    "path": "src/features/presets/ui/preset-generation-sections.js",
     "dependencies": [
       "b",
       "hn",
@@ -488,7 +488,7 @@
   {
     "symbol": "lu",
     "name": "PresetConfiguration",
-    "path": "src/features/presets/ui/preset-sections.js",
+    "path": "src/features/presets/ui/preset-generation-sections.js",
     "dependencies": [
       "b",
       "iu",
@@ -510,7 +510,7 @@
   {
     "symbol": "pu",
     "name": "PromptListItem",
-    "path": "src/features/presets/ui/preset-sections.js",
+    "path": "src/features/presets/ui/prompt-manager.js",
     "dependencies": [
       "wt",
       "yl"
@@ -527,7 +527,7 @@
   {
     "symbol": "mu",
     "name": "PromptPreview",
-    "path": "src/features/presets/ui/preset-sections.js",
+    "path": "src/features/presets/ui/prompt-preview.js",
     "dependencies": [
       "b",
       "un",
@@ -545,7 +545,7 @@
   {
     "symbol": "hu",
     "name": "PromptEditDialog",
-    "path": "src/features/presets/ui/preset-sections.js",
+    "path": "src/features/presets/ui/prompt-editor.js",
     "dependencies": [
       "Xl",
       "b",
@@ -570,7 +570,7 @@
   {
     "symbol": "wu",
     "name": "PresetNameDialog",
-    "path": "src/features/presets/ui/preset-sections.js",
+    "path": "src/features/presets/ui/prompt-editor.js",
     "dependencies": [
       "Xl",
       "b",
@@ -588,7 +588,7 @@
   {
     "symbol": "du",
     "name": "MacroReference",
-    "path": "src/features/presets/ui/preset-sections.js",
+    "path": "src/features/presets/ui/prompt-preview.js",
     "dependencies": [
       "b",
       "cu",
@@ -607,7 +607,7 @@
   {
     "symbol": "gu",
     "name": "PromptManager",
-    "path": "src/features/presets/ui/preset-sections.js",
+    "path": "src/features/presets/ui/prompt-manager.js",
     "dependencies": [
       "Cc",
       "b",
@@ -629,7 +629,7 @@
   {
     "symbol": "Su",
     "name": "LorebookListItem",
-    "path": "src/features/world-info/ui/lorebook-controls.js",
+    "path": "src/features/world-info/ui/lorebook-library.js",
     "dependencies": [
       "wt"
     ],
@@ -645,7 +645,7 @@
   {
     "symbol": "Cu",
     "name": "LorebookUploadControl",
-    "path": "src/features/world-info/ui/lorebook-controls.js",
+    "path": "src/features/world-info/ui/lorebook-library.js",
     "dependencies": [
       "mn",
       "wt"
@@ -662,7 +662,7 @@
   {
     "symbol": "Sc",
     "name": "EntryPositionControl",
-    "path": "src/features/world-info/ui/lorebook-controls.js",
+    "path": "src/features/world-info/ui/lorebook-entry-editor.js",
     "dependencies": [
       "wt",
       "xu"
@@ -679,7 +679,7 @@
   {
     "symbol": "Nc",
     "name": "LorebookEntryCard",
-    "path": "src/features/world-info/ui/lorebook-controls.js",
+    "path": "src/features/world-info/ui/lorebook-entry-item.js",
     "dependencies": [
       "wt",
       "yl"
@@ -696,7 +696,7 @@
   {
     "symbol": "Af",
     "name": "ActiveWorldInfoEntry",
-    "path": "src/features/world-info/ui/lorebook-controls.js",
+    "path": "src/features/world-info/ui/dynamic-world-info.js",
     "dependencies": [
       "Sc",
       "wt",
@@ -714,7 +714,7 @@
   {
     "symbol": "Tc",
     "name": "LorebookEntryList",
-    "path": "src/features/world-info/ui/lorebook-controls.js",
+    "path": "src/features/world-info/ui/lorebook-entry-list.js",
     "dependencies": [
       "Cc",
       "Ec",
@@ -734,7 +734,7 @@
   {
     "symbol": "Ec",
     "name": "LorebookEntryDialog",
-    "path": "src/features/world-info/ui/lorebook-controls.js",
+    "path": "src/features/world-info/ui/lorebook-entry-editor.js",
     "dependencies": [
       "Sc",
       "Xl",
@@ -760,7 +760,7 @@
   {
     "symbol": "Yc",
     "name": "AttachLorebookDialog",
-    "path": "src/features/world-info/ui/lorebook-controls.js",
+    "path": "src/features/world-info/ui/attach-lorebook-dialog.js",
     "dependencies": [
       "Xl",
       "b",
@@ -778,7 +778,7 @@
   {
     "symbol": "Eu",
     "name": "LorebookLibrary",
-    "path": "src/features/world-info/ui/lorebook-controls.js",
+    "path": "src/features/world-info/ui/lorebook-library.js",
     "dependencies": [
       "Cu",
       "Ql",

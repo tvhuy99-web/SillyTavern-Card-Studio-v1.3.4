@@ -37,7 +37,7 @@ const nav=components.St({items:[{target:'one',label:'One'}]});const click=nav.pr
 click({currentTarget:{closest:()=>null}});assert.equal(scrolled,undefined);
 click({currentTarget:{closest:()=>({querySelectorAll:()=>[section]})}});assert.equal(section.open,true);assert.deepEqual(scrolled,{behavior:'smooth',block:'start'});
 let opened=0;components.kf({onOpen:()=>opened++}).props.children[0].props.onClick();assert.equal(opened,1);
-const bundle=await readFile(new URL('../assets/app-production-v1.3.6.js',import.meta.url),'utf8');
+const bundle=(await Promise.all(['../assets/app-production-v1.3.6.js','../assets/recovered/app/composition/persistence-composition.js','../assets/recovered/app/composition/provider-composition.js','../assets/recovered/app/composition/store-composition.js','../assets/recovered/app/composition/conversation-composition.js','../assets/recovered/app/composition/runtime-composition.js','../assets/recovered/app/composition/ui-composition.js'].map(p=>readFile(new URL(p,import.meta.url),'utf8')))).join('\n');
 for(const binding of ['TableCellInput=__stsCreateTableCellInput(jsxRuntime)','ModelSelect=__stsCreateModelSelect(jsxRuntime,React)','Tooltip=__stsCreateTooltip(jsxRuntime)','CollapsibleSection=__stsCreateCollapsibleSection(jsxRuntime)','SectionNavigator=__stsCreateSectionNavigator(jsxRuntime)','GenerateEntryButton=__stsCreateGenerateEntryButton(jsxRuntime)']) {
   assert.equal(bundle.split(binding).length-1,1);assert.ok(bundle.indexOf('jsxRuntime')<bundle.indexOf(binding));
 }

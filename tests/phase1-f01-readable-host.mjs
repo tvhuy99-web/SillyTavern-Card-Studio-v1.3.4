@@ -2,9 +2,10 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { renderHost } from '../build/asset-manifest.mjs';
 
-const source = readFileSync(new URL('../src/app/host.js', import.meta.url), 'utf8');
+const hostRaw = readFileSync(new URL('../src/app/host.js', import.meta.url), 'utf8');
 const portable = readFileSync(new URL('../assets/app-production-v1.3.6.js', import.meta.url), 'utf8');
-assert.equal(portable, renderHost(source), 'portable host must be generated from canonical source');
+assert.equal(portable, renderHost(hostRaw), 'portable host must be generated from canonical source');
+const source = ['src/app/host.js','src/app/composition/persistence-composition.js','src/app/composition/provider-composition.js','src/app/composition/store-composition.js','src/app/composition/conversation-composition.js','src/app/composition/runtime-composition.js','src/app/composition/ui-composition.js'].map(f => readFileSync(new URL('../' + f, import.meta.url), 'utf8')).join('\n');
 assert.doesNotMatch(source, /^(?:var|function) ([$\w]{1,2})\s*(?:=\s*__stsCreate[A-Z]\w+\(|\(\.\.\.args\)\{return __stsCreate[A-Z]\w+\()/m);
 for (const [name, factory] of [
   ['Icon', 'Icon'], ['ConnectionSettingsScreen', 'ConnectionSettingsScreen'],

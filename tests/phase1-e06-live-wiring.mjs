@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { createSessionStore } from '../src/app/state/session-store.js';
 import { useSessionPersistence } from '../src/features/chat/hooks/use-session-persistence.js';
-import { createBackupSettings } from '../src/ui/settings/settings-screens.js';
+import { createBackupSettings } from '../src/ui/settings/sections/backup-settings.js';
 import { useConnectionSettings } from '../src/ui/settings/settings-controller.js';
 import { createMemoryStorage } from '../src/providers/proxy/persistence.js';
 
@@ -447,10 +447,10 @@ import { createMemoryStorage } from '../src/providers/proxy/persistence.js';
 
 // 5. host.js: initializes and injects all 3 E06 services + 3 missing backup keys in Ns.
 {
-  const hostSrc = readFileSync(new URL('../src/app/host.js', import.meta.url), 'utf8');
-  assert.ok(hostSrc.includes("createCrossTabSync as __stsCreateCrossTabSync } from './persistence/cross-tab-sync.js'"));
-  assert.ok(hostSrc.includes("createBackupRestoreService as __stsCreateBackupRestoreService } from './persistence/backup-restore-service.js'"));
-  assert.ok(hostSrc.includes("createSettingsRepository as __stsCreateSettingsRepository } from './state/settings-repository.js'"));
+  const hostSrc = ['src/app/host.js','src/app/composition/persistence-composition.js','src/app/composition/provider-composition.js','src/app/composition/store-composition.js','src/app/composition/conversation-composition.js','src/app/composition/runtime-composition.js','src/app/composition/ui-composition.js'].map(f => readFileSync(new URL('../' + f, import.meta.url), 'utf8')).join('\n');
+  assert.ok(hostSrc.includes("createCrossTabSync as __stsCreateCrossTabSync } from '../persistence/cross-tab-sync.js'"));
+  assert.ok(hostSrc.includes("createBackupRestoreService as __stsCreateBackupRestoreService } from '../persistence/backup-restore-service.js'"));
+  assert.ok(hostSrc.includes("createSettingsRepository as __stsCreateSettingsRepository } from '../state/settings-repository.js'"));
   assert.ok(hostSrc.includes('__stsCrossTabSync=__stsCreateCrossTabSync()'));
   assert.ok(hostSrc.includes('__stsSettingsRepository=__stsCreateSettingsRepository('));
   assert.ok(hostSrc.includes('__stsBackupRestoreService=__stsCreateBackupRestoreService('));
@@ -465,7 +465,7 @@ import { createMemoryStorage } from '../src/providers/proxy/persistence.js';
 
 // 6. settings-screens.js: must NOT contain inline restoreBackupSettings( fallback.
 {
-  const settingsScreensSrc = readFileSync(new URL('../src/ui/settings/settings-screens.js', import.meta.url), 'utf8');
+  const settingsScreensSrc = readFileSync(new URL('../src/ui/settings/sections/backup-settings.js', import.meta.url), 'utf8');
   assert.equal(settingsScreensSrc.includes('restoreBackupSettings('), false, 'legacy inline restoreBackupSettings fallback must be removed');
   assert.ok(/(?:__stsBackupRestoreService|backupRestoreService)\.restore\(rawBackup\)/.test(settingsScreensSrc));
   assert.ok(/(?:__stsBackupRestoreService|backupRestoreService)\?\.getPendingRecovery\?\.\(\)/.test(settingsScreensSrc));
