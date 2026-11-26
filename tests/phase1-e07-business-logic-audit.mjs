@@ -64,7 +64,7 @@ for (const relativePath of RECOVERED_FILES) {
 // ============================================================================
 {
   let mode = 'official-local';
-  const { processRegex } = createRegexProcessing({ Co: () => mode });
+  const { processRegex } = createRegexProcessing({ readCardRuntimeEngineMode: () => mode });
 
   const official = processRegex(
     'Hello [TAG:Aria]!\n```html\n<div class="hud">HP 90</div>\n```',
