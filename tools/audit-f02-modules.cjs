@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// F02 Module Size, Ownership, Factory Parity & F01-Name Regression Auditor (zero-dependency).
+// F02 Module Size, Ownership and AST Factory Parity Auditor.
 const fs = require('node:fs');
 const path = require('node:path');
 
@@ -48,61 +48,7 @@ function countLines(text) {
   return text.split('\n').length;
 }
 
-function extractFactories(text) {
-  const factories = new Map();
-  const re = /export\s+(?:async\s+)?function\s+(create[A-Z]\w+|__stsCreate\w+)\s*\(/g;
-  let m;
-  while ((m = re.exec(text)) !== null) {
-    const name = m[1];
-    const startIdx = m.index;
-    const braceStart = text.indexOf('{', re.lastIndex);
-    if (braceStart < 0) continue;
-    let depth = 0;
-    let inStr = null;
-    let esc = false;
-    let inLineComment = false;
-    let inBlockComment = false;
-    let endIdx = -1;
-    for (let i = braceStart; i < text.length; i++) {
-      const ch = text[i];
-      const next = text[i + 1];
-      if (inLineComment) {
-        if (ch === '\n') inLineComment = false;
-        continue;
-      }
-      if (inBlockComment) {
-        if (ch === '*' && next === '/') { inBlockComment = false; i++; }
-        continue;
-      }
-      if (inStr) {
-        if (esc) { esc = false; continue; }
-        if (ch === '\\') { esc = true; continue; }
-        if (ch === inStr) inStr = null;
-        continue;
-      }
-      if (ch === '/' && next === '/') { inLineComment = true; i++; continue; }
-      if (ch === '/' && next === '*') { inBlockComment = true; i++; continue; }
-      if (ch === '"' || ch === "'" || ch === '`') { inStr = ch; continue; }
-      if (ch === '{') depth++;
-      else if (ch === '}') {
-        depth--;
-        if (depth === 0) { endIdx = i + 1; break; }
-      }
-    }
-    if (endIdx > 0) {
-      factories.set(name, text.slice(startIdx, endIdx));
-    }
-  }
-  return factories;
-}
-
-function normalizeBody(code) {
-  return code
-    .replace(/\/\*[\s\S]*?\*\//g, '')
-    .replace(/(^|[^:\\])\/\/[^\n]*/g, '$1')
-    .replace(/\s+/g, ' ')
-    .trim();
-}
+const { extractFactories, checkFactoryParity } = require('./audit-f02-factory-parity.cjs');
 
 function auditModules(baseDir = ROOT) {
   const jsFiles = walk(path.join(baseDir, 'src'), ['.js']);
@@ -118,7 +64,7 @@ function auditModules(baseDir = ROOT) {
     const text = fs.readFileSync(fp, 'utf8');
     const lines = countLines(text);
     const kb = +(fs.statSync(fp).size / 1024).toFixed(1);
-    const factories = r.endsWith('.js') ? extractFactories(text).size : 0;
+    const factories = r.endsWith('.js') ? extractFactories(text, r).size : 0;
     totalFactories += factories;
 
     if (lines < 300) buckets.lt300++;
@@ -146,48 +92,6 @@ function auditModules(baseDir = ROOT) {
     unexplainedLargeCount: unexplainedLarge.length,
     unexplainedLarge,
     over500,
-  };
-}
-
-function checkFactoryParity(baselineDir, currentDir) {
-  const baseMap = new Map();
-  for (const fp of walk(path.join(baselineDir, 'src'), ['.js'])) {
-    const r = rel(fp, baselineDir);
-    const facs = extractFactories(fs.readFileSync(fp, 'utf8'));
-    for (const [name, body] of facs) {
-      baseMap.set(name, { file: r, body, norm: normalizeBody(body) });
-    }
-  }
-  const curMap = new Map();
-  for (const fp of walk(path.join(currentDir, 'src'), ['.js'])) {
-    const r = rel(fp, currentDir);
-    const facs = extractFactories(fs.readFileSync(fp, 'utf8'));
-    for (const [name, body] of facs) {
-      curMap.set(name, { file: r, body, norm: normalizeBody(body) });
-    }
-  }
-  const missing = [];
-  const added = [];
-  const moved = [];
-  const modified = [];
-  for (const [name, b] of baseMap) {
-    const c = curMap.get(name);
-    if (!c) { missing.push({ name, baselineFile: b.file }); continue; }
-    if (b.file !== c.file) moved.push({ name, from: b.file, to: c.file });
-    if (b.norm !== c.norm) modified.push({ name, from: b.file, to: c.file });
-  }
-  for (const [name, c] of curMap) {
-    if (!baseMap.has(name)) added.push({ name, currentFile: c.file });
-  }
-  return {
-    ok: missing.length === 0,
-    baselineFactories: baseMap.size,
-    currentFactories: curMap.size,
-    missing,
-    added,
-    movedCount: moved.length,
-    modifiedCount: modified.length,
-    modified,
   };
 }
 
