@@ -38,8 +38,8 @@ export function createLorebookListItem(getDependencies) {
       className: "bg-slate-800 border border-slate-700 rounded-xl overflow-hidden hover:border-sky-500/50 hover:shadow-lg  flex flex-col h-full group",
       children: [(0, jsxRuntime.jsx)("div", {
         onClick: onEdit,
-        onKeyDown: e => {
-          ("Enter" === e.key || " " === e.key) && (e.preventDefault(), onEdit());
+        onKeyDown: event => {
+          ("Enter" === event.key || " " === event.key) && (event.preventDefault(), onEdit());
         },
         role: "button",
         tabIndex: 0,
@@ -54,8 +54,8 @@ export function createLorebookListItem(getDependencies) {
       }), (0, jsxRuntime.jsxs)("div", {
         className: "grid grid-cols-2 border-t border-slate-700 bg-slate-900/30",
         children: [(0, jsxRuntime.jsxs)("button", {
-          onClick: e => {
-            e.stopPropagation();
+          onClick: event => {
+            event.stopPropagation();
             onDelete();
           },
           className: "p-3 text-sm font-bold text-red-400/80 hover:text-red-300 hover:bg-red-900/20  border-r border-slate-700 flex items-center justify-center gap-2",
@@ -73,8 +73,8 @@ export function createLorebookListItem(getDependencies) {
             })
           }), "Xóa"]
         }), (0, jsxRuntime.jsxs)("button", {
-          onClick: e => {
-            e.stopPropagation();
+          onClick: event => {
+            event.stopPropagation();
             onEdit();
           },
           className: "p-3 text-sm font-bold text-sky-400/80 hover:text-sky-300 hover:bg-sky-900/20  flex items-center justify-center gap-2",
@@ -104,8 +104,8 @@ export function createLorebookUploadControl(getDependencies) {
     } = resolveLorebookControlDeps(getDependencies);
     return (0, jsxRuntime.jsxs)("div", {
       onClick: isLoading ? undefined : onUpload,
-      onKeyDown: n => {
-        !isLoading && ("Enter" === n.key || " " === n.key) && (n.preventDefault(), onUpload());
+      onKeyDown: event => {
+        !isLoading && ("Enter" === event.key || " " === event.key) && (event.preventDefault(), onUpload());
       },
       role: "button",
       tabIndex: isLoading ? -1 : 0,
@@ -150,7 +150,7 @@ export function createEntryPositionControl(getDependencies) {
       jsxRuntime,
       handleRadioKeyDown
     } = resolveLorebookControlDeps(getDependencies);
-    let getOptionClassName = (e, t) => "flex-1 px-2 py-1 text-xs font-bold  flex items-center justify-center gap-1 " + (e ? `${t} text-white shadow-sm` : "text-slate-400 hover:text-slate-200 hover:bg-slate-600/50");
+    let getOptionClassName = (isSelected, activeClass) => "flex-1 px-2 py-1 text-xs font-bold  flex items-center justify-center gap-1 " + (isSelected ? `${activeClass} text-white shadow-sm` : "text-slate-400 hover:text-slate-200 hover:bg-slate-600/50");
     return (0, jsxRuntime.jsxs)("div", {
       className: `flex flex-col gap-1 ${className}`,
       children: [(0, jsxRuntime.jsx)("label", {
@@ -212,14 +212,14 @@ export function createLorebookEntryCard(getDependencies) {
       "aria-labelledby": headingId,
       className: `group flex items-start gap-3 p-4 border rounded-lg focus:ring-2 focus:ring-sky-500 focus:outline-none \n                ${isDeleted ? "bg-red-900/20 border-red-500/50 opacity-75 hover:opacity-100 hover:bg-red-900/30" : "bg-slate-800 border-slate-700 hover:bg-slate-750 hover:border-sky-500/50 " + (propEntry.enabled ? "" : "opacity-60")}\n            `,
       children: [(0, jsxRuntime.jsx)("div", {
-        onClick: e => e.stopPropagation(),
+        onClick: event => event.stopPropagation(),
         className: "flex-shrink-0 self-start mt-1",
         children: (0, jsxRuntime.jsx)(ToggleSwitch, {
           ariaLabel: undefined,
           checked: false !== propEntry.enabled,
-          onChange: r => onUpdate(index, {
+          onChange: enabled => onUpdate(index, {
             ...propEntry,
-            enabled: r
+            enabled: enabled
           }),
           disabled: isDeleted,
           clean: true
@@ -263,7 +263,7 @@ export function createLorebookEntryCard(getDependencies) {
           })]
         }), (0, jsxRuntime.jsx)("div", {
           className: "text-xs font-mono p-3 rounded border whitespace-pre-wrap break-words select-text cursor-text  " + (isDeleted ? "bg-red-950/30 text-red-200/70 border-red-900/30" : "bg-slate-900/50 text-slate-300 border-slate-700/50 hover:bg-slate-900/70"),
-          onClick: e => e.stopPropagation(),
+          onClick: event => event.stopPropagation(),
           children: propEntry.content || (0, jsxRuntime.jsx)("span", {
             className: "text-slate-600 italic",
             children: "(Trống)"
@@ -272,8 +272,8 @@ export function createLorebookEntryCard(getDependencies) {
       }), (0, jsxRuntime.jsxs)("div", {
         className: "flex flex-col gap-3 flex-shrink-0 items-end self-start",
         children: [(0, jsxRuntime.jsx)("button", {
-          onClick: r => {
-            r.stopPropagation();
+          onClick: event => {
+            event.stopPropagation();
             onUpdate(index, {
               ...propEntry,
               constant: !propEntry.constant
@@ -285,8 +285,8 @@ export function createLorebookEntryCard(getDependencies) {
         }), (0, jsxRuntime.jsxs)("div", {
           className: "flex items-center gap-1 opacity-80 group-hover:opacity-100 ",
           children: [(0, jsxRuntime.jsx)("button", {
-            onClick: e => {
-              e.stopPropagation();
+            onClick: event => {
+              event.stopPropagation();
               onRemove(index);
             },
             className: "p-1.5 rounded-md  " + (isDeleted ? "text-green-400 hover:bg-green-900/30" : "text-slate-500 hover:text-red-400 hover:bg-slate-700"),
@@ -374,12 +374,12 @@ export function createActiveWorldInfoEntry(getDependencies) {
               label: "",
               ariaLabel: `Bật mục ${entry.comment || "Mục không có tên"}`,
               checked: isEnabled,
-              onChange: t => onToggle(entry.uid, t),
+              onChange: enabled => onToggle(entry.uid, enabled),
               clean: true
             })]
           }), (0, jsxRuntime.jsx)(EntryPositionControl, {
             value: placement,
-            onChange: t => onPlacementChange(entry.uid, t),
+            onChange: position => onPlacementChange(entry.uid, position),
             className: "min-w-[150px]"
           })]
         }), (0, jsxRuntime.jsxs)("button", {
@@ -413,22 +413,22 @@ export function createLorebookEntryList(getDependencies) {
     let [searchQuery, setSearchQuery] = (0, react.useState)("");
     let [filterMode, setFilterMode] = (0, react.useState)("all");
     let [editingIndex, setEditingIndex] = (0, react.useState)(null);
-    let handleUpdateEntry = (0, react.useCallback)((n, r) => {
-      let a = [...entries];
-      r.uid ||= `entry_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
-      a[n] = r;
-      onUpdate(a);
+    let handleUpdateEntry = (0, react.useCallback)((index, updatedEntry) => {
+      let nextEntries = [...entries];
+      updatedEntry.uid ||= `entry_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
+      nextEntries[index] = updatedEntry;
+      onUpdate(nextEntries);
     }, [entries, onUpdate]);
-    let handleToggleDeleteEntry = (0, react.useCallback)(n => {
-      let r = [...entries];
-      r[n] = {
-        ...r[n],
-        __deleted: !r[n].__deleted
+    let handleToggleDeleteEntry = (0, react.useCallback)(index => {
+      let nextEntries = [...entries];
+      nextEntries[index] = {
+        ...nextEntries[index],
+        __deleted: !nextEntries[index].__deleted
       };
-      onUpdate(r);
+      onUpdate(nextEntries);
     }, [entries, onUpdate]);
     let handleAddEntry = (0, react.useCallback)(() => {
-      let n = {
+      let newEntry = {
         keys: [],
         content: "",
         comment: "Mục mới",
@@ -440,37 +440,37 @@ export function createLorebookEntryList(getDependencies) {
         position: "before_char",
         uid: `entry_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`
       };
-      onUpdate([...entries, n]);
+      onUpdate([...entries, newEntry]);
       setEditingIndex(entries.length);
     }, [entries, onUpdate]);
-    let filteredEntries = entries.map((e, t) => ({
-      entry: e,
-      index: t
+    let filteredEntries = entries.map((entry, index) => ({
+      entry: entry,
+      index: index
     })).filter(({
-      entry: e
+      entry: entry
     }) => {
-      let t = true;
+      let matchesSearch = true;
       if (searchQuery) {
-        let n = searchQuery.toLowerCase();
-        t = (e.comment || "").toLowerCase().includes(n) || (e.keys || []).some(e => e.toLowerCase().includes(n)) || (e.content || "").toLowerCase().includes(n);
+        let query = searchQuery.toLowerCase();
+        matchesSearch = (entry.comment || "").toLowerCase().includes(query) || (entry.keys || []).some(key => key.toLowerCase().includes(query)) || (entry.content || "").toLowerCase().includes(query);
       }
-      let n = true;
+      let matchesFilter = true;
       if ("enabled" === filterMode) {
-        n = false !== e.enabled;
+        matchesFilter = false !== entry.enabled;
       } else {
         if ("disabled" === filterMode) {
-          n = false === e.enabled;
+          matchesFilter = false === entry.enabled;
         } else {
-          "constant" === filterMode && (n = true === e.constant);
+          "constant" === filterMode && (matchesFilter = true === entry.constant);
         }
       }
-      return t && n;
+      return matchesSearch && matchesFilter;
     });
     let entryCounts = {
       all: entries.length,
-      enabled: entries.filter(e => false !== e.enabled).length,
-      disabled: entries.filter(e => false === e.enabled).length,
-      constant: entries.filter(e => true === e.constant).length
+      enabled: entries.filter(entry => false !== entry.enabled).length,
+      disabled: entries.filter(entry => false === entry.enabled).length,
+      constant: entries.filter(entry => true === entry.constant).length
     };
     return (0, jsxRuntime.jsxs)("div", {
       className: `flex flex-col gap-4 ${className}`,
@@ -499,7 +499,7 @@ export function createLorebookEntryList(getDependencies) {
               type: "text",
               "aria-label": "Tìm kiếm mục sổ tay",
               value: searchQuery,
-              onChange: e => setSearchQuery(e.target.value),
+              onChange: event => setSearchQuery(event.target.value),
               placeholder: "Tìm kiếm...",
               className: "pl-9 w-full bg-slate-700 border border-slate-600 rounded-md py-1.5 text-sm text-slate-200 focus:ring-2 focus:ring-sky-500 focus:border-sky-500 transition"
             })]
@@ -543,16 +543,16 @@ export function createLorebookEntryList(getDependencies) {
             children: "Không tìm thấy mục nào."
           })
         }) : filteredEntries.map(({
-          entry: e,
-          index: t
+          entry: entry,
+          index: index
         }) => (0, jsxRuntime.jsx)(LorebookEntryCard, {
-          entry: e,
-          index: t,
+          entry: entry,
+          index: index,
           onUpdate: handleUpdateEntry,
           onRemove: handleToggleDeleteEntry,
-          onEdit: () => setEditingIndex(t),
-          syncStatus: statusMap && e.uid ? statusMap[e.uid] : undefined
-        }, e.uid || t))
+          onEdit: () => setEditingIndex(index),
+          syncStatus: statusMap && entry.uid ? statusMap[entry.uid] : undefined
+        }, entry.uid || index))
       }), (0, jsxRuntime.jsxs)("button", {
         onClick: handleAddEntry,
         className: "w-full bg-slate-700 hover:bg-slate-600 text-sky-400 font-semibold py-3 px-4 rounded-lg   flex items-center justify-center gap-2 border border-slate-600 hover:border-sky-500/50 group shrink-0",
@@ -574,8 +574,8 @@ export function createLorebookEntryList(getDependencies) {
         isOpen: null !== editingIndex,
         entry: null === editingIndex ? null : entries[editingIndex],
         onClose: () => setEditingIndex(null),
-        onSave: e => {
-          null !== editingIndex && handleUpdateEntry(editingIndex, e);
+        onSave: updatedEntry => {
+          null !== editingIndex && handleUpdateEntry(editingIndex, updatedEntry);
         }
       })]
     });
@@ -603,10 +603,10 @@ export function createLorebookEntryDialog(getDependencies) {
     if ((0, react.useEffect)(() => {
       setDraftEntry(entry ? JSON.parse(JSON.stringify(entry)) : null);
     }, [entry, isOpen]), useDialogFocus(isOpen, onClose, dialogRef, closeButtonRef), !isOpen || !draftEntry) return null;
-    let updateDraftField = (e, t) => {
-      setDraftEntry(n => n ? {
-        ...n,
-        [e]: t
+    let updateDraftField = (field, value) => {
+      setDraftEntry(previousEntry => previousEntry ? {
+        ...previousEntry,
+        [field]: value
       } : null);
     };
     return (0, jsxRuntime.jsx)("div", {
@@ -618,7 +618,7 @@ export function createLorebookEntryDialog(getDependencies) {
       children: (0, jsxRuntime.jsxs)("div", {
         ref: dialogRef,
         className: "bg-slate-800 border border-slate-600 rounded-xl shadow-2xl w-full max-w-4xl max-h-[90vh] flex flex-col ",
-        onClick: e => e.stopPropagation(),
+        onClick: event => event.stopPropagation(),
         children: [(0, jsxRuntime.jsxs)("header", {
           className: "p-4 border-b border-slate-700 flex justify-between items-center bg-slate-900/50 rounded-t-xl",
           children: [(0, jsxRuntime.jsx)("h3", {
@@ -652,12 +652,12 @@ export function createLorebookEntryDialog(getDependencies) {
             children: [(0, jsxRuntime.jsx)(TextInput, {
               label: "Tiêu đề (Bình luận)",
               value: draftEntry.comment || "",
-              onChange: e => updateDraftField("comment", e.target.value),
+              onChange: event => updateDraftField("comment", event.target.value),
               placeholder: "Đặt tên cho mục này..."
             }), (0, jsxRuntime.jsx)(TextInput, {
               label: "Từ khóa chính",
               value: (draftEntry.keys || []).join(", "),
-              onChange: e => updateDraftField("keys", e.target.value.split(",").map(e => e.trim()).filter(Boolean)),
+              onChange: event => updateDraftField("keys", event.target.value.split(",").map(key => key.trim()).filter(Boolean)),
               placeholder: "Ví dụ: gươm, kiếm"
             })]
           }), (0, jsxRuntime.jsxs)("div", {
@@ -665,7 +665,7 @@ export function createLorebookEntryDialog(getDependencies) {
             children: [(0, jsxRuntime.jsx)(TextInput, {
               label: "Từ khóa phụ",
               value: (draftEntry.secondary_keys || []).join(", "),
-              onChange: e => updateDraftField("secondary_keys", e.target.value.split(",").map(e => e.trim()).filter(Boolean)),
+              onChange: event => updateDraftField("secondary_keys", event.target.value.split(",").map(key => key.trim()).filter(Boolean)),
               placeholder: "Ví dụ: cổ đại"
             }), (0, jsxRuntime.jsxs)("div", {
               className: "grid grid-cols-2 gap-4",
@@ -673,24 +673,24 @@ export function createLorebookEntryDialog(getDependencies) {
                 label: "Thứ tự chèn",
                 type: "number",
                 value: String(draftEntry.insertion_order ?? 100),
-                onChange: e => updateDraftField("insertion_order", parseInt(e.target.value))
+                onChange: event => updateDraftField("insertion_order", parseInt(event.target.value))
               }), (0, jsxRuntime.jsx)(EntryPositionControl, {
-                value: (e => {
-                  let t = String(e || "");
-                  return t.includes("before") ? "before" : t.includes("after") ? "after" : undefined;
+                value: (position => {
+                  let positionText = String(position || "");
+                  return positionText.includes("before") ? "before" : positionText.includes("after") ? "after" : undefined;
                 })(draftEntry.position),
-                onChange: e => {
-                  let t = "";
-                  "before" === e && (t = "before_char");
-                  "after" === e && (t = "after_char");
-                  updateDraftField("position", t);
+                onChange: selection => {
+                  let position = "";
+                  "before" === selection && (position = "before_char");
+                  "after" === selection && (position = "after_char");
+                  updateDraftField("position", position);
                 }
               })]
             })]
           }), (0, jsxRuntime.jsx)(TextArea, {
             label: "Nội dung",
             value: draftEntry.content || "",
-            onChange: e => updateDraftField("content", e.target.value),
+            onChange: event => updateDraftField("content", event.target.value),
             rows: 8
           }), (0, jsxRuntime.jsxs)("div", {
             className: "bg-slate-700/30 p-4 rounded-lg border border-slate-700 grid grid-cols-2 md:grid-cols-4 gap-4",
@@ -702,12 +702,12 @@ export function createLorebookEntryDialog(getDependencies) {
               }), (0, jsxRuntime.jsx)(ToggleSwitch, {
                 label: "Đã bật",
                 checked: false !== draftEntry.enabled,
-                onChange: e => updateDraftField("enabled", e),
+                onChange: enabled => updateDraftField("enabled", enabled),
                 clean: true
               }), (0, jsxRuntime.jsx)(ToggleSwitch, {
                 label: "Hằng số",
                 checked: !!draftEntry.constant,
-                onChange: e => updateDraftField("constant", e),
+                onChange: enabled => updateDraftField("constant", enabled),
                 clean: true,
                 tooltip: "Luôn luôn gửi đi, bỏ qua kiểm tra từ khóa."
               })]
@@ -719,13 +719,13 @@ export function createLorebookEntryDialog(getDependencies) {
               }), (0, jsxRuntime.jsx)(ToggleSwitch, {
                 label: "Chọn lọc",
                 checked: !!draftEntry.selective,
-                onChange: e => updateDraftField("selective", e),
+                onChange: enabled => updateDraftField("selective", enabled),
                 clean: true,
                 tooltip: "Chỉ kích hoạt khi từ khóa xuất hiện."
               }), (0, jsxRuntime.jsx)(ToggleSwitch, {
                 label: "Dùng Regex",
                 checked: !!draftEntry.use_regex,
-                onChange: e => updateDraftField("use_regex", e),
+                onChange: enabled => updateDraftField("use_regex", enabled),
                 clean: true,
                 tooltip: "Xử lý từ khóa như biểu thức chính quy."
               })]
@@ -735,12 +735,12 @@ export function createLorebookEntryDialog(getDependencies) {
                 label: "Sticky (Duy trì)",
                 type: "number",
                 value: String(draftEntry.sticky || 0),
-                onChange: e => updateDraftField("sticky", parseInt(e.target.value))
+                onChange: event => updateDraftField("sticky", parseInt(event.target.value))
               }), (0, jsxRuntime.jsx)(TextInput, {
                 label: "Cooldown (Hồi chiêu)",
                 type: "number",
                 value: String(draftEntry.cooldown || 0),
-                onChange: e => updateDraftField("cooldown", parseInt(e.target.value))
+                onChange: event => updateDraftField("cooldown", parseInt(event.target.value))
               })]
             })]
           })]
@@ -776,7 +776,7 @@ export function createAttachLorebookDialog(getDependencies) {
       jsxRuntime
     } = resolveLorebookControlDeps(getDependencies);
     let [selectedLorebookName, setSelectedLorebookName] = (0, react.useState)("");
-    let selectedLorebook = lorebooks.find(e => e.name === selectedLorebookName);
+    let selectedLorebook = lorebooks.find(lorebook => lorebook.name === selectedLorebookName);
     let dialogRef = (0, react.useRef)(null);
     let closeButtonRef = (0, react.useRef)(null);
     useDialogFocus(isOpen, onClose, dialogRef, closeButtonRef);
@@ -789,7 +789,7 @@ export function createAttachLorebookDialog(getDependencies) {
       children: (0, jsxRuntime.jsxs)("div", {
         ref: dialogRef,
         className: "bg-slate-800 border border-slate-600 rounded-xl shadow-2xl w-full max-w-md p-6",
-        onClick: e => e.stopPropagation(),
+        onClick: event => event.stopPropagation(),
         children: [(0, jsxRuntime.jsx)("h3", {
           id: "attach-lorebook-title",
           className: "text-xl font-bold text-white mb-4",
@@ -805,15 +805,15 @@ export function createAttachLorebookDialog(getDependencies) {
               id: "attach-lorebook-select",
               ref: closeButtonRef,
               value: selectedLorebookName,
-              onChange: e => setSelectedLorebookName(e.target.value),
+              onChange: event => setSelectedLorebookName(event.target.value),
               className: "w-full bg-slate-700 border border-slate-600 rounded-lg p-3 text-slate-200 focus:ring-2 focus:ring-sky-500",
               children: [(0, jsxRuntime.jsx)("option", {
                 value: "",
                 children: "-- Chọn sổ tay --"
-              }), lorebooks.map(e => (0, jsxRuntime.jsxs)("option", {
-                value: e.name,
-                children: [e.name, " (", e.book.entries.length, " mục)"]
-              }, e.name))]
+              }), lorebooks.map(lorebook => (0, jsxRuntime.jsxs)("option", {
+                value: lorebook.name,
+                children: [lorebook.name, " (", lorebook.book.entries.length, " mục)"]
+              }, lorebook.name))]
             })]
           }), (0, jsxRuntime.jsxs)("div", {
             className: "grid grid-cols-2 gap-4 pt-2",
@@ -875,10 +875,10 @@ export function createLorebookLibrary(getDependencies) {
     let [isExportDialogOpen, setIsExportDialogOpen] = (0, react.useState)(false);
     let [searchQuery, setSearchQuery] = (0, react.useState)("");
     let fileInputRef = (0, react.useRef)(null);
-    let activeLorebook = lorebooks.find(e => e.name === activeLorebookName);
+    let activeLorebook = lorebooks.find(lorebook => lorebook.name === activeLorebookName);
     let filteredLorebooks = (0, react.useMemo)(() => {
-      let t = searchQuery.trim().toLocaleLowerCase("vi");
-      return t ? lorebooks.filter(e => e.name.toLocaleLowerCase("vi").includes(t)) : lorebooks;
+      let query = searchQuery.trim().toLocaleLowerCase("vi");
+      return query ? lorebooks.filter(lorebook => lorebook.name.toLocaleLowerCase("vi").includes(query)) : lorebooks;
     }, [lorebooks, searchQuery]);
     return (0, jsxRuntime.jsxs)("div", {
       className: "lorebook-library h-full flex flex-col",
@@ -903,7 +903,7 @@ export function createLorebookLibrary(getDependencies) {
           }), (0, jsxRuntime.jsx)("input", {
             type: "search",
             value: searchQuery,
-            onChange: e => setSearchQuery(e.target.value),
+            onChange: event => setSearchQuery(event.target.value),
             placeholder: "Tìm sổ tay...",
             "aria-label": "Tìm sổ tay thế giới"
           })]
@@ -928,8 +928,8 @@ export function createLorebookLibrary(getDependencies) {
         "aria-label": "Nhập sổ tay JSON",
         className: "sr-only",
         accept: ".json",
-        onChange: e => {
-          e.target.files && e.target.files.length > 0 && (loadLorebooks(e.target.files), e.target.value = "");
+        onChange: event => {
+          event.target.files && event.target.files.length > 0 && (loadLorebooks(event.target.files), event.target.value = "");
         },
         multiple: true
       }), (0, jsxRuntime.jsxs)("div", {
@@ -937,28 +937,28 @@ export function createLorebookLibrary(getDependencies) {
         children: [(0, jsxRuntime.jsx)(LorebookUploadControl, {
           onUpload: () => fileInputRef.current?.click(),
           isLoading: isLoading
-        }), filteredLorebooks.map(e => (0, jsxRuntime.jsx)(LorebookListItem, {
-          lorebook: e,
-          onEdit: () => setActiveLorebookName(e.name),
-          onDelete: () => (e => {
-            window.confirm(`Bạn có chắc chắn muốn xóa sổ tay "${e}" không?`) && deleteLorebook(e);
-          })(e.name)
-        }, e.name)), searchQuery && 0 === filteredLorebooks.length && (0, jsxRuntime.jsx)("div", {
+        }), filteredLorebooks.map(lorebook => (0, jsxRuntime.jsx)(LorebookListItem, {
+          lorebook: lorebook,
+          onEdit: () => setActiveLorebookName(lorebook.name),
+          onDelete: () => (name => {
+            window.confirm(`Bạn có chắc chắn muốn xóa sổ tay "${name}" không?`) && deleteLorebook(name);
+          })(lorebook.name)
+        }, lorebook.name)), searchQuery && 0 === filteredLorebooks.length && (0, jsxRuntime.jsx)("div", {
           className: "col-span-full rounded-xl border border-dashed border-slate-700 p-8 text-center text-sm text-slate-500",
           children: "Không tìm thấy sổ tay phù hợp."
         })]
       }), activeLorebook && (0, jsxRuntime.jsx)(LorebookManager, {
         initialEntries: activeLorebook.book.entries || [],
-        onSave: e => {
+        onSave: entries => {
           if (!activeLorebook) return;
-          let t = {
+          let updatedLorebook = {
             ...activeLorebook,
             book: {
               ...activeLorebook.book,
-              entries: e
+              entries: entries
             }
           };
-          updateLorebook(t);
+          updateLorebook(updatedLorebook);
           setActiveLorebookName(null);
         },
         onClose: () => setActiveLorebookName(null),
@@ -972,22 +972,22 @@ export function createLorebookLibrary(getDependencies) {
       }), (0, jsxRuntime.jsx)(FileNameDialog, {
         isOpen: isExportDialogOpen,
         onClose: () => setIsExportDialogOpen(false),
-        onConfirm: e => {
-          activeLorebook && ((e, t) => {
+        onConfirm: fileName => {
+          activeLorebook && ((lorebook, fileName) => {
             try {
-              let n = e.book;
-              let r = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(n, null, 2));
-              let a = document.createElement("a");
-              a.setAttribute("href", r);
-              a.setAttribute("download", t);
-              document.body.appendChild(a);
-              a.click();
-              a.remove();
-            } catch (e) {
-              console.error("Failed to export lorebook:", e);
+              let book = lorebook.book;
+              let downloadUrl = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(book, null, 2));
+              let anchor = document.createElement("a");
+              anchor.setAttribute("href", downloadUrl);
+              anchor.setAttribute("download", fileName);
+              document.body.appendChild(anchor);
+              anchor.click();
+              anchor.remove();
+            } catch (error) {
+              console.error("Failed to export lorebook:", error);
               alert("An error occurred while trying to export the lorebook file.");
             }
-          })(activeLorebook, e);
+          })(activeLorebook, fileName);
         },
         initialFileName: activeLorebook?.name || "Lorebook",
         title: "Xuất Sổ tay Thế giới",
