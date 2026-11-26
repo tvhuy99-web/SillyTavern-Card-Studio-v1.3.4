@@ -12,22 +12,22 @@ export function renderGeminiSection({ LoadingIndicator, SearchableSelect, Toggle
                 }), jsxRuntime.jsxs("div", {
                     className: "flex gap-2", children: [jsxRuntime.jsx("div", {
                             className: "flex-grow", children: jsxRuntime.jsx(SearchableSelect, {
-                                ariaLabel: "Mô hình Chính", value: settings.gemini_model, ...modelTestProps(modelTest, "gemini", settings.gemini_model), onChange: e => updateSetting("gemini_model", e.target.value), options: geminiModels.map(e => ({
-                                    value: e.id, label: e.name
+                                ariaLabel: "Mô hình Chính", value: settings.gemini_model, ...modelTestProps(modelTest, "gemini", settings.gemini_model), onChange: event => updateSetting("gemini_model", event.target.value), options: geminiModels.map(model => ({
+                                    value: model.id, label: model.name
                                 }))
                             })
                         }), jsxRuntime.jsx("button", {
-                            onClick: async () => { let t = useDefaultGeminiKey ? connections.getGeminiCatalogKeyForEnvironment() : undefined; if (!useDefaultGeminiKey) {
-                                let n = geminiKeysText.split("\n").map(e => e.trim()).filter(e => "" !== e);
-                                if (!(n.length > 0))
+                            onClick: async () => { let apiKey = useDefaultGeminiKey ? connections.getGeminiCatalogKeyForEnvironment() : undefined; if (!useDefaultGeminiKey) {
+                                let keys = geminiKeysText.split("\n").map(key => key.trim()).filter(key => "" !== key);
+                                if (!(keys.length > 0))
                                     return void showToast("Vui lòng nhập API Key.", "warning");
-                                t = n[0];
+                                apiKey = keys[0];
                             } try {
-                                let n = await refreshGeminiModels(t);
-                                showToast(`Đã tải ${n.length} models từ Google Gemini.`, "success");
+                                let models = await refreshGeminiModels(apiKey);
+                                showToast(`Đã tải ${models.length} models từ Google Gemini.`, "success");
                             }
-                            catch (t) {
-                                showToast(`Lỗi tải models: ${t.message}`, "error");
+                            catch (error) {
+                                showToast(`Lỗi tải models: ${error.message}`, "error");
                             } }, disabled: geminiLoading, className: "px-3 bg-slate-700 text-slate-300 rounded hover:bg-slate-600 flex items-center justify-center", title: "Tải danh sách Model từ Google Gemini", children: geminiLoading ? jsxRuntime.jsx(LoadingIndicator, {
                                 message: ""
                             }) : jsxRuntime.jsx("svg", {
@@ -44,7 +44,7 @@ export function renderGeminiSection({ LoadingIndicator, SearchableSelect, Toggle
                     className: "space-y-4 pl-2 border-l-2 border-slate-700", children: [jsxRuntime.jsx(ToggleSwitch, {
                             label: "Sử dụng API Key Mặc định (Environment)", checked: useDefaultGeminiKey, onChange: setUseDefaultGeminiKey
                         }), !useDefaultGeminiKey && jsxRuntime.jsx("textarea", {
-                            "aria-label": "API Key Gemini", value: geminiKeysText, onChange: e => setGeminiKeysText(e.target.value), rows: 3, className: "w-full bg-slate-700 border border-slate-600 rounded-md p-2 text-slate-200 font-mono text-xs", placeholder: "Nhập API Key cá nhân (Mỗi dòng 1 key)..."
+                            "aria-label": "API Key Gemini", value: geminiKeysText, onChange: event => setGeminiKeysText(event.target.value), rows: 3, className: "w-full bg-slate-700 border border-slate-600 rounded-md p-2 text-slate-200 font-mono text-xs", placeholder: "Nhập API Key cá nhân (Mỗi dòng 1 key)..."
                         })]
                 })]
         })]
@@ -58,9 +58,9 @@ export function renderOpenRouterSection({ LoadingIndicator, SearchableSelect, To
                 }) : jsxRuntime.jsxs("div", {
                     className: "flex gap-2", children: [jsxRuntime.jsx("div", {
                             className: "flex-grow", children: jsxRuntime.jsx(SearchableSelect, {
-                                ariaLabel: "Mô hình OpenRouter", options: filteredOpenRouterModels.map(e => ({
-                                    value: e.id, label: `${e.name} (${"0" === e.pricing.prompt ? "Free" : "$"})`
-                                })), value: settings.openrouter_model, ...modelTestProps(modelTest, "openrouter", settings.openrouter_model), onChange: e => updateSetting("openrouter_model", e.target.value), placeholder: "Chọn mô hình..."
+                                ariaLabel: "Mô hình OpenRouter", options: filteredOpenRouterModels.map(model => ({
+                                    value: model.id, label: `${model.name} (${"0" === model.pricing.prompt ? "Free" : "$"})`
+                                })), value: settings.openrouter_model, ...modelTestProps(modelTest, "openrouter", settings.openrouter_model), onChange: event => updateSetting("openrouter_model", event.target.value), placeholder: "Chọn mô hình..."
                             })
                         }), jsxRuntime.jsx("button", {
                             onClick: loadOpenRouterModels, className: "px-3 bg-slate-700 rounded hover:bg-slate-600 text-slate-300", title: "Tải lại danh sách", "aria-label": "Tải lại danh sách mô hình", children: "↻"
@@ -75,14 +75,14 @@ export function renderOpenRouterSection({ LoadingIndicator, SearchableSelect, To
                     className: "font-bold text-slate-300 mb-3", children: "API Key (OpenRouter)"
                 }), jsxRuntime.jsxs("div", {
                     className: "flex gap-2", children: [jsxRuntime.jsx("input", {
-                            type: "password", "aria-label": "API Key OpenRouter", value: openRouterKey, onChange: e => setOpenRouterKey(e.target.value), className: "flex-grow bg-slate-700 border border-slate-600 rounded-md p-2 text-white", placeholder: "sk-or-..."
+                            type: "password", "aria-label": "API Key OpenRouter", value: openRouterKey, onChange: event => setOpenRouterKey(event.target.value), className: "flex-grow bg-slate-700 border border-slate-600 rounded-md p-2 text-white", placeholder: "sk-or-..."
                         }), jsxRuntime.jsx("button", {
                             onClick: async () => { if (openRouterKey) {
                                 setKeyChecking(!0), setKeyStatus("idle");
                                 try {
-                                    await async function (e) { if (!(await request("https://openrouter.ai/api/v1/auth/key", {
+                                    await async function (apiKey) { if (!(await request("https://openrouter.ai/api/v1/auth/key", {
                                         method: "GET", headers: {
-                                            Authorization: `Bearer ${e}`
+                                            Authorization: `Bearer ${apiKey}`
                                         }
                                     })).ok)
                                         throw Error("Invalid API Key"); return !0; }(openRouterKey), setKeyStatus("success"), 0 === openRouterModels.length && loadOpenRouterModels();
@@ -116,28 +116,28 @@ export function renderAiStudioSection({ ModelSelect, modelTest, aiStudioLoading,
                         })]
                 }), jsxRuntime.jsxs("div", {
                     className: "grid grid-cols-1 gap-4", children: [jsxRuntime.jsx(ModelSelect, {
-                            provider: "aistudio", label: "Chat Model ID", value: settings.aistudio_model ?? "default", ...modelTestProps(modelTest, "aistudio", settings.aistudio_model ?? "default"), onChange: e => updateSetting("aistudio_model", e), options: Array.from(new Map([{
+                            provider: "aistudio", label: "Chat Model ID", value: settings.aistudio_model ?? "default", ...modelTestProps(modelTest, "aistudio", settings.aistudio_model ?? "default"), onChange: modelId => updateSetting("aistudio_model", modelId), options: Array.from(new Map([{
                                     id: "default", name: "Mặc định theo trang web (AI Studio)"
                                 }, {
                                     id: "gemini-2.5-flash", name: "Gemini 2.5 Flash"
                                 }, {
                                     id: "gemini-2.5-pro", name: "Gemini 2.5 Pro"
-                                }, ...defaultGeminiModels, ...aiStudioModels].filter(x => x && x.id).map(x => [x.id, x])).values())
+                                }, ...defaultGeminiModels, ...aiStudioModels].filter(model => model && model.id).map(model => [model.id, model])).values())
                         }), jsxRuntime.jsx(ModelSelect, {
-                            provider: "aistudio", label: "Tool Model ID", value: settings.aistudio_tool_model ?? "default", ...modelTestProps(modelTest, "aistudio", settings.aistudio_tool_model ?? "default"), onChange: e => updateSetting("aistudio_tool_model", e), options: Array.from(new Map([{
+                            provider: "aistudio", label: "Tool Model ID", value: settings.aistudio_tool_model ?? "default", ...modelTestProps(modelTest, "aistudio", settings.aistudio_tool_model ?? "default"), onChange: modelId => updateSetting("aistudio_tool_model", modelId), options: Array.from(new Map([{
                                     id: "default", name: "Mặc định theo trang web (AI Studio)"
                                 }, {
                                     id: "gemini-2.5-flash", name: "Gemini 2.5 Flash"
                                 }, {
                                     id: "gemini-2.5-pro", name: "Gemini 2.5 Pro"
-                                }, ...defaultGeminiModels, ...aiStudioModels].filter(x => x && x.id).map(x => [x.id, x])).values())
+                                }, ...defaultGeminiModels, ...aiStudioModels].filter(model => model && model.id).map(model => [model.id, model])).values())
                         })]
                 }), jsxRuntime.jsxs("div", {
                     className: "grid grid-cols-1 md:grid-cols-2 gap-4", children: [jsxRuntime.jsxs("label", {
                             className: "text-sm text-indigo-200 block", children: [jsxRuntime.jsx("span", {
                                     className: "block mb-2 font-bold", children: "Mức suy nghĩ Chat"
                                 }), jsxRuntime.jsxs("select", {
-                                    "aria-label": "Mức suy nghĩ Chat", className: "w-full rounded bg-slate-800 border border-slate-600 p-2 text-white", value: settings.aistudio_thinking || "default", onChange: e => updateSetting("aistudio_thinking", e.target.value), children: [jsxRuntime.jsx("option", {
+                                    "aria-label": "Mức suy nghĩ Chat", className: "w-full rounded bg-slate-800 border border-slate-600 p-2 text-white", value: settings.aistudio_thinking || "default", onChange: event => updateSetting("aistudio_thinking", event.target.value), children: [jsxRuntime.jsx("option", {
                                             value: "default", children: "Mặc định theo trang web (AI Studio)"
                                         }), jsxRuntime.jsx("option", {
                                             value: "minimal", children: "Tối thiểu"
@@ -153,7 +153,7 @@ export function renderAiStudioSection({ ModelSelect, modelTest, aiStudioLoading,
                             className: "text-sm text-indigo-200 block", children: [jsxRuntime.jsx("span", {
                                     className: "block mb-2 font-bold", children: "Mức suy nghĩ Tool"
                                 }), jsxRuntime.jsxs("select", {
-                                    "aria-label": "Mức suy nghĩ Tool", className: "w-full rounded bg-slate-800 border border-slate-600 p-2 text-white", value: settings.aistudio_tool_thinking || "default", onChange: e => updateSetting("aistudio_tool_thinking", e.target.value), children: [jsxRuntime.jsx("option", {
+                                    "aria-label": "Mức suy nghĩ Tool", className: "w-full rounded bg-slate-800 border border-slate-600 p-2 text-white", value: settings.aistudio_tool_thinking || "default", onChange: event => updateSetting("aistudio_tool_thinking", event.target.value), children: [jsxRuntime.jsx("option", {
                                             value: "default", children: "Mặc định theo trang web (AI Studio)"
                                         }), jsxRuntime.jsx("option", {
                                             value: "minimal", children: "Tối thiểu"
@@ -183,8 +183,8 @@ export function renderAiStudioSection({ ModelSelect, modelTest, aiStudioLoading,
             type: "button", onClick: async () => { try {
                 await openAiStudioSession();
             }
-            catch (t) {
-                showToast("AI Studio: " + (t?.message || String(t)), "error");
+            catch (error) {
+                showToast("AI Studio: " + (error?.message || String(error)), "error");
             } }, className: "bg-indigo-600 hover:bg-indigo-500 text-white rounded px-4 py-2", children: "Mở Google / AI Studio để đăng nhập"
         })]
 }); }
@@ -195,46 +195,46 @@ export function renderProxySection({ LoadingIndicator, ModelSelect, TextInput, T
                             className: "text-xs font-bold text-slate-400 uppercase tracking-wide", children: "Quản lý Cấu hình (Profile)"
                         }), jsxRuntime.jsxs("div", {
                             className: "flex gap-2", children: [jsxRuntime.jsx("input", {
-                                    type: "file", "aria-label": "Nhập cấu hình proxy JSON", ref: profileFileRef, accept: ".json", className: "hidden", onChange: t => { let n = t.target.files?.[0]; if (!n)
-                                        return; let r = new FileReader; r.onload = t => { try {
-                                        let n = JSON.parse(t.target?.result);
-                                        if (Array.isArray(n)) {
-                                            let t = n.map(e => ({
-                                                ...e, id: `import_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`
-                                            })), r = [...profiles, ...t];
-                                            saveProfiles(r), setProfiles(r), showToast(`Đã nhập ${t.length} cấu hình.`, "success");
+                                    type: "file", "aria-label": "Nhập cấu hình proxy JSON", ref: profileFileRef, accept: ".json", className: "hidden", onChange: event => { let file = event.target.files?.[0]; if (!file)
+                                        return; let reader = new FileReader; reader.onload = loadEvent => { try {
+                                        let parsedProfiles = JSON.parse(loadEvent.target?.result);
+                                        if (Array.isArray(parsedProfiles)) {
+                                            let importedProfiles = parsedProfiles.map(profile => ({
+                                                ...profile, id: `import_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`
+                                            })), updatedProfiles = [...profiles, ...importedProfiles];
+                                            saveProfiles(updatedProfiles), setProfiles(updatedProfiles), showToast(`Đã nhập ${importedProfiles.length} cấu hình.`, "success");
                                         }
                                         else
                                             showToast("File không hợp lệ.", "error");
                                     }
                                     catch {
                                         showToast("Lỗi nhập file JSON.", "error");
-                                    } }, r.readAsText(n), t.target.value = ""; }
+                                    } }, reader.readAsText(file), event.target.value = ""; }
                                 }), jsxRuntime.jsx("button", {
                                     onClick: () => profileFileRef.current?.click(), className: "text-[10px] bg-slate-700 hover:bg-slate-600 px-2 py-1 rounded text-slate-300", title: "Nhập Profile", children: "Nhập"
                                 }), jsxRuntime.jsx("button", {
                                     onClick: () => { if (0 === profiles.length)
-                                        return void showToast("Không có cấu hình nào để xuất.", "warning"); let t = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(profiles, null, 2)), n = document.createElement("a"); n.href = t, n.download = `ProxyProfiles_${Date.now()}.json`, document.body.appendChild(n), n.click(), document.body.removeChild(n); }, className: "text-[10px] bg-slate-700 hover:bg-slate-600 px-2 py-1 rounded text-slate-300", title: "Xuất Profile", children: "Xuất"
+                                        return void showToast("Không có cấu hình nào để xuất.", "warning"); let downloadUrl = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(profiles, null, 2)), anchor = document.createElement("a"); anchor.href = downloadUrl, anchor.download = `ProxyProfiles_${Date.now()}.json`, document.body.appendChild(anchor), anchor.click(), document.body.removeChild(anchor); }, className: "text-[10px] bg-slate-700 hover:bg-slate-600 px-2 py-1 rounded text-slate-300", title: "Xuất Profile", children: "Xuất"
                                 })]
                         })]
                 }), jsxRuntime.jsxs("div", {
                     className: "flex gap-2 items-center", children: [jsxRuntime.jsxs("select", {
-                            "aria-label": "Cấu hình proxy", value: profileId, onChange: e => selectProfile(e.target.value), className: "flex-grow bg-slate-800 border border-slate-600 rounded p-2 text-sm text-white", children: [jsxRuntime.jsx("option", {
+                            "aria-label": "Cấu hình proxy", value: profileId, onChange: event => selectProfile(event.target.value), className: "flex-grow bg-slate-800 border border-slate-600 rounded p-2 text-sm text-white", children: [jsxRuntime.jsx("option", {
                                     value: "", children: "-- Chọn cấu hình --"
-                                }), profiles.map(e => jsxRuntime.jsx("option", {
-                                    value: e.id, children: e.name
-                                }, e.id))]
+                                }), profiles.map(profile => jsxRuntime.jsx("option", {
+                                    value: profile.id, children: profile.name
+                                }, profile.id))]
                         }), jsxRuntime.jsx("button", {
                             onClick: () => { if (!profileId)
-                                return void createProfile(); let n = profiles.map(e => e.id === profileId ? {
-                                ...e, url: proxyUrl, password: proxyPassword, legacyMode: legacyMode, proxyForTools: proxyForTools, protocol: settings.proxy_protocol, chatModel: settings.proxy_model, toolModel: settings.proxy_tool_model
-                            } : e); try { saveProfiles(n); setProfiles(n); showToast("Đã cập nhật cấu hình hiện tại.", "success"); } catch { showToast("Không thể lưu Profile.", "error"); } }, className: "px-3 py-2 bg-sky-600 hover:bg-sky-500 text-white rounded text-sm font-bold", title: "Lưu thay đổi vào Profile hiện tại", children: "Lưu"
+                                return void createProfile(); let updatedProfiles = profiles.map(profile => profile.id === profileId ? {
+                                ...profile, url: proxyUrl, password: proxyPassword, legacyMode: legacyMode, proxyForTools: proxyForTools, protocol: settings.proxy_protocol, chatModel: settings.proxy_model, toolModel: settings.proxy_tool_model
+                            } : profile); try { saveProfiles(updatedProfiles); setProfiles(updatedProfiles); showToast("Đã cập nhật cấu hình hiện tại.", "success"); } catch { showToast("Không thể lưu Profile.", "error"); } }, className: "px-3 py-2 bg-sky-600 hover:bg-sky-500 text-white rounded text-sm font-bold", title: "Lưu thay đổi vào Profile hiện tại", children: "Lưu"
                         }), jsxRuntime.jsx("button", {
                             onClick: createProfile, className: "px-3 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded text-sm font-bold", title: "Tạo Profile mới từ cài đặt hiện tại", children: "+"
                         }), jsxRuntime.jsx("button", {
                             onClick: () => { if (!profileId || !confirm("Bạn có chắc chắn muốn xóa cấu hình này không?"))
-                                return; let t = profiles.filter(e => e.id !== profileId); try { saveProfiles(t); } catch { showToast("Không thể xóa Profile.", "error"); return; } setProfiles(t), setProfileId(""), setSettings(e => ({
-                                ...e, proxy_profile_id: ""
+                                return; let remainingProfiles = profiles.filter(profile => profile.id !== profileId); try { saveProfiles(remainingProfiles); } catch { showToast("Không thể xóa Profile.", "error"); return; } setProfiles(remainingProfiles), setProfileId(""), setSettings(previousSettings => ({
+                                ...previousSettings, proxy_profile_id: ""
                             })), showToast("Đã xóa cấu hình.", "info"); }, disabled: !profileId, className: "px-3 py-2 bg-red-900/50 hover:bg-red-900 text-red-200 rounded text-sm font-bold disabled:opacity-50", title: "Xóa Profile", children: "✕"
                         })]
                 })]
@@ -270,7 +270,7 @@ export function renderProxySection({ LoadingIndicator, ModelSelect, TextInput, T
                 }), jsxRuntime.jsx(TextInput, {
                     label: "Password / Key", value: proxyPassword, onChange: event => { invalidateProxyCatalog(); setProxyPassword(event.target.value); }, type: "password"
                 }), jsxRuntime.jsx(ToggleSwitch, {
-                    label: "Ghi nhớ Password / Key trên thiết bị này", checked: rememberProxySecrets, onChange: e => { try { proxyPersistence.setRememberSecrets(e); setRememberProxySecrets(e); } catch { showToast("Không thể lưu tùy chọn ghi nhớ Proxy.", "error"); } }
+                    label: "Ghi nhớ Password / Key trên thiết bị này", checked: rememberProxySecrets, onChange: remember => { try { proxyPersistence.setRememberSecrets(remember); setRememberProxySecrets(remember); } catch { showToast("Không thể lưu tùy chọn ghi nhớ Proxy.", "error"); } }
                 }), jsxRuntime.jsxs("div", {
                     className: "grid grid-cols-1 md:grid-cols-2 gap-4 pt-2", children: [jsxRuntime.jsx("div", {
                             children: jsxRuntime.jsx(ToggleSwitch, {
@@ -298,9 +298,9 @@ export function renderProxySection({ LoadingIndicator, ModelSelect, TextInput, T
                 })]
         }), jsxRuntime.jsxs("div", {
             className: "grid grid-cols-1 gap-4", children: [jsxRuntime.jsx(ModelSelect, {
-                    provider: "proxy", label: "Chat Model ID", value: settings.proxy_model, ...modelTestProps(modelTest, "proxy", settings.proxy_model), onChange: e => updateSetting("proxy_model", e), options: proxyModelOptions
+                    provider: "proxy", label: "Chat Model ID", value: settings.proxy_model, ...modelTestProps(modelTest, "proxy", settings.proxy_model), onChange: modelId => updateSetting("proxy_model", modelId), options: proxyModelOptions
                 }), jsxRuntime.jsx(ModelSelect, {
-                    provider: "proxy", label: "Tool Model ID", value: settings.proxy_tool_model, ...modelTestProps(modelTest, "proxy", settings.proxy_tool_model), onChange: e => updateSetting("proxy_tool_model", e), options: proxyModelOptions
+                    provider: "proxy", label: "Tool Model ID", value: settings.proxy_tool_model, ...modelTestProps(modelTest, "proxy", settings.proxy_tool_model), onChange: modelId => updateSetting("proxy_tool_model", modelId), options: proxyModelOptions
                 })]
         })]
 }); }
