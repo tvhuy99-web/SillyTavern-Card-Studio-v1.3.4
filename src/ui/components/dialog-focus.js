@@ -2,10 +2,10 @@
 export function createDialogFocusHook(dependencies = {}) {
   let dialogStack = [];
   function useDialogFocus(isOpen, onClose, dialogRef, initialFocusRef) {
-    let closeCallbackRef = (0,dependencies.b.useRef)(onClose);
-    let previousFocusRef = (0,dependencies.b.useRef)(null);
+    let closeCallbackRef = (0,dependencies.react.useRef)(onClose);
+    let previousFocusRef = (0,dependencies.react.useRef)(null);
     closeCallbackRef.current = onClose;
-    (0,dependencies.b.useEffect)(() => {
+    (0,dependencies.react.useEffect)(() => {
       if (!isOpen) return;
       let dialogToken = {};
       dialogStack.push(dialogToken);

@@ -14,13 +14,13 @@ assert.equal(imported.name,'Test');assert.deepEqual(imported.book.entries[0].key
 assert.equal(new Set(imported.book.entries.map(entry=>entry.uid)).size,2);
 assert.deepEqual(await lore.parseLorebookFile(file),imported);
 await assert.rejects(lore.parseLorebookFile(new File(['not json'],'bad.json')), /JSON/);
-const presets = createPresetFileCodec({fu:{temp:1,prompts:[]},__stsNormalizePresetConfig:value=>value});
+const presets = createPresetFileCodec({builtInPreset:{temp:1,prompts:[]},__stsNormalizePresetConfig:value=>value});
 const preset = await presets.parsePresetFile(new File([JSON.stringify({openai_max_tokens:1024,temperature:0.7,prompts:[null,{identifier:'p',content:42,enabled:true}]})],'custom.json'));
 assert.equal(preset.name,'custom');assert.equal(preset.max_tokens,1024);assert.equal(preset.prompts[0].content,'42');assert.equal(preset.prompts.length,1);
 const macro = createMacroProcessing();assert.equal(macro.Vu({name:'  Hero  '}),'Hero');assert.equal(macro.Ku('Before {{original}}','source'),'Before source');assert.equal(macro.Ju('{{char}} / {{user}}',{card:{name:'Hero'},userName:'Reader'}),'Hero / Reader');
 const keyword = createKeywordMatching();assert.deepEqual(keyword.resolveWorldInfo('dragon',[{uid:'dragon',keys:['dragon'],content:'Lore',enabled:true}],{}, {}, {}, [],false,1,3).activeEntries.map(entry=>entry.uid),['dragon']);
 for (const engine of ['current','official-local']) {
-    const regex = createRegexProcessing({Co:()=>engine});
+    const regex = createRegexProcessing({readCardRuntimeEngineMode:()=>engine});
     assert.equal(regex.processRegex('plain text',[],[1],{engineMode:engine}).displayContent,'plain text');
 }
 const {markdown} = createMarkdownRuntime();assert.match(markdown.parse('# Title\n\n**bold**'),/<h1>Title<\/h1>/);assert.match(markdown.parse('**bold**'),/<strong>bold<\/strong>/);

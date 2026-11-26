@@ -595,7 +595,7 @@ function runLegacyMaskingPipeline(inputText, scripts = [], targetPlacements = [2
 
 export function createRegexProcessing(dependencies = {}) {
   const processRegex = (inputText, cardScripts = [], targetPlacements = [2], options = {}) => {
-    const engineMode = options.engineMode ?? dependencies.Co();
+    const engineMode = options.engineMode ?? dependencies.readCardRuntimeEngineMode();
     if (engineMode === 'official-local') {
       const mergedScripts = [
         ...(options.globalScripts || []),

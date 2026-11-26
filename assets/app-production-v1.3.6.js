@@ -206,13 +206,13 @@ var SearchableSelect=__stsCreateSearchableSelect(()=>({react: React, Tooltip: To
 var builtInRpgDatabase=defaultRpgDatabase;
 var createDefaultRpgDatabase=()=>({...JSON.parse(JSON.stringify(builtInRpgDatabase)),lastUpdated:Date.now()});
 var RpgDatabaseEditor=__stsCreateRpgDatabaseEditor(()=>({react: React, jsxRuntime, useToast, sessionStore, SearchableSelect: SearchableSelect, createDefaultRpgDatabase: createDefaultRpgDatabase, useDialogFocus: useDialogFocus, TextInput: TextInput, TextArea: TextArea, buildGeneratedLorebookEntries: buildLinkedLorebookEntries, ToggleSwitch: ToggleSwitch}));
-var { useGeminiCatalog: useGeminiCatalog } = createGeminiCatalogHook({__stsCatalog, b: React});
+var { useGeminiCatalog: useGeminiCatalog } = createGeminiCatalogHook({__stsCatalog, react: React});
 var { rpgPromptMacros, importChatSheetsDatabase } = createRpgImport({});
 var MythicConfigurationDialog=__stsCreateMythicConfigurationDialog(()=>({react: React, jsxRuntime, useToast, parseLooseJson: parseRelaxedJson, SearchableSelect: SearchableSelect, isProxyForToolsEnabled: getProxyForTools, defaultMythicSystemPrompt: defaultMythicSystemPrompt, ModelTestButton: __stsModelTestButton, mythicPromptMacros: rpgPromptMacros, importLegacyRpgDatabase: importChatSheetsDatabase, defaultGeminiModels: defaultGeminiModels, useDialogFocus: useDialogFocus, connections: __stsConnections, proxyPersistence: __stsProxyPersistence, getProxyLegacyMode: getProxyLegacyMode, buildSavedProbeTarget: __stsBuildSavedProbeTarget, TextInput: TextInput, useGeminiCatalog: useGeminiCatalog, testModel: __stsGenerationGateway.testModel, getProxyUrl: getProxyUrl, getProxyPassword: getProxyPassword, ToggleSwitch: ToggleSwitch}));
 var CharacterRpgSection=__stsCreateCharacterRpgSection(()=>({react: React, jsxRuntime, createDefaultRpgDatabase: createDefaultRpgDatabase, MythicConfigurationDialog: MythicConfigurationDialog, RpgDatabaseEditor: RpgDatabaseEditor, CollapsibleSection: CollapsibleSection, ToggleSwitch: ToggleSwitch}));
 var CharacterDetailSections=__stsCreateCharacterDetailSections(()=>({react: React, jsxRuntime, lorebookStore, MythicSection: CharacterRpgSection, CharacterExtensionsSection: CharacterExtensionsSection, SectionNavigator: SectionNavigator, CharacterMetadataSection: CharacterMetadataSection, CharacterScenarioSection: CharacterScenarioSection, CharacterDialogueSection: CharacterDialogueSection, CharacterCoreSection: CharacterCoreSection, CharacterLorebookSection: CharacterLorebookSection}));
 var { encodeBase64Utf8, createPngTextChunk, resolveExportSpec, buildExportCard, isPngBytes, downloadBlob } = createCharacterExport({});
-var { useDialogFocus: useDialogFocus } = createDialogFocusHook({b: React});
+var { useDialogFocus: useDialogFocus } = createDialogFocusHook({react: React});
 var FileNameDialog=__stsCreateFileNameDialog(()=>({useDialogFocus: useDialogFocus, react: React, jsxRuntime}));
 var estimateTokenCount=(text="")=>text?Math.ceil(text.length/4):0;
 var CharacterTools=__stsCreateCharacterTools(()=>({react: React, jsxRuntime, lorebookStore, createPngTextChunk: createPngTextChunk, encodeBase64Utf8: encodeBase64Utf8, downloadBlob: downloadBlob, buildExportCard: buildExportCard, FileNameDialog: FileNameDialog, isPngBytes: isPngBytes, estimateTokens: estimateTokenCount, LoadingIndicator: LoadingIndicator, resolveExportSpec: resolveExportSpec}));
@@ -255,7 +255,7 @@ var PromptListItem=__stsCreatePromptListItem(()=>({jsxRuntime, ToggleSwitch: Tog
 var PromptPreview=__stsCreatePromptPreview(()=>({react: React, CopyButton: CopyButton, jsxRuntime}));
 var PromptManager=__stsCreatePromptManager(()=>({EntrySelectionControl: EntrySelectionControl, react: React, MacroReference: MacroReference, PromptEditDialog: PromptEditDialog, PromptPreview: PromptPreview, PromptListItem: PromptListItem, jsxRuntime}));
 var builtInPreset=defaultPreset;
-var { parsePresetFile: parsePresetFile } = createPresetFileCodec({__stsNormalizePresetConfig, fu: builtInPreset});
+var { parsePresetFile: parsePresetFile } = createPresetFileCodec({__stsNormalizePresetConfig, builtInPreset});
 var presetStore=__stsCreatePresetStore({createStore:createStore,immer:withImmer,repositories:__stsRepositories,normalize:__stsNormalizePresetConfig,defaultPreset:builtInPreset,parsePreset:parsePresetFile});
 var { handleRadioKeyDown: handleRadioKeyDown } = createRadioNavigation({});
 var PresetTab=__stsCreatePresetTab(jsxRuntime);
@@ -277,7 +277,7 @@ var { runIsolatedScript: runIsolatedScript, getVariable: getVariable, $u: execut
 var SYSTEM_LOG_EVENT="sillytavern:system-log";
 var dispatchSystemLog=(level,source,message,stack,payload)=>{let event=new CustomEvent(SYSTEM_LOG_EVENT,{detail:{level:level,source:source,message:message,stack:stack,payload:payload}});window.dispatchEvent(event)};
 var { Vu: resolveCharacterName, Ku: resolvePromptOverride, Ju: expandBasicMacros, Xu: expandRandomMacros, Zu: extractRegexScripts } = createMacroProcessing({});
-var { processRegex: processRegex } = createRegexProcessing({Co: readCardRuntimeEngineMode});
+var { processRegex: processRegex } = createRegexProcessing({readCardRuntimeEngineMode});
 var { buildBaseSections: buildBaseSections, assemblePrompt: assemblePrompt } = createPromptAssembler({Co: readCardRuntimeEngineMode, Gu: mutateVariable, Js: defaultMythicSystemPrompt, Ju: expandBasicMacros, Ku: resolvePromptOverride, Lu: runIsolatedScript, Qs: createRpgRowSnapshot, Uu: getVariable, Vu: resolveCharacterName, Xs: formatRpgHybridTable, Xu: expandRandomMacros, Zs: buildMythicPrompt, Zu: extractRegexScripts, __stsBuildSmartStateBlock, __stsNormalizePromptVariableScopes, __stsReadGlobalVariables, el: filterRpgDatabaseByActiveEntries, gd: processRegex, nc: loadLibraryModule, qu: dispatchSystemLog});
 var conversationSafetySettings = DEFAULT_GEMINI_SAFETY_SETTINGS;
 var { generateSummary: generateSummary } = createSummaryGeneration({Cs: getProxyForTools, Ks: generateProxyToolText, __stsAiStudioToolText, _d: conversationSafetySettings, bd: extractStoryContent, cl: generateGeminiToolText, ns: getConnectionSettings});

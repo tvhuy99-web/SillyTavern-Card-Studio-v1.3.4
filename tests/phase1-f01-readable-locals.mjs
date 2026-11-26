@@ -37,6 +37,6 @@ assert.equal(createAudioConversion().decodeRawPcmBuffer(rawPcm,{createBuffer:(ch
 assert.deepEqual([...channel],[-1,32767/32768]);
 assert.equal(createSpeechEngine({HarmCategory:{},HarmBlockThreshold:{}}).sanitizeSpeechText('<thinking>secret</thinking> Hello **world**'),'Hello world');
 assert.deepEqual(createRelaxedJsonParser({relaxedJson:{default:{parse:JSON.parse}}}).parseRelaxedJson('{"ok":true}'),{ok:true});
-const preset=await createPresetFileCodec({fu:{temp:1},__stsNormalizePresetConfig:value=>value}).parsePresetFile(new File([JSON.stringify({temperature:0.5,openai_max_context:2048,prompts:[null,{content:42,enabled:true}]})],'test.json'));
+const preset=await createPresetFileCodec({builtInPreset:{temp:1},__stsNormalizePresetConfig:value=>value}).parsePresetFile(new File([JSON.stringify({temperature:0.5,openai_max_context:2048,prompts:[null,{content:42,enabled:true}]})],'test.json'));
 assert.equal(preset.temp,0.5);assert.equal(preset.truncation_length,2048);assert.equal(preset.prompts[0].content,'42');
 console.log('F01 readable local bindings: codec, UI navigation, linked lorebook, RPG and audio behavior OK');

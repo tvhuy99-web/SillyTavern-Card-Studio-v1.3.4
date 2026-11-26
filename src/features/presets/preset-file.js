@@ -15,7 +15,7 @@ var parsePresetFile = async file => {
   if (void 0 !== rawPreset.openai_max_tokens && void 0 === rawPreset.max_tokens) rawPreset.max_tokens = rawPreset.openai_max_tokens;
   if (void 0 !== rawPreset.openai_max_context && void 0 === rawPreset.truncation_length) rawPreset.truncation_length = rawPreset.openai_max_context;
   let presetName = "string" == typeof rawPreset.name ? rawPreset.name.trim().slice(0,300) : "";
-  let preset = {...dependencies.fu, ...rawPreset};
+  let preset = {...dependencies.builtInPreset, ...rawPreset};
   preset.name = presetName || file.name.replace(/\.json$/i,"").slice(0,300);
   if (preset.prompts && !Array.isArray(preset.prompts)) preset.prompts = [];
   else if (preset.prompts) {
