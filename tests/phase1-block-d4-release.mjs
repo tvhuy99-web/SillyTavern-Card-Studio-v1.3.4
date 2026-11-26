@@ -50,7 +50,7 @@ assert.deepEqual(invalidateHistorySummaries(state,1,settings,countTurns).longTer
 assert.deepEqual(buildRewindPatch(state,1,{initialVariables:()=>({}),buildLorebook:()=>[],countTurns,settings}).longTermSummaries,[]);
 assert.equal(createSessionSnapshot(state).summaryChunkSize,2);
 let slice;state.setSessionData=patch=>{state={...state,...patch};};const ol=()=>state;ol.getState=()=>state;
-const summary=useSmartContext({ol,b:{useCallback:f=>f},__stsRuntimeState:runtimeState,os:()=>settings,qu(){},wd:async history=>{slice=history;return 'new summary';}});
+const summary=useSmartContext({sessionStore:ol,react:{useCallback:f=>f},__stsRuntimeState:runtimeState,getSmartContextSettings:()=>settings,dispatchSystemLog(){},generateSummary:async history=>{slice=history;return 'new summary';}});
 await summary.triggerSummarization();assert.deepEqual(slice.map(m=>m.id),['2','3']);assert.equal(state.summaryChunkSize,2);assert.deepEqual(state.longTermSummaries,['old','new summary']);
 let captured;const prompt=createRuntimePromptBuilder({readState:()=>state,readLorebooks:()=>[],resolvePreset:()=>state.preset,turnPolicy:{modelContextContent:m=>m.content},baseSections:()=>({baseSections:[]}),buildPrompt:(...args)=>{captured=args;return {fullPrompt:'result'};},readContextSettings:()=>settings,writeGlobalVariables(){},publish(){}});
 await prompt(false,{user_input:'next'},()=>{});assert.equal(captured[5],2);assert.deepEqual(captured[4],state.longTermSummaries);

@@ -55,7 +55,7 @@ assert.ok(production.includes('__stsSeedSessionInitialVariablesFromCard') && pro
 assert.ok(production.includes('variablesHealed') || production.includes('__stsVariablesHealed'));
 assert.ok(/contextState:\s*JSON\.parse\(JSON\.stringify\([^)]+\.variables\)\)/.test(production));
 assert.ok(/(?:arenaStateHealed|needsSaveAfterHeal)\s*=\s*[^;]*needsRewrite\s*\|\|\s*[^;]*[vV]ariablesHealed/.test(production));
-assert.ok(read('src/features/chat/hooks/use-message-history.js').includes("__stsMergeInitialVariableSources({},card?.char_book?.entries||[],String(card?.first_mes||''),text=>dependencies.jt.default.parse(text))"));
+assert.ok(read('src/features/chat/hooks/use-message-history.js').includes("__stsMergeInitialVariableSources({},card?.char_book?.entries||[],String(card?.first_mes||''),text=>dependencies.relaxedJson.default.parse(text))"));
 assert.ok(!production.includes('e.comment?.includes("[InitVar]")'));
 assert.ok(!production.includes('L.current=U(),M.current=setTimeout'), 'autosave must not build snapshots eagerly on every state change');
 assert.ok(/(?:__stsAutosave|autosave)\.markDirty\(\)/.test(production), 'autosave must mark dirty via coordinator');
