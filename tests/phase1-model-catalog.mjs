@@ -26,7 +26,7 @@ for (const field of ['aistudio_model','aistudio_tool_model','proxy_model','proxy
   const provider=field.startsWith('aistudio')?'aistudio':'proxy';
   assert.match(sections,new RegExp(`ModelSelect,\\s*\\{\\s*provider: "${provider}", label: "(?:Chat|Tool) Model ID", value: settings\\.${field}`));
 }
-assert.ok(production.includes('Ed=__stsCreateModelSelect(jsxRuntime,React)'));
+assert.ok(production.includes('ModelSelect=__stsCreateModelSelect(jsxRuntime,React)'));
 const controls=await readFile(new URL('../assets/m6/ui/components/form-controls.js',import.meta.url),'utf8');
 assert.ok(controls.includes("'data-sts-provider': provider"));
 assert.ok(production.includes('connections:__stsConnections,catalog:__stsCatalog'));
