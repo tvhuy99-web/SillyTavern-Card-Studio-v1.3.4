@@ -135,19 +135,19 @@ function pruneSecretMap(secretMap, profiles) {
 export function createProxyPersistence(options = {}) {
   const local = options.localStorage || browserStorage('localStorage');
   const session = options.sessionStorage || browserStorage('sessionStorage');
-  const K = PROXY_PERSISTENCE_KEYS;
+  const storageKeys = PROXY_PERSISTENCE_KEYS;
 
-  const rememberEnabled = () => read(local, K.rememberSecrets) === 'true';
+  const rememberEnabled = () => read(local, storageKeys.rememberSecrets) === 'true';
 
   function canonicalProfiles() {
-    const value = parseJSON(read(local, K.profilesCanonical), []);
+    const value = parseJSON(read(local, storageKeys.profilesCanonical), []);
     return Array.isArray(value) ? value.map(normalizeMetadata).filter(Boolean) : [];
   }
 
   function getProfiles() {
     const profiles = canonicalProfiles();
-    const persistent = rememberEnabled() ? readMap(local, K.profileSecretsPersistent) : {};
-    const perSession = readMap(session, K.profileSecretsSession);
+    const persistent = rememberEnabled() ? readMap(local, storageKeys.profileSecretsPersistent) : {};
+    const perSession = readMap(session, storageKeys.profileSecretsSession);
     const secrets = mergeSecretMaps(persistent, perSession);
     return profiles.map((profile, index) => {
       const key = profileKey(profile, index);
@@ -161,7 +161,7 @@ export function createProxyPersistence(options = {}) {
   // synchronous write where possible; never report success on a partial write.
   function mutate(work) {
     options.assertWriteAllowed?.("proxy.mutate");
-    const snapshot = [local, session].map(storage => [storage, Object.values(K).map(key => [key, storage.getItem(key)])]);
+    const snapshot = [local, session].map(storage => [storage, Object.values(storageKeys).map(key => [key, storage.getItem(key)])]);
     try { return work(); }
     catch (error) {
       let rollbackFailed = false;
@@ -174,9 +174,9 @@ export function createProxyPersistence(options = {}) {
   }
   function setProfiles(input) { return mutate(() => setProfilesInternal(input)); }
   function setProfilesInternal(input) {
-    const previousRequired = readSet(local, K.profileSecretRequired);
-    const previousSessionSecrets = readMap(session, K.profileSecretsSession);
-    const previousPersistentSecrets = readMap(local, K.profileSecretsPersistent);
+    const previousRequired = readSet(local, storageKeys.profileSecretRequired);
+    const previousSessionSecrets = readMap(session, storageKeys.profileSecretsSession);
+    const previousPersistentSecrets = readMap(local, storageKeys.profileSecretsPersistent);
     validateProfiles(input);
     const split = splitProfiles(input);
     const ids = new Set(split.profiles.map((profile, index) => profileKey(profile, index)));
@@ -204,11 +204,11 @@ export function createProxyPersistence(options = {}) {
       else if (!split.presentSecretFields[id] && previousRequired.has(id)) nextRequired.add(id);
     }
 
-    write(local, K.profilesCanonical, JSON.stringify(split.profiles));
-    writeMap(session, K.profileSecretsSession, sessionSecrets);
-    remove(local, K.profilesLegacy);
-    remove(session, K.profilesLegacy);
-    writeSet(local, K.profileSecretRequired, nextRequired);
+    write(local, storageKeys.profilesCanonical, JSON.stringify(split.profiles));
+    writeMap(session, storageKeys.profileSecretsSession, sessionSecrets);
+    remove(local, storageKeys.profilesLegacy);
+    remove(session, storageKeys.profilesLegacy);
+    writeSet(local, storageKeys.profileSecretRequired, nextRequired);
 
     if (rememberEnabled()) {
       const persistentSecrets = pruneSecretMap(
@@ -218,51 +218,51 @@ export function createProxyPersistence(options = {}) {
       for (const id of Object.keys(split.presentSecretFields)) {
         if (!split.nonEmptySecretIds.has(id)) delete persistentSecrets[id];
       }
-      writeMap(local, K.profileSecretsPersistent, persistentSecrets);
+      writeMap(local, storageKeys.profileSecretsPersistent, persistentSecrets);
     } else {
-      remove(local, K.profileSecretsPersistent);
+      remove(local, storageKeys.profileSecretsPersistent);
     }
     return getProfiles();
   }
 
   function getPassword() {
-    const current = read(session, K.proxyPasswordLegacy);
+    const current = read(session, storageKeys.proxyPasswordLegacy);
     if (current !== null && current !== '') return current;
-    if (rememberEnabled()) return read(local, K.proxyPasswordPersistent) || '';
+    if (rememberEnabled()) return read(local, storageKeys.proxyPasswordPersistent) || '';
     return current || '';
   }
 
   function setPassword(value) { return mutate(() => setPasswordInternal(value)); }
   function setPasswordInternal(value) {
     const textValue = String(value ?? '');
-    write(session, K.proxyPasswordLegacy, textValue);
-    remove(local, K.proxyPasswordLegacy);
-    if (rememberEnabled() && textValue) write(local, K.proxyPasswordPersistent, textValue);
-    else if (!textValue || !rememberEnabled()) remove(local, K.proxyPasswordPersistent);
+    write(session, storageKeys.proxyPasswordLegacy, textValue);
+    remove(local, storageKeys.proxyPasswordLegacy);
+    if (rememberEnabled() && textValue) write(local, storageKeys.proxyPasswordPersistent, textValue);
+    else if (!textValue || !rememberEnabled()) remove(local, storageKeys.proxyPasswordPersistent);
     return textValue;
   }
 
   function setRememberSecrets(enabled) { return mutate(() => setRememberSecretsInternal(enabled)); }
   function setRememberSecretsInternal(enabled) {
     const next = Boolean(enabled);
-    write(local, K.rememberSecrets, next ? 'true' : 'false');
+    write(local, storageKeys.rememberSecrets, next ? 'true' : 'false');
     if (!next) {
-      remove(local, K.profileSecretsPersistent);
-      remove(local, K.proxyPasswordPersistent);
+      remove(local, storageKeys.profileSecretsPersistent);
+      remove(local, storageKeys.proxyPasswordPersistent);
       return false;
     }
 
     const split = splitProfiles(getProfiles());
-    writeMap(local, K.profileSecretsPersistent, pruneSecretMap(split.secrets, split.profiles));
-    const password = read(session, K.proxyPasswordLegacy);
-    if (password) write(local, K.proxyPasswordPersistent, password);
+    writeMap(local, storageKeys.profileSecretsPersistent, pruneSecretMap(split.secrets, split.profiles));
+    const password = read(session, storageKeys.proxyPasswordLegacy);
+    if (password) write(local, storageKeys.proxyPasswordPersistent, password);
     return true;
   }
 
   function getProfileStatus(id) {
     const profileId = String(id || '').trim();
     if (!profileId) return { profileId: '', requiresSecret: false, hasSecret: false, profile: null };
-    const required = readSet(local, K.profileSecretRequired).has(profileId);
+    const required = readSet(local, storageKeys.profileSecretRequired).has(profileId);
     const profile = getProfiles().find(item => String(item.id || '') === profileId) || null;
     const hasSecret = Boolean(profile && SECRET_FIELDS.some(field => String(profile[field] ?? '').trim()));
     return { profileId, requiresSecret: required, hasSecret, profile };
@@ -270,19 +270,19 @@ export function createProxyPersistence(options = {}) {
 
   function clearProfiles() { return mutate(clearProfilesInternal); }
   function clearProfilesInternal() {
-    remove(local, K.profilesCanonical);
-    remove(local, K.profilesLegacy);
-    remove(session, K.profilesLegacy);
-    remove(session, K.profileSecretsSession);
-    remove(local, K.profileSecretsPersistent);
-    remove(local, K.profileSecretRequired);
+    remove(local, storageKeys.profilesCanonical);
+    remove(local, storageKeys.profilesLegacy);
+    remove(session, storageKeys.profilesLegacy);
+    remove(session, storageKeys.profileSecretsSession);
+    remove(local, storageKeys.profileSecretsPersistent);
+    remove(local, storageKeys.profileSecretRequired);
   }
 
   function migrateLegacyState() { return mutate(migrateLegacyStateInternal); }
   function migrateLegacyStateInternal() {
-    const canonicalRaw = parseJSON(read(local, K.profilesCanonical), null);
-    const legacyLocalRaw = parseJSON(read(local, K.profilesLegacy), null);
-    const legacySessionRaw = parseJSON(read(session, K.profilesLegacy), null);
+    const canonicalRaw = parseJSON(read(local, storageKeys.profilesCanonical), null);
+    const legacyLocalRaw = parseJSON(read(local, storageKeys.profilesLegacy), null);
+    const legacySessionRaw = parseJSON(read(session, storageKeys.profilesLegacy), null);
     const source = Array.isArray(canonicalRaw)
       ? canonicalRaw
       : Array.isArray(legacyLocalRaw)
@@ -297,7 +297,7 @@ export function createProxyPersistence(options = {}) {
       Object.entries(secrets || {}).filter(([id]) => canonicalIds.has(String(id))),
     );
 
-    const existingSessionSecrets = readMap(session, K.profileSecretsSession);
+    const existingSessionSecrets = readMap(session, storageKeys.profileSecretsSession);
     const combinedSessionSecrets = pruneSecretMap(
       mergeSecretMaps(
         mergeSecretMaps(
@@ -309,27 +309,27 @@ export function createProxyPersistence(options = {}) {
       sourceSplit.profiles,
     );
 
-    write(local, K.profilesCanonical, JSON.stringify(sourceSplit.profiles));
-    writeMap(session, K.profileSecretsSession, combinedSessionSecrets);
-    remove(local, K.profilesLegacy);
-    remove(session, K.profilesLegacy);
+    write(local, storageKeys.profilesCanonical, JSON.stringify(sourceSplit.profiles));
+    writeMap(session, storageKeys.profileSecretsSession, combinedSessionSecrets);
+    remove(local, storageKeys.profilesLegacy);
+    remove(session, storageKeys.profilesLegacy);
 
-    const required = readSet(local, K.profileSecretRequired);
+    const required = readSet(local, storageKeys.profileSecretRequired);
     for (const id of sourceSplit.nonEmptySecretIds) required.add(id);
     for (const id of localSplit.nonEmptySecretIds) if (canonicalIds.has(id)) required.add(id);
     for (const id of sessionSplit.nonEmptySecretIds) if (canonicalIds.has(id)) required.add(id);
     for (const id of Array.from(required)) if (!canonicalIds.has(id)) required.delete(id);
-    writeSet(local, K.profileSecretRequired, required);
+    writeSet(local, storageKeys.profileSecretRequired, required);
 
-    const legacyPassword = read(local, K.proxyPasswordLegacy);
+    const legacyPassword = read(local, storageKeys.proxyPasswordLegacy);
     if (legacyPassword) {
-      write(session, K.proxyPasswordLegacy, legacyPassword);
-      if (rememberEnabled()) write(local, K.proxyPasswordPersistent, legacyPassword);
-      remove(local, K.proxyPasswordLegacy);
+      write(session, storageKeys.proxyPasswordLegacy, legacyPassword);
+      if (rememberEnabled()) write(local, storageKeys.proxyPasswordPersistent, legacyPassword);
+      remove(local, storageKeys.proxyPasswordLegacy);
     }
     if (!rememberEnabled()) {
-      remove(local, K.profileSecretsPersistent);
-      remove(local, K.proxyPasswordPersistent);
+      remove(local, storageKeys.profileSecretsPersistent);
+      remove(local, storageKeys.proxyPasswordPersistent);
     }
   }
 
@@ -354,7 +354,7 @@ export function createProxyPersistence(options = {}) {
 
   return Object.freeze({
     getProfiles,
-    getOwnedStorageKeys: () => Object.values(K),
+    getOwnedStorageKeys: () => Object.values(storageKeys),
     validateProfiles,
     setProfiles,
     clearProfiles,

@@ -21,9 +21,9 @@ export function normalizeGeminiModels(items) {
   return unique(items, item => {
     if (!item?.supportedGenerationMethods?.includes?.('generateContent') || !Array.isArray(item.supportedGenerationMethods)) return null;
     return basic({ id: String(item.name || item.baseModelId || '').replace(/^models\//, ''), name: item.displayName });
-  }).sort((a,b) => a.name.localeCompare(b.name,'vi',{numeric:true,sensitivity:'base'}) || a.id.localeCompare(b.id));
+  }).sort((firstModel,secondModel) => firstModel.name.localeCompare(secondModel.name,'vi',{numeric:true,sensitivity:'base'}) || firstModel.id.localeCompare(secondModel.id));
 }
-const proxyModels = items => unique(items, item => basic({id:item?.id, name:item?.id})).sort((a,b)=>a.id.localeCompare(b.id));
+const proxyModels = items => unique(items, item => basic({id:item?.id, name:item?.id})).sort((firstModel,secondModel)=>firstModel.id.localeCompare(secondModel.id));
 export function createModelCatalog({ storage, request, geminiRequest = request, normalizeProxyUrl, getGeminiKey }) {
   const subscribers = new Set();
   const read = (key, fallback) => { try { return JSON.parse(storage.getItem(key) || 'null') ?? fallback; } catch { return fallback; } };

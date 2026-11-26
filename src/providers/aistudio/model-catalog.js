@@ -12,7 +12,7 @@ export function normalizeAiStudioModelCatalog(payload) {
     !/(embedding|transcribe|tts|live|imagen|image|computer-use)/i.test(item.id)
   ).map(item => [item.id, {
     id: item.id, name: String(item.name || item.id).slice(0, 120),
-  }])).values()].sort((a, b) => a.id.localeCompare(b.id));
+  }])).values()].sort((firstModel, secondModel) => firstModel.id.localeCompare(secondModel.id));
 }
 async function requestModels(host) {
   const cap = getNativePromiseBridge(host);

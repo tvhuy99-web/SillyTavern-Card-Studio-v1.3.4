@@ -35,7 +35,7 @@ export function createStateRpcHandlers({ readState, saveSession, persistMessages
       if (!Number.isInteger(index) || index < 0 || index >= state.messages.length) throw new Error('Message variable scope is out of range.');
       key = `message:${index}`;
       const messageId = state.messages[index].id;
-      await persistMessages(state.messages.map((message, i) => i === index ? { ...message, contextState: clean } : message));
+      await persistMessages(state.messages.map((message, messageIndex) => messageIndex === index ? { ...message, contextState: clean } : message));
       assertCurrent(lease);
       const current = readState().messages[index];
       // A later mutation may have replaced the scope while persistence awaited.

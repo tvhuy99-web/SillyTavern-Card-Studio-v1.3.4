@@ -12,21 +12,20 @@ import { createRuntimeMessageHandler, subscribeRuntimeSession, subscribeRuntimeL
 
 /** Compatibility adapter. Only this boundary knows recovered binding names. */
 export function useCardRuntime(dependencies, options) {
-  const d = dependencies;
   return useRuntimeBridge({
-    react: d.b, sessionStore: d.ol, lorebookStore: d.sn, characterStore: d.kc,
-    personaStore: d.Au, presetStore: d.bu, runtimeState: d.__stsRuntimeState,
-    frames: d.Kh, validatePayload: d._h, clone: d.xh, turnPolicy: d.__stsChatTurnPolicy,
-    countTurns: d.gh, formatHistory: d.Eh, resolveIndex: d.wh, resolveRange: d.kh, normalizeScope: d.Nh,
-    variableStorageKey: d.Ah, webStorageKey: d.Ih, readRecord: d.jh, writeRecord: d.Dh,
-    readContext: d.Xh, publish: d.Wh, readText: d.Vh, parseRegex: d.As,
-    resolvePreset: d.Zh, baseSections: d.vd, buildPrompt: d.xd, readContextSettings: d.os,
-    writeGlobalVariables: d.__stsWriteGlobalVariables, generateOnce: d.Sd, stream: d.Cd,
-    emit: d.Jh, maxEntries: d.Hh, parseWorldbook: d.Lt, safeName: d.$h,
-    toChatMessage: d.Ch, normalizeRole: d.Sh, isRecord: d.vh, findCharacter: d.zh,
-    describeCharacter: d.Gh, normalizeCharacter: d.qh, mergeSettings: d.yh,
-    sessions: d.__stsRepositories.sessions, listProxyModels: d.Ws, gateway: d.__stsGenerationGateway,
-    diagnostics: { create: d.Lh, normalize: d.Fh, format: d.Bh, append: d.Uh, code: d.Yh },
+    react: dependencies.b, sessionStore: dependencies.ol, lorebookStore: dependencies.sn, characterStore: dependencies.kc,
+    personaStore: dependencies.Au, presetStore: dependencies.bu, runtimeState: dependencies.__stsRuntimeState,
+    frames: dependencies.Kh, validatePayload: dependencies._h, clone: dependencies.xh, turnPolicy: dependencies.__stsChatTurnPolicy,
+    countTurns: dependencies.gh, formatHistory: dependencies.Eh, resolveIndex: dependencies.wh, resolveRange: dependencies.kh, normalizeScope: dependencies.Nh,
+    variableStorageKey: dependencies.Ah, webStorageKey: dependencies.Ih, readRecord: dependencies.jh, writeRecord: dependencies.Dh,
+    readContext: dependencies.Xh, publish: dependencies.Wh, readText: dependencies.Vh, parseRegex: dependencies.As,
+    resolvePreset: dependencies.Zh, baseSections: dependencies.vd, buildPrompt: dependencies.xd, readContextSettings: dependencies.os,
+    writeGlobalVariables: dependencies.__stsWriteGlobalVariables, generateOnce: dependencies.Sd, stream: dependencies.Cd,
+    emit: dependencies.Jh, maxEntries: dependencies.Hh, parseWorldbook: dependencies.Lt, safeName: dependencies.$h,
+    toChatMessage: dependencies.Ch, normalizeRole: dependencies.Sh, isRecord: dependencies.vh, findCharacter: dependencies.zh,
+    describeCharacter: dependencies.Gh, normalizeCharacter: dependencies.qh, mergeSettings: dependencies.yh,
+    sessions: dependencies.__stsRepositories.sessions, listProxyModels: dependencies.Ws, gateway: dependencies.__stsGenerationGateway,
+    diagnostics: { create: dependencies.Lh, normalize: dependencies.Fh, format: dependencies.Bh, append: dependencies.Uh, code: dependencies.Yh },
   }, options);
 }
 
