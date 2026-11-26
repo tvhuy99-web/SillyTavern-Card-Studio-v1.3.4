@@ -272,7 +272,7 @@ var PersonaScreen=__stsCreatePersonaScreen(()=>({react: React, jsxRuntime, perso
 var fetchOpenRouterModels=__stsHostConnections.loadOpenRouterModels;
 
 // === 5. Domain Services & Card Runtime ===
-var { lodash: lodash } = createLodashRuntime({l: wrapModule, o: commonJsFactory});
+var { lodash: lodash } = createLodashRuntime({wrapModule, commonJsFactory});
 var { runIsolatedScript, getVariable, executeUpdateVariableBlock, mutateVariable } = createScriptExecution({lodash, loadLibraryModule});
 var SYSTEM_LOG_EVENT="sillytavern:system-log";
 var dispatchSystemLog=(level,source,message,stack,payload)=>{let event=new CustomEvent(SYSTEM_LOG_EVENT,{detail:{level:level,source:source,message:message,stack:stack,payload:payload}});window.dispatchEvent(event)};
@@ -334,7 +334,7 @@ var CardFrame=__stsCreateCardFrame(React,()=>({react: React, jsxRuntime, charact
 CardFrame.displayName="InteractiveHtmlMessage";
 var StreamingHtmlPreview=__stsCreateStreamingHtmlPreview(()=>({react: React, jsxRuntime}));
 var { markdown: markdownParser, toArray: toArray } = createMarkdownRuntime({});
-var { sanitizer: htmlSanitizer } = createHtmlSanitizerRuntime({Hm: toArray});
+var { sanitizer: htmlSanitizer } = createHtmlSanitizerRuntime({toArray});
 var MessageMenu=__stsCreateMessageMenu(()=>({react: React, Icon: Icon, jsxRuntime}));
 var ThinkingPanel=__stsCreateThinkingPanel(()=>({react: React, Icon: Icon, jsxRuntime}));
 var __stsLiveStreamText=__stsCreateLiveStreamText(()=>({react: React, jsxRuntime, liveStreamStore: __stsLiveStreamStore}));

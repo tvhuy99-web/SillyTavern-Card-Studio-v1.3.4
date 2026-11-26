@@ -144,3 +144,5 @@ if (args.includes('--check-host') && (report.host.current !== 0 || report.host.c
 if (args.includes('--check-opaque') && bindingReview.unresolved !== 0) process.exitCode = 1;
 
 if (args.includes('--check-embedded-opaque') && (!report.embeddedRuntime || report.embeddedRuntime.review.unresolved !== 0)) process.exitCode = 1;
+
+if (args.includes('--check-host-aliases') && hostAliases.count !== 0) process.exitCode = 1;
