@@ -110,16 +110,16 @@ export function createSmartScanSettings(getDependencies) {
       models: geminiModels
     } = useGeminiCatalog(defaultGeminiModels);
     (0, react.useEffect)(() => {
-      let e = getSmartScanSettings();
-      setSettings(e);
+      let savedSettings = getSmartScanSettings();
+      setSettings(savedSettings);
     }, []);
-    let updateSetting = (n, r) => {
-      let a = {
+    let updateSetting = (field, value) => {
+      let nextSettings = {
         ...settings,
-        [n]: r
+        [field]: value
       };
-      setSettings(a);
-      saveSmartScanSettings(a);
+      setSettings(nextSettings);
+      saveSmartScanSettings(nextSettings);
     };
     let usesSemanticScan = ["semantic", "hybrid_fast", "ultimate"].includes(settings.mode);
     let usesLlmScan = ["llm_only", "ultimate"].includes(settings.mode);
@@ -133,7 +133,7 @@ export function createSmartScanSettings(getDependencies) {
         }), (0, jsxRuntime.jsx)(ToggleSwitch, {
           label: "Kích hoạt",
           checked: settings.enabled,
-          onChange: e => updateSetting("enabled", e),
+          onChange: value => updateSetting("enabled", value),
           clean: true
         })]
       }), (0, jsxRuntime.jsxs)("div", {
@@ -141,7 +141,7 @@ export function createSmartScanSettings(getDependencies) {
         children: [(0, jsxRuntime.jsx)(SearchableSelect, {
           label: "Chế độ Quét",
           value: settings.mode,
-          onChange: e => updateSetting("mode", e.target.value),
+          onChange: event => updateSetting("mode", event.target.value),
           options: [{
             value: "keyword",
             label: "1. Truyền thống (Chỉ Từ khóa)"
@@ -169,10 +169,10 @@ export function createSmartScanSettings(getDependencies) {
           }), (0, jsxRuntime.jsx)(SearchableSelect, {
             label: "Mô hình Embedding",
             value: settings.embedding_provider || "gemini",
-            onChange: e => updateSetting("embedding_provider", e.target.value),
-            options: embeddingService.listProviders().map(e => ({
-              value: e.id,
-              label: e.label
+            onChange: event => updateSetting("embedding_provider", event.target.value),
+            options: embeddingService.listProviders().map(provider => ({
+              value: provider.id,
+              label: provider.label
             }))
           }), (0, jsxRuntime.jsx)(EmbeddingProviderStatus, {
             providerId: settings.embedding_provider || "gemini",
@@ -182,21 +182,21 @@ export function createSmartScanSettings(getDependencies) {
             children: [(0, jsxRuntime.jsx)(NumberInput, {
               label: "Ngưỡng Tương đồng (Threshold)",
               value: settings.semantic_threshold || .7,
-              onChange: e => updateSetting("semantic_threshold", e),
+              onChange: value => updateSetting("semantic_threshold", value),
               min: .1,
               max: 1,
               step: .05
             }), (0, jsxRuntime.jsx)(NumberInput, {
               label: "Ngân sách Mục Ngữ nghĩa (Max Entries)",
               value: settings.max_semantic_entries || 20,
-              onChange: e => updateSetting("max_semantic_entries", e),
+              onChange: value => updateSetting("max_semantic_entries", value),
               min: 1,
               max: 50,
               step: 1
             }), (0, jsxRuntime.jsx)(NumberInput, {
               label: "Số mục xử lý mỗi đợt",
               value: settings.embedding_batch_size || 30,
-              onChange: e => updateSetting("embedding_batch_size", e),
+              onChange: value => updateSetting("embedding_batch_size", value),
               min: 1,
               max: 100,
               step: 1
@@ -215,7 +215,7 @@ export function createSmartScanSettings(getDependencies) {
             children: [(0, jsxRuntime.jsx)(SearchableSelect, {
               label: "Chiến lược Nội dung",
               value: settings.scan_strategy || "efficient",
-              onChange: e => updateSetting("scan_strategy", e.target.value),
+              onChange: event => updateSetting("scan_strategy", event.target.value),
               options: [{
                 value: "efficient",
                 label: "⚡ Tối ưu hóa (Cắt ngắn)"
@@ -226,10 +226,10 @@ export function createSmartScanSettings(getDependencies) {
             }), (0, jsxRuntime.jsx)(SearchableSelect, {
               label: "Mô hình Quét (Khuyên dùng Flash)",
               value: settings.model || "gemini-3-flash-preview",
-              onChange: e => updateSetting("model", e.target.value),
-              options: geminiModels.map(e => ({
-                value: e.id,
-                label: e.name
+              onChange: event => updateSetting("model", event.target.value),
+              options: geminiModels.map(model => ({
+                value: model.id,
+                label: model.name
               })),
               testButton: ModelTestButton && buildSavedProbeTarget && testModel ? (0, jsxRuntime.jsx)(ModelTestButton, {
                 target: buildSavedProbeTarget({
@@ -247,14 +247,14 @@ export function createSmartScanSettings(getDependencies) {
             children: [(0, jsxRuntime.jsx)(NumberInput, {
               label: "Độ sâu Quét (Tin nhắn)",
               value: settings.depth || 3,
-              onChange: e => updateSetting("depth", e),
+              onChange: value => updateSetting("depth", value),
               min: 1,
               max: 10,
               step: 1
             }), (0, jsxRuntime.jsx)(NumberInput, {
               label: "Ngân sách Mục LLM (Max Entries)",
               value: settings.max_entries || 5,
-              onChange: e => updateSetting("max_entries", e),
+              onChange: value => updateSetting("max_entries", value),
               min: 1,
               max: 50,
               step: 1
@@ -273,7 +273,7 @@ export function createSmartScanSettings(getDependencies) {
               children: (0, jsxRuntime.jsx)(TextArea, {
                 label: "Nội dung Prompt",
                 value: settings.system_prompt || "",
-                onChange: e => updateSetting("system_prompt", e.target.value),
+                onChange: event => updateSetting("system_prompt", event.target.value),
                 rows: 15
               })
             })]
@@ -290,7 +290,7 @@ export function createSmartScanSettings(getDependencies) {
         }), (0, jsxRuntime.jsx)(NumberInput, {
           label: "AI Sticky Duration (lượt AI phản hồi)",
           value: settings.aiStickyDuration,
-          onChange: e => updateSetting("aiStickyDuration", e),
+          onChange: value => updateSetting("aiStickyDuration", value),
           min: 0,
           max: 20,
           step: 1
@@ -329,13 +329,13 @@ export function createSmartContextSettings(getDependencies) {
     (0, react.useEffect)(() => {
       setSettings(getSmartContextSettings());
     }, []);
-    let updateSetting = (e, r) => {
-      let a = {
+    let updateSetting = (field, value) => {
+      let nextSettings = {
         ...settings,
-        [e]: r
+        [field]: value
       };
-      settingsStorage.setItem(smartContextStorageKey, JSON.stringify(a));
-      setSettings(a);
+      settingsStorage.setItem(smartContextStorageKey, JSON.stringify(nextSettings));
+      setSettings(nextSettings);
     };
     return (0, jsxRuntime.jsxs)("div", {
       className: "space-y-8",
@@ -349,21 +349,21 @@ export function createSmartContextSettings(getDependencies) {
           children: [(0, jsxRuntime.jsx)(NumberInput, {
             label: "Ngưỡng Kích Hoạt Tóm Tắt (Context Depth)",
             value: settings.context_depth || 20,
-            onChange: e => updateSetting("context_depth", e),
+            onChange: value => updateSetting("context_depth", value),
             min: 4,
             max: 100,
             step: 2
           }), (0, jsxRuntime.jsx)(NumberInput, {
             label: "Kích Thước Gói Tóm Tắt (Chunk Size)",
             value: settings.summarization_chunk_size || 10,
-            onChange: e => updateSetting("summarization_chunk_size", e),
+            onChange: value => updateSetting("summarization_chunk_size", value),
             min: 1,
             max: settings.context_depth || 20,
             step: 1
           }), (0, jsxRuntime.jsx)(SearchableSelect, {
             label: "Chế độ Ghép nối Lịch sử",
             value: settings.context_mode || "standard",
-            onChange: e => updateSetting("context_mode", e.target.value),
+            onChange: event => updateSetting("context_mode", event.target.value),
             options: [{
               value: "standard",
               label: "Tiêu chuẩn (Cả User & AI)"
@@ -390,7 +390,7 @@ export function createSmartContextSettings(getDependencies) {
             label: "",
             ariaLabel: "Lời nhắc Tóm tắt Toàn cục",
             value: settings.summarization_prompt || "",
-            onChange: e => updateSetting("summarization_prompt", e.target.value),
+            onChange: event => updateSetting("summarization_prompt", event.target.value),
             rows: 15,
             className: "font-mono text-xs"
           })]
@@ -432,10 +432,10 @@ export function createActionSuggestionSettings(getDependencies) {
     let connectionSettings = getConnectionSettings();
     let usesGemini = "gemini" === connectionSettings.source;
     (0, react.useEffect)(() => {
-      let e = getActionSuggestionSettings();
-      setIsEnabled(e.enabled);
-      setGeminiModel(e.gemini_model);
-      setSystemPrompt(e.action_suggestion_prompt);
+      let savedSettings = getActionSuggestionSettings();
+      setIsEnabled(savedSettings.enabled);
+      setGeminiModel(savedSettings.gemini_model);
+      setSystemPrompt(savedSettings.action_suggestion_prompt);
     }, []);
     return (0, jsxRuntime.jsxs)("div", {
       className: "space-y-6",
@@ -457,10 +457,10 @@ export function createActionSuggestionSettings(getDependencies) {
             }), (0, jsxRuntime.jsx)(SearchableSelect, {
               ariaLabel: "Mô hình Google Gemini",
               value: geminiModel,
-              onChange: e => setGeminiModel(e.target.value),
-              options: geminiModels.map(e => ({
-                value: e.id,
-                label: e.name
+              onChange: event => setGeminiModel(event.target.value),
+              options: geminiModels.map(model => ({
+                value: model.id,
+                label: model.name
               })),
               disabled: isLoadingModels,
               testButton: ModelTestButton && buildSavedProbeTarget && testModel ? (0, jsxRuntime.jsx)(ModelTestButton, {
@@ -488,7 +488,7 @@ export function createActionSuggestionSettings(getDependencies) {
             }), (0, jsxRuntime.jsx)(TextArea, {
               label: "Lời nhắc (System Prompt)",
               value: systemPrompt,
-              onChange: e => setSystemPrompt(e.target.value),
+              onChange: event => setSystemPrompt(event.target.value),
               rows: 15,
               placeholder: "Nhập lời nhắc tuỳ chỉnh cho Gợi ý hành động..."
             })]
@@ -498,8 +498,8 @@ export function createActionSuggestionSettings(getDependencies) {
         className: "flex justify-end border-t border-slate-700 pt-4",
         children: (0, jsxRuntime.jsx)("button", {
           onClick: () => {
-            (e => {
-              settingsStorage.setItem(actionSuggestionStorageKey, JSON.stringify(e));
+            (nextSettings => {
+              settingsStorage.setItem(actionSuggestionStorageKey, JSON.stringify(nextSettings));
             })({
               enabled: isEnabled,
               gemini_model: geminiModel,
@@ -549,10 +549,10 @@ export function createLiterarySettings(getDependencies) {
     let usesProxyForTools = getProxyForTools();
     let usesGemini = !usesProxyForTools && "gemini" === connectionSettings.source;
     (0, react.useEffect)(() => {
-      let e = getWritingRefinementSettings();
-      setIsEnabled(e.enabled);
-      setGeminiModel(e.gemini_model);
-      setSystemPrompt(e.writing_refinement_prompt);
+      let savedSettings = getWritingRefinementSettings();
+      setIsEnabled(savedSettings.enabled);
+      setGeminiModel(savedSettings.gemini_model);
+      setSystemPrompt(savedSettings.writing_refinement_prompt);
     }, []);
     return (0, jsxRuntime.jsxs)("div", {
       className: "space-y-6",
@@ -574,10 +574,10 @@ export function createLiterarySettings(getDependencies) {
             }), (0, jsxRuntime.jsx)(SearchableSelect, {
               ariaLabel: "Mô hình Google Gemini",
               value: geminiModel,
-              onChange: e => setGeminiModel(e.target.value),
-              options: geminiModels.map(e => ({
-                value: e.id,
-                label: e.name
+              onChange: event => setGeminiModel(event.target.value),
+              options: geminiModels.map(model => ({
+                value: model.id,
+                label: model.name
               })),
               disabled: isLoadingModels,
               testButton: ModelTestButton && buildSavedProbeTarget && testModel ? (0, jsxRuntime.jsx)(ModelTestButton, {
@@ -605,7 +605,7 @@ export function createLiterarySettings(getDependencies) {
             }), (0, jsxRuntime.jsx)(TextArea, {
               label: "Lời nhắc (System Prompt)",
               value: systemPrompt,
-              onChange: e => setSystemPrompt(e.target.value),
+              onChange: event => setSystemPrompt(event.target.value),
               rows: 17,
               placeholder: "Nhập lời nhắc tuỳ chỉnh cho Cải thiện Văn chương..."
             })]
@@ -615,8 +615,8 @@ export function createLiterarySettings(getDependencies) {
         className: "flex justify-end border-t border-slate-700 pt-4",
         children: (0, jsxRuntime.jsx)("button", {
           onClick: () => {
-            (e => {
-              settingsStorage.setItem(writingRefinementStorageKey, JSON.stringify(e));
+            (nextSettings => {
+              settingsStorage.setItem(writingRefinementStorageKey, JSON.stringify(nextSettings));
             })({
               enabled: isEnabled,
               gemini_model: geminiModel,
@@ -662,22 +662,22 @@ export function createSpeechSettings(getDependencies) {
     let [isTestingVoice, setIsTestingVoice] = (0, react.useState)(false);
     let [nativeVoices, setNativeVoices] = (0, react.useState)([]);
     (0, react.useEffect)(() => {
-      let e = () => {
-        let e = window.speechSynthesis.getVoices().sort((e, t) => {
-          let n = e.lang.includes("vi");
-          let r = t.lang.includes("vi");
-          return n && !r ? -1 : !n && r ? 1 : e.name.localeCompare(t.name);
+      let refreshVoices = () => {
+        let voices = window.speechSynthesis.getVoices().sort((firstVoice, secondVoice) => {
+          let firstVietnamese = firstVoice.lang.includes("vi");
+          let secondVietnamese = secondVoice.lang.includes("vi");
+          return firstVietnamese && !secondVietnamese ? -1 : !firstVietnamese && secondVietnamese ? 1 : firstVoice.name.localeCompare(secondVoice.name);
         });
-        setNativeVoices(e);
+        setNativeVoices(voices);
       };
-      e();
-      window.speechSynthesis.addEventListener("voiceschanged", e);
-      return () => window.speechSynthesis.removeEventListener("voiceschanged", e);
+      refreshVoices();
+      window.speechSynthesis.addEventListener("voiceschanged", refreshVoices);
+      return () => window.speechSynthesis.removeEventListener("voiceschanged", refreshVoices);
     }, []);
-    let updateSetting = (n, r) => {
+    let updateSetting = (field, value) => {
       updateSpeechSettings({
         ...speechSettings,
-        [n]: r
+        [field]: value
       });
     };
     let isNativeProvider = "native" === speechSettings.tts_provider;
@@ -689,17 +689,17 @@ export function createSpeechSettings(getDependencies) {
       }), (0, jsxRuntime.jsx)(ToggleSwitch, {
         label: "Bật Text-to-Speech (TTS) Toàn Cục",
         checked: speechSettings.tts_enabled ?? false,
-        onChange: e => updateSetting("tts_enabled", e)
+        onChange: value => updateSetting("tts_enabled", value)
       }), (0, jsxRuntime.jsxs)("div", {
         className: "space-y-6   " + (speechSettings.tts_enabled ? "" : "opacity-50 pointer-events-none"),
         children: [(0, jsxRuntime.jsx)(ToggleSwitch, {
           label: "Chế độ Đọc Streaming (Real-time)",
           checked: speechSettings.tts_streaming ?? false,
-          onChange: e => updateSetting("tts_streaming", e)
+          onChange: value => updateSetting("tts_streaming", value)
         }), (0, jsxRuntime.jsx)(SearchableSelect, {
           label: "Nguồn Giọng Đọc (Provider)",
           value: speechSettings.tts_provider || "gemini",
-          onChange: e => updateSetting("tts_provider", e.target.value),
+          onChange: event => updateSetting("tts_provider", event.target.value),
           options: [{
             value: "gemini",
             label: "Gemini AI (Cloud)"
@@ -715,22 +715,22 @@ export function createSpeechSettings(getDependencies) {
           }) : (0, jsxRuntime.jsx)(SearchableSelect, {
             label: "Giọng Đọc Trình Duyệt",
             value: speechSettings.tts_native_voice || nativeVoices[0]?.voiceURI || "",
-            onChange: e => updateSetting("tts_native_voice", e.target.value),
-            options: nativeVoices.map(e => ({
-              value: e.voiceURI,
-              label: e.name
+            onChange: event => updateSetting("tts_native_voice", event.target.value),
+            options: nativeVoices.map(voice => ({
+              value: voice.voiceURI,
+              label: voice.name
             }))
           }), (0, jsxRuntime.jsx)(NumberInput, {
             label: "Tốc độ (Rate)",
             value: speechSettings.tts_rate ?? 1,
-            onChange: e => updateSetting("tts_rate", e),
+            onChange: value => updateSetting("tts_rate", value),
             min: .1,
             max: 2,
             step: .1
           }), (0, jsxRuntime.jsx)(NumberInput, {
             label: "Cao độ (Pitch)",
             value: speechSettings.tts_pitch ?? 1,
-            onChange: e => updateSetting("tts_pitch", e),
+            onChange: value => updateSetting("tts_pitch", value),
             min: 0,
             max: 2,
             step: .1
@@ -740,10 +740,10 @@ export function createSpeechSettings(getDependencies) {
           children: (0, jsxRuntime.jsx)(SearchableSelect, {
             label: "Giọng đọc Gemini",
             value: speechSettings.tts_voice || "Kore",
-            onChange: e => updateSetting("tts_voice", e.target.value),
-            options: geminiSpeechVoices.map(e => ({
-              value: e.id,
-              label: e.name
+            onChange: event => updateSetting("tts_voice", event.target.value),
+            options: geminiSpeechVoices.map(voice => ({
+              value: voice.id,
+              label: voice.name
             }))
           })
         }), (0, jsxRuntime.jsx)("div", {
@@ -753,28 +753,28 @@ export function createSpeechSettings(getDependencies) {
               if (!isTestingVoice) {
                 setIsTestingVoice(true);
                 try {
-                  let t = "Xin chào, đây là giọng đọc thử nghiệm. Hệ thống âm thanh đang hoạt động tốt.";
-                  if ("gemini" === (speechSettings.tts_provider || "gemini")) await (async (e, t = "Kore", n) => {
-                    let r = nextGeminiKey();
-                    if (!r) throw Error("API Key chưa được cấu hình.");
-                    let a = sanitizeSpeechText(e);
+                  let sampleText = "Xin chào, đây là giọng đọc thử nghiệm. Hệ thống âm thanh đang hoạt động tốt.";
+                  if ("gemini" === (speechSettings.tts_provider || "gemini")) await (async (text, voiceName = "Kore", onStart) => {
+                    let apiKey = nextGeminiKey();
+                    if (!apiKey) throw Error("API Key chưa được cấu hình.");
+                    let cleanText = sanitizeSpeechText(text);
                     if (console.log("[TTS] Starting request...", {
-                      originalLength: e.length,
-                      cleanLength: a.length,
-                      voiceName: t
-                    }), !a) throw Error("Không có nội dung văn bản hợp lệ để đọc (Văn bản có thể chỉ chứa ký tự đặc biệt).");
-                    let i = new GoogleGenAI({
-                      apiKey: r
+                      originalLength: text.length,
+                      cleanLength: cleanText.length,
+                      voiceName: voiceName
+                    }), !cleanText) throw Error("Không có nội dung văn bản hợp lệ để đọc (Văn bản có thể chỉ chứa ký tự đặc biệt).");
+                    let client = new GoogleGenAI({
+                      apiKey: apiKey
                     });
                     try {
-                      let r = await getAudioContext();
+                      let context = await getAudioContext();
                       console.log("[TTS] AudioContext ready/resumed");
                       console.log("[TTS] Sending API request...");
-                      let o = await i.models.generateContent({
+                      let response = await client.models.generateContent({
                         model: "gemini-2.5-flash-preview-tts",
                         contents: {
                           parts: [{
-                            text: a
+                            text: cleanText
                           }]
                         },
                         config: {
@@ -782,7 +782,7 @@ export function createSpeechSettings(getDependencies) {
                           speechConfig: {
                             voiceConfig: {
                               prebuiltVoiceConfig: {
-                                voiceName: t
+                                voiceName: voiceName
                               }
                             }
                           },
@@ -790,62 +790,62 @@ export function createSpeechSettings(getDependencies) {
                         }
                       });
                       console.log("[TTS] API Response received");
-                      let s = o.candidates?.[0];
-                      let l = s?.content?.parts?.[0]?.inlineData?.data;
-                      if (!l) {
-                        let e = s?.finishReason;
-                        let t = s?.safetyRatings;
+                      let candidate = response.candidates?.[0];
+                      let encodedAudio = candidate?.content?.parts?.[0]?.inlineData?.data;
+                      if (!encodedAudio) {
+                        let finishReason = candidate?.finishReason;
+                        let safetyRatings = candidate?.safetyRatings;
                         throw console.error("[TTS] No audio data.", {
-                          finishReason: e,
-                          safetyRatings: t
-                        }), Error("SAFETY" === e || "OTHER" === e ? `AI từ chối đọc do nội dung nhạy cảm. (Reason: ${e})` : `API trả về phản hồi rỗng. (Reason: ${e || "Unknown"})`);
+                          finishReason: finishReason,
+                          safetyRatings: safetyRatings
+                        }), Error("SAFETY" === finishReason || "OTHER" === finishReason ? `AI từ chối đọc do nội dung nhạy cảm. (Reason: ${finishReason})` : `API trả về phản hồi rỗng. (Reason: ${finishReason || "Unknown"})`);
                       }
-                      let c;
-                      let u = decodeBase64Bytes(l);
-                      console.log(`[TTS] Decoded ${u.length} bytes.`);
+                      let audioBuffer;
+                      let audioBytes = decodeBase64Bytes(encodedAudio);
+                      console.log(`[TTS] Decoded ${audioBytes.length} bytes.`);
                       try {
-                        let e = u.buffer.slice(0);
-                        c = await r.decodeAudioData(e);
+                        let buffer = audioBytes.buffer.slice(0);
+                        audioBuffer = await context.decodeAudioData(buffer);
                         console.log("[TTS] Standard decodeAudioData success.");
-                      } catch (t) {
-                        console.warn("[TTS] Standard decode failed, trying Raw PCM fallback...", t);
+                      } catch (error) {
+                        console.warn("[TTS] Standard decode failed, trying Raw PCM fallback...", error);
                         try {
-                          c = decodeRawPcmBuffer(u, r, 24e3);
+                          audioBuffer = decodeRawPcmBuffer(audioBytes, context, 24e3);
                           console.log("[TTS] Raw PCM decode success.");
-                        } catch (e) {
-                          throw console.error("[TTS] All decoding attempts failed.", e), Error("Không thể giải mã dữ liệu âm thanh (Định dạng không hỗ trợ).");
+                        } catch (error) {
+                          throw console.error("[TTS] All decoding attempts failed.", error), Error("Không thể giải mã dữ liệu âm thanh (Định dạng không hỗ trợ).");
                         }
                       }
-                      return new Promise((e, t) => {
+                      return new Promise((resolve, reject) => {
                         try {
-                          let t = r.createBufferSource();
-                          t.buffer = c;
-                          t.connect(r.destination);
-                          t.onended = () => {
+                          let source = context.createBufferSource();
+                          source.buffer = audioBuffer;
+                          source.connect(context.destination);
+                          source.onended = () => {
                             console.log("[TTS] Playback ended.");
-                            e();
+                            resolve();
                           };
-                          n && n();
-                          t.start();
+                          onStart && onStart();
+                          source.start();
                           console.log("[TTS] Playback started.");
-                        } catch (e) {
-                          t(e);
+                        } catch (error) {
+                          reject(error);
                         }
                       });
-                    } catch (e) {
-                      throw console.error("[TTS] Critical Error:", e), e;
+                    } catch (error) {
+                      throw console.error("[TTS] Critical Error:", error), error;
                     }
-                  })(t, speechSettings.tts_voice || "Kore");else {
-                    let n = speechSettings.tts_native_voice || "";
-                    let r = speechSettings.tts_rate || 1;
-                    let a = speechSettings.tts_pitch || 1;
-                    await new Promise(e => {
-                      speakNativeText(t, n, r, a, undefined, () => e());
+                  })(sampleText, speechSettings.tts_voice || "Kore");else {
+                    let voice = speechSettings.tts_native_voice || "";
+                    let rate = speechSettings.tts_rate || 1;
+                    let pitch = speechSettings.tts_pitch || 1;
+                    await new Promise(resolve => {
+                      speakNativeText(sampleText, voice, rate, pitch, undefined, () => resolve());
                     });
                   }
                   showToast("Đã phát âm thanh thử nghiệm thành công.", "success");
-                } catch (e) {
-                  showToast(`Lỗi thử nghiệm: ${e instanceof Error ? e.message : String(e)}`, "error");
+                } catch (error) {
+                  showToast(`Lỗi thử nghiệm: ${error instanceof Error ? error.message : String(error)}`, "error");
                 } finally {
                   setIsTestingVoice(false);
                 }
@@ -1337,43 +1337,43 @@ export function createCardRuntimeSettings(getDependencies) {
     let [compatMode, setCompatMode] = (0, react.useState)(readCardRuntimeCompatMode);
     let [engineMode, setEngineMode] = (0, react.useState)(readCardRuntimeEngineMode);
     let activeLevel = "full" === compatMode && "official-local" === engineMode ? "advanced" : "basic";
-    let updateCompatMode = e => {
-      typeof window > "u" || (settingsStorage.setItem(cardRuntimeCompatKey, e), window.dispatchEvent(new CustomEvent(cardRuntimeCompatEvent, {
-        detail: e
+    let updateCompatMode = mode => {
+      typeof window > "u" || (settingsStorage.setItem(cardRuntimeCompatKey, mode), window.dispatchEvent(new CustomEvent(cardRuntimeCompatEvent, {
+        detail: mode
       })));
-      setCompatMode(e);
+      setCompatMode(mode);
     };
-    let updateEngineMode = e => {
-      typeof window > "u" || (settingsStorage.setItem(cardRuntimeEngineKey, e), window.dispatchEvent(new CustomEvent(cardRuntimeEngineEvent, {
-        detail: e
+    let updateEngineMode = mode => {
+      typeof window > "u" || (settingsStorage.setItem(cardRuntimeEngineKey, mode), window.dispatchEvent(new CustomEvent(cardRuntimeEngineEvent, {
+        detail: mode
       })));
-      setEngineMode(e);
+      setEngineMode(mode);
     };
-    let selectLevel = e => {
-      let t = "advanced" === e;
-      updateCompatMode(t ? "full" : "safe");
-      updateEngineMode(t ? "official-local" : "current");
+    let selectLevel = level => {
+      let isAdvanced = "advanced" === level;
+      updateCompatMode(isAdvanced ? "full" : "safe");
+      updateEngineMode(isAdvanced ? "official-local" : "current");
     };
     (0, react.useEffect)(() => {
-      let e = e => {
-        let n = e.detail;
-        ("full" === n || "safe" === n) && setCompatMode(n);
+      let handleCompatChange = event => {
+        let mode = event.detail;
+        ("full" === mode || "safe" === mode) && setCompatMode(mode);
       };
-      let n = e => {
-        let t = e.detail;
-        ("current" === t || "official-local" === t) && setEngineMode(t);
+      let handleEngineChange = event => {
+        let mode = event.detail;
+        ("current" === mode || "official-local" === mode) && setEngineMode(mode);
       };
-      window.addEventListener(cardRuntimeCompatEvent, e);
-      window.addEventListener(cardRuntimeEngineEvent, n);
+      window.addEventListener(cardRuntimeCompatEvent, handleCompatChange);
+      window.addEventListener(cardRuntimeEngineEvent, handleEngineChange);
       return () => {
-        window.removeEventListener(cardRuntimeCompatEvent, e);
-        window.removeEventListener(cardRuntimeEngineEvent, n);
+        window.removeEventListener(cardRuntimeCompatEvent, handleCompatChange);
+        window.removeEventListener(cardRuntimeEngineEvent, handleEngineChange);
       };
     }, []);
     (0, react.useEffect)(() => {
-      let t = "advanced" === activeLevel ? "full" : "safe";
-      let r = "advanced" === activeLevel ? "official-local" : "current";
-      compatMode === t && engineMode === r || selectLevel(activeLevel);
+      let expectedCompatMode = "advanced" === activeLevel ? "full" : "safe";
+      let expectedEngineMode = "advanced" === activeLevel ? "official-local" : "current";
+      compatMode === expectedCompatMode && engineMode === expectedEngineMode || selectLevel(activeLevel);
     }, [compatMode, engineMode, activeLevel]);
     return (0, jsxRuntime.jsxs)("div", {
       className: "space-y-5",
