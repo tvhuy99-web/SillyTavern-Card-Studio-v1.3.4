@@ -33,10 +33,10 @@ import { createMemoryStorage } from '../src/providers/proxy/persistence.js';
   };
 
   const store = createSessionStore({
-    At: createStore,
-    It: fn => fn,
-    Bs: x => x,
-    Es: payload => esCalls.push({ insideReducer, payload }),
+    createStore: createStore,
+    immer: fn => fn,
+    redactNetworkLog: x => x,
+    saveArenaSettings: payload => esCalls.push({ insideReducer, payload }),
     __stsDiagnosticsState: {
       activate: () => ({ turns: [] }),
       snapshot: () => ({ turns: [] }),
@@ -49,7 +49,7 @@ import { createMemoryStorage } from '../src/providers/proxy/persistence.js';
       remove() {},
       abortAll() {},
     },
-    il: {
+    initialState: {
       isArenaMode: false,
       arenaProvider: 'gemini',
       arenaModelId: null,
@@ -57,7 +57,7 @@ import { createMemoryStorage } from '../src/providers/proxy/persistence.js';
       messages: [],
       logs: { turns: [] },
     },
-    rl: () => [],
+    buildLinkedLorebookEntries: () => [],
   });
 
   store.getState().setArenaMode(true);
@@ -67,7 +67,7 @@ import { createMemoryStorage } from '../src/providers/proxy/persistence.js';
 
   assert.equal(esCalls.length, 4);
   for (const call of esCalls) {
-    assert.equal(call.insideReducer, false, 'dependencies.Es must run outside Immer updater');
+    assert.equal(call.insideReducer, false, 'saveArenaSettings must run outside Immer updater');
   }
   assert.deepEqual(esCalls.at(-1).payload, {
     enabled: true,

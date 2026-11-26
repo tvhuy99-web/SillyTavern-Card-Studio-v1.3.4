@@ -14,7 +14,7 @@ function createDiagnosticsActions(setState, dependencies) {
         addMythicLog: value => log('addMythic', value),
         addSelectionLog: value => log('addSelection', value),
         addNetworkLog: value => setState(draft => {
-            draft.logs = dependencies.__stsDiagnosticsState.addNetwork((0, dependencies.Bs)(value));
+            draft.logs = dependencies.__stsDiagnosticsState.addNetwork((0, dependencies.redactNetworkLog)(value));
         }),
         clearLogs: () => setState(draft => { draft.logs = dependencies.__stsDiagnosticsState.clear(); })
     };
@@ -26,7 +26,7 @@ function createArenaActions(setState, getState, dependencies) {
             draft[field] = value;
         });
         const next = getState();
-        (0, dependencies.Es)({
+        (0, dependencies.saveArenaSettings)({
             enabled: next.isArenaMode,
             provider: next.arenaProvider,
             modelId: next.arenaModelId,
@@ -42,12 +42,12 @@ function createArenaActions(setState, getState, dependencies) {
 }
 
 export function createSessionStore(dependencies) {
-    const createStore = dependencies.At;
-    const immer = dependencies.It;
+    const createStore = dependencies.createStore;
+    const immer = dependencies.immer;
     return createStore()(immer((setState, getState) => {
         const setField = (field, value) => setState(draft => { draft[field] = value; });
         return {
-            ...dependencies.il,
+            ...dependencies.initialState,
             setSessionData: patch => {
                 if ((Object.prototype.hasOwnProperty.call(patch, 'sessionId') && patch.sessionId !== getState().sessionId) || (Object.prototype.hasOwnProperty.call(patch,'__stsRecordGeneration') && patch.__stsRecordGeneration !== getState().__stsRecordGeneration)) {
                     dependencies.__stsRuntimeState.invalidateSession();
@@ -87,7 +87,7 @@ export function createSessionStore(dependencies) {
             resetStore: () => setState(draft => {
                 dependencies.__stsRuntimeState.invalidateSession('store-reset');
                 dependencies.__stsDiagnosticsState.activate(null);
-                Object.assign(draft, dependencies.il);
+                Object.assign(draft, dependencies.initialState);
                 draft.logs = dependencies.__stsDiagnosticsState.snapshot();
             }),
             ...createSessionRpgActions(setState, dependencies)

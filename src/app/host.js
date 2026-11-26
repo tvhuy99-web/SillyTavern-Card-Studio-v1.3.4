@@ -178,7 +178,7 @@ var fetchProxyModels=__stsHostConnections.loadProxyModels;
 var { defaultMythicSystemPrompt, defaultMythicSafetySettings, formatRpgHybridTable, createRpgRowSnapshot, buildMythicPrompt, filterRpgDatabaseByActiveEntries, parseRpgActions, applyRpgActions } = createTableProcessing({parseRelaxedJson, HarmBlockThreshold, HarmCategory});
 var { buildLinkedLorebookEntries: buildLinkedLorebookEntries } = createTableLorebookLinks({});
 var { initialState: initialSessionState } = createSessionDefaults({arenaSettingsKey, __stsDiagnosticsState});
-var sessionStore=__stsCreateSessionStore({At: createStore,Bs: redactNetworkLog,Es: saveArenaSettings,It: withImmer,__stsDiagnosticsState,__stsRuntimeState,il: initialSessionState,rl: buildLinkedLorebookEntries});
+var sessionStore=__stsCreateSessionStore({createStore,redactNetworkLog,saveArenaSettings,immer: withImmer,__stsDiagnosticsState,__stsRuntimeState,initialState: initialSessionState,buildLinkedLorebookEntries});
 var createActiveGeminiClient = () => createGeminiClient({ GoogleGenAI: GoogleGenAI, getApiKey: nextGeminiKey });
 var buildActiveGeminiRequest = (prompt, preset, safetySettings) => buildGeminiRequest(prompt, preset, safetySettings, { thinkingLevel: ThinkingLevel.HIGH });
 var generateGeminiToolText = async (model, prompt, preset, safetySettings = [], signal) => ({ text: (await __stsGenerationGateway.generateOnce({ source: "gemini", model: model || preset.model || DEFAULT_GEMINI_MODEL, prompt, preset, safetySettings, signal })).response.text });

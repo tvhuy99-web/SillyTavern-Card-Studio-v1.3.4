@@ -2,7 +2,7 @@
 export function createSessionRpgActions(setState, dependencies) {
     function synchronize(draft, operation) {
         draft.card.rpg_data.lastUpdated = Date.now();
-        try { draft.generatedLorebookEntries = dependencies.rl(draft.card.rpg_data); }
+        try { draft.generatedLorebookEntries = dependencies.buildLinkedLorebookEntries(draft.card.rpg_data); }
         catch (error) { console.error(`Sync error in ${operation}`, error); }
     }
     return {
@@ -45,7 +45,7 @@ export function createSessionRpgActions(setState, dependencies) {
             draft.card.rpg_data = updated;
             updated.lastUpdated = Date.now();
             try {
-                const entries = dependencies.rl(updated);
+                const entries = dependencies.buildLinkedLorebookEntries(updated);
                 draft.generatedLorebookEntries = entries;
                 draft.logs = dependencies.__stsDiagnosticsState.addSystem({
                     level: 'state', source: 'system',
