@@ -52,24 +52,24 @@ export function createCharacterCoreSection(getDependencies) {
       children: [(0, jsxRuntime.jsx)(TextInput, {
         label: "Tên",
         value: card.name,
-        onChange: e => onChange("name", e.target.value)
+        onChange: event => onChange("name", event.target.value)
       }), (0, jsxRuntime.jsx)(TextArea, {
         containerClassName: "col-span-full",
         label: "Mô tả",
         value: card.description,
-        onChange: e => onChange("description", e.target.value),
+        onChange: event => onChange("description", event.target.value),
         rows: 5
       }), (0, jsxRuntime.jsx)(TextArea, {
         containerClassName: "col-span-full",
         label: "Tính cách",
         value: card.personality || "",
-        onChange: e => onChange("personality", e.target.value),
+        onChange: event => onChange("personality", event.target.value),
         rows: 5
       }), (0, jsxRuntime.jsx)(TextArea, {
         containerClassName: "col-span-full",
         label: "Vai trò (Persona)",
         value: card.char_persona || "",
-        onChange: e => onChange("char_persona", e.target.value),
+        onChange: event => onChange("char_persona", event.target.value),
         rows: 5
       })]
     });
@@ -93,17 +93,17 @@ export function createCharacterScenarioSection(getDependencies) {
         containerClassName: "col-span-full",
         label: "Kịch bản",
         value: card.scenario || "",
-        onChange: e => onChange("scenario", e.target.value)
+        onChange: event => onChange("scenario", event.target.value)
       }), (0, jsxRuntime.jsx)(TextArea, {
         containerClassName: "col-span-full",
         label: "Gợi ý hệ thống",
         value: card.system_prompt || "",
-        onChange: e => onChange("system_prompt", e.target.value)
+        onChange: event => onChange("system_prompt", event.target.value)
       }), (0, jsxRuntime.jsx)(TextArea, {
         containerClassName: "col-span-full",
         label: "Chỉ dẫn sau lịch sử",
         value: card.post_history_instructions || "",
-        onChange: e => onChange("post_history_instructions", e.target.value)
+        onChange: event => onChange("post_history_instructions", event.target.value)
       })]
     });
   };
@@ -118,7 +118,7 @@ export function createCharacterLorebookSection(getDependencies) {
       jsxRuntime
     } = resolveCharacterSectionDeps(getDependencies);
     let entries = card.char_book?.entries || [];
-    let enabledCount = entries.filter(e => false !== e.enabled).length;
+    let enabledCount = entries.filter(entry => false !== entry.enabled).length;
     let attachedLorebooks = card.attached_lorebooks || [];
     return (0, jsxRuntime.jsx)(CollapsibleSection, {
       title: "Sổ tay & Thế giới (Lorebook)",
@@ -168,7 +168,7 @@ export function createCharacterLorebookSection(getDependencies) {
           children: [(0, jsxRuntime.jsx)("span", {
             className: "text-xs font-bold text-slate-500 uppercase tracking-wide flex items-center h-6",
             children: "Liên kết:"
-          }), attachedLorebooks.map((e, t) => (0, jsxRuntime.jsxs)("span", {
+          }), attachedLorebooks.map((lorebookName, index) => (0, jsxRuntime.jsxs)("span", {
             className: "inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-amber-900/30 text-amber-400 border border-amber-700/50",
             children: [(0, jsxRuntime.jsx)("svg", {
               "aria-hidden": "true",
@@ -183,8 +183,8 @@ export function createCharacterLorebookSection(getDependencies) {
                 strokeWidth: "2",
                 d: "M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"
               })
-            }), e]
-          }, t))]
+            }), lorebookName]
+          }, index))]
         })]
       })
     });
@@ -206,41 +206,41 @@ export function createCharacterMetadataSection(getDependencies) {
     let fieldIdPrefix = (0, react.useId)();
     let [customFieldDrafts, setCustomFieldDrafts] = (0, react.useState)({});
     let knownFields = new Set(["name", "description", "personality", "char_persona", "first_mes", "mes_example", "scenario", "system_prompt", "post_history_instructions", "creator", "character_version", "tags", "creator_notes", "creatorcomment", "char_book", "character_book", "attached_lorebooks", "alternate_greetings", "group_only_greetings", "extensions", "data", "spec", "spec_version", "create_date", "avatar"]);
-    let customFieldKeys = Object.keys(card).filter(e => !knownFields.has(e) && !e.startsWith("__"));
+    let customFieldKeys = Object.keys(card).filter(field => !knownFields.has(field) && !field.startsWith("__"));
     (0, react.useEffect)(() => {
-      let t = {};
-      customFieldKeys.forEach(n => {
-        let r = card[n];
-        "object" == typeof r && r && (!Array.isArray(r) || !r.every(e => "string" == typeof e)) && (t[n] = {
-          value: JSON.stringify(r, null, 2),
+      let drafts = {};
+      customFieldKeys.forEach(field => {
+        let fieldValue = card[field];
+        "object" == typeof fieldValue && fieldValue && (!Array.isArray(fieldValue) || !fieldValue.every(item => "string" == typeof item)) && (drafts[field] = {
+          value: JSON.stringify(fieldValue, null, 2),
           isValid: true
         });
       });
-      setCustomFieldDrafts(t);
+      setCustomFieldDrafts(drafts);
     }, [card, customFieldKeys.join(",")]);
-    let handleCustomFieldChange = (e, n) => {
-      setCustomFieldDrafts(t => ({
-        ...t,
-        [e]: {
-          ...t[e],
-          value: n
+    let handleCustomFieldChange = (field, jsonText) => {
+      setCustomFieldDrafts(previousDrafts => ({
+        ...previousDrafts,
+        [field]: {
+          ...previousDrafts[field],
+          value: jsonText
         }
       }));
       try {
-        let r = "" === n.trim() ? null : JSON.parse(n);
-        setCustomFieldDrafts(t => ({
-          ...t,
-          [e]: {
-            value: n,
+        let parsedValue = "" === jsonText.trim() ? null : JSON.parse(jsonText);
+        setCustomFieldDrafts(previousDrafts => ({
+          ...previousDrafts,
+          [field]: {
+            value: jsonText,
             isValid: true
           }
         }));
-        onChange(e, r);
+        onChange(field, parsedValue);
       } catch {
-        setCustomFieldDrafts(t => ({
-          ...t,
-          [e]: {
-            value: n,
+        setCustomFieldDrafts(previousDrafts => ({
+          ...previousDrafts,
+          [field]: {
+            value: jsonText,
             isValid: false
           }
         }));
@@ -253,11 +253,11 @@ export function createCharacterMetadataSection(getDependencies) {
       children: [(0, jsxRuntime.jsx)(TextInput, {
         label: "Người tạo",
         value: card.creator || "",
-        onChange: e => onChange("creator", e.target.value)
+        onChange: event => onChange("creator", event.target.value)
       }), (0, jsxRuntime.jsx)(TextInput, {
         label: "Phiên bản nhân vật",
         value: card.character_version || "",
-        onChange: e => onChange("character_version", e.target.value)
+        onChange: event => onChange("character_version", event.target.value)
       }), (0, jsxRuntime.jsxs)("div", {
         className: "col-span-full",
         children: [(0, jsxRuntime.jsx)("label", {
@@ -270,8 +270,8 @@ export function createCharacterMetadataSection(getDependencies) {
             id: fieldIdPrefix,
             type: "text",
             value: card.tags?.join(", ") || "",
-            onChange: e => {
-              onChange("tags", e.target.value.split(",").map(e => e.trim()).filter(Boolean));
+            onChange: event => {
+              onChange("tags", event.target.value.split(",").map(tag => tag.trim()).filter(Boolean));
             },
             className: "w-full bg-slate-700 border border-slate-600 rounded-md p-2 text-slate-200 focus:ring-2 focus:ring-sky-500 focus:border-sky-500 transition",
             placeholder: "fantasy, sci-fi, isekai"
@@ -281,12 +281,12 @@ export function createCharacterMetadataSection(getDependencies) {
         containerClassName: "col-span-full",
         label: "Ghi chú của người tạo",
         value: card.creator_notes || "",
-        onChange: e => onChange("creator_notes", e.target.value)
+        onChange: event => onChange("creator_notes", event.target.value)
       }), (0, jsxRuntime.jsx)(TextArea, {
         containerClassName: "col-span-full",
         label: "Nhận xét của người tạo (V3)",
         value: card.creatorcomment || "",
-        onChange: e => onChange("creatorcomment", e.target.value)
+        onChange: event => onChange("creatorcomment", event.target.value)
       }), customFieldKeys.length > 0 && (0, jsxRuntime.jsxs)("div", {
         className: "col-span-full border-t border-slate-700 pt-4 mt-2",
         children: [(0, jsxRuntime.jsx)("h4", {
@@ -294,49 +294,49 @@ export function createCharacterMetadataSection(getDependencies) {
           children: "Trường dữ liệu mở rộng"
         }), (0, jsxRuntime.jsx)("div", {
           className: "grid grid-cols-1 gap-4",
-          children: customFieldKeys.map(n => {
-            let a = card[n];
-            if (Array.isArray(a) && a.every(e => "string" == typeof e)) return (0, jsxRuntime.jsx)(TextArea, {
-              label: `${n} (Mỗi mục phân tách bằng '---')`,
-              value: a.join("\n---\n"),
-              onChange: e => onChange(n, e.target.value.split("\n---\n").map(e => e.trim())),
+          children: customFieldKeys.map(field => {
+            let fieldValue = card[field];
+            if (Array.isArray(fieldValue) && fieldValue.every(item => "string" == typeof item)) return (0, jsxRuntime.jsx)(TextArea, {
+              label: `${field} (Mỗi mục phân tách bằng '---')`,
+              value: fieldValue.join("\n---\n"),
+              onChange: event => onChange(field, event.target.value.split("\n---\n").map(item => item.trim())),
               rows: 5
-            }, n);
-            if ("string" == typeof a) return (0, jsxRuntime.jsx)(TextArea, {
-              label: n,
-              value: a,
-              onChange: e => onChange(n, e.target.value)
-            }, n);
-            if ("boolean" == typeof a) return (0, jsxRuntime.jsx)("div", {
+            }, field);
+            if ("string" == typeof fieldValue) return (0, jsxRuntime.jsx)(TextArea, {
+              label: field,
+              value: fieldValue,
+              onChange: event => onChange(field, event.target.value)
+            }, field);
+            if ("boolean" == typeof fieldValue) return (0, jsxRuntime.jsx)("div", {
               children: (0, jsxRuntime.jsx)(ToggleSwitch, {
-                label: n,
-                checked: a,
-                onChange: e => onChange(n, e)
+                label: field,
+                checked: fieldValue,
+                onChange: value => onChange(field, value)
               })
-            }, n);
-            if ("number" == typeof a) return (0, jsxRuntime.jsx)(TextInput, {
-              label: n,
+            }, field);
+            if ("number" == typeof fieldValue) return (0, jsxRuntime.jsx)(TextInput, {
+              label: field,
               type: "number",
-              value: String(a),
-              onChange: e => onChange(n, parseFloat(e.target.value) || 0)
-            }, n);
-            if ("object" == typeof a && a) {
-              let e = customFieldDrafts[n] || {
+              value: String(fieldValue),
+              onChange: event => onChange(field, parseFloat(event.target.value) || 0)
+            }, field);
+            if ("object" == typeof fieldValue && fieldValue) {
+              let draft = customFieldDrafts[field] || {
                 value: "",
                 isValid: true
               };
               return (0, jsxRuntime.jsxs)("div", {
                 children: [(0, jsxRuntime.jsx)(TextArea, {
-                  label: `JSON: ${n}`,
-                  value: e.value,
-                  onChange: e => handleCustomFieldChange(n, e.target.value),
+                  label: `JSON: ${field}`,
+                  value: draft.value,
+                  onChange: event => handleCustomFieldChange(field, event.target.value),
                   rows: 8,
-                  className: "font-mono text-xs " + (e.isValid ? "" : "border-red-500")
-                }), !e.isValid && (0, jsxRuntime.jsx)("p", {
+                  className: "font-mono text-xs " + (draft.isValid ? "" : "border-red-500")
+                }), !draft.isValid && (0, jsxRuntime.jsx)("p", {
                   className: "text-sm text-red-400 mt-1",
                   children: "JSON không hợp lệ."
                 })]
-              }, n);
+              }, field);
             }
             return null;
           })
@@ -360,10 +360,10 @@ export function createRegexScriptEditor(getDependencies) {
       ToggleSwitch
     } = resolveCharacterSectionDeps(getDependencies);
     let [isExpanded, setIsExpanded] = (0, react.useState)(false);
-    let updateField = (r, a) => {
+    let updateField = (field, value) => {
       onUpdate(index, {
         ...script,
-        [r]: a
+        [field]: value
       });
     };
     return (0, jsxRuntime.jsxs)("div", {
@@ -372,12 +372,12 @@ export function createRegexScriptEditor(getDependencies) {
         className: "flex items-center p-3",
         children: [(0, jsxRuntime.jsx)("div", {
           className: "flex items-center gap-2 flex-shrink-0 mr-4",
-          onClick: e => e.stopPropagation(),
+          onClick: event => event.stopPropagation(),
           children: (0, jsxRuntime.jsx)(ToggleSwitch, {
             label: "",
             ariaLabel: `Bật kịch bản ${script.scriptName || "Kịch bản không tên"}`,
             checked: !script.disabled,
-            onChange: e => updateField("disabled", !e),
+            onChange: enabled => updateField("disabled", !enabled),
             className: "bg-transparent p-0"
           })
         }), (0, jsxRuntime.jsx)("button", {
@@ -392,8 +392,8 @@ export function createRegexScriptEditor(getDependencies) {
         }), (0, jsxRuntime.jsxs)("div", {
           className: "flex items-center ml-4 flex-shrink-0",
           children: [(0, jsxRuntime.jsx)("button", {
-            onClick: e => {
-              e.stopPropagation();
+            onClick: event => {
+              event.stopPropagation();
               onRemove(index);
             },
             className: "text-slate-500 hover:text-red-400  p-1",
@@ -433,16 +433,16 @@ export function createRegexScriptEditor(getDependencies) {
         children: [(0, jsxRuntime.jsx)(TextInput, {
           label: "Tên Kịch bản",
           value: script.scriptName || "",
-          onChange: e => updateField("scriptName", e.target.value)
+          onChange: event => updateField("scriptName", event.target.value)
         }), (0, jsxRuntime.jsx)(TextArea, {
           label: "Biểu thức Regex Tìm kiếm",
           value: script.findRegex || "",
-          onChange: e => updateField("findRegex", e.target.value),
+          onChange: event => updateField("findRegex", event.target.value),
           rows: 3
         }), (0, jsxRuntime.jsx)(TextArea, {
           label: "Chuỗi Thay thế (HTML/Văn bản)",
           value: script.replaceString || "",
-          onChange: e => updateField("replaceString", e.target.value),
+          onChange: event => updateField("replaceString", event.target.value),
           rows: 15
         })]
       })]
@@ -464,12 +464,12 @@ export function createTavernScriptEditor(getDependencies) {
       ToggleSwitch
     } = resolveCharacterSectionDeps(getDependencies);
     let [isExpanded, setIsExpanded] = (0, react.useState)(false);
-    let updateField = (r, a) => {
+    let updateField = (field, value) => {
       onUpdate(index, {
         ...script,
         value: {
           ...(script?.value || {}),
-          [r]: a
+          [field]: value
         }
       });
     };
@@ -479,12 +479,12 @@ export function createTavernScriptEditor(getDependencies) {
         className: "flex items-center p-3",
         children: [(0, jsxRuntime.jsx)("div", {
           className: "flex items-center gap-2 flex-shrink-0 mr-4",
-          onClick: e => e.stopPropagation(),
+          onClick: event => event.stopPropagation(),
           children: (0, jsxRuntime.jsx)(ToggleSwitch, {
             label: "",
             ariaLabel: `Bật kịch bản ${script?.value?.name || "Kịch bản không tên"}`,
             checked: script?.value?.enabled ?? false,
-            onChange: e => updateField("enabled", e),
+            onChange: enabled => updateField("enabled", enabled),
             clean: true
           })
         }), (0, jsxRuntime.jsx)("button", {
@@ -499,8 +499,8 @@ export function createTavernScriptEditor(getDependencies) {
         }), (0, jsxRuntime.jsxs)("div", {
           className: "flex items-center ml-4 flex-shrink-0",
           children: [(0, jsxRuntime.jsx)("button", {
-            onClick: e => {
-              e.stopPropagation();
+            onClick: event => {
+              event.stopPropagation();
               onRemove(index);
             },
             className: "text-slate-500 hover:text-red-400  p-1",
@@ -540,13 +540,13 @@ export function createTavernScriptEditor(getDependencies) {
         children: [(0, jsxRuntime.jsx)(TextInput, {
           label: "Tên Kịch bản",
           value: script?.value?.name || "",
-          onChange: e => updateField("name", e.target.value)
+          onChange: event => updateField("name", event.target.value)
         }), (0, jsxRuntime.jsx)("div", {
           className: "relative",
           children: (0, jsxRuntime.jsx)(TextArea, {
             label: "Nội dung",
             value: script?.value?.content || "",
-            onChange: e => updateField("content", e.target.value),
+            onChange: event => updateField("content", event.target.value),
             rows: 15,
             className: "font-mono text-xs"
           })
@@ -565,16 +565,16 @@ export function createRegexScriptList(getDependencies) {
       jsxRuntime,
       RegexScriptEditor
     } = resolveCharacterSectionDeps(getDependencies);
-    let handleUpdateScript = (0, react.useCallback)((n, r) => {
-      let a = [...scripts];
-      a[n] = r;
-      onUpdate(a);
+    let handleUpdateScript = (0, react.useCallback)((index, updatedScript) => {
+      let nextScripts = [...scripts];
+      nextScripts[index] = updatedScript;
+      onUpdate(nextScripts);
     }, [scripts, onUpdate]);
-    let handleRemoveScript = (0, react.useCallback)(n => {
-      onUpdate(scripts.filter((e, t) => t !== n));
+    let handleRemoveScript = (0, react.useCallback)(index => {
+      onUpdate(scripts.filter((script, scriptIndex) => scriptIndex !== index));
     }, [scripts, onUpdate]);
     let handleAddScript = (0, react.useCallback)(() => {
-      let n = {
+      let newScript = {
         id: `regex_${Date.now()}`,
         scriptName: "Kịch bản Mới",
         findRegex: "",
@@ -584,16 +584,16 @@ export function createRegexScriptList(getDependencies) {
         promptOnly: false,
         runOnEdit: false
       };
-      onUpdate([...scripts, n]);
+      onUpdate([...scripts, newScript]);
     }, [scripts, onUpdate]);
     return (0, jsxRuntime.jsxs)("div", {
       className: "space-y-3",
-      children: [scripts.map((e, t) => (0, jsxRuntime.jsx)(RegexScriptEditor, {
-        script: e,
-        index: t,
+      children: [scripts.map((script, index) => (0, jsxRuntime.jsx)(RegexScriptEditor, {
+        script: script,
+        index: index,
         onUpdate: handleUpdateScript,
         onRemove: handleRemoveScript
-      }, e.id || t)), (0, jsxRuntime.jsxs)("button", {
+      }, script.id || index)), (0, jsxRuntime.jsxs)("button", {
         onClick: handleAddScript,
         className: "w-full mt-2 bg-slate-700 hover:bg-slate-600 text-sky-400 font-semibold py-2 px-4 rounded-lg   flex items-center justify-center gap-2 border border-slate-600",
         children: [(0, jsxRuntime.jsx)("svg", {
@@ -624,16 +624,16 @@ export function createTavernScriptList(getDependencies) {
       TavernScriptEditor,
       jsxRuntime
     } = resolveCharacterSectionDeps(getDependencies);
-    let handleUpdateScript = (0, react.useCallback)((n, r) => {
-      let a = [...scripts];
-      a[n] = r;
-      onUpdate(a);
+    let handleUpdateScript = (0, react.useCallback)((index, updatedScript) => {
+      let nextScripts = [...scripts];
+      nextScripts[index] = updatedScript;
+      onUpdate(nextScripts);
     }, [scripts, onUpdate]);
-    let handleRemoveScript = (0, react.useCallback)(n => {
-      onUpdate(scripts.filter((e, t) => t !== n));
+    let handleRemoveScript = (0, react.useCallback)(index => {
+      onUpdate(scripts.filter((script, scriptIndex) => scriptIndex !== index));
     }, [scripts, onUpdate]);
     let handleAddScript = (0, react.useCallback)(() => {
-      let n = {
+      let newScript = {
         type: "script",
         value: {
           id: `tavern_${Date.now()}`,
@@ -642,16 +642,16 @@ export function createTavernScriptList(getDependencies) {
           enabled: true
         }
       };
-      onUpdate([...scripts, n]);
+      onUpdate([...scripts, newScript]);
     }, [scripts, onUpdate]);
     return (0, jsxRuntime.jsxs)("div", {
       className: "space-y-3",
-      children: [scripts.map((e, t) => (0, jsxRuntime.jsx)(TavernScriptEditor, {
-        script: e,
-        index: t,
+      children: [scripts.map((script, index) => (0, jsxRuntime.jsx)(TavernScriptEditor, {
+        script: script,
+        index: index,
         onUpdate: handleUpdateScript,
         onRemove: handleRemoveScript
-      }, e?.value?.id || t)), (0, jsxRuntime.jsxs)("button", {
+      }, script?.value?.id || index)), (0, jsxRuntime.jsxs)("button", {
         onClick: handleAddScript,
         className: "w-full mt-2 bg-slate-700 hover:bg-slate-600 text-sky-400 font-semibold py-2 px-4 rounded-lg   flex items-center justify-center gap-2 border border-slate-600",
         children: [(0, jsxRuntime.jsx)("svg", {
@@ -690,12 +690,12 @@ export function createCharacterExtensionsSection(getDependencies) {
     let [rawExtensionsJson, setRawExtensionsJson] = (0, react.useState)("{}");
     let [isValidJson, setIsValidJson] = (0, react.useState)(true);
     let otherExtensions = (0, react.useMemo)(() => {
-      let t = {
+      let extensions = {
         ...(card.extensions || {})
       };
-      delete t.regex_scripts;
-      delete t.TavernHelper_scripts;
-      return t;
+      delete extensions.regex_scripts;
+      delete extensions.TavernHelper_scripts;
+      return extensions;
     }, [card.extensions]);
     (0, react.useEffect)(() => {
       setRawExtensionsJson(JSON.stringify(otherExtensions, null, 2));
@@ -731,13 +731,13 @@ export function createCharacterExtensionsSection(getDependencies) {
         }), (0, jsxRuntime.jsx)(TextArea, {
           label: "Các trường JSON chưa được xử lý trong 'extensions'",
           value: rawExtensionsJson,
-          onChange: e => {
-            let t = e.target.value;
-            setRawExtensionsJson(t);
+          onChange: event => {
+            let jsonText = event.target.value;
+            setRawExtensionsJson(jsonText);
             try {
-              let e = "" === t.trim() ? {} : JSON.parse(t);
-              if (!e || "object" != typeof e || Array.isArray(e)) throw Error("Extensions phải là một đối tượng JSON.");
-              onExtensionsReplace(e);
+              let parsedExtensions = "" === jsonText.trim() ? {} : JSON.parse(jsonText);
+              if (!parsedExtensions || "object" != typeof parsedExtensions || Array.isArray(parsedExtensions)) throw Error("Extensions phải là một đối tượng JSON.");
+              onExtensionsReplace(parsedExtensions);
               setIsValidJson(true);
             } catch {
               setIsValidJson(false);
@@ -781,49 +781,49 @@ export function createCharacterDialogueSection(getDependencies) {
     let {
       showToast: showToast
     } = useToast();
-    let handleGreetingChange = (n, a) => {
-      let i = [...allGreetings];
-      i[n] = a;
-      let [o, ...s] = i;
+    let handleGreetingChange = (index, value) => {
+      let nextGreetings = [...allGreetings];
+      nextGreetings[index] = value;
+      let [firstGreeting, ...alternateGreetings] = nextGreetings;
       onUpdate({
         ...card,
-        first_mes: o,
-        alternate_greetings: s.length > 0 ? s : []
+        first_mes: firstGreeting,
+        alternate_greetings: alternateGreetings.length > 0 ? alternateGreetings : []
       });
     };
-    let handleRemoveGreeting = n => {
+    let handleRemoveGreeting = index => {
       if (allGreetings.length <= 1) return;
-      let [a, ...i] = allGreetings.filter((e, t) => t !== n);
+      let [firstGreeting, ...alternateGreetings] = allGreetings.filter((greeting, greetingIndex) => greetingIndex !== index);
       onUpdate({
         ...card,
-        first_mes: a,
-        alternate_greetings: i.length > 0 ? i : []
+        first_mes: firstGreeting,
+        alternate_greetings: alternateGreetings.length > 0 ? alternateGreetings : []
       });
     };
-    let handlePromoteGreeting = n => {
-      if (0 === n) return;
-      let a = [...allGreetings];
-      let i = a.splice(n, 1)[0];
-      a.unshift(i);
-      let [o, ...s] = a;
+    let handlePromoteGreeting = index => {
+      if (0 === index) return;
+      let nextGreetings = [...allGreetings];
+      let promotedGreeting = nextGreetings.splice(index, 1)[0];
+      nextGreetings.unshift(promotedGreeting);
+      let [firstGreeting, ...alternateGreetings] = nextGreetings;
       onUpdate({
         ...card,
-        first_mes: o,
-        alternate_greetings: s
+        first_mes: firstGreeting,
+        alternate_greetings: alternateGreetings
       });
     };
     let groupOnlyGreetings = card.group_only_greetings || [];
-    let handleGroupGreetingChange = (n, r) => {
-      let a = [...groupOnlyGreetings];
-      a[n] = r;
+    let handleGroupGreetingChange = (index, value) => {
+      let nextGreetings = [...groupOnlyGreetings];
+      nextGreetings[index] = value;
       onUpdate({
         ...card,
-        group_only_greetings: a
+        group_only_greetings: nextGreetings
       });
     };
-    let handleRemoveGroupGreeting = n => onUpdate({
+    let handleRemoveGroupGreeting = index => onUpdate({
       ...card,
-      group_only_greetings: groupOnlyGreetings.filter((e, t) => t !== n)
+      group_only_greetings: groupOnlyGreetings.filter((greeting, greetingIndex) => greetingIndex !== index)
     });
     return (0, jsxRuntime.jsxs)(CollapsibleSection, {
       title: "Đối thoại",
@@ -835,27 +835,27 @@ export function createCharacterDialogueSection(getDependencies) {
           onClick: async () => {
             setIsGeneratingGreeting(true);
             try {
-              let n = await async function (e, t = "gemini-3-flash-preview") {
-                let n = `... (Prompt Logic) ... \n${JSON.stringify(e)}`;
-                let r = "{}";
+              let translatedGreetings = await async function (greetings, model = "gemini-3-flash-preview") {
+                let prompt = `... (Prompt Logic) ... \n${JSON.stringify(greetings)}`;
+                let responseText = "{}";
                 try {
                   if (readConnectionSettings().source === "aistudio") {
-                    let e = readConnectionSettings();
-                    r = await generateAiStudioToolText(n, e.aistudio_tool_model || e.aistudio_model || t);
+                    let connectionSettings = readConnectionSettings();
+                    responseText = await generateAiStudioToolText(prompt, connectionSettings.aistudio_tool_model || connectionSettings.aistudio_model || model);
                   } else if (readProxyForTools()) {
-                    let e = readConnectionSettings();
-                    r = await generateProxyText(n, e.proxy_tool_model || e.proxy_model || t, e.proxy_protocol);
-                  } else r = (await createGeminiClient().models.generateContent({
-                    model: t,
-                    contents: n,
+                    let connectionSettings = readConnectionSettings();
+                    responseText = await generateProxyText(prompt, connectionSettings.proxy_tool_model || connectionSettings.proxy_model || model, connectionSettings.proxy_protocol);
+                  } else responseText = (await createGeminiClient().models.generateContent({
+                    model: model,
+                    contents: prompt,
                     config: {
                       responseMimeType: "application/json",
                       safetySettings: geminiSafetySettings
                     }
                   })).text || "{}";
-                  return JSON.parse(r);
-                } catch (e) {
-                  throw Error(e.message || "Lỗi dịch thuật từ AI.");
+                  return JSON.parse(responseText);
+                } catch (error) {
+                  throw Error(error.message || "Lỗi dịch thuật từ AI.");
                 }
               }({
                 first_mes: card.first_mes,
@@ -867,14 +867,14 @@ export function createCharacterDialogueSection(getDependencies) {
               }, resolveCurrentModel());
               onUpdate({
                 ...card,
-                first_mes: n.first_mes,
-                alternate_greetings: n.alternate_greetings,
-                group_only_greetings: n.group_only_greetings
+                first_mes: translatedGreetings.first_mes,
+                alternate_greetings: translatedGreetings.alternate_greetings,
+                group_only_greetings: translatedGreetings.group_only_greetings
               });
               showToast("Đã dịch xong toàn bộ lời chào!", "success");
-            } catch (e) {
-              console.error(e);
-              showToast(`Lỗi dịch thuật: ${e instanceof Error ? e.message : String(e)}`, "error");
+            } catch (error) {
+              console.error(error);
+              showToast(`Lỗi dịch thuật: ${error instanceof Error ? error.message : String(error)}`, "error");
             } finally {
               setIsGeneratingGreeting(false);
             }
@@ -891,24 +891,24 @@ export function createCharacterDialogueSection(getDependencies) {
         })
       }), (0, jsxRuntime.jsxs)("div", {
         className: "space-y-4",
-        children: [allGreetings.map((e, t) => (0, jsxRuntime.jsxs)("div", {
+        children: [allGreetings.map((greeting, index) => (0, jsxRuntime.jsxs)("div", {
           className: "bg-slate-700/50 p-4 rounded-lg " + (isGeneratingGreeting ? "opacity-50 pointer-events-none" : ""),
           children: [(0, jsxRuntime.jsxs)("div", {
             className: "flex justify-between items-center mb-2",
             children: [(0, jsxRuntime.jsx)("label", {
-              htmlFor: `${fieldIdPrefix}-${t}`,
+              htmlFor: `${fieldIdPrefix}-${index}`,
               className: "text-sm font-bold text-slate-300",
-              children: 0 === t ? "Lời chào Chính (first_mes)" : `Lời chào Thay thế #${t}`
+              children: 0 === index ? "Lời chào Chính (first_mes)" : `Lời chào Thay thế #${index}`
             }), (0, jsxRuntime.jsxs)("div", {
               className: "flex items-center gap-2",
-              children: [t > 0 && (0, jsxRuntime.jsx)("button", {
-                onClick: () => handlePromoteGreeting(t),
+              children: [index > 0 && (0, jsxRuntime.jsx)("button", {
+                onClick: () => handlePromoteGreeting(index),
                 className: "text-xs bg-sky-700 hover:bg-sky-600 text-white font-semibold py-1 px-2 rounded-md ",
                 children: "Đặt làm Chính"
               }), allGreetings.length > 1 && (0, jsxRuntime.jsx)("button", {
-                onClick: () => handleRemoveGreeting(t),
+                onClick: () => handleRemoveGreeting(index),
                 className: "text-slate-400 hover:text-red-400",
-                "aria-label": `Xóa lời chào số ${t}`,
+                "aria-label": `Xóa lời chào số ${index}`,
                 children: (0, jsxRuntime.jsx)("svg", {
                   "aria-hidden": "true",
                   xmlns: "http://www.w3.org/2000/svg",
@@ -926,24 +926,24 @@ export function createCharacterDialogueSection(getDependencies) {
           }), (0, jsxRuntime.jsxs)("div", {
             className: "relative",
             children: [(0, jsxRuntime.jsx)("textarea", {
-              id: `${fieldIdPrefix}-${t}`,
-              value: e,
-              onChange: e => handleGreetingChange(t, e.target.value),
+              id: `${fieldIdPrefix}-${index}`,
+              value: greeting,
+              onChange: event => handleGreetingChange(index, event.target.value),
               rows: 8,
               disabled: isGeneratingGreeting,
               className: "w-full bg-slate-700 border border-slate-600 rounded-md p-2 pr-10 text-slate-200 focus:ring-2 focus:ring-sky-500 focus:border-sky-500 transition disabled:bg-slate-800 disabled:text-slate-500"
             }), (0, jsxRuntime.jsx)(CopyButton, {
-              textToCopy: e,
+              textToCopy: greeting,
               absolute: true
             })]
           })]
-        }, t)), (0, jsxRuntime.jsxs)("button", {
+        }, index)), (0, jsxRuntime.jsxs)("button", {
           onClick: () => {
-            let [n, ...a] = [...allGreetings, ""];
+            let [firstGreeting, ...alternateGreetings] = [...allGreetings, ""];
             onUpdate({
               ...card,
-              first_mes: n,
-              alternate_greetings: a
+              first_mes: firstGreeting,
+              alternate_greetings: alternateGreetings
             });
           },
           disabled: isGeneratingGreeting,
@@ -968,17 +968,17 @@ export function createCharacterDialogueSection(getDependencies) {
         children: [(0, jsxRuntime.jsx)("h4", {
           className: "text-lg font-semibold text-slate-300",
           children: "Lời chào Chỉ dành cho Nhóm"
-        }), groupOnlyGreetings.map((e, t) => (0, jsxRuntime.jsxs)("div", {
+        }), groupOnlyGreetings.map((greeting, index) => (0, jsxRuntime.jsxs)("div", {
           className: "bg-slate-700/50 p-4 rounded-lg",
           children: [(0, jsxRuntime.jsxs)("div", {
             className: "flex justify-between items-center mb-2",
             children: [(0, jsxRuntime.jsxs)("label", {
               className: "text-sm font-bold text-slate-300",
-              children: ["Lời chào Nhóm #", t + 1]
+              children: ["Lời chào Nhóm #", index + 1]
             }), (0, jsxRuntime.jsx)("button", {
-              onClick: () => handleRemoveGroupGreeting(t),
+              onClick: () => handleRemoveGroupGreeting(index),
               className: "text-slate-400 hover:text-red-400",
-              "aria-label": `Xóa lời chào nhóm số ${t + 1}`,
+              "aria-label": `Xóa lời chào nhóm số ${index + 1}`,
               children: (0, jsxRuntime.jsx)("svg", {
                 "aria-hidden": "true",
                 xmlns: "http://www.w3.org/2000/svg",
@@ -995,17 +995,17 @@ export function createCharacterDialogueSection(getDependencies) {
           }), (0, jsxRuntime.jsxs)("div", {
             className: "relative",
             children: [(0, jsxRuntime.jsx)("textarea", {
-              value: e,
-              onChange: e => handleGroupGreetingChange(t, e.target.value),
-              "aria-label": `Lời chào Nhóm ${t + 1}`,
+              value: greeting,
+              onChange: event => handleGroupGreetingChange(index, event.target.value),
+              "aria-label": `Lời chào Nhóm ${index + 1}`,
               rows: 4,
               className: "w-full bg-slate-700 border border-slate-600 rounded-md p-2 pr-10 text-slate-200 focus:ring-2 focus:ring-sky-500 focus:border-sky-500 transition"
             }), (0, jsxRuntime.jsx)(CopyButton, {
-              textToCopy: e,
+              textToCopy: greeting,
               absolute: true
             })]
           })]
-        }, t)), (0, jsxRuntime.jsxs)("button", {
+        }, index)), (0, jsxRuntime.jsxs)("button", {
           onClick: () => onUpdate({
             ...card,
             group_only_greetings: [...groupOnlyGreetings, ""]
@@ -1030,7 +1030,7 @@ export function createCharacterDialogueSection(getDependencies) {
         containerClassName: "col-span-full",
         label: "Ví dụ hội thoại (Phân tách bằng <START>)",
         value: card.mes_example,
-        onChange: e => onChange("mes_example", e.target.value),
+        onChange: event => onChange("mes_example", event.target.value),
         rows: 8
       })]
     });
@@ -1171,15 +1171,15 @@ export function createCharacterDetailSections(getDependencies) {
         card: card,
         onRegexUpdate: handleRegexScriptsUpdate,
         onTavernUpdate: handleTavernScriptsUpdate,
-        onExtensionsReplace: n => {
-          let r = {};
-          card.extensions?.regex_scripts && (r.regex_scripts = card.extensions.regex_scripts);
-          card.extensions?.TavernHelper_scripts && (r.TavernHelper_scripts = card.extensions.TavernHelper_scripts);
+        onExtensionsReplace: nextExtensions => {
+          let preservedScripts = {};
+          card.extensions?.regex_scripts && (preservedScripts.regex_scripts = card.extensions.regex_scripts);
+          card.extensions?.TavernHelper_scripts && (preservedScripts.TavernHelper_scripts = card.extensions.TavernHelper_scripts);
           onUpdate({
             ...card,
             extensions: {
-              ...n,
-              ...r
+              ...nextExtensions,
+              ...preservedScripts
             }
           });
         }
