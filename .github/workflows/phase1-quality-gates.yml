@@ -35,7 +35,7 @@ jobs:
           node-version: '22'
 
       - name: Build portable static bundle
-        run: npm run build
+        run: npm run build:portable
 
       - name: Build source-native ESM layout
         run: npm run build:source
@@ -85,7 +85,7 @@ jobs:
 
       - name: Build portable and source-native targets
         run: |
-          npm run build
+          npm run build:portable
           npm run build:source
 
       - name: Verify Chromium/Chrome binary
@@ -122,16 +122,13 @@ jobs:
         with:
           node-version: '22'
 
-      - name: Install locked npm runtime dependencies
+      - name: Run canonical locked npm release build
         run: |
-          npm ci --prefix build/npm-runtime --no-audit --no-fund
+          npm run build
           git diff --exit-code -- build/npm-runtime/package-lock.json
 
       - name: Audit npm dependency lockfile and licenses
         run: npm run audit:npm-dependencies
-
-      - name: Build package-backed ESM runtime
-        run: npm run build:npm
 
       - name: Run package-backed runtime parity tests
         run: npm run test:npm-runtime

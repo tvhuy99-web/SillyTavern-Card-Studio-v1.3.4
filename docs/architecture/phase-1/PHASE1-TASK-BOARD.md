@@ -27,3 +27,7 @@ Baseline: `STCS-Phase1-Block-D-92` (`14a26bde516278938f27efdce5cd81b5a2165a7b`) 
 | U04 | TESTED (supported checks) | Expanded T02 regression, full Node suite, build, boundary, quality, native Java and overlay checks. No independent human review or real-browser validation claimed. |
 | U05 | BLOCKED | Registry DNS EAI_AGAIN; workflow now defaults to running npm acceptance on manual dispatch and uploads genuine lockfile/evidence after successful build. |
 | U06 | BLOCKED | Chromium timed out; Android SDK/device and live provider acceptance not run. |
+
+## Connected CI follow-up (2026-11-26)
+
+U05 / E01: genuine tracked lockfile, clean npm ci, npm runtime parity and mounted Chromium/IndexedDB verified on 5e623a3 ([run 45801131779](https://github.com/tvhuy99-web/SillyTavern-Card-Studio-v1.3.4/actions/runs/45801131779)). Default release build, Netlify and Capacitor cutover implemented; fresh integrated CI and APK evidence pending. U06: automated browser and Android compilation verified on prior release, initial APK trial reported good; full device/upgrade, live provider and remaining scenario coverage not verified.

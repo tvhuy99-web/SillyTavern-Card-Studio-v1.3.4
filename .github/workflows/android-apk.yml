@@ -43,17 +43,21 @@ jobs:
           "$SDKMANAGER" --version
           "$SDKMANAGER" --sdk_root="$ANDROID_HOME" "platforms;android-36" "build-tools;36.0.0"
 
-      - name: Install web dependencies
-        run: npm install --no-audit --no-fund
-
-      - name: Build portable static web app and run regression tests
+      - name: Build portable compatibility fixture and run regression tests
         run: |
-          npm run build
+          npm run build:portable
           npm test
           npm run test:native-java
           npm run test:android-overlay
-          test -s dist/index.html
-          test -d dist/assets
+
+      - name: Build official locked npm web payload
+        run: |
+          npm run build
+          npm run test:npm-runtime
+          git diff --exit-code -- build/npm-runtime/package-lock.json
+          test -s dist-npm/index.html
+          test -s dist-npm/modules/app/entry.js
+          test -s dist-npm/npm-runtime-build.json
 
       # Keep the existing web project untouched: only build-time CI installs.
       # Pin exact Capacitor 8.0.0 packages for reproducible Android APK builds.
@@ -129,6 +133,31 @@ jobs:
           print('ARM64-only ONNX Runtime + LiteRT-LM packaging verified.')
           PY
           grep -q 'EmbeddingGemma2LiteRTPlugin' android/app/src/main/java/com/tvhuy99/cardstudio/MainActivity.java
+
+      - name: Verify APK contains the exact npm release runtime
+        run: |
+          python3 - <<'PY'
+          import hashlib
+          import json
+          from pathlib import Path
+          from zipfile import ZipFile
+
+          dist = Path('dist-npm')
+          manifest = json.loads((dist / 'npm-runtime-build.json').read_text())
+          lock = Path('build/npm-runtime/package-lock.json').read_bytes()
+          assert manifest['lockSha256'] == hashlib.sha256(lock).hexdigest()
+          with ZipFile('android/app/build/outputs/apk/debug/app-debug.apk') as apk:
+              prefix = 'assets/public/'
+              assert apk.read(prefix + 'index.html') == (dist / 'index.html').read_bytes()
+              assert apk.read(prefix + 'modules/app/entry.js') == (dist / 'modules/app/entry.js').read_bytes()
+              assert apk.read(prefix + 'npm-runtime-build.json') == (dist / 'npm-runtime-build.json').read_bytes()
+              assert len(manifest['replacements']) == 6
+              for item in manifest['replacements']:
+                  data = apk.read(prefix + item['path'])
+                  assert hashlib.sha256(data).hexdigest() == item['sha256'], item['path']
+              assert prefix + 'assets/app-production-v1.3.6.js' not in apk.namelist()
+          print('APK contains all six locked package-backed runtime adapters; no portable application bundle.')
+          PY
 
       - name: Verify stable signing certificate
         shell: bash

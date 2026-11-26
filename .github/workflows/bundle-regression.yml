@@ -37,7 +37,7 @@ jobs:
         with:
           node-version: '22'
       - name: Build portable static app
-        run: npm run build
+        run: npm run build:portable
       - name: Verify all generated assets are committed
         run: |
           git diff --exit-code -- assets
@@ -75,7 +75,7 @@ jobs:
         with:
           node-version: '22'
       - name: Build portable static app
-        run: npm run build
+        run: npm run build:portable
       - name: Check Chromium/Chrome availability
         run: google-chrome --version
       - name: Browser application acceptance
@@ -94,7 +94,7 @@ jobs:
           CHROME_BIN: google-chrome
         run: npm run test:app-browser && npm run test:storage-browser
 
-  # Experimental until registry pins and a lockfile have been verified.
+  # Extra manual repeat of the mandatory locked npm gate in phase1-quality-gates.yml.
   npm-runtime-acceptance:
     if: github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
@@ -106,11 +106,8 @@ jobs:
           node-version: '22'
       - name: Install isolated runtime dependencies
         run: |
-          if test -f build/npm-runtime/package-lock.json; then
-            npm ci --prefix build/npm-runtime --no-audit --no-fund
-          else
-            npm install --prefix build/npm-runtime --no-audit --no-fund
-          fi
+          npm ci --prefix build/npm-runtime --no-audit --no-fund
+          git diff --exit-code -- build/npm-runtime/package-lock.json
           npm ls --prefix build/npm-runtime --all
       - name: Record actual registry lock and installed license metadata
         run: node tools/audit-npm-dependencies.mjs > npm-dependency-evidence.json
