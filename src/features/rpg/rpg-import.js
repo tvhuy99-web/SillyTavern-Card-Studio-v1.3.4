@@ -30,5 +30,5 @@ var importChatSheetsDatabase = source => {
   tables.sort((first, second) => (first.config.orderNo || 0) - (second.config.orderNo || 0));
   return {version: 2, tables: tables, globalRules: "Hệ thống RPG Tự động.", lastUpdated: Date.now()};
 };
-return { Ol: rpgPromptMacros, Rl: importChatSheetsDatabase };
+return { rpgPromptMacros, importChatSheetsDatabase };
 }

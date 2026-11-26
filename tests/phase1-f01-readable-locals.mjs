@@ -27,15 +27,15 @@ const db={tables:[{config:{id:'table',name:'Stats',columns:[{id:'name',label:'Na
 const linked=createTableLorebookLinks().buildLinkedLorebookEntries(db);
 assert.equal(linked[0].uid,'mythic_table_row');
 assert.equal(linked[0].content,'### [Mythic Data] Hero\n**Nguồn:** Stats\n- **Name:** Hero\n- **HP:** 0');
-const imported=createRpgImport().Rl({sheet_a:{name:'Stats',content:[['id','HP'],['row',42]],exportConfig:{entryType:'keyword'}}});
+const imported=createRpgImport().importChatSheetsDatabase({sheet_a:{name:'Stats',content:[['id','HP'],['row',42]],exportConfig:{entryType:'keyword'}}});
 assert.equal(imported.tables[0].config.export.strategy,'on_change');
 assert.equal(imported.tables[0].data.rows[0][1],42);
 const rawPcm=new Uint8Array([0,128,255,127]);
 const channel=new Float32Array(2);
 const buffer={getChannelData:()=>channel};
-assert.equal(createAudioConversion().Pd(rawPcm,{createBuffer:(channels,count,rate)=>{assert.deepEqual([channels,count,rate],[1,2,24000]);return buffer;}}),buffer);
+assert.equal(createAudioConversion().decodeRawPcmBuffer(rawPcm,{createBuffer:(channels,count,rate)=>{assert.deepEqual([channels,count,rate],[1,2,24000]);return buffer;}}),buffer);
 assert.deepEqual([...channel],[-1,32767/32768]);
-assert.equal(createSpeechEngine({ke:{},Ce:{}}).$d('<thinking>secret</thinking> Hello **world**'),'Hello world');
+assert.equal(createSpeechEngine({HarmCategory:{},HarmBlockThreshold:{}}).sanitizeSpeechText('<thinking>secret</thinking> Hello **world**'),'Hello world');
 assert.deepEqual(createRelaxedJsonParser({jt:{default:{parse:JSON.parse}}}).parseRelaxedJson('{"ok":true}'),{ok:true});
 const preset=await createPresetFileCodec({fu:{temp:1},__stsNormalizePresetConfig:value=>value}).parsePresetFile(new File([JSON.stringify({temperature:0.5,openai_max_context:2048,prompts:[null,{content:42,enabled:true}]})],'test.json'));
 assert.equal(preset.temp,0.5);assert.equal(preset.truncation_length,2048);assert.equal(preset.prompts[0].content,'42');

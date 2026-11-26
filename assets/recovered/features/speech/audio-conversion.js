@@ -15,5 +15,5 @@ function decodeRawPcmBuffer(bytes, context, sampleRate = 24e3) {
   for (let index = 0; index < sampleCount; index++) samples[index] = view.getInt16(2 * index, true) / 32768;
   return audioBuffer;
 }
-return { Od: getAudioContext, Rd: decodeBase64Bytes, Pd: decodeRawPcmBuffer };
+return { getAudioContext, decodeBase64Bytes, decodeRawPcmBuffer };
 }
