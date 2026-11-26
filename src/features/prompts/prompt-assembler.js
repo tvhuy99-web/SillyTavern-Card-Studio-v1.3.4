@@ -243,7 +243,6 @@ function resolveAssemblerDependencies(rawDependencies = {}) {
   const deps = rawDependencies && typeof rawDependencies === 'object' ? rawDependencies : {};
 
   const getRegexEngineMode = deps.getRegexEngineMode
-    || deps.Co
     || (() => 'official-local');
 
   const defaultRegexProcessor = createRegexProcessing({
@@ -254,19 +253,19 @@ function resolveAssemblerDependencies(rawDependencies = {}) {
 
   return {
     getRegexEngineMode,
-    processRegex: deps.processRegex || deps.gd || defaultRegexProcessor.processRegex,
-    extractRegexScripts: deps.extractRegexScripts || deps.Zu || defaultMacroHelpers.extractRegexScripts,
-    resolveCharacterName: deps.resolveCharacterName || deps.Vu || defaultMacroHelpers.resolveCharacterName,
-    resolvePromptOverride: deps.resolvePromptOverride || deps.Ku || defaultMacroHelpers.resolvePromptOverride,
-    expandBasicMacros: deps.expandBasicMacros || deps.Ju || defaultMacroHelpers.expandBasicMacros,
-    expandRandomMacros: deps.expandRandomMacros || deps.Xu || defaultMacroHelpers.expandRandomMacros,
-    getVariable: deps.getVariable || deps.Uu || defaultGetVariable,
-    mutateVariable: deps.mutateVariable || deps.Gu || defaultMutateVariable,
-    filterRpgDatabaseByActiveEntries: deps.filterRpgDatabaseByActiveEntries || deps.el || defaultTableHelpers.filterRpgDatabaseByActiveEntries,
-    formatRpgHybridTable: deps.formatRpgHybridTable || deps.Xs || defaultTableHelpers.formatRpgHybridTable,
-    createRpgRowSnapshot: deps.createRpgRowSnapshot || deps.Qs || defaultTableHelpers.createRpgRowSnapshot,
-    buildMythicPrompt: deps.buildMythicPrompt || deps.Zs || defaultTableHelpers.buildMythicPrompt,
-    defaultMythicSystemPrompt: deps.defaultMythicSystemPrompt ?? deps.Js ?? defaultTableHelpers.defaultMythicSystemPrompt,
+    processRegex: deps.processRegex || defaultRegexProcessor.processRegex,
+    extractRegexScripts: deps.extractRegexScripts || defaultMacroHelpers.extractRegexScripts,
+    resolveCharacterName: deps.resolveCharacterName || defaultMacroHelpers.resolveCharacterName,
+    resolvePromptOverride: deps.resolvePromptOverride || defaultMacroHelpers.resolvePromptOverride,
+    expandBasicMacros: deps.expandBasicMacros || defaultMacroHelpers.expandBasicMacros,
+    expandRandomMacros: deps.expandRandomMacros || defaultMacroHelpers.expandRandomMacros,
+    getVariable: deps.getVariable || defaultGetVariable,
+    mutateVariable: deps.mutateVariable || defaultMutateVariable,
+    filterRpgDatabaseByActiveEntries: deps.filterRpgDatabaseByActiveEntries || defaultTableHelpers.filterRpgDatabaseByActiveEntries,
+    formatRpgHybridTable: deps.formatRpgHybridTable || defaultTableHelpers.formatRpgHybridTable,
+    createRpgRowSnapshot: deps.createRpgRowSnapshot || defaultTableHelpers.createRpgRowSnapshot,
+    buildMythicPrompt: deps.buildMythicPrompt || defaultTableHelpers.buildMythicPrompt,
+    defaultMythicSystemPrompt: deps.defaultMythicSystemPrompt ?? defaultTableHelpers.defaultMythicSystemPrompt,
     normalizePromptVariableScopes: deps.normalizePromptVariableScopes
       || deps.__stsNormalizePromptVariableScopes
       || normalizePromptVariableScopes,
@@ -276,11 +275,10 @@ function resolveAssemblerDependencies(rawDependencies = {}) {
     buildSmartStateBlock: deps.buildSmartStateBlock
       || deps.__stsBuildSmartStateBlock
       || buildSmartStateBlock,
-    loadOptionalModule: deps.loadOptionalModule || deps.nc || (async loader => loader()),
+    loadOptionalModule: deps.loadOptionalModule || (async loader => loader()),
     runIsolatedScript: deps.runIsolatedScript
-      || deps.Lu
       || (() => Promise.reject(new Error('Isolated card scripts require a browser environment.'))),
-    logSystemMessage: deps.logSystemMessage || deps.qu || (() => {}),
+    logSystemMessage: deps.logSystemMessage || (() => {}),
   };
 }
 

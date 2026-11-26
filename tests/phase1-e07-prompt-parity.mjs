@@ -76,7 +76,7 @@ function createSharedDependencies({
   const logs = [];
   const macros = createMacroProcessing({});
   const getMode = () => regexEngineMode;
-  const regex = createRegexProcessing({ Co: getMode });
+  const regex = createRegexProcessing({ readCardRuntimeEngineMode: getMode });
   const tables = createTableProcessing({ HarmCategory: {}, HarmBlockThreshold: {}, parseRelaxedJson: text => JSON.parse(text) });
 
   const getVariable = (variables, path, fallback = undefined, unwrap = true) => {
@@ -135,26 +135,26 @@ function createSharedDependencies({
 
   return {
     logs,
-    Co: getMode,
-    Gu: mutateVariable,
-    Js: tables.defaultMythicSystemPrompt,
-    Ju: macros.expandBasicMacros,
-    Ku: macros.resolvePromptOverride,
-    Lu: runIsolatedScript,
-    Qs: tables.createRpgRowSnapshot,
-    Uu: getVariable,
-    Vu: macros.resolveCharacterName,
-    Xs: tables.formatRpgHybridTable,
-    Xu: macros.expandRandomMacros,
-    Zs: tables.buildMythicPrompt,
-    Zu: macros.extractRegexScripts,
+    getRegexEngineMode: getMode,
+    mutateVariable: mutateVariable,
+    defaultMythicSystemPrompt: tables.defaultMythicSystemPrompt,
+    expandBasicMacros: macros.expandBasicMacros,
+    resolvePromptOverride: macros.resolvePromptOverride,
+    runIsolatedScript: runIsolatedScript,
+    createRpgRowSnapshot: tables.createRpgRowSnapshot,
+    getVariable: getVariable,
+    resolveCharacterName: macros.resolveCharacterName,
+    formatRpgHybridTable: tables.formatRpgHybridTable,
+    expandRandomMacros: macros.expandRandomMacros,
+    buildMythicPrompt: tables.buildMythicPrompt,
+    extractRegexScripts: macros.extractRegexScripts,
     __stsBuildSmartStateBlock: buildSmartStateBlock,
     __stsNormalizePromptVariableScopes: normalizePromptVariableScopes,
     __stsReadGlobalVariables: () => ({ ...globalVariables }),
-    el: tables.filterRpgDatabaseByActiveEntries,
-    gd: regex.processRegex,
-    nc: async () => ({ default: {} }),
-    qu: (...entry) => logs.push(entry),
+    filterRpgDatabaseByActiveEntries: tables.filterRpgDatabaseByActiveEntries,
+    processRegex: regex.processRegex,
+    loadOptionalModule: async () => ({ default: {} }),
+    logSystemMessage: (...entry) => logs.push(entry),
   };
 }
 
