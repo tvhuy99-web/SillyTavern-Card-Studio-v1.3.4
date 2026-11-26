@@ -47,7 +47,7 @@ assert.match(sections, /checked: aiStudioVisible/);
 assert.match(sections, /changeAiStudioVisibility\(event.target.checked\)/);
 assert.match(screen, /"aria-label": "Nhà cung cấp AI"/);
 for (const source of ['gemini','openrouter','proxy','aistudio']) assert.ok(screen.includes('value: "'+source+'"'));
-assert.match(screen, /value: settings.source, onChange: e => updateSetting/);
+assert.match(screen, /value: settings\.source, onChange: ([\w$]+) => updateSetting\("source", \1\.target\.value\)/);
 for (const note of ['Dùng phiên Google / AI Studio trong WebView Android (thử nghiệm)', 'Hãy chọn mô hình trực tiếp trên trang AI Studio', 'Mặc định tắt. Bật khi cần đăng nhập, chọn mô hình hoặc kiểm tra lỗi']) assert.ok(!sections.includes(note));
 
 assert.match(native,/event\.put\("replace",true\)/);
