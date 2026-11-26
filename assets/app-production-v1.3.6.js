@@ -273,7 +273,7 @@ var fetchOpenRouterModels=__stsHostConnections.loadOpenRouterModels;
 
 // === 5. Domain Services & Card Runtime ===
 var { lodash: lodash } = createLodashRuntime({l: wrapModule, o: commonJsFactory});
-var { runIsolatedScript: runIsolatedScript, getVariable: getVariable, $u: executeUpdateVariableBlock, mutateVariable: mutateVariable } = createScriptExecution({Pu: lodash, nc: loadLibraryModule});
+var { runIsolatedScript, getVariable, executeUpdateVariableBlock, mutateVariable } = createScriptExecution({lodash, loadLibraryModule});
 var SYSTEM_LOG_EVENT="sillytavern:system-log";
 var dispatchSystemLog=(level,source,message,stack,payload)=>{let event=new CustomEvent(SYSTEM_LOG_EVENT,{detail:{level:level,source:source,message:message,stack:stack,payload:payload}});window.dispatchEvent(event)};
 var { resolveCharacterName, resolvePromptOverride, expandBasicMacros, expandRandomMacros, extractRegexScripts } = createMacroProcessing({});

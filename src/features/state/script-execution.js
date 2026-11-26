@@ -274,7 +274,7 @@ function buildVariableWorkerSource(userScript, lodashSource) {
 export function createScriptExecution(dependencies = {}) {
   const getVariable = (variables, path, fallback = undefined, unwrapTuple = true) => {
     const normalizedPath = normalizeVariablePath(path);
-    const rawValue = dependencies.Pu.default.get(variables, normalizedPath);
+    const rawValue = dependencies.lodash.default.get(variables, normalizedPath);
     if (unwrapTuple && isDescribedTuple(rawValue)) {
       return rawValue[0];
     }
@@ -283,11 +283,11 @@ export function createScriptExecution(dependencies = {}) {
 
   const setVariableValue = (variables, path, value) => {
     const normalizedPath = normalizeVariablePath(path);
-    const current = dependencies.Pu.default.get(variables, normalizedPath);
+    const current = dependencies.lodash.default.get(variables, normalizedPath);
     if (isDescribedTuple(current)) {
-      dependencies.Pu.default.set(variables, normalizedPath, [value, current[1]]);
+      dependencies.lodash.default.set(variables, normalizedPath, [value, current[1]]);
     } else {
-      dependencies.Pu.default.set(variables, normalizedPath, value);
+      dependencies.lodash.default.set(variables, normalizedPath, value);
     }
   };
 
@@ -303,7 +303,7 @@ export function createScriptExecution(dependencies = {}) {
 
     const logLines = ['[ISOLATED JS ENGINE] Script detected. Executing...'];
     try {
-      const lodashModule = await dependencies.nc(async () => {
+      const lodashModule = await dependencies.loadLibraryModule(async () => {
         const { default: lodashCode } = await import('../../../assets/lodash.min-xZXeUb-0.js');
         return { default: lodashCode };
       });
@@ -346,7 +346,7 @@ export function createScriptExecution(dependencies = {}) {
     if (operation === 'set') {
       setVariableValue(clonedVariables, path, operand);
     } else if (operation === 'delete') {
-      dependencies.Pu.default.unset(clonedVariables, normalizeVariablePath(path));
+      dependencies.lodash.default.unset(clonedVariables, normalizeVariablePath(path));
     } else if (operation === 'add') {
       const current = getVariable(clonedVariables, path, undefined, true);
       if (current == null) {
@@ -407,7 +407,7 @@ export function createScriptExecution(dependencies = {}) {
   return {
     runIsolatedScript,
     getVariable,
-    $u: executeUpdateVariableBlock,
+    executeUpdateVariableBlock,
     mutateVariable,
   };
 }

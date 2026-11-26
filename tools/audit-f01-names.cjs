@@ -96,6 +96,23 @@ function inspectCompositionAliases(content) {
   return {count:entries.length,byKind,byKey,entries};
 }
 
+
+function inspectEmbeddedRuntime() {
+  const file = 'src/runtime/card-runtime/core-builder.js';
+  const content = fs.readFileSync(path.join(root, file), 'utf8');
+  const source = ts.createSourceFile(file, content, ts.ScriptTarget.Latest, true, ts.ScriptKind.JS);
+  if (source.parseDiagnostics.length) throw Error('Cannot parse generated runtime builder');
+  const declarations = source.statements.filter(ts.isVariableStatement).flatMap(statement => Array.from(statement.declarationList.declarations));
+  const declaration = declarations.find(item => ts.isIdentifier(item.name) && item.name.text === 'CARD_RUNTIME_CORE_SOURCE');
+  if (!declaration?.initializer || !ts.isStringLiteral(declaration.initializer)) throw Error('Missing embedded classic runtime source');
+  const runtime = inspect('embedded CARD_RUNTIME_CORE_SOURCE', declaration.initializer.text);
+  return {
+    scope: 'Generated classic iframe script containing core template, runtime modules and compatibility fragments; counted separately from first-party JS module inventory.',
+    count: runtime.count, byKind: runtime.byKind, topLevel: runtime.topLevel,
+    review: reviewBindings([runtime]),
+  };
+}
+
 const args = process.argv.slice(2);
 const index = args.indexOf('--baseline');
 const baselineRef = index === -1 ? null : args[index + 1];
@@ -112,6 +129,7 @@ const report = {
   parser: ts.version,
   conventionalNames,
   bindingReview,
+  embeddedRuntime: args.includes('--embedded-runtime') ? inspectEmbeddedRuntime() : null,
   compositionAliasCandidates: { scope: 'Short identifier property keys mapped to longer local names in host.js; includes legitimate keys and repeated dependency edges, not a semantic defect count.', count: hostAliases.count, byKind: hostAliases.byKind, byKey: hostAliases.byKey, ...(args.includes('--details') ? { entries: hostAliases.entries } : {}) },
   baselineRef,
   baseline: baseline ? summarize(baseline) : null,

@@ -1,0 +1,3 @@
+# F01: Embedded runtime naming inventory
+
+The lexical audit now optionally parses the generated classic iframe script from CARD_RUNTIME_CORE_SOURCE in the tracked core-builder module. This captures the composed `.jsfrag` fragments and template as a single valid JavaScript program. Counts and unreviewed short binding candidates are reported separately from the original 155-file inventory, without relaxing or expanding the existing `--check-opaque` gate. This inventory is a diagnostic, not a claim of no embedded minify remnants. Script execution also uses descriptive internal dependency and result keys; its public runtime variable API is unchanged.
