@@ -1,17 +1,61 @@
 import { postFrameMessage } from './rpc-dispatcher.js';
 // Recovered from the application host. One owner; dependency getters preserve late binding.
 export function createRuntimeContextAdapters(dependencies = {}) {
-var DEFAULT_RPC_TIMEOUT_MS=5e3;
-var normalizeImportedName=(e,t)=>String(e??"").trim().slice(0,300)||t;
-var getCharacterSummary=e=>{let t=dependencies.kc.getState(),n=t.characters.find(t=>t.fileName===e);return n?{fileName:n.fileName,name:n.card.name,avatar:n.avatarUrl||n.fileName,avatarUrl:n.avatarUrl,card:(0, dependencies.xh)(n.card),current:n.fileName===t.activeCharacterFileName}:null};
-var findCharacter=e=>{let t=dependencies.kc.getState(),n=String(e??""),r=Number(n);return t.characters.find((e,t)=>e.fileName===n||e.card.name===n||Number.isInteger(r)&&r===t)};
-var normalizeImportedCharacter=(e,t)=>{let n=(0, dependencies.xh)(t?.raw||t?.data||t||{}),r=Array.isArray(t?.first_messages)?t.first_messages.map(String):[];return (0, dependencies.gc)({...n,name:normalizeImportedName(e??n.name,"Imported Character"),description:t?.description??n.description??"",personality:t?.personality??n.personality??"",scenario:t?.scenario??n.scenario??"",mes_example:t?.mes_example??n.mes_example??"",first_mes:r[0]??n.first_mes??"",alternate_greetings:r.length>1?r.slice(1):n.alternate_greetings,creator:t?.creator??n.creator,creator_notes:t?.creator_notes??n.creator_notes??n.creatorcomment,character_version:t?.version??n.character_version,extensions:t?.extensions??n.extensions})};
-var readTextPayload=async e=>e instanceof Blob?e.text():e instanceof ArrayBuffer||ArrayBuffer.isView(e)?(new TextDecoder).decode(e):String(e??"");
-var getActiveCardFrames=()=>Array.from(document.querySelectorAll('iframe[data-card-studio-iframe="true"][data-card-runtime-active="true"]'));
-var broadcastRuntimeMessage=e=>{getActiveCardFrames().forEach(frame=>postFrameMessage(frame,e))};
-var emitRuntimeEvent=(e,t,n=[])=>{postFrameMessage(getActiveCardFrames().find(frame=>frame.contentWindow===e),{type:"CARD_RUNTIME_EVENT",eventName:t,args:n})};
-var classifyRuntimeError=e=>/Unsupported card runtime method|unavailable in the isolated card runtime/i.test(e)?"CARD_RUNTIME_RPC_UNSUPPORTED":/payload exceeds|oversized/i.test(e)?"CARD_RUNTIME_PAYLOAD_TOO_LARGE":/storage|quota/i.test(e)?"CARD_RUNTIME_STORAGE_FAILED":/timeout|timed out/i.test(e)?"CARD_RUNTIME_RPC_TIMEOUT":"CARD_RUNTIME_RPC_FAILED";
-var buildRuntimeScope=e=>{let t=dependencies.ol.getState();return{chatId:t.sessionId||"current-chat",characterId:t.card?.fileName||t.card?.name||"current-character",presetName:t.preset?.name||"default",messageId:e}};
-var resolveGenerationPreset=e=>{let t=dependencies.ol.getState();if(!t.preset)throw Error("No generation preset is loaded.");let n=String(e.preset_name||"in_use"),r="in_use"===n?t.preset:dependencies.bu.getState().presets.find(e=>e.name===n);if(!r)throw Error(`Generation preset not found: ${n}`);let a=(0, dependencies.xh)(r),i=e.custom_api||{};return[["max_tokens","max_tokens"],["temperature","temp"],["frequency_penalty","frequency_penalty"],["presence_penalty","presence_penalty"],["top_p","top_p"],["top_k","top_k"]].forEach(([e,t])=>{let n=i[e];void 0!==n&&"same_as_preset"!==n&&"unset"!==n&&Number.isFinite(Number(n))&&(a[t]=Number(n))}),a};
-return { Hh: DEFAULT_RPC_TIMEOUT_MS, $h: normalizeImportedName, Gh: getCharacterSummary, zh: findCharacter, qh: normalizeImportedCharacter, Vh: readTextPayload, Kh: getActiveCardFrames, Wh: broadcastRuntimeMessage, Jh: emitRuntimeEvent, Yh: classifyRuntimeError, Xh: buildRuntimeScope, Zh: resolveGenerationPreset };
+  var DEFAULT_RPC_TIMEOUT_MS = 5e3;
+  var normalizeImportedName = (value, fallback) => String(value ?? "").trim().slice(0,300) || fallback;
+  var getCharacterSummary = fileName => {
+    let state = dependencies.kc.getState();
+    let character = state.characters.find(entry => entry.fileName === fileName);
+    return character ? {fileName:character.fileName,name:character.card.name,avatar:character.avatarUrl||character.fileName,avatarUrl:character.avatarUrl,card:(0, dependencies.xh)(character.card),current:character.fileName===state.activeCharacterFileName} : null;
+  };
+  var findCharacter = identifier => {
+    let state = dependencies.kc.getState(), query = String(identifier ?? ""), index = Number(query);
+    return state.characters.find((character, position) => character.fileName === query || character.card.name === query || Number.isInteger(index) && index === position);
+  };
+  var normalizeImportedCharacter = (name, source) => {
+    let rawCard = (0, dependencies.xh)(source?.raw || source?.data || source || {});
+    let greetings = Array.isArray(source?.first_messages) ? source.first_messages.map(String) : [];
+    return (0, dependencies.gc)({
+      ...rawCard,
+      name: normalizeImportedName(name ?? rawCard.name, "Imported Character"),
+      description: source?.description ?? rawCard.description ?? "",
+      personality: source?.personality ?? rawCard.personality ?? "",
+      scenario: source?.scenario ?? rawCard.scenario ?? "",
+      mes_example: source?.mes_example ?? rawCard.mes_example ?? "",
+      first_mes: greetings[0] ?? rawCard.first_mes ?? "",
+      alternate_greetings: greetings.length > 1 ? greetings.slice(1) : rawCard.alternate_greetings,
+      creator: source?.creator ?? rawCard.creator,
+      creator_notes: source?.creator_notes ?? rawCard.creator_notes ?? rawCard.creatorcomment,
+      character_version: source?.version ?? rawCard.character_version,
+      extensions: source?.extensions ?? rawCard.extensions
+    });
+  };
+  var readTextPayload = async value => value instanceof Blob ? value.text() : value instanceof ArrayBuffer || ArrayBuffer.isView(value) ? (new TextDecoder).decode(value) : String(value ?? "");
+  var getActiveCardFrames = () => Array.from(document.querySelectorAll('iframe[data-card-studio-iframe="true"][data-card-runtime-active="true"]'));
+  var broadcastRuntimeMessage = message => { getActiveCardFrames().forEach(frame => postFrameMessage(frame, message)); };
+  var emitRuntimeEvent = (targetWindow, eventName, args = []) => {
+    postFrameMessage(getActiveCardFrames().find(frame => frame.contentWindow === targetWindow), {type:"CARD_RUNTIME_EVENT",eventName:eventName,args:args});
+  };
+  var classifyRuntimeError = message => /Unsupported card runtime method|unavailable in the isolated card runtime/i.test(message) ? "CARD_RUNTIME_RPC_UNSUPPORTED"
+    : /payload exceeds|oversized/i.test(message) ? "CARD_RUNTIME_PAYLOAD_TOO_LARGE"
+    : /storage|quota/i.test(message) ? "CARD_RUNTIME_STORAGE_FAILED"
+    : /timeout|timed out/i.test(message) ? "CARD_RUNTIME_RPC_TIMEOUT" : "CARD_RUNTIME_RPC_FAILED";
+  var buildRuntimeScope = messageId => {
+    let state = dependencies.ol.getState();
+    return {chatId:state.sessionId||"current-chat",characterId:state.card?.fileName||state.card?.name||"current-character",presetName:state.preset?.name||"default",messageId:messageId};
+  };
+  var resolveGenerationPreset = options => {
+    let state = dependencies.ol.getState();
+    if (!state.preset) throw Error("No generation preset is loaded.");
+    let name = String(options.preset_name || "in_use");
+    let preset = "in_use" === name ? state.preset : dependencies.bu.getState().presets.find(entry => entry.name === name);
+    if (!preset) throw Error(`Generation preset not found: ${name}`);
+    let result = (0, dependencies.xh)(preset), overrides = options.custom_api || {};
+    [["max_tokens","max_tokens"],["temperature","temp"],["frequency_penalty","frequency_penalty"],["presence_penalty","presence_penalty"],["top_p","top_p"],["top_k","top_k"]].forEach(([sourceKey, targetKey]) => {
+      let value = overrides[sourceKey];
+      if (void 0 !== value && "same_as_preset" !== value && "unset" !== value && Number.isFinite(Number(value))) result[targetKey] = Number(value);
+    });
+    return result;
+  };
+  return { Hh: DEFAULT_RPC_TIMEOUT_MS, $h: normalizeImportedName, Gh: getCharacterSummary, zh: findCharacter, qh: normalizeImportedCharacter, Vh: readTextPayload, Kh: getActiveCardFrames, Wh: broadcastRuntimeMessage, Jh: emitRuntimeEvent, Yh: classifyRuntimeError, Xh: buildRuntimeScope, Zh: resolveGenerationPreset };
 }

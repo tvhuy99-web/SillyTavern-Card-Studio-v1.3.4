@@ -1,5 +1,59 @@
 // Recovered from the application host. One owner; dependency getters preserve late binding.
 export function createEmbeddingSyncHook(dependencies = {}) {
-var Jc=(e,t)=>{let[n,r]=(0,dependencies.b.useState)({}),[a,i]=(0,dependencies.b.useState)(!1),[o,s]=(0,dependencies.b.useState)({current:0,total:0}),{showToast:l}=(0, dependencies.hl)(),c=(0,dependencies.b.useCallback)(async()=>{if(!e)return;let __stsProvider=(0, dependencies.as)().embedding_provider||"gemini";await (0, dependencies.Lc)(e,__stsProvider);let n=(0, dependencies.Fc)(e,__stsProvider),a=new Map;n.forEach(e=>{a.has(e.uid)||a.set(e.uid,[]),a.get(e.uid).push(e)});let i={},o=t.filter(e=>e.uid&&e.content&&e.content.trim().length>0);await Promise.all(o.map(async e=>{if(!e.uid)return;let t=a.get(e.uid);if(t&&0!==t.length){let n=await (0, dependencies.zc)((0, dependencies.qc)(e));t[0].contentHash===n?i[e.uid]="synced":i[e.uid]="needs_sync"}else i[e.uid]="not_synced"})),r(i)},[e,t]);(0,dependencies.b.useEffect)(()=>{c()},[c]);let u=t.filter(e=>e.uid&&e.content&&e.content.trim().length>0&&!1!==e.enabled);return{statusMap:n,isSyncing:a,syncProgress:o,syncedCount:u.filter(e=>"synced"===n[e.uid]).length,totalCount:u.length,handleSync:async()=>{let n=(0, dependencies.as)();if(n.enabled&&["semantic","hybrid_fast","ultimate"].includes(n.mode)){if(e&&0!==t.length){i(!0);try{await (0, dependencies.Vc)(e,t.filter(e=>!1!==e.enabled),(e,t)=>s({current:e,total:t})),l("Đồng bộ Semantic Search thành công!","success"),await c()}catch(e){console.error("Sync error:",e),l(`Lỗi đồng bộ: ${e.message}`,"error")}finally{i(!1),s({current:0,total:0})}}}else l("Smart Scan hoặc Semantic Search đang tắt.","info")},checkStatus:c}};
-return { useEmbeddingSync: Jc };
+  var useEmbeddingSync = (lorebookId, entries) => {
+    let [statusMap, setStatusMap] = (0,dependencies.b.useState)({});
+    let [isSyncing, setIsSyncing] = (0,dependencies.b.useState)(false);
+    let [syncProgress, setSyncProgress] = (0,dependencies.b.useState)({current:0,total:0});
+    let {showToast} = (0, dependencies.hl)();
+    let checkStatus = (0,dependencies.b.useCallback)(async () => {
+      if (!lorebookId) return;
+      let provider = (0, dependencies.as)().embedding_provider || "gemini";
+      await (0, dependencies.Lc)(lorebookId, provider);
+      let indexedEntries = (0, dependencies.Fc)(lorebookId, provider);
+      let indexByUid = new Map;
+      indexedEntries.forEach(entry => {
+        if (!indexByUid.has(entry.uid)) indexByUid.set(entry.uid, []);
+        indexByUid.get(entry.uid).push(entry);
+      });
+      let nextStatus = {};
+      let eligibleEntries = entries.filter(entry => entry.uid && entry.content && entry.content.trim().length > 0);
+      await Promise.all(eligibleEntries.map(async entry => {
+        if (!entry.uid) return;
+        let matches = indexByUid.get(entry.uid);
+        if (matches && matches.length !== 0) {
+          let hash = await (0, dependencies.zc)((0, dependencies.qc)(entry));
+          nextStatus[entry.uid] = matches[0].contentHash === hash ? "synced" : "needs_sync";
+        } else nextStatus[entry.uid] = "not_synced";
+      }));
+      setStatusMap(nextStatus);
+    }, [lorebookId, entries]);
+    (0,dependencies.b.useEffect)(() => { checkStatus(); }, [checkStatus]);
+    let enabledEntries = entries.filter(entry => entry.uid && entry.content && entry.content.trim().length > 0 && false !== entry.enabled);
+    return {
+      statusMap: statusMap, isSyncing: isSyncing, syncProgress: syncProgress,
+      syncedCount: enabledEntries.filter(entry => "synced" === statusMap[entry.uid]).length,
+      totalCount: enabledEntries.length,
+      handleSync: async () => {
+        let settings = (0, dependencies.as)();
+        if (settings.enabled && ["semantic","hybrid_fast","ultimate"].includes(settings.mode)) {
+          if (lorebookId && entries.length !== 0) {
+            setIsSyncing(true);
+            try {
+              await (0, dependencies.Vc)(lorebookId, entries.filter(entry => false !== entry.enabled), (current, total) => setSyncProgress({current:current,total:total}));
+              showToast("Đồng bộ Semantic Search thành công!","success");
+              await checkStatus();
+            } catch (error) {
+              console.error("Sync error:", error);
+              showToast(`Lỗi đồng bộ: ${error.message}`,"error");
+            } finally {
+              setIsSyncing(false);
+              setSyncProgress({current:0,total:0});
+            }
+          }
+        } else showToast("Smart Scan hoặc Semantic Search đang tắt.","info");
+      },
+      checkStatus: checkStatus
+    };
+  };
+  return { useEmbeddingSync };
 }
