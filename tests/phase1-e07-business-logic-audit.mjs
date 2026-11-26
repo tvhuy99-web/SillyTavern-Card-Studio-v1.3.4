@@ -290,9 +290,9 @@ for (const relativePath of RECOVERED_FILES) {
 {
   let capturedPrompt = '';
   const { generateSummary } = createSummaryGeneration({
-    bd: extractStoryContent,
-    ns: () => ({ source: 'aistudio', aistudio_tool_model: 'gemini-2.5-flash' }),
-    Cs: () => false,
+    extractStoryContent: extractStoryContent,
+    getConnectionSettings: () => ({ source: 'aistudio', aistudio_tool_model: 'gemini-2.5-flash' }),
+    getProxyForTools: () => false,
     __stsAiStudioToolText: async prompt => {
       capturedPrompt = prompt;
       return '  Summary OK  ';

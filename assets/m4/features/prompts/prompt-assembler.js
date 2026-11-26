@@ -24,9 +24,9 @@ const VALID_DEPTH_PROMPT_ROLES = ['system', 'user', 'assistant'];
 
 const defaultMacroHelpers = createMacroProcessing({});
 const defaultTableHelpers = createTableProcessing({
-  ke: {},
-  Ce: {},
-  As: text => JSON.parse(text),
+  HarmCategory: {},
+  HarmBlockThreshold: {},
+  parseRelaxedJson: text => JSON.parse(text),
 });
 
 /**
@@ -247,7 +247,7 @@ function resolveAssemblerDependencies(rawDependencies = {}) {
     || (() => 'official-local');
 
   const defaultRegexProcessor = createRegexProcessing({
-    get Co() {
+    get readCardRuntimeEngineMode() {
       return getRegexEngineMode;
     },
   });
@@ -255,18 +255,18 @@ function resolveAssemblerDependencies(rawDependencies = {}) {
   return {
     getRegexEngineMode,
     processRegex: deps.processRegex || deps.gd || defaultRegexProcessor.processRegex,
-    extractRegexScripts: deps.extractRegexScripts || deps.Zu || defaultMacroHelpers.Zu,
-    resolveCharacterName: deps.resolveCharacterName || deps.Vu || defaultMacroHelpers.Vu,
-    resolvePromptOverride: deps.resolvePromptOverride || deps.Ku || defaultMacroHelpers.Ku,
-    expandBasicMacros: deps.expandBasicMacros || deps.Ju || defaultMacroHelpers.Ju,
-    expandRandomMacros: deps.expandRandomMacros || deps.Xu || defaultMacroHelpers.Xu,
+    extractRegexScripts: deps.extractRegexScripts || deps.Zu || defaultMacroHelpers.extractRegexScripts,
+    resolveCharacterName: deps.resolveCharacterName || deps.Vu || defaultMacroHelpers.resolveCharacterName,
+    resolvePromptOverride: deps.resolvePromptOverride || deps.Ku || defaultMacroHelpers.resolvePromptOverride,
+    expandBasicMacros: deps.expandBasicMacros || deps.Ju || defaultMacroHelpers.expandBasicMacros,
+    expandRandomMacros: deps.expandRandomMacros || deps.Xu || defaultMacroHelpers.expandRandomMacros,
     getVariable: deps.getVariable || deps.Uu || defaultGetVariable,
     mutateVariable: deps.mutateVariable || deps.Gu || defaultMutateVariable,
-    filterRpgDatabaseByActiveEntries: deps.filterRpgDatabaseByActiveEntries || deps.el || defaultTableHelpers.el,
-    formatRpgHybridTable: deps.formatRpgHybridTable || deps.Xs || defaultTableHelpers.Xs,
-    createRpgRowSnapshot: deps.createRpgRowSnapshot || deps.Qs || defaultTableHelpers.Qs,
-    buildMythicPrompt: deps.buildMythicPrompt || deps.Zs || defaultTableHelpers.Zs,
-    defaultMythicSystemPrompt: deps.defaultMythicSystemPrompt ?? deps.Js ?? defaultTableHelpers.Js,
+    filterRpgDatabaseByActiveEntries: deps.filterRpgDatabaseByActiveEntries || deps.el || defaultTableHelpers.filterRpgDatabaseByActiveEntries,
+    formatRpgHybridTable: deps.formatRpgHybridTable || deps.Xs || defaultTableHelpers.formatRpgHybridTable,
+    createRpgRowSnapshot: deps.createRpgRowSnapshot || deps.Qs || defaultTableHelpers.createRpgRowSnapshot,
+    buildMythicPrompt: deps.buildMythicPrompt || deps.Zs || defaultTableHelpers.buildMythicPrompt,
+    defaultMythicSystemPrompt: deps.defaultMythicSystemPrompt ?? deps.Js ?? defaultTableHelpers.defaultMythicSystemPrompt,
     normalizePromptVariableScopes: deps.normalizePromptVariableScopes
       || deps.__stsNormalizePromptVariableScopes
       || normalizePromptVariableScopes,
