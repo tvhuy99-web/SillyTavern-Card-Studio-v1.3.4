@@ -49,7 +49,7 @@ import {
     'host.js must wire writeGuard onto __stsSettingsRepository',
   );
   assert.ok(
-    /var\s+lp=__stsCreateChatSessionHook\(\{[^}]*__stsBackupRestoreService/.test(hostSrc),
+    /var\s+useChatSession=__stsCreateChatSessionHook\(\{[^}]*__stsBackupRestoreService/.test(hostSrc),
     'host.js must pass __stsBackupRestoreService into __stsCreateChatSessionHook',
   );
 

@@ -28,19 +28,19 @@ const shellSource = read('src/ui/shell/application-shell.js');
 assert.equal(shellSource, read('assets/m6/ui/shell/application-shell.js'));
 assert.ok(shellSource.includes("title: 'Phiên bản ứng dụng 1.3.6'"));
 assert.ok(shellSource.includes("children: 'v1.3.6'"));
-assert.ok(production.includes('Ct=__stsCreateAppHeader(jsxRuntime,kt)'));
+assert.ok(production.includes('AppHeader=__stsCreateAppHeader(jsxRuntime,Icon)'));
 assert.ok(!production.includes('Phiên bản ứng dụng 1.3.4'));
 assert.ok(!production.includes('children:"v1.3.4"'));
 
 const switchSource = read('src/ui/components/form-controls.js').split('export function createToggleSwitch')[1];
-assert.ok(production.includes('yl=__stsCreateToggleSwitch(jsxRuntime,React,cn)'));
+assert.ok(production.includes('ToggleSwitch=__stsCreateToggleSwitch(jsxRuntime,React,Tooltip)'));
 assert.ok(switchSource.includes("type: 'button', disabled"));
 assert.ok(switchSource.includes("role: 'switch'"));
 assert.ok(!switchSource.includes('onKeyDown:'));
 assert.ok(!switchSource.includes('aria-disabled'));
 
 const loreSource = read('src/features/world-info/ui/lorebook-controls.js').split('export function createLorebookEntryCard')[1].split('export function createActiveWorldInfoEntry')[0];
-assert.ok(production.includes('Nc=__stsCreateLorebookEntryCard('));
+assert.ok(production.includes('LorebookEntryCard=__stsCreateLorebookEntryCard('));
 assert.match(loreSource, /jsxRuntime\.jsxs\)\("article",\s*\{\s*"aria-labelledby":/);
 assert.match(loreSource, /jsxRuntime\.jsxs\)\("h3",\s*\{\s*id:/);
 assert.ok(!loreSource.includes('role: "button"'));
@@ -67,7 +67,7 @@ assert.ok(
 );
 
 const promptSource = read('src/features/presets/ui/preset-sections.js').split('export function createPromptListItem')[1].split('export function createPromptPreview')[0];
-assert.ok(production.includes('pu=__stsCreatePromptListItem('));
+assert.ok(production.includes('PromptListItem=__stsCreatePromptListItem('));
 assert.match(promptSource, /ariaLabel:\s*(?:undefined|void 0),[\s\S]*?checked:\s*propPrompt\.enabled\s*\?\?\s*(?:false|!1)/);
 
 assert.equal(read('src/ui/styles/accessibility.css'), read('assets/m6/ui/accessibility.css'), 'assets/m6/ui/accessibility.css must match source owner');

@@ -79,7 +79,7 @@ for (const marker of [
   '__stsBuildConversationPrompt',
   '__stsProcessAIResponse',
   '__stsSessionPersistence.createSessionSnapshot',
-  'yl=__stsCreateToggleSwitch(jsxRuntime,React,cn)',
+  'ToggleSwitch=__stsCreateToggleSwitch(jsxRuntime,React,Tooltip)',
 ]) assert.ok(production.includes(marker), 'previous milestone invariant lost: ' + marker);
 
 console.log('M7 cleanup architecture checks: OK');

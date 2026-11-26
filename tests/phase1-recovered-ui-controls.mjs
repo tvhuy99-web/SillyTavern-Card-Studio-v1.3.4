@@ -38,7 +38,7 @@ click({currentTarget:{closest:()=>null}});assert.equal(scrolled,undefined);
 click({currentTarget:{closest:()=>({querySelectorAll:()=>[section]})}});assert.equal(section.open,true);assert.deepEqual(scrolled,{behavior:'smooth',block:'start'});
 let opened=0;components.kf({onOpen:()=>opened++}).props.children[0].props.onClick();assert.equal(opened,1);
 const bundle=await readFile(new URL('../assets/app-production-v1.3.6.js',import.meta.url),'utf8');
-for(const binding of ['Bf=__stsCreateTableCellInput(jsxRuntime)','Ed=__stsCreateModelSelect(jsxRuntime,React)','cn=__stsCreateTooltip(jsxRuntime)','ln=__stsCreateCollapsibleSection(jsxRuntime)','St=__stsCreateSectionNavigator(jsxRuntime)','kf=__stsCreateGenerateEntryButton(jsxRuntime)']) {
+for(const binding of ['TableCellInput=__stsCreateTableCellInput(jsxRuntime)','ModelSelect=__stsCreateModelSelect(jsxRuntime,React)','Tooltip=__stsCreateTooltip(jsxRuntime)','CollapsibleSection=__stsCreateCollapsibleSection(jsxRuntime)','SectionNavigator=__stsCreateSectionNavigator(jsxRuntime)','GenerateEntryButton=__stsCreateGenerateEntryButton(jsxRuntime)']) {
   assert.equal(bundle.split(binding).length-1,1);assert.ok(bundle.indexOf('jsxRuntime')<bundle.indexOf(binding));
 }
 console.log('P09 controls: 13 legacy tree snapshots, model selection, table editing, navigation, action and build wiring: OK');

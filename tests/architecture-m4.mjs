@@ -37,7 +37,7 @@ for (const token of [
 ]) assert.ok(production.includes(token), 'missing M4 ownership token: ' + token);
 
 const generationStart = production.indexOf('const __stsHostGeneration=');
-const generationEnd = production.indexOf('var Ed=', generationStart);
+const generationEnd = production.indexOf('var ModelSelect=', generationStart);
 assert.ok(generationStart >= 0 && generationEnd > generationStart);
 const gatewayAdapter = production.slice(generationStart, generationEnd);
 assert.ok(!gatewayAdapter.includes('openrouter.ai/api/v1/chat/completions'));
