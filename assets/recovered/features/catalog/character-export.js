@@ -1,16 +1,147 @@
 // Recovered from the application host. One owner; dependency getters preserve late binding.
 export function createCharacterExport(dependencies = {}) {
-var PNG_SIGNATURE=[137,80,78,71,13,10,26,10];
-var isRecordObject=e=>"object"==typeof e&&!!e&&!Array.isArray(e);
-var crc32LookupTable=(()=>{let e=[];for(let t=0;t<256;t++){let n=t;for(let e=0;e<8;e++)n=1&n?3988292384^n>>>1:n>>>1;e.push(n>>>0)}return e})();
-var encodeBase64Utf8=e=>{let t=(new TextEncoder).encode(e);if(t.byteLength>50331648)throw Error("Dữ liệu thẻ quá lớn để ghi vào PNG.");let n="";for(let e=0;e<t.length;e+=32768)n+=String.fromCharCode(...t.subarray(e,e+32768));return btoa(n)};
-var createPngTextChunk=(e,t)=>{let n=new TextEncoder,r=n.encode("tEXt"),a=n.encode(e),i=n.encode(t),o=new Uint8Array(a.length+1+i.length);o.set(a),o.set(i,a.length+1);let s=new Uint8Array(r.length+o.length);s.set(r),s.set(o,r.length);let l=new Uint8Array(12+o.length),c=new DataView(l.buffer);return c.setUint32(0,o.length),l.set(r,4),l.set(o,8),c.setUint32(8+o.length,(e=>{let t=-1;for(let n of e)t=t>>>8^crc32LookupTable[255&(t^n)];return(-1^t)>>>0})(s)),l};
-var cleanExportValue=(e,t="")=>{if(t.startsWith("__")||"attached_lorebooks"===t||"source_lorebook"===t)return;if(Array.isArray(e))return e.map(e=>cleanExportValue(e)).filter(e=>void 0!==e);if(!isRecordObject(e))return e;let n={};for(let[t,r]of Object.entries(e)){let e=cleanExportValue(r,t);void 0!==e&&(n[t]=e)}return n};
-var convertLegacyScript=e=>{let{buttons:t,...n}=cleanExportValue(e.value);return{...n,type:"script",button:isRecordObject(n.button)?{...n.button,buttons:Array.isArray(t)?t:n.button.buttons||[]}:{buttons:Array.isArray(t)?t:[]}}};
-var resolveExportSpec=(e,t)=>{if("auto"!==t)return t;let n=String(e.__source_spec||e.spec||"").toLowerCase();return n.includes("v3")?"v3":n.includes("v2")?"v2":"v1"};
-var buildExportData=(e,t)=>{let n=cleanExportValue(e);return delete n.data,delete n.spec,delete n.spec_version,delete n.char_name,delete n.char_greeting,delete n.example_dialogue,delete n.world_scenario,n.char_book&&(n.character_book=n.char_book,delete n.char_book),n.extensions=(e=>{let t=isRecordObject(e)?cleanExportValue(e):{},n=Array.isArray(t.TavernHelper_scripts)?t.TavernHelper_scripts.filter(e=>"script"===e?.type&&isRecordObject(e.value)):[];if(!n.length)return t;let r=Array.isArray(t.tavern_helper)?t.tavern_helper.map(e=>cleanExportValue(e)):[],a=r.find(e=>Array.isArray(e)&&"scripts"===e[0]);a||(a=["scripts",[]],r.push(a)),Array.isArray(a[1])||(a[1]=[]);let i=new Map;return a[1].forEach((e,t)=>{isRecordObject(e)&&i.set(String(e.id||`legacy_${t}`),e)}),n.forEach((e,t)=>{let n=String(e.value.id||`script_${t}`);i.set(n,{...i.get(n)||{},...convertLegacyScript(e),id:n})}),a[1]=[...i.values()],t.tavern_helper=r,t})(n.extensions),["name","description","personality","scenario","first_mes","mes_example","creator_notes","system_prompt","post_history_instructions","creator","character_version"].forEach(e=>{n[e]=void 0===n[e]||null===n[e]?"":String(n[e])}),n.alternate_greetings=Array.isArray(n.alternate_greetings)?n.alternate_greetings.map(String):[],n.tags=Array.isArray(n.tags)?n.tags.map(String):[],"v3"===t&&(n.group_only_greetings=Array.isArray(n.group_only_greetings)?n.group_only_greetings.map(String):[],n.modification_date=Math.floor(Date.now()/1e3)),n};
-var buildExportCard=(e,t="auto")=>{let n=resolveExportSpec(e,t);if("v1"===n){let t=buildExportData(e,"v2"),n={...t};return n.char_name=t.name,n.char_persona=t.personality,n.char_greeting=t.first_mes,n.example_dialogue=t.mes_example,n.world_scenario=t.scenario,delete n.character_book,t.character_book&&(n.char_book=t.character_book),n}let r=buildExportData(e,n),a=String(e.spec||e.__source_spec||"").toLowerCase(),i=void 0===e.spec_version||null===e.spec_version?"":String(e.spec_version),o={spec:"v3"===n?"chara_card_v3":"chara_card_v2",spec_version:"v3"===n?a.includes("v3")&&i?i:"3.0":a.includes("v2")&&i?i:"2.0"};return((e,t)=>{["name","description","personality","scenario","first_mes","mes_example","creatorcomment","avatar","chat","talkativeness","fav","tags"].forEach(n=>{void 0!==t[n]&&(e[n]=t[n])})})(o,r),o.data=r,o};
-var isPngBytes=e=>e.length>=PNG_SIGNATURE.length&&PNG_SIGNATURE.every((t,n)=>e[n]===t);
-var downloadBlob=(e,t)=>{let n=URL.createObjectURL(e),r=document.createElement("a");r.href=n,r.download=t,document.body.appendChild(r),r.click(),r.remove(),setTimeout(()=>URL.revokeObjectURL(n),3e4)};
-return { Hl: encodeBase64Utf8, $l: createPngTextChunk, ql: resolveExportSpec, Kl: buildExportCard, Wl: isPngBytes, Jl: downloadBlob };
+  var PNG_SIGNATURE = [137,80,78,71,13,10,26,10];
+  var isRecordObject = value => "object" == typeof value && !!value && !Array.isArray(value);
+  var crc32LookupTable = (() => {
+    let table = [];
+    for (let byte = 0; byte < 256; byte++) {
+      let crc = byte;
+      for (let bit = 0; bit < 8; bit++) crc = 1 & crc ? 3988292384 ^ crc >>> 1 : crc >>> 1;
+      table.push(crc >>> 0);
+    }
+    return table;
+  })();
+  var encodeBase64Utf8 = text => {
+    let bytes = (new TextEncoder).encode(text);
+    if (bytes.byteLength > 50331648) throw Error("Dữ liệu thẻ quá lớn để ghi vào PNG.");
+    let binary = "";
+    for (let index = 0; index < bytes.length; index += 32768) binary += String.fromCharCode(...bytes.subarray(index,index+32768));
+    return btoa(binary);
+  };
+  var createPngTextChunk = (keyword, text) => {
+    let encoder = new TextEncoder;
+    let chunkType = encoder.encode("tEXt"), keywordBytes = encoder.encode(keyword), textBytes = encoder.encode(text);
+    let data = new Uint8Array(keywordBytes.length + 1 + textBytes.length);
+    data.set(keywordBytes);
+    data.set(textBytes, keywordBytes.length + 1);
+    let crcInput = new Uint8Array(chunkType.length + data.length);
+    crcInput.set(chunkType);
+    crcInput.set(data, chunkType.length);
+    let chunk = new Uint8Array(12 + data.length), view = new DataView(chunk.buffer);
+    view.setUint32(0, data.length);
+    chunk.set(chunkType, 4);
+    chunk.set(data, 8);
+    view.setUint32(8 + data.length, (bytes => {
+      let crc = -1;
+      for (let byte of bytes) crc = crc >>> 8 ^ crc32LookupTable[255 & (crc ^ byte)];
+      return (-1 ^ crc) >>> 0;
+    })(crcInput));
+    return chunk;
+  };
+  var cleanExportValue = (value, key = "") => {
+    if (key.startsWith("__") || "attached_lorebooks" === key || "source_lorebook" === key) return;
+    if (Array.isArray(value)) return value.map(item => cleanExportValue(item)).filter(item => void 0 !== item);
+    if (!isRecordObject(value)) return value;
+    let result = {};
+    for (let [field, fieldValue] of Object.entries(value)) {
+      let cleanedValue = cleanExportValue(fieldValue, field);
+      if (void 0 !== cleanedValue) result[field] = cleanedValue;
+    }
+    return result;
+  };
+  var convertLegacyScript = entry => {
+    let {buttons, ...script} = cleanExportValue(entry.value);
+    return {...script, type:"script", button:isRecordObject(script.button)
+      ? {...script.button,buttons:Array.isArray(buttons)?buttons:script.button.buttons||[]}
+      : {buttons:Array.isArray(buttons)?buttons:[]}};
+  };
+  var resolveExportSpec = (card, requestedSpec) => {
+    if ("auto" !== requestedSpec) return requestedSpec;
+    let spec = String(card.__source_spec || card.spec || "").toLowerCase();
+    return spec.includes("v3") ? "v3" : spec.includes("v2") ? "v2" : "v1";
+  };
+  var buildExportData = (card, spec) => {
+    let data = cleanExportValue(card);
+    delete data.data;
+    delete data.spec;
+    delete data.spec_version;
+    delete data.char_name;
+    delete data.char_greeting;
+    delete data.example_dialogue;
+    delete data.world_scenario;
+    if (data.char_book) {
+      data.character_book = data.char_book;
+      delete data.char_book;
+    }
+    data.extensions = (value => {
+      let extensions = isRecordObject(value) ? cleanExportValue(value) : {};
+      let scripts = Array.isArray(extensions.TavernHelper_scripts)
+        ? extensions.TavernHelper_scripts.filter(entry => "script" === entry?.type && isRecordObject(entry.value)) : [];
+      if (!scripts.length) return extensions;
+      let helper = Array.isArray(extensions.tavern_helper) ? extensions.tavern_helper.map(entry => cleanExportValue(entry)) : [];
+      let scriptGroup = helper.find(entry => Array.isArray(entry) && "scripts" === entry[0]);
+      if (!scriptGroup) {
+        scriptGroup = ["scripts",[]];
+        helper.push(scriptGroup);
+      }
+      if (!Array.isArray(scriptGroup[1])) scriptGroup[1] = [];
+      let scriptsById = new Map;
+      scriptGroup[1].forEach((script, index) => {
+        if (isRecordObject(script)) scriptsById.set(String(script.id || `legacy_${index}`), script);
+      });
+      scripts.forEach((entry, index) => {
+        let scriptId = String(entry.value.id || `script_${index}`);
+        scriptsById.set(scriptId, {...scriptsById.get(scriptId)||{}, ...convertLegacyScript(entry), id:scriptId});
+      });
+      scriptGroup[1] = [...scriptsById.values()];
+      extensions.tavern_helper = helper;
+      return extensions;
+    })(data.extensions);
+    ["name","description","personality","scenario","first_mes","mes_example","creator_notes","system_prompt","post_history_instructions","creator","character_version"].forEach(field => {
+      data[field] = void 0 === data[field] || null === data[field] ? "" : String(data[field]);
+    });
+    data.alternate_greetings = Array.isArray(data.alternate_greetings) ? data.alternate_greetings.map(String) : [];
+    data.tags = Array.isArray(data.tags) ? data.tags.map(String) : [];
+    if ("v3" === spec) {
+      data.group_only_greetings = Array.isArray(data.group_only_greetings) ? data.group_only_greetings.map(String) : [];
+      data.modification_date = Math.floor(Date.now()/1e3);
+    }
+    return data;
+  };
+  var buildExportCard = (card, requestedSpec = "auto") => {
+    let spec = resolveExportSpec(card, requestedSpec);
+    if ("v1" === spec) {
+      let data = buildExportData(card,"v2"), result = {...data};
+      result.char_name = data.name;
+      result.char_persona = data.personality;
+      result.char_greeting = data.first_mes;
+      result.example_dialogue = data.mes_example;
+      result.world_scenario = data.scenario;
+      delete result.character_book;
+      if (data.character_book) result.char_book = data.character_book;
+      return result;
+    }
+    let data = buildExportData(card,spec);
+    let sourceSpec = String(card.spec || card.__source_spec || "").toLowerCase();
+    let sourceVersion = void 0 === card.spec_version || null === card.spec_version ? "" : String(card.spec_version);
+    let result = {spec:"v3"===spec?"chara_card_v3":"chara_card_v2",spec_version:"v3"===spec?sourceSpec.includes("v3")&&sourceVersion?sourceVersion:"3.0":sourceSpec.includes("v2")&&sourceVersion?sourceVersion:"2.0"};
+    ((target, source) => {
+      ["name","description","personality","scenario","first_mes","mes_example","creatorcomment","avatar","chat","talkativeness","fav","tags"].forEach(field => {
+        if (void 0 !== source[field]) target[field] = source[field];
+      });
+    })(result,data);
+    result.data = data;
+    return result;
+  };
+  var isPngBytes = bytes => bytes.length >= PNG_SIGNATURE.length && PNG_SIGNATURE.every((signatureByte,index) => bytes[index] === signatureByte);
+  var downloadBlob = (blob, fileName) => {
+    let url = URL.createObjectURL(blob), anchor = document.createElement("a");
+    anchor.href = url;
+    anchor.download = fileName;
+    document.body.appendChild(anchor);
+    anchor.click();
+    anchor.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 3e4);
+  };
+  return { Hl: encodeBase64Utf8, $l: createPngTextChunk, ql: resolveExportSpec, Kl: buildExportCard, Wl: isPngBytes, Jl: downloadBlob };
 }
