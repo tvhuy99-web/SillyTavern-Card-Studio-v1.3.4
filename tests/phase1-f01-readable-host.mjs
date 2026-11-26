@@ -18,5 +18,14 @@ for (const marker of ['pl: ToastItem', 'mh: useDiagnostics', 'fh: useConversatio
 assert.ok(source.includes('CardFrame.displayName="InteractiveHtmlMessage"'));
 assert.ok(source.includes('CardPreviewDialog.displayName="FloatingStatusHUD"'));
 assert.doesNotMatch(source, /^(?:var|let|const|function)\s+[$A-Za-z_][\w$]?\s*(?:=|\()/m, 'no opaque direct top-level declarations in host');
-for (const marker of ['Eo: arenaSettingsKey', 'Co: readCardRuntimeEngineMode', 'Cs: getProxyForTools', 'get Wh(){return Wh}']) assert.ok(source.includes(marker), marker);
-console.log('F01 readable composition-root direct bindings and settings aliases: OK');
+for (const marker of ['Eo: arenaSettingsKey', 'Co: readCardRuntimeEngineMode', 'Cs: getProxyForTools', 'get Wh(){return broadcastRuntimeMessage}']) assert.ok(source.includes(marker), marker);
+// Every top-level destructured local has a descriptive name; old property keys are retained.
+for (const match of source.matchAll(/^var\s*\{([^}\n]+)\}\s*=/gm)) {
+  for (const part of match[1].split(',')) {
+    const name = part.trim().split(':').at(-1).trim();
+    assert.doesNotMatch(name, /^[$A-Za-z_][\w$]?$/, 'opaque destructured binding: ' + name);
+  }
+}
+assert.doesNotMatch(source, /^import[^\n]*\bas\s+[$A-Za-z_][\w$]?(?=\s*[,}])/m, 'opaque named import alias');
+assert.ok(source.includes('export{unsupportedRequire as n,commonJsFactory as t};'), 'legacy public exports remain stable');
+console.log('F01 readable composition-root binding inventory: OK');
