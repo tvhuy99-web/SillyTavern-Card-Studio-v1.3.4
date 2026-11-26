@@ -129,6 +129,52 @@ function compareInventories(before, after) {
     currentFactories: after.size, unchanged: before.size - missing.length - modified.length,
     movedCount: moved.length, modifiedCount: modified.length, missing, modified, moved, added };
 }
+// Inspect top-level helper declarations in the original UI owners as well.
+// Helpers may be exported or copied to more than one of their new UI owners;
+// only the export modifier is ignored. Every matching copy must have parity.
+function helpers(file, content) {
+  const ast = parse(file, content);
+  const projectionNames = identityProjections(ast);
+  const records = [];
+  for (const statement of ast.statements) {
+    if (ts.isFunctionDeclaration(statement) && statement.name && statement.body) {
+      const name = statement.name.text;
+      if (projectionNames.has(name) || (/^(create[A-Z]|__stsCreate)/.test(name) &&
+          statement.modifiers?.some(modifier => modifier.kind === ts.SyntaxKind.ExportKeyword))) continue;
+      const shape = [name, (statement.modifiers || []).filter(modifier => modifier.kind !== ts.SyntaxKind.ExportKeyword).map(modifier => fingerprint(modifier, ast)),
+        Boolean(statement.asteriskToken), statement.parameters.map(parameter => fingerprint(parameter, ast)), fingerprint(statement.body, ast)];
+      records.push({ name, file, hash: createHash('sha256').update(JSON.stringify(shape)).digest('hex') });
+    } else if (ts.isVariableStatement(statement)) {
+      for (const declaration of statement.declarationList.declarations) {
+        if (!ts.isIdentifier(declaration.name)) throw Error('Review destructured module helper in ' + file);
+        const shape = [statement.declarationList.flags & (ts.NodeFlags.Let | ts.NodeFlags.Const), fingerprint(declaration, ast)];
+        records.push({ name: declaration.name.text, file, hash: createHash('sha256').update(JSON.stringify(shape)).digest('hex') });
+      }
+    }
+  }
+  return records;
+}
+function compareUiHelpers(originalSources, currentSources, originalFactories, currentFactories) {
+  const currentByFile = new Map(currentSources);
+  const owners = new Map();
+  for (const [name, original] of originalFactories) {
+    const current = currentFactories.get(name);
+    if (!current) continue;
+    if (!owners.has(original.file)) owners.set(original.file, new Set());
+    owners.get(original.file).add(current.file);
+  }
+  const missing = [], modified = [], verified = [];
+  for (const [file, source] of originalSources) {
+    const candidates = [...(owners.get(file) || [])].flatMap(owner => helpers(owner, currentByFile.get(owner)));
+    for (const expected of helpers(file, source)) {
+      const matches = candidates.filter(candidate => candidate.name === expected.name);
+      if (!matches.length) missing.push(expected);
+      else if (matches.some(candidate => candidate.hash !== expected.hash)) modified.push({ expected, matches });
+      else verified.push({ name: expected.name, original: file, owners: matches.map(candidate => candidate.file) });
+    }
+  }
+  return { ok: missing.length === 0 && modified.length === 0, verifiedCount: verified.length, missing, modified, verified };
+}
 function checkFactoryParity(baselineDir, currentDir) {
   return compareInventories(inventory(directorySources(baselineDir)), inventory(directorySources(currentDir)));
 }
@@ -157,11 +203,15 @@ if (require.main === module) {
   const args = process.argv.slice(2);
   if (args.includes('--self-test')) { console.log('F02 AST factory parity fixtures PASS'); }
   else {
-    const after = inventory(directorySources(root));
-    const oldUi = compareInventories(inventory(gitSources(F01, UI_OWNERS), true), inventory(directorySources(root), true));
+    const currentSources = directorySources(root);
+    const originalSources = gitSources(F01, UI_OWNERS);
+    const after = inventory(currentSources);
+    const oldFactories = inventory(originalSources, true);
+    const oldUi = compareInventories(oldFactories, inventory(currentSources, true));
+    const uiHelpers = compareUiHelpers(originalSources, currentSources, oldFactories, after);
     const imported = compareInventories(inventory(gitSources(IMPORTED_F02)), after);
     // Historical UI scope and imported full-factory scope are independent.
-    console.log(JSON.stringify({ historicalUi: { ...oldUi, added: undefined }, imported }, null, 2));
-    if (!oldUi.ok || !imported.ok) process.exitCode = 1;
+    console.log(JSON.stringify({ historicalUi: { ...oldUi, added: undefined }, uiHelpers, imported }, null, 2));
+    if (!oldUi.ok || !uiHelpers.ok || !imported.ok) process.exitCode = 1;
   }
 }
