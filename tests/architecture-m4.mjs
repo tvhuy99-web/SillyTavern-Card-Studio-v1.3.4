@@ -45,16 +45,16 @@ assert.ok(!gatewayAdapter.includes('.body.getReader()'));
 assert.ok(!gatewayAdapter.includes('new TextDecoder'));
 assert.ok(!gatewayAdapter.includes('Proxy Stream Error'));
 
-const sendStart = production.indexOf('const sendMessage = b.useCallback(');
+const sendStart = production.indexOf('const sendMessage = react.useCallback(');
 const sendEnd = production.indexOf('return {', sendStart);
 assert.ok(sendStart >= 0 && sendEnd > sendStart);
 const sendBlock = production.slice(sendStart, sendEnd);
 for (const forbidden of [
-  'scanWorldInfo', 'xd(', 'Cd(', 'Sd(', '__stsArenaState',
+  'scanWorldInfo', 'assemblePrompt(', 'streamGeneration(', 'generateOnce(', '__stsArenaState',
   'logSmartScan', 'logSelection', 'new AbortController',
 ]) assert.ok(!sendBlock.includes(forbidden), 'React send adapter regained business logic: ' + forbidden);
 
-const smartScanStart = production.indexOf('const scanInput = b.useCallback(');
+const smartScanStart = production.indexOf('const scanInput = react.useCallback(');
 const smartScanEnd = production.indexOf('const processOutput =', smartScanStart);
 assert.ok(smartScanStart >= 0 && smartScanEnd > smartScanStart);
 const smartScanAdapter = production.slice(smartScanStart, smartScanEnd);
@@ -65,7 +65,7 @@ assert.ok(!smartScanAdapter.includes('((t,r,a,i,o,s=[]'));
 assert.ok(!smartScanAdapter.includes('semantic_threshold||.7'));
 assert.ok(!smartScanAdapter.includes('[Smart Scan] Skipped API call'));
 
-const responseStart = production.indexOf('const processAIResponse = b.useCallback(');
+const responseStart = production.indexOf('const processAIResponse = react.useCallback(');
 const responseEnd = production.indexOf('const createPlaceholderMessage =', responseStart);
 assert.ok(responseStart >= 0 && responseEnd > responseStart);
 const responseAdapter = production.slice(responseStart, responseEnd);
