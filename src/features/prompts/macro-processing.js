@@ -142,10 +142,10 @@ function extractRegexScripts(extensionSettings, preset) {
 
 export function createMacroProcessing(dependencies = {}) {
   return {
-    Vu: resolveCharacterName,
-    Ku: resolvePromptOverride,
-    Ju: expandBasicMacros,
-    Xu: expandRandomMacros,
-    Zu: extractRegexScripts,
+    resolveCharacterName,
+    resolvePromptOverride,
+    expandBasicMacros,
+    expandRandomMacros,
+    extractRegexScripts,
   };
 }

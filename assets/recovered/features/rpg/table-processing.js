@@ -375,10 +375,10 @@ function applyRpgActions(rpgDatabase, actions) {
 
 export function createTableProcessing(dependencies = {}) {
   const defaultSafetySettings = [
-    { category: dependencies.ke.HARM_CATEGORY_HARASSMENT, threshold: dependencies.Ce.BLOCK_NONE },
-    { category: dependencies.ke.HARM_CATEGORY_HATE_SPEECH, threshold: dependencies.Ce.BLOCK_NONE },
-    { category: dependencies.ke.HARM_CATEGORY_SEXUALLY_EXPLICIT, threshold: dependencies.Ce.BLOCK_NONE },
-    { category: dependencies.ke.HARM_CATEGORY_DANGEROUS_CONTENT, threshold: dependencies.Ce.BLOCK_NONE },
+    { category: dependencies.HarmCategory.HARM_CATEGORY_HARASSMENT, threshold: dependencies.HarmBlockThreshold.BLOCK_NONE },
+    { category: dependencies.HarmCategory.HARM_CATEGORY_HATE_SPEECH, threshold: dependencies.HarmBlockThreshold.BLOCK_NONE },
+    { category: dependencies.HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT, threshold: dependencies.HarmBlockThreshold.BLOCK_NONE },
+    { category: dependencies.HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT, threshold: dependencies.HarmBlockThreshold.BLOCK_NONE },
   ];
 
   const parseRpgActions = (responseText, rowSnapshot) => {
@@ -437,7 +437,7 @@ export function createTableProcessing(dependencies = {}) {
           });
         }
       } else if (commandName === 'insertRow') {
-        const parsedObject = extractBalancedJsonObject(editBody, cursor, dependencies.As);
+        const parsedObject = extractBalancedJsonObject(editBody, cursor, dependencies.parseRelaxedJson);
         if (parsedObject) {
           actions.push({
             type: 'INSERT',
@@ -449,7 +449,7 @@ export function createTableProcessing(dependencies = {}) {
       } else if (commandName === 'updateRow') {
         const rowIndex = readNextInteger();
         if (rowIndex !== null) {
-          const parsedObject = extractBalancedJsonObject(editBody, cursor, dependencies.As);
+          const parsedObject = extractBalancedJsonObject(editBody, cursor, dependencies.parseRelaxedJson);
           if (parsedObject) {
             actions.push({
               type: 'UPDATE',
@@ -468,13 +468,13 @@ export function createTableProcessing(dependencies = {}) {
   };
 
   return {
-    Js: DEFAULT_MYTHIC_SYSTEM_PROMPT,
-    Ys: defaultSafetySettings,
-    Xs: formatRpgHybridTable,
-    Qs: createRpgRowSnapshot,
-    Zs: buildMythicPrompt,
-    el: filterRpgDatabaseByActiveEntries,
-    tl: parseRpgActions,
-    nl: applyRpgActions,
+    defaultMythicSystemPrompt: DEFAULT_MYTHIC_SYSTEM_PROMPT,
+    defaultMythicSafetySettings: defaultSafetySettings,
+    formatRpgHybridTable,
+    createRpgRowSnapshot,
+    buildMythicPrompt,
+    filterRpgDatabaseByActiveEntries,
+    parseRpgActions,
+    applyRpgActions,
   };
 }

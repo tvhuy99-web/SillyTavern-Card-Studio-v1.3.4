@@ -121,15 +121,15 @@ for (const relativePath of RECOVERED_FILES) {
 // 3. table-processing audit (hybrid table, snapshot, filter, parse, apply)
 // ============================================================================
 {
-  const { Xs, Qs, Zs, el, tl, nl, Js } = createTableProcessing({
-    ke: {
+  const { formatRpgHybridTable: Xs, createRpgRowSnapshot: Qs, buildMythicPrompt: Zs, filterRpgDatabaseByActiveEntries: el, parseRpgActions: tl, applyRpgActions: nl, defaultMythicSystemPrompt: Js } = createTableProcessing({
+    HarmCategory: {
       HARM_CATEGORY_HARASSMENT: 'HARASSMENT',
       HARM_CATEGORY_HATE_SPEECH: 'HATE',
       HARM_CATEGORY_SEXUALLY_EXPLICIT: 'SEXUAL',
       HARM_CATEGORY_DANGEROUS_CONTENT: 'DANGEROUS',
     },
-    Ce: { BLOCK_NONE: 'BLOCK_NONE' },
-    As: text => JSON.parse(text),
+    HarmBlockThreshold: { BLOCK_NONE: 'BLOCK_NONE' },
+    parseRelaxedJson: text => JSON.parse(text),
   });
 
   const db = {
@@ -257,7 +257,7 @@ for (const relativePath of RECOVERED_FILES) {
 // 5. macro-processing audit
 // ============================================================================
 {
-  const { Vu, Ku, Ju, Xu, Zu } = createMacroProcessing({});
+  const { resolveCharacterName: Vu, resolvePromptOverride: Ku, expandBasicMacros: Ju, expandRandomMacros: Xu, extractRegexScripts: Zu } = createMacroProcessing({});
   assert.equal(Vu({ name: 'Aria', nickname: 'Captain Aria' }), 'Captain Aria');
   assert.equal(Ku('Override {{original}}', 'Base'), 'Override Base');
   assert.equal(Ku('   ', 'Base'), 'Base');

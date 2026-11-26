@@ -316,11 +316,11 @@ function createInMemoryIdbDatabase() {
 // 3. backup-codec.js: clean named helpers + backward-compatible Kd/Wd/Jd/Yd/Xd aliases.
 {
   const codec = createBackupCodec();
-  assert.equal(codec.Kd, MAX_AVATAR_BASE64_LENGTH);
-  assert.equal(codec.Wd, isPlainObject);
-  assert.equal(codec.Jd, assertBackupArray);
-  assert.equal(codec.Yd, encodeBufferToBase64);
-  assert.equal(codec.Xd, decodeBase64ToBuffer);
+  assert.equal(codec.MAX_AVATAR_BASE64_LENGTH, MAX_AVATAR_BASE64_LENGTH);
+  assert.equal(codec.isPlainObject, isPlainObject);
+  assert.equal(codec.assertBackupArray, assertBackupArray);
+  assert.equal(codec.encodeBufferToBase64, encodeBufferToBase64);
+  assert.equal(codec.decodeBase64ToBuffer, decodeBase64ToBuffer);
   const sample = new Uint8Array([1, 2, 3, 250, 255]).buffer;
   const encoded = await encodeBufferToBase64(sample);
   const decoded = await decodeBase64ToBuffer(encoded);

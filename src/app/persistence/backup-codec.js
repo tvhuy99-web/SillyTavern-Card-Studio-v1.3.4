@@ -53,12 +53,6 @@ export function createBackupCodec(_dependencies = {}) {
     assertBackupArray,
     encodeBufferToBase64,
     decodeBase64ToBuffer,
-    // Backward-compatible export aliases
-    Kd: MAX_AVATAR_BASE64_LENGTH,
-    Wd: isPlainObject,
-    Jd: assertBackupArray,
-    Yd: encodeBufferToBase64,
-    Xd: decodeBase64ToBuffer,
   };
 }
 

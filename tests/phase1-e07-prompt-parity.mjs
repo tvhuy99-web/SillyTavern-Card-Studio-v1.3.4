@@ -77,7 +77,7 @@ function createSharedDependencies({
   const macros = createMacroProcessing({});
   const getMode = () => regexEngineMode;
   const regex = createRegexProcessing({ Co: getMode });
-  const tables = createTableProcessing({ ke: {}, Ce: {}, As: text => JSON.parse(text) });
+  const tables = createTableProcessing({ HarmCategory: {}, HarmBlockThreshold: {}, parseRelaxedJson: text => JSON.parse(text) });
 
   const getVariable = (variables, path, fallback = undefined, unwrap = true) => {
     const value = getPathValue(variables, path);
@@ -137,21 +137,21 @@ function createSharedDependencies({
     logs,
     Co: getMode,
     Gu: mutateVariable,
-    Js: tables.Js,
-    Ju: macros.Ju,
-    Ku: macros.Ku,
+    Js: tables.defaultMythicSystemPrompt,
+    Ju: macros.expandBasicMacros,
+    Ku: macros.resolvePromptOverride,
     Lu: runIsolatedScript,
-    Qs: tables.Qs,
+    Qs: tables.createRpgRowSnapshot,
     Uu: getVariable,
-    Vu: macros.Vu,
-    Xs: tables.Xs,
-    Xu: macros.Xu,
-    Zs: tables.Zs,
-    Zu: macros.Zu,
+    Vu: macros.resolveCharacterName,
+    Xs: tables.formatRpgHybridTable,
+    Xu: macros.expandRandomMacros,
+    Zs: tables.buildMythicPrompt,
+    Zu: macros.extractRegexScripts,
     __stsBuildSmartStateBlock: buildSmartStateBlock,
     __stsNormalizePromptVariableScopes: normalizePromptVariableScopes,
     __stsReadGlobalVariables: () => ({ ...globalVariables }),
-    el: tables.el,
+    el: tables.filterRpgDatabaseByActiveEntries,
     gd: regex.processRegex,
     nc: async () => ({ default: {} }),
     qu: (...entry) => logs.push(entry),
