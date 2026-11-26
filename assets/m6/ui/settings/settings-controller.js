@@ -81,8 +81,8 @@ export function useConnectionSettings({
     const onLog = event => {
       if (!aiStudioRequest.current || event.detail?.source !== 'aistudio') return;
       if (String(event.detail.message).includes('[MODEL_SCAN]')) {
-        const p = event.detail.payload || {};
-        setAiStudioStatus({ kind: 'working', message: 'AI Studio đang quét model...', detail: `Lần quét: ${p.attempt ?? '?'}; model: ${p.usableModels ?? '?'}; DOM: ${p.domCandidates ?? '?'}; phản hồi mạng: ${p.networkHits ?? '?'}` });
+        const scanProgress = event.detail.payload || {};
+        setAiStudioStatus({ kind: 'working', message: 'AI Studio đang quét model...', detail: `Lần quét: ${scanProgress.attempt ?? '?'}; model: ${scanProgress.usableModels ?? '?'}; DOM: ${scanProgress.domCandidates ?? '?'}; phản hồi mạng: ${scanProgress.networkHits ?? '?'}` });
       }
     };
     window.addEventListener?.('sts:aistudio-visibility', onVisibility);

@@ -23,7 +23,7 @@ function makeId() {
 
 function resolveThinkingLevel(explicit){
   if(typeof explicit==="string"&&explicit.trim())return explicit.trim();
-  try{const s=createConnectionRepository().getSettings();return String(s.aistudio_thinking||"default");}
+  try{const settings=createConnectionRepository().getSettings();return String(settings.aistudio_thinking||"default");}
   catch{return "default";}
 }
 async function run({ prompt, model, signal, requestId, thinkingLevel, mode = 'chat', requestTimeoutMs = 510000 }) {
@@ -56,11 +56,11 @@ async function run({ prompt, model, signal, requestId, thinkingLevel, mode = 'ch
     log('TEXT_RESULT', {requestId, mode, responseChars:text.length,
       requestedThinking: resolvedThinking, nativeConfirmedThinking: String(result?.appliedThinking || 'see-native-log')}, 'script-success');
     return {text, reasoning:String(result?.reasoning ?? "")};
-  } catch (e) {
-    if (e?.code === 'NATIVE_BRIDGE_TIMEOUT') abort();
+  } catch (error) {
+    if (error?.code === 'NATIVE_BRIDGE_TIMEOUT') abort();
     log('TEXT_ERROR', {requestId, mode, sentThinking:resolvedThinking, sentModel:resolvedModel || 'web-default',
-      message:String(e?.message || e)}, 'error');
-    throw e;
+      message:String(error?.message || error)}, 'error');
+    throw error;
   } finally {
     signal?.removeEventListener('abort', abort);
   }

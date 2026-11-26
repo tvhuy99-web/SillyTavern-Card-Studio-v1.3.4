@@ -19,7 +19,7 @@ export function createConnectionSettingsScreen(jsxRuntime, react, getDependencie
                     children: [jsxRuntime.jsx("h2", {
                             className: "text-xl font-bold text-sky-400 mb-4", children: "1. Chọn Nguồn Kết Nối (API Source)"
                         }), jsxRuntime.jsxs("select", {
-                            value: settings.source, onChange: e => updateSetting("source", e.target.value), "aria-label": "Nhà cung cấp AI", className: "w-full bg-slate-900 border border-slate-600 rounded-lg p-3 text-white focus:border-sky-500 outline-none", children: [jsxRuntime.jsx("option", {
+                            value: settings.source, onChange: event => updateSetting("source", event.target.value), "aria-label": "Nhà cung cấp AI", className: "w-full bg-slate-900 border border-slate-600 rounded-lg p-3 text-white focus:border-sky-500 outline-none", children: [jsxRuntime.jsx("option", {
                                     value: "gemini", children: "Google Gemini"
                                 }), jsxRuntime.jsx("option", {
                                     value: "openrouter", children: "OpenRouter"
@@ -48,7 +48,7 @@ export function createConnectionSettingsScreen(jsxRuntime, react, getDependencie
                             className: "text-xl font-bold text-sky-400 mb-4", children: "3. Cấu hình Nâng cao"
                         }), jsxRuntime.jsxs("div", {
                             className: "bg-slate-900/50 p-4 rounded-lg border border-slate-700 space-y-4", children: [jsxRuntime.jsx(ToggleSwitch, {
-                                    label: "Tự động Kết nối Trực tiếp (Direct Fetch Bypass)", checked: settings.directFetchBypass ?? !0, onChange: e => updateSetting("directFetchBypass", e)
+                                    label: "Tự động Kết nối Trực tiếp (Direct Fetch Bypass)", checked: settings.directFetchBypass ?? !0, onChange: enabled => updateSetting("directFetchBypass", enabled)
                                 }), jsxRuntime.jsx("p", {
                                     className: "text-xs text-slate-400 ml-8", children: "Bỏ qua máy chủ trung gian (proxy) đối với các API an toàn (như Google, OpenRouter) để tối ưu tốc độ và tránh lỗi timeout. Tắt chế độ này có thể giải quyết các vấn đề CORS trên một số trình duyệt, nhưng tăng nguy cơ lỗi Timeout."
                                 })]

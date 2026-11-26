@@ -42,9 +42,9 @@ export function invalidateHistorySummaries(state, index, settings, countTurns) {
 /** Find the first changed message in an existing conversation. Appends do not
  * invalidate summaries; changed, deleted or reordered historical text does. */
 export function firstChangedHistoryIndex(previous, next) {
-  for (let i=0;i<previous.length;i++) {
-    const a=previous[i], b=next[i];
-    if (!b || a.id!==b.id || a.role!==b.role || a.content!==b.content || a.is_hidden!==b.is_hidden) return i;
+  for (let index=0;index<previous.length;index++) {
+    const previousMessage=previous[index], nextMessage=next[index];
+    if (!nextMessage || previousMessage.id!==nextMessage.id || previousMessage.role!==nextMessage.role || previousMessage.content!==nextMessage.content || previousMessage.is_hidden!==nextMessage.is_hidden) return index;
   }
   return -1;
 }
