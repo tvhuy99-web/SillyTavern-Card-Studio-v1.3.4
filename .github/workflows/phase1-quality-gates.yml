@@ -106,11 +106,11 @@ jobs:
           npm run test:app-browser
           npm run test:storage-browser
 
-  # Optional job for connected runners with npm registry access (unlocks BLK-001: E01.2, E01.3, G11, G13).
+  # Run npm acceptance on CI; manual runs may opt out (unlocks BLK-001: E01.2, E01.3, G11, G13).
   npm-runtime-gate:
-    name: Package-Backed npm Runtime Build (Optional — Network)
+    name: Package-Backed npm Runtime Build
     needs: core-quality-gates
-    if: github.event_name == 'workflow_dispatch' && inputs.run_npm_runtime
+    if: github.event_name != 'workflow_dispatch' || inputs.run_npm_runtime
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
