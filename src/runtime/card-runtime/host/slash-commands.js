@@ -64,7 +64,7 @@ export function createSlashCommands(dependencies = {}) {
     };
   };
   var expandSlashMacros = (text, context) => {
-    let expanded = (0, dependencies.Xu)(text);
+    let expanded = (0, dependencies.expandRandomMacros)(text);
     expanded = expanded.replace(/{{random:(.*?)}}/gi, (match, optionsText) => {
       let options = optionsText.split(",");
       if (2 === options.length && !isNaN(Number(options[0])) && !isNaN(Number(options[1]))) {
@@ -100,28 +100,28 @@ export function createSlashCommands(dependencies = {}) {
     }));
     expanded = expanded.replace(/{{date}}/gi, now.toLocaleDateString());
     expanded = expanded.replace(/{{getvar::([^}]+)}}/gi, (match, variablePath) => {
-      let value = (0, dependencies.Uu)(context.variables, variablePath);
+      let value = (0, dependencies.getVariable)(context.variables, variablePath);
       return undefined === value ? "" : String(value);
     });
     expanded = expanded.replace(/{{getglobalvar::([^}]+)}}/gi, (match, variablePath) => {
-      let value = (0, dependencies.Uu)(context.variables, "globals." + variablePath);
+      let value = (0, dependencies.getVariable)(context.variables, "globals." + variablePath);
       return undefined === value ? "" : String(value);
     });
     expanded = expanded.replace(/{{setglobalvar::([^:]+)::(.*?)}}/gi, (match, variablePath, value) => {
-      let updatedVariables = (0, dependencies.Gu)(context.variables, "set", "globals." + variablePath, value);
+      let updatedVariables = (0, dependencies.mutateVariable)(context.variables, "set", "globals." + variablePath, value);
       context.variables = updatedVariables;
       context.setVariables(updatedVariables);
       return "";
     });
     expanded = expanded.replace(/{{setvar::([^:]+)::(.*?)}}/gi, (match, variablePath, value) => {
-      let updatedVariables = (0, dependencies.Gu)(context.variables, "set", variablePath, value);
+      let updatedVariables = (0, dependencies.mutateVariable)(context.variables, "set", variablePath, value);
       context.variables = updatedVariables;
       context.setVariables(updatedVariables);
       return "";
     });
     expanded = expanded.replace(/{{\s*([a-zA-Z0-9_.[\]]+)\s*}}/g, (match, variablePath) => {
       if (variablePath.includes(":")) return match;
-      let value = (0, dependencies.Uu)(context.variables, variablePath);
+      let value = (0, dependencies.getVariable)(context.variables, variablePath);
       return undefined === value ? match : String(value);
     });
     return expanded;
@@ -185,7 +185,7 @@ export function createSlashCommands(dependencies = {}) {
         value = assignmentParts.slice(1).join("=");
       }
       if (variablePath && undefined !== value) {
-        let updatedVariables = (0, dependencies.Gu)(context.variables, "set", variablePath, value);
+        let updatedVariables = (0, dependencies.mutateVariable)(context.variables, "set", variablePath, value);
         context.variables = updatedVariables;
         context.setVariables(updatedVariables);
       }
@@ -197,13 +197,13 @@ export function createSlashCommands(dependencies = {}) {
         value: value
       } = parseVariableAssignment(args);
       if (!variablePath) return "";
-      let updatedVariables = (0, dependencies.Gu)(context.variables, "set", variablePath, value);
+      let updatedVariables = (0, dependencies.mutateVariable)(context.variables, "set", variablePath, value);
       context.variables = updatedVariables;
       context.setVariables(updatedVariables);
       return String(value ?? "");
     },
     get: async (args, context) => {
-      let value = (0, dependencies.Uu)(context.variables, args[0]);
+      let value = (0, dependencies.getVariable)(context.variables, args[0]);
       context.sendMessage(`[System] ${args[0]} = ${value}`, "system");
       return null == value ? "" : String(value);
     },
@@ -212,26 +212,26 @@ export function createSlashCommands(dependencies = {}) {
         named: namedArgs,
         positional: positionalArgs
       } = parseSlashArguments(args);
-      let value = (0, dependencies.Uu)(context.variables, namedArgs.key ?? positionalArgs[0]);
+      let value = (0, dependencies.getVariable)(context.variables, namedArgs.key ?? positionalArgs[0]);
       return null == value ? "" : "object" == typeof value ? JSON.stringify(value) : String(value);
     },
     add: async (args, context) => {
-      let updatedVariables = (0, dependencies.Gu)(context.variables, "add", args[0], args[1]);
+      let updatedVariables = (0, dependencies.mutateVariable)(context.variables, "add", args[0], args[1]);
       context.variables = updatedVariables;
       context.setVariables(updatedVariables);
     },
     sub: async (args, context) => {
-      let updatedVariables = (0, dependencies.Gu)(context.variables, "sub", args[0], args[1]);
+      let updatedVariables = (0, dependencies.mutateVariable)(context.variables, "sub", args[0], args[1]);
       context.variables = updatedVariables;
       context.setVariables(updatedVariables);
     },
     mul: async (args, context) => {
-      let updatedVariables = (0, dependencies.Gu)(context.variables, "mul", args[0], args[1]);
+      let updatedVariables = (0, dependencies.mutateVariable)(context.variables, "mul", args[0], args[1]);
       context.variables = updatedVariables;
       context.setVariables(updatedVariables);
     },
     div: async (args, context) => {
-      let updatedVariables = (0, dependencies.Gu)(context.variables, "div", args[0], args[1]);
+      let updatedVariables = (0, dependencies.mutateVariable)(context.variables, "div", args[0], args[1]);
       context.variables = updatedVariables;
       context.setVariables(updatedVariables);
     },
@@ -240,7 +240,7 @@ export function createSlashCommands(dependencies = {}) {
       let variablePath = "globals." + assignment.key;
       let value = assignment.value;
       if (assignment.key && undefined !== value) {
-        let updatedVariables = (0, dependencies.Gu)(context.variables, "set", variablePath, value);
+        let updatedVariables = (0, dependencies.mutateVariable)(context.variables, "set", variablePath, value);
         context.variables = updatedVariables;
         context.setVariables(updatedVariables);
       }
@@ -251,7 +251,7 @@ export function createSlashCommands(dependencies = {}) {
         named: namedArgs,
         positional: positionalArgs
       } = parseSlashArguments(args);
-      let value = (0, dependencies.Uu)(context.variables, "globals." + (namedArgs.key ?? positionalArgs[0] ?? ""));
+      let value = (0, dependencies.getVariable)(context.variables, "globals." + (namedArgs.key ?? positionalArgs[0] ?? ""));
       return null == value ? "" : "object" == typeof value ? JSON.stringify(value) : String(value);
     },
     addvar: async (args, context) => {
@@ -259,10 +259,10 @@ export function createSlashCommands(dependencies = {}) {
         key: variablePath,
         value: value
       } = parseVariableAssignment(args);
-      let updatedVariables = (0, dependencies.Gu)(context.variables, "add", variablePath, value);
+      let updatedVariables = (0, dependencies.mutateVariable)(context.variables, "add", variablePath, value);
       context.variables = updatedVariables;
       context.setVariables(updatedVariables);
-      let result = (0, dependencies.Uu)(updatedVariables, variablePath);
+      let result = (0, dependencies.getVariable)(updatedVariables, variablePath);
       return null == result ? "" : String(result);
     },
     incvar: async (args, context) => {
@@ -272,10 +272,10 @@ export function createSlashCommands(dependencies = {}) {
       } = parseSlashArguments(args);
       let variablePath = namedArgs.key ?? positionalArgs[0] ?? "";
       let amount = parseSlashValue(namedArgs.value ?? positionalArgs[1] ?? "1");
-      let updatedVariables = (0, dependencies.Gu)(context.variables, "add", variablePath, amount);
+      let updatedVariables = (0, dependencies.mutateVariable)(context.variables, "add", variablePath, amount);
       context.variables = updatedVariables;
       context.setVariables(updatedVariables);
-      return String((0, dependencies.Uu)(updatedVariables, variablePath) ?? "");
+      return String((0, dependencies.getVariable)(updatedVariables, variablePath) ?? "");
     },
     decvar: async (args, context) => {
       let {
@@ -284,10 +284,10 @@ export function createSlashCommands(dependencies = {}) {
       } = parseSlashArguments(args);
       let variablePath = namedArgs.key ?? positionalArgs[0] ?? "";
       let amount = parseSlashValue(namedArgs.value ?? positionalArgs[1] ?? "1");
-      let updatedVariables = (0, dependencies.Gu)(context.variables, "sub", variablePath, amount);
+      let updatedVariables = (0, dependencies.mutateVariable)(context.variables, "sub", variablePath, amount);
       context.variables = updatedVariables;
       context.setVariables(updatedVariables);
-      return String((0, dependencies.Uu)(updatedVariables, variablePath) ?? "");
+      return String((0, dependencies.getVariable)(updatedVariables, variablePath) ?? "");
     },
     delvar: async (args, context) => {
       let {
@@ -295,7 +295,7 @@ export function createSlashCommands(dependencies = {}) {
         positional: positionalArgs
       } = parseSlashArguments(args);
       let variablePath = namedArgs.key ?? positionalArgs[0] ?? "";
-      let updatedVariables = (0, dependencies.Gu)(context.variables, "delete", variablePath, undefined);
+      let updatedVariables = (0, dependencies.mutateVariable)(context.variables, "delete", variablePath, undefined);
       context.variables = updatedVariables;
       context.setVariables(updatedVariables);
       return "";
@@ -303,10 +303,10 @@ export function createSlashCommands(dependencies = {}) {
     flushvar: async (args, context, rawText, execution) => slashCommandHandlers.delvar(args, context, rawText, execution),
     length: async (args, context) => {
       let targetPath = args[0];
-      let value = (0, dependencies.Uu)(context.variables, args[1]);
+      let value = (0, dependencies.getVariable)(context.variables, args[1]);
       let length = 0;
       (Array.isArray(value) || "string" == typeof value) && (length = value.length);
-      let updatedVariables = (0, dependencies.Gu)(context.variables, "set", targetPath, length);
+      let updatedVariables = (0, dependencies.mutateVariable)(context.variables, "set", targetPath, length);
       context.variables = updatedVariables;
       context.setVariables(updatedVariables);
     },
@@ -314,7 +314,7 @@ export function createSlashCommands(dependencies = {}) {
       let targetPath = args[0];
       let combined = "";
       for (let index = 1; index < args.length; index++) combined += String(args[index]);
-      let updatedVariables = (0, dependencies.Gu)(context.variables, "set", targetPath, combined);
+      let updatedVariables = (0, dependencies.mutateVariable)(context.variables, "set", targetPath, combined);
       context.variables = updatedVariables;
       context.setVariables(updatedVariables);
     },
@@ -398,9 +398,9 @@ export function createSlashCommands(dependencies = {}) {
     stop: async () => false
   };
   return {
-    tp: tokenizeSlashCommand,
-    ip: expandSlashMacros,
-    op: compareSlashValues,
-    sp: slashCommandHandlers
+    tokenizeSlashCommand,
+    expandSlashMacros,
+    compareSlashValues,
+    slashCommandHandlers
   };
 }

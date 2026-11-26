@@ -4,18 +4,18 @@ export function createRuntimeContextAdapters(dependencies = {}) {
   var DEFAULT_RPC_TIMEOUT_MS = 5e3;
   var normalizeImportedName = (value, fallback) => String(value ?? "").trim().slice(0,300) || fallback;
   var getCharacterSummary = fileName => {
-    let state = dependencies.kc.getState();
+    let state = dependencies.characterStore.getState();
     let character = state.characters.find(entry => entry.fileName === fileName);
-    return character ? {fileName:character.fileName,name:character.card.name,avatar:character.avatarUrl||character.fileName,avatarUrl:character.avatarUrl,card:(0, dependencies.xh)(character.card),current:character.fileName===state.activeCharacterFileName} : null;
+    return character ? {fileName:character.fileName,name:character.card.name,avatar:character.avatarUrl||character.fileName,avatarUrl:character.avatarUrl,card:(0, dependencies.cloneRuntimeValue)(character.card),current:character.fileName===state.activeCharacterFileName} : null;
   };
   var findCharacter = identifier => {
-    let state = dependencies.kc.getState(), query = String(identifier ?? ""), index = Number(query);
+    let state = dependencies.characterStore.getState(), query = String(identifier ?? ""), index = Number(query);
     return state.characters.find((character, position) => character.fileName === query || character.card.name === query || Number.isInteger(index) && index === position);
   };
   var normalizeImportedCharacter = (name, source) => {
-    let rawCard = (0, dependencies.xh)(source?.raw || source?.data || source || {});
+    let rawCard = (0, dependencies.cloneRuntimeValue)(source?.raw || source?.data || source || {});
     let greetings = Array.isArray(source?.first_messages) ? source.first_messages.map(String) : [];
-    return (0, dependencies.gc)({
+    return (0, dependencies.normalizeCharacterCard)({
       ...rawCard,
       name: normalizeImportedName(name ?? rawCard.name, "Imported Character"),
       description: source?.description ?? rawCard.description ?? "",
@@ -41,21 +41,21 @@ export function createRuntimeContextAdapters(dependencies = {}) {
     : /storage|quota/i.test(message) ? "CARD_RUNTIME_STORAGE_FAILED"
     : /timeout|timed out/i.test(message) ? "CARD_RUNTIME_RPC_TIMEOUT" : "CARD_RUNTIME_RPC_FAILED";
   var buildRuntimeScope = messageId => {
-    let state = dependencies.ol.getState();
+    let state = dependencies.sessionStore.getState();
     return {chatId:state.sessionId||"current-chat",characterId:state.card?.fileName||state.card?.name||"current-character",presetName:state.preset?.name||"default",messageId:messageId};
   };
   var resolveGenerationPreset = options => {
-    let state = dependencies.ol.getState();
+    let state = dependencies.sessionStore.getState();
     if (!state.preset) throw Error("No generation preset is loaded.");
     let name = String(options.preset_name || "in_use");
-    let preset = "in_use" === name ? state.preset : dependencies.bu.getState().presets.find(entry => entry.name === name);
+    let preset = "in_use" === name ? state.preset : dependencies.presetStore.getState().presets.find(entry => entry.name === name);
     if (!preset) throw Error(`Generation preset not found: ${name}`);
-    let result = (0, dependencies.xh)(preset), overrides = options.custom_api || {};
+    let result = (0, dependencies.cloneRuntimeValue)(preset), overrides = options.custom_api || {};
     [["max_tokens","max_tokens"],["temperature","temp"],["frequency_penalty","frequency_penalty"],["presence_penalty","presence_penalty"],["top_p","top_p"],["top_k","top_k"]].forEach(([sourceKey, targetKey]) => {
       let value = overrides[sourceKey];
       if (void 0 !== value && "same_as_preset" !== value && "unset" !== value && Number.isFinite(Number(value))) result[targetKey] = Number(value);
     });
     return result;
   };
-  return { Hh: DEFAULT_RPC_TIMEOUT_MS, $h: normalizeImportedName, Gh: getCharacterSummary, zh: findCharacter, qh: normalizeImportedCharacter, Vh: readTextPayload, Kh: getActiveCardFrames, Wh: broadcastRuntimeMessage, Jh: emitRuntimeEvent, Yh: classifyRuntimeError, Xh: buildRuntimeScope, Zh: resolveGenerationPreset };
+  return { DEFAULT_RPC_TIMEOUT_MS, normalizeImportedName, getCharacterSummary, findCharacter, normalizeImportedCharacter, readTextPayload, getActiveCardFrames, broadcastRuntimeMessage, emitRuntimeEvent, classifyRuntimeError, buildRuntimeScope, resolveGenerationPreset };
 }

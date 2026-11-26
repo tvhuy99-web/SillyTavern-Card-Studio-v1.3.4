@@ -64,5 +64,5 @@ export function createRuntimeCompatibilityData(dependencies = {}) {
   var runtimeWebStorageKey = dependencies.__stsRuntimeWebStorageKey;
   var readRuntimeRecord = dependencies.__stsReadRuntimeRecord;
   var writeRuntimeRecord = (storage, key, value) => (0, dependencies.__stsWriteRuntimeRecord)(storage, key, value, assertPayloadSize);
-  return { yh: applySamplingOverrides, vh: isRecordObject, xh: cloneRuntimeValue, _h: assertPayloadSize, wh: resolveMessageIndex, kh: resolveMessageRange, Sh: toInternalRole, Ch: toRuntimeMessage, Eh: toRuntimeMessages, Nh: normalizeRuntimeScope, Ah: runtimeVariableStorageKey, Ih: runtimeWebStorageKey, jh: readRuntimeRecord, Dh: writeRuntimeRecord };
+  return { applySamplingOverrides, isRecordObject, cloneRuntimeValue, assertPayloadSize, resolveMessageIndex, resolveMessageRange, toInternalRole, toRuntimeMessage, toRuntimeMessages, normalizeRuntimeScope, runtimeVariableStorageKey, runtimeWebStorageKey, readRuntimeRecord, writeRuntimeRecord };
 }
