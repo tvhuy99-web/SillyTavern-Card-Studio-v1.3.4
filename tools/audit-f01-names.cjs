@@ -53,6 +53,49 @@ function inventory(ref) {
   for (const row of rows) for (const [kind, count] of Object.entries(row.byKind)) byKind[kind] = (byKind[kind] || 0) + count;
   return { files: rows.length, count: rows.reduce((n, row) => n + row.count, 0), topLevel: rows.reduce((n, row) => n + row.topLevel, 0), byKind, rows };
 }
+
+// These short names have ordinary meanings in the reviewed first-party code.
+// They are not a general exemption for property aliases or generated scripts.
+const conventionalNames = Object.freeze({
+  id: 'identifier', db: 'database', tx: 'transaction', op: 'operation',
+  fn: 'function callback', ui: 'UI-facing action', ok: 'success flag',
+  _: 'intentionally unused parameter or caught error'
+});
+function isConventionalBinding(binding) {
+  return Object.hasOwn(conventionalNames, binding.name) &&
+    (binding.name !== '_' || binding.kind === 'catch' || binding.kind === 'parameter') &&
+    !binding.topLevel;
+}
+function reviewBindings(rows) {
+  const acceptedByName = {};
+  const unresolved = [];
+  for (const row of rows) for (const binding of row.bindings) {
+    if (isConventionalBinding(binding)) acceptedByName[binding.name] = (acceptedByName[binding.name] || 0) + 1;
+    else unresolved.push({ file: row.file, ...binding });
+  }
+  return { accepted: Object.values(acceptedByName).reduce((total, count) => total + count, 0),
+    acceptedByName, unresolved: unresolved.length, candidates: unresolved };
+}
+function inspectCompositionAliases(content) {
+  const source = ts.createSourceFile('src/app/host.js', content, ts.ScriptTarget.Latest, true, ts.ScriptKind.JS);
+  if(source.parseDiagnostics.length) throw Error('Cannot parse composition root');
+  const entries=[];
+  const record=(key,value,kind,node)=>{
+    if(!key||!value||!ts.isIdentifier(key)||!shortName.test(key.text)||!ts.isIdentifier(value)||shortName.test(value.text)) return;
+    entries.push({key:key.text,binding:value.text,kind,line:source.getLineAndCharacterOfPosition(node.getStart(source)).line+1});
+  };
+  function visit(node) {
+    if(ts.isBindingElement(node)&&node.propertyName) record(node.propertyName,node.name,'destructure',node);
+    if(ts.isPropertyAssignment(node))record(node.name,node.initializer,'property',node);
+    if(ts.isGetAccessorDeclaration(node)&&node.body?.statements.length===1&&ts.isReturnStatement(node.body.statements[0]))record(node.name,node.body.statements[0].expression,'getter',node);
+    ts.forEachChild(node,visit);
+  }
+  visit(source);
+  const byKind={},byKey={};
+  for(const entry of entries){byKind[entry.kind]=(byKind[entry.kind]||0)+1;byKey[entry.key]=(byKey[entry.key]||0)+1;}
+  return {count:entries.length,byKind,byKey,entries};
+}
+
 const args = process.argv.slice(2);
 const index = args.indexOf('--baseline');
 const baselineRef = index === -1 ? null : args[index + 1];
@@ -61,9 +104,15 @@ const current = inventory(null);
 const baseline = baselineRef ? inventory(baselineRef) : null;
 const before = new Map(baseline?.rows.map(row => [row.file, row.count]) || []);
 const summarize = ({ files, count, topLevel, byKind }) => ({ files, count, topLevel, byKind });
+const hostFile = 'src/app/host.js';
+const hostAliases = inspectCompositionAliases(fs.readFileSync(path.join(root, hostFile), 'utf8'));
+const bindingReview = reviewBindings(current.rows);
 const report = {
   scope: 'First-party src/**/*.js, .mjs and .cjs; excludes src/vendor, property keys, export aliases and embedded script strings. Short-name candidates include legitimate abbreviations and loop indices.',
   parser: ts.version,
+  conventionalNames,
+  bindingReview,
+  compositionAliasCandidates: { scope: 'Short identifier property keys mapped to longer local names in host.js; includes legitimate keys and repeated dependency edges, not a semantic defect count.', count: hostAliases.count, byKind: hostAliases.byKind, byKey: hostAliases.byKey, ...(args.includes('--details') ? { entries: hostAliases.entries } : {}) },
   baselineRef,
   baseline: baseline ? summarize(baseline) : null,
   current: summarize(current),
@@ -73,3 +122,5 @@ const report = {
 };
 console.log(JSON.stringify(report, null, 2));
 if (args.includes('--check-host') && (report.host.current !== 0 || report.host.currentTotal !== 0)) process.exitCode = 1;
+
+if (args.includes('--check-opaque') && bindingReview.unresolved !== 0) process.exitCode = 1;

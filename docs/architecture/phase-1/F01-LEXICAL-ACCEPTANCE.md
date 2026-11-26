@@ -1,0 +1,5 @@
+# F01 — Lexical naming acceptance and dependency inventory
+
+The detailed CI inventory at 626864f measured 128 short lexical bindings, of which the residual opaque names were subsequently addressed. `--check-opaque` now distinguishes documented ordinary short names (id, db, tx, op, fn, ui, ok and intentionally unused `_` parameters/catches) from unreviewed candidates; a short module-level declaration is never exempt. The original 2,250-binding metric remains comparable to its baseline. The gate is scoped to first-party JS modules, not generated strings, vendor code, or `.jsfrag` runtime fragments.
+
+A separate composition-root audit reports short property names that map to longer binding names, including injected keys and destructuring aliases. These are candidate occurrences, not unique defects; some are compatibility or legitimate keys. This makes progress on internal contracts visible without pretending the lexical count covers property aliases. Completion of the new gate and the contract review must be verified by CI. Historical UI alpha-equivalence is still a naming-only check and must not become a permanent barrier to future intentional UI changes.
