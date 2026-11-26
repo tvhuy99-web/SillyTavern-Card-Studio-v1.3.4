@@ -3,8 +3,8 @@ export function createEpubImport(dependencies = {}) {
 var readEpub = async file => {
   try {
     if (!file || file.size === 0 || file.size > 209715200) throw Error("File EPUB trống hoặc vượt quá giới hạn 200 MB.");
-    let archive = await (await (0, dependencies.nc)(async () => {
-      let {default: zipLibrary} = await import("../../../jszip.min-CF4xG0Dr.js").then(module => (0, dependencies.l)(module.default, 1));
+    let archive = await (await (0, dependencies.loadLibraryModule)(async () => {
+      let {default: zipLibrary} = await import("../../../jszip.min-CF4xG0Dr.js").then(module => (0, dependencies.wrapModule)(module.default, 1));
       return {default: zipLibrary};
     })).default.loadAsync(await file.arrayBuffer());
     let entries = Object.values(archive.files);

@@ -30,9 +30,9 @@ export function createDiagnosticsHook(dependencies) {
       addMythicLog,
       addSelectionLog,
       clearLogs,
-    } = dependencies.ol();
+    } = dependencies.sessionStore();
 
-    const startTurn = dependencies.b.useCallback(() => {
+    const startTurn = dependencies.react.useCallback(() => {
       addLogTurn({
         timestamp: Date.now(),
         prompt: [],
@@ -41,7 +41,7 @@ export function createDiagnosticsHook(dependencies) {
       });
     }, [addLogTurn]);
 
-    const logPrompt = dependencies.b.useCallback(promptPayload => {
+    const logPrompt = dependencies.react.useCallback(promptPayload => {
       updateCurrentTurn({
         prompt: typeof promptPayload === 'string'
           ? [{ id: 'legacy_raw', name: 'Raw Prompt', content: promptPayload, role: 'system' }]
@@ -49,15 +49,15 @@ export function createDiagnosticsHook(dependencies) {
       });
     }, [updateCurrentTurn]);
 
-    const logResponse = dependencies.b.useCallback(responseText => {
+    const logResponse = dependencies.react.useCallback(responseText => {
       updateCurrentTurn({ response: responseText });
     }, [updateCurrentTurn]);
 
-    const logSummary = dependencies.b.useCallback(summaryText => {
+    const logSummary = dependencies.react.useCallback(summaryText => {
       updateCurrentTurn({ summary: summaryText });
     }, [updateCurrentTurn]);
 
-    const logSystemMessage = dependencies.b.useCallback((level, source, message, stack, payload) => {
+    const logSystemMessage = dependencies.react.useCallback((level, source, message, stack, payload) => {
       const logEntry = {
         level,
         source,
@@ -70,7 +70,7 @@ export function createDiagnosticsHook(dependencies) {
       updateCurrentTurn({ systemLogs: [logEntry] });
     }, [addSystemLog, updateCurrentTurn]);
 
-    dependencies.b.useEffect(() => {
+    dependencies.react.useEffect(() => {
       const handleSystemLogEvent = event => {
         const { level, source, message, stack, payload } = event.detail;
         let formattedPayload = payload;
@@ -84,13 +84,13 @@ export function createDiagnosticsHook(dependencies) {
         logSystemMessage(level, source, message, stack, formattedPayload);
       };
 
-      window.addEventListener(dependencies.zu, handleSystemLogEvent);
+      window.addEventListener(dependencies.systemLogEvent, handleSystemLogEvent);
       return () => {
-        window.removeEventListener(dependencies.zu, handleSystemLogEvent);
+        window.removeEventListener(dependencies.systemLogEvent, handleSystemLogEvent);
       };
     }, [logSystemMessage]);
 
-    const logDiagnostic = dependencies.b.useCallback((diagnosticText, source = 'regex') => {
+    const logDiagnostic = dependencies.react.useCallback((diagnosticText, source = 'regex') => {
       if (!diagnosticText) {
         return;
       }
@@ -115,19 +115,19 @@ export function createDiagnosticsHook(dependencies) {
       updateCurrentTurn({ systemLogs: entries.reverse() });
     }, [addSystemLog, updateCurrentTurn]);
 
-    const logSmartScan = dependencies.b.useCallback((fullPrompt, rawResponse, latency) => {
+    const logSmartScan = dependencies.react.useCallback((fullPrompt, rawResponse, latency) => {
       addSmartScanLog(JSON.stringify({ latency, fullPrompt, rawResponse }));
     }, [addSmartScanLog]);
 
-    const logSelection = dependencies.b.useCallback((prompt, selectedItems) => {
+    const logSelection = dependencies.react.useCallback((prompt, selectedItems) => {
       addSelectionLog(JSON.stringify({ timestamp: Date.now(), prompt, selectedItems }));
     }, [addSelectionLog]);
 
-    const logMythic = dependencies.b.useCallback((fullPrompt, rawResponse, latency) => {
+    const logMythic = dependencies.react.useCallback((fullPrompt, rawResponse, latency) => {
       addMythicLog(JSON.stringify({ latency, fullPrompt, rawResponse }));
     }, [addMythicLog]);
 
-    const clearSystemLogs = dependencies.b.useCallback(() => {}, []);
+    const clearSystemLogs = dependencies.react.useCallback(() => {}, []);
 
     return {
       logs,
