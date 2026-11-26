@@ -46,15 +46,15 @@ export function createPresetBasicSection(getDependencies) {
       children: [(0, jsxRuntime.jsx)(TextInput, {
         label: "Tên Preset",
         value: preset.name || "",
-        onChange: e => onChange("name", e.target.value)
+        onChange: event => onChange("name", event.target.value)
       }), (0, jsxRuntime.jsx)(TextInput, {
         label: "Nhận xét",
         value: preset.comment || "",
-        onChange: e => onChange("comment", e.target.value)
+        onChange: event => onChange("comment", event.target.value)
       }), (0, jsxRuntime.jsx)(TextArea, {
         label: "Lời nhắc Hệ thống",
         value: preset.system_prompt || "",
-        onChange: e => onChange("system_prompt", e.target.value),
+        onChange: event => onChange("system_prompt", event.target.value),
         rows: 6,
         containerClassName: "md:col-span-2"
       })]
@@ -79,7 +79,7 @@ export function createSamplingSection(getDependencies) {
         children: [(0, jsxRuntime.jsx)(NumberInput, {
           label: "Nhiệt độ (Temperature)",
           value: preset.temp ?? 1,
-          onChange: e => onChange("temp", e),
+          onChange: value => onChange("temp", value),
           min: 0,
           max: 2,
           step: .01,
@@ -87,7 +87,7 @@ export function createSamplingSection(getDependencies) {
         }), (0, jsxRuntime.jsx)(NumberInput, {
           label: "Top P",
           value: preset.top_p ?? .9,
-          onChange: e => onChange("top_p", e),
+          onChange: value => onChange("top_p", value),
           min: 0,
           max: 1,
           step: .01,
@@ -95,7 +95,7 @@ export function createSamplingSection(getDependencies) {
         }), (0, jsxRuntime.jsx)(NumberInput, {
           label: "Top K",
           value: preset.top_k ?? 0,
-          onChange: e => onChange("top_k", e),
+          onChange: value => onChange("top_k", value),
           min: 0,
           max: 100,
           step: 1,
@@ -103,7 +103,7 @@ export function createSamplingSection(getDependencies) {
         }), (0, jsxRuntime.jsx)(NumberInput, {
           label: "Typical P",
           value: preset.typical_p ?? 1,
-          onChange: e => onChange("typical_p", e),
+          onChange: value => onChange("typical_p", value),
           min: 0,
           max: 1,
           step: .01,
@@ -116,7 +116,7 @@ export function createSamplingSection(getDependencies) {
         children: [(0, jsxRuntime.jsx)(NumberInput, {
           label: "Min P",
           value: preset.min_p ?? 0,
-          onChange: e => onChange("min_p", e),
+          onChange: value => onChange("min_p", value),
           min: 0,
           max: 1,
           step: .01,
@@ -124,7 +124,7 @@ export function createSamplingSection(getDependencies) {
         }), (0, jsxRuntime.jsx)(NumberInput, {
           label: "Repetition Penalty",
           value: preset.repetition_penalty ?? 1.1,
-          onChange: e => onChange("repetition_penalty", e),
+          onChange: value => onChange("repetition_penalty", value),
           min: 1,
           max: 2,
           step: .01,
@@ -132,14 +132,14 @@ export function createSamplingSection(getDependencies) {
         }), (0, jsxRuntime.jsx)(NumberInput, {
           label: "Frequency Penalty",
           value: preset.frequency_penalty ?? 0,
-          onChange: e => onChange("frequency_penalty", e),
+          onChange: value => onChange("frequency_penalty", value),
           min: 0,
           max: 2,
           step: .01
         }), (0, jsxRuntime.jsx)(NumberInput, {
           label: "Presence Penalty",
           value: preset.presence_penalty ?? 0,
-          onChange: e => onChange("presence_penalty", e),
+          onChange: value => onChange("presence_penalty", value),
           min: 0,
           max: 2,
           step: .01
@@ -151,7 +151,7 @@ export function createSamplingSection(getDependencies) {
         children: [(0, jsxRuntime.jsx)(SearchableSelect, {
           label: "Chế độ Mirostat",
           value: preset.mirostat_mode ?? 0,
-          onChange: e => onChange("mirostat_mode", parseInt(e.target.value, 10)),
+          onChange: event => onChange("mirostat_mode", parseInt(event.target.value, 10)),
           options: [{
             value: 0,
             label: "Tắt"
@@ -165,14 +165,14 @@ export function createSamplingSection(getDependencies) {
         }), (0, jsxRuntime.jsx)(NumberInput, {
           label: "Mirostat Tau",
           value: preset.mirostat_tau ?? 5,
-          onChange: e => onChange("mirostat_tau", e),
+          onChange: value => onChange("mirostat_tau", value),
           min: 0,
           max: 10,
           step: .1
         }), (0, jsxRuntime.jsx)(NumberInput, {
           label: "Mirostat ETA",
           value: preset.mirostat_eta ?? .1,
-          onChange: e => onChange("mirostat_eta", e),
+          onChange: value => onChange("mirostat_eta", value),
           min: 0,
           max: 1,
           step: .01
@@ -201,23 +201,23 @@ export function createGenerationControlSection(getDependencies) {
         children: [(0, jsxRuntime.jsx)(TextInput, {
           label: "Max Tokens",
           value: preset.max_tokens ?? 2048,
-          onChange: e => onChange("max_tokens", e.target.value),
+          onChange: event => onChange("max_tokens", event.target.value),
           type: "text"
         }), (0, jsxRuntime.jsx)(TextInput, {
           label: "Độ dài cắt bỏ (Context Limit)",
           value: preset.truncation_length ?? 4096,
-          onChange: e => onChange("truncation_length", e.target.value),
+          onChange: event => onChange("truncation_length", event.target.value),
           type: "text"
         }), (0, jsxRuntime.jsxs)("div", {
           className: "space-y-4",
           children: [(0, jsxRuntime.jsx)(ToggleSwitch, {
             label: "Ban EOS Token",
             checked: preset.ban_eos_token ?? false,
-            onChange: e => onChange("ban_eos_token", e)
+            onChange: value => onChange("ban_eos_token", value)
           }), (0, jsxRuntime.jsx)(ToggleSwitch, {
             label: "Stream Response",
             checked: preset.stream_response ?? false,
-            onChange: e => onChange("stream_response", e),
+            onChange: value => onChange("stream_response", value),
             tooltip: "Hiển thị văn bản ngay khi AI đang viết."
           })]
         })]
@@ -228,11 +228,11 @@ export function createGenerationControlSection(getDependencies) {
         children: [(0, jsxRuntime.jsx)(StringListInput, {
           label: "Stopping Strings",
           values: preset.stopping_strings ?? [],
-          onChange: e => onChange("stopping_strings", e)
+          onChange: value => onChange("stopping_strings", value)
         }), (0, jsxRuntime.jsx)(StringListInput, {
           label: "Custom Stopping Strings",
           values: preset.custom_stopping_strings ?? [],
-          onChange: e => onChange("custom_stopping_strings", e)
+          onChange: value => onChange("custom_stopping_strings", value)
         })]
       })]
     });
@@ -256,26 +256,26 @@ export function createInstructSection(getDependencies) {
       children: [(0, jsxRuntime.jsx)(TextInput, {
         label: "WI Format",
         value: preset.wi_format || "",
-        onChange: e => onChange("wi_format", e.target.value),
+        onChange: event => onChange("wi_format", event.target.value),
         tooltip: "Mẫu chèn World Info: {{keys}} {{content}}"
       }), (0, jsxRuntime.jsx)(TextInput, {
         label: "Scenario Format",
         value: preset.scenario_format || "",
-        onChange: e => onChange("scenario_format", e.target.value)
+        onChange: event => onChange("scenario_format", event.target.value)
       }), (0, jsxRuntime.jsx)(TextInput, {
         label: "Personality Format",
         value: preset.personality_format || "",
-        onChange: e => onChange("personality_format", e.target.value)
+        onChange: event => onChange("personality_format", event.target.value)
       }), (0, jsxRuntime.jsx)(TextArea, {
         label: "Mẫu Instruct",
         value: preset.instruct_template || "",
-        onChange: e => onChange("instruct_template", e.target.value),
+        onChange: event => onChange("instruct_template", event.target.value),
         rows: 8,
         containerClassName: "md:col-span-2"
       }), (0, jsxRuntime.jsx)(TextArea, {
         label: "New Chat Prompt",
         value: preset.new_chat_prompt || "",
-        onChange: e => onChange("new_chat_prompt", e.target.value),
+        onChange: event => onChange("new_chat_prompt", event.target.value),
         rows: 4,
         containerClassName: "md:col-span-2"
       })]
@@ -309,7 +309,7 @@ export function createExperimentalSection(getDependencies) {
         children: [(0, jsxRuntime.jsx)(NumberInput, {
           label: "Thinking Budget",
           value: preset.thinking_budget ?? 0,
-          onChange: e => onChange("thinking_budget", e),
+          onChange: value => onChange("thinking_budget", value),
           min: 0,
           max: 32768,
           step: 1024,
@@ -319,19 +319,19 @@ export function createExperimentalSection(getDependencies) {
           children: [(0, jsxRuntime.jsx)(ToggleSwitch, {
             label: "Wrap in Quotes",
             checked: preset.wrap_in_quotes ?? false,
-            onChange: e => onChange("wrap_in_quotes", e)
+            onChange: value => onChange("wrap_in_quotes", value)
           }), (0, jsxRuntime.jsx)(ToggleSwitch, {
             label: "Max Context Unlocked",
             checked: preset.max_context_unlocked ?? false,
-            onChange: e => onChange("max_context_unlocked", e)
+            onChange: value => onChange("max_context_unlocked", value)
           }), (0, jsxRuntime.jsx)(ToggleSwitch, {
             label: "Squash System Messages",
             checked: preset.squash_system_messages ?? true,
-            onChange: e => onChange("squash_system_messages", e)
+            onChange: value => onChange("squash_system_messages", value)
           }), (0, jsxRuntime.jsx)(ToggleSwitch, {
             label: "Bypass Status Check",
             checked: preset.bypass_status_check ?? true,
-            onChange: e => onChange("bypass_status_check", e)
+            onChange: value => onChange("bypass_status_check", value)
           })]
         })]
       }), (0, jsxRuntime.jsxs)(CollapsibleSection, {
@@ -341,11 +341,11 @@ export function createExperimentalSection(getDependencies) {
         children: [(0, jsxRuntime.jsx)(TextArea, {
           label: "Extensions JSON",
           value: extensionsJson,
-          onChange: e => {
-            let n = e.target.value;
-            if (setExtensionsJson(n), !n.trim()) return onChange("extensions", {}), void setIsValidJson(true);
+          onChange: event => {
+            let jsonText = event.target.value;
+            if (setExtensionsJson(jsonText), !jsonText.trim()) return onChange("extensions", {}), void setIsValidJson(true);
             try {
-              onChange("extensions", JSON.parse(n));
+              onChange("extensions", JSON.parse(jsonText));
               setIsValidJson(true);
             } catch {
               setIsValidJson(false);
@@ -376,10 +376,10 @@ export function createPresetConfiguration(getDependencies) {
       PresetBasicSection,
       jsxRuntime
     } = resolvePresetSectionDeps(getDependencies);
-    let handleFieldChange = (0, react.useCallback)((n, r) => {
+    let handleFieldChange = (0, react.useCallback)((field, value) => {
       onUpdate({
         ...preset,
-        [n]: r
+        [field]: value
       });
     }, [preset, onUpdate]);
     return (0, jsxRuntime.jsxs)("div", {
@@ -430,14 +430,14 @@ export function createPromptListItem(getDependencies) {
         className: "flex items-start p-3",
         children: [(0, jsxRuntime.jsx)("div", {
           className: "flex items-center gap-2 flex-shrink-0 mr-4 pt-1",
-          onClick: e => e.stopPropagation(),
+          onClick: event => event.stopPropagation(),
           children: (0, jsxRuntime.jsx)(ToggleSwitch, {
             label: "",
             ariaLabel: undefined,
             checked: propPrompt.enabled ?? false,
-            onChange: r => onUpdate(index, {
+            onChange: enabled => onUpdate(index, {
               ...propPrompt,
-              enabled: r
+              enabled: enabled
             }),
             clean: true
           })
@@ -448,8 +448,8 @@ export function createPromptListItem(getDependencies) {
             className: "font-medium text-base leading-6 " + (propPrompt.enabled ? "text-slate-200" : "text-slate-500 line-through"),
             children: (0, jsxRuntime.jsx)("button", {
               type: "button",
-              onClick: e => {
-                e.stopPropagation();
+              onClick: event => {
+                event.stopPropagation();
                 onEdit(index);
               },
               className: "rounded text-left hover:text-sky-300 focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-800",
@@ -466,8 +466,8 @@ export function createPromptListItem(getDependencies) {
           className: "flex items-center ml-4 flex-shrink-0 gap-1",
           children: [isMoveActive ? isMovingThis ? (0, jsxRuntime.jsx)("button", {
             type: "button",
-            onClick: e => {
-              e.stopPropagation();
+            onClick: event => {
+              event.stopPropagation();
               onCancelMove();
             },
             className: "p-2 bg-red-600/50 hover:bg-red-500/50 text-white rounded-md ",
@@ -486,8 +486,8 @@ export function createPromptListItem(getDependencies) {
             })
           }) : (0, jsxRuntime.jsx)("button", {
             type: "button",
-            onClick: e => {
-              e.stopPropagation();
+            onClick: event => {
+              event.stopPropagation();
               onMoveTo(index);
             },
             className: "px-3 py-1.5 text-sm bg-sky-600 hover:bg-sky-500 text-white font-semibold rounded-md ",
@@ -495,8 +495,8 @@ export function createPromptListItem(getDependencies) {
             children: "Di chuyển đến đây"
           }) : (0, jsxRuntime.jsx)("button", {
             type: "button",
-            onClick: e => {
-              e.stopPropagation();
+            onClick: event => {
+              event.stopPropagation();
               onSelectToMove(index);
             },
             className: "p-2 text-slate-400 hover:text-sky-400 disabled:text-slate-600 disabled:cursor-not-allowed ",
@@ -517,8 +517,8 @@ export function createPromptListItem(getDependencies) {
             })
           }), (0, jsxRuntime.jsx)("button", {
             type: "button",
-            onClick: e => {
-              e.stopPropagation();
+            onClick: event => {
+              event.stopPropagation();
               onRemove(index);
             },
             className: "text-slate-500 hover:text-red-400 p-1",
@@ -551,11 +551,11 @@ export function createPromptPreview(getDependencies) {
       jsxRuntime
     } = resolvePresetSectionDeps(getDependencies);
     let [isExpanded, setIsExpanded] = (0, react.useState)(false);
-    let previewText = (0, react.useMemo)(() => prompts.filter(e => e.enabled).map(e => e.include_title ? `--- ${e.name} ---\n${e.content}` : e.content).join("\n\n"), [prompts]);
+    let previewText = (0, react.useMemo)(() => prompts.filter(prompt => prompt.enabled).map(prompt => prompt.include_title ? `--- ${prompt.name} ---\n${prompt.content}` : prompt.content).join("\n\n"), [prompts]);
     return (0, jsxRuntime.jsxs)("details", {
       className: "bg-slate-800/50 rounded-xl shadow-lg open:mb-6  ",
       open: isExpanded,
-      onToggle: e => setIsExpanded(e.target.open),
+      onToggle: event => setIsExpanded(event.target.open),
       children: [(0, jsxRuntime.jsxs)("summary", {
         className: "p-4 cursor-pointer text-md font-bold text-sky-400 list-none flex justify-between items-center",
         children: [(0, jsxRuntime.jsx)("span", {
@@ -617,10 +617,10 @@ export function createPromptEditDialog(getDependencies) {
     if ((0, react.useEffect)(() => {
       setDraftPrompt(prompt ? JSON.parse(JSON.stringify(prompt)) : null);
     }, [prompt, isOpen]), useDialogFocus(isOpen, onClose, dialogRef, closeButtonRef), !isOpen || !draftPrompt) return null;
-    let updateDraftField = (e, t) => {
-      setDraftPrompt(n => n ? {
-        ...n,
-        [e]: t
+    let updateDraftField = (field, value) => {
+      setDraftPrompt(previousPrompt => previousPrompt ? {
+        ...previousPrompt,
+        [field]: value
       } : null);
     };
     return (0, jsxRuntime.jsx)("div", {
@@ -633,7 +633,7 @@ export function createPromptEditDialog(getDependencies) {
         "aria-modal": "true",
         "aria-labelledby": "prompt-modal-title",
         className: "bg-slate-800 border border-slate-700 rounded-xl shadow-2xl w-full max-w-2xl max-h-[90vh] flex flex-col   " + (isOpen ? "scale-100" : "scale-95"),
-        onClick: e => e.stopPropagation(),
+        onClick: event => event.stopPropagation(),
         children: [(0, jsxRuntime.jsxs)("header", {
           className: "p-4 border-b border-slate-700 flex justify-between items-center flex-shrink-0",
           children: [(0, jsxRuntime.jsx)("h2", {
@@ -665,16 +665,16 @@ export function createPromptEditDialog(getDependencies) {
           children: [(0, jsxRuntime.jsx)(TextInput, {
             label: "Tên Lời nhắc",
             value: draftPrompt.name,
-            onChange: e => updateDraftField("name", e.target.value)
+            onChange: event => updateDraftField("name", event.target.value)
           }), (0, jsxRuntime.jsx)(TextArea, {
             label: "Nội dung",
             value: draftPrompt.content,
-            onChange: e => updateDraftField("content", e.target.value),
+            onChange: event => updateDraftField("content", event.target.value),
             rows: 12
           }), (0, jsxRuntime.jsx)(ToggleSwitch, {
             label: "Gửi kèm Tiêu đề",
             checked: draftPrompt.include_title ?? false,
-            onChange: e => updateDraftField("include_title", e)
+            onChange: value => updateDraftField("include_title", value)
           })]
         }), (0, jsxRuntime.jsxs)("footer", {
           className: "p-4 border-t border-slate-700 flex justify-end gap-3 flex-shrink-0",
@@ -726,7 +726,7 @@ export function createPresetNameDialog(getDependencies) {
       children: (0, jsxRuntime.jsxs)("div", {
         ref: inputRef,
         className: "bg-slate-800 border border-slate-600 rounded-xl shadow-2xl w-full max-w-sm ",
-        onClick: e => e.stopPropagation(),
+        onClick: event => event.stopPropagation(),
         children: [(0, jsxRuntime.jsxs)("div", {
           className: "p-4 border-b border-slate-700 bg-slate-900/50 flex justify-between items-center",
           children: [(0, jsxRuntime.jsx)("h3", {
@@ -761,12 +761,12 @@ export function createPresetNameDialog(getDependencies) {
             ref: dialogRef,
             type: "text",
             value: presetName,
-            onChange: e => setPresetName(e.target.value),
-            onKeyDown: e => {
-              if ("Enter" === e.key) {
+            onChange: event => setPresetName(event.target.value),
+            onKeyDown: event => {
+              if ("Enter" === event.key) {
                 handleConfirm();
               } else {
-                "Escape" === e.key && onClose();
+                "Escape" === event.key && onClose();
               }
             },
             className: "w-full bg-slate-700 border border-slate-600 rounded-md p-3 text-slate-200 focus:ring-2 focus:ring-sky-500 transition",
@@ -800,7 +800,7 @@ export function createMacroReference(getDependencies) {
     return (0, jsxRuntime.jsxs)("details", {
       className: "bg-slate-800/50 rounded-xl shadow-lg open:mb-6   border border-slate-700/50",
       open: isExpanded,
-      onToggle: e => setIsExpanded(e.target.open),
+      onToggle: event => setIsExpanded(event.target.open),
       children: [(0, jsxRuntime.jsxs)("summary", {
         className: "p-4 cursor-pointer text-md font-bold text-sky-400 list-none flex justify-between items-center hover:bg-slate-800/80 rounded-xl ",
         children: [(0, jsxRuntime.jsxs)("span", {
@@ -833,9 +833,9 @@ export function createMacroReference(getDependencies) {
         })]
       }), (0, jsxRuntime.jsx)("div", {
         className: "p-4 pt-0 grid grid-cols-1 md:grid-cols-2 gap-3 max-h-[600px] overflow-y-auto custom-scrollbar",
-        children: macroReference.map(e => (0, jsxRuntime.jsx)(InlineCopyButton, {
-          macro: e
-        }, e.name))
+        children: macroReference.map(macro => (0, jsxRuntime.jsx)(InlineCopyButton, {
+          macro: macro
+        }, macro.name))
       })]
     });
   };
@@ -859,24 +859,24 @@ export function createPromptManager(getDependencies) {
     let [editingPromptIndex, setEditingPromptIndex] = (0, react.useState)(null);
     let lastFocusedRef = (0, react.useRef)(null);
     let prompts = preset.prompts || [];
-    let handleUpdatePrompt = (0, react.useCallback)((n, r) => {
-      let a = [...prompts];
-      a[n] = r;
+    let handleUpdatePrompt = (0, react.useCallback)((index, updatedPrompt) => {
+      let nextPrompts = [...prompts];
+      nextPrompts[index] = updatedPrompt;
       onUpdate({
         ...preset,
-        prompts: a
+        prompts: nextPrompts
       });
     }, [prompts, preset, onUpdate]);
-    let handleRemovePrompt = (0, react.useCallback)(n => {
-      movingPromptIndex === n && setMovingPromptIndex(null);
-      let r = prompts.filter((e, t) => t !== n);
+    let handleRemovePrompt = (0, react.useCallback)(index => {
+      movingPromptIndex === index && setMovingPromptIndex(null);
+      let remainingPrompts = prompts.filter((prompt, promptIndex) => promptIndex !== index);
       onUpdate({
         ...preset,
-        prompts: r
+        prompts: remainingPrompts
       });
     }, [prompts, preset, onUpdate, movingPromptIndex]);
     let handleAddPrompt = (0, react.useCallback)(() => {
-      let n = {
+      let newPrompt = {
         identifier: `prompt_${Date.now()}`,
         name: "New Prompt",
         role: "system",
@@ -886,57 +886,57 @@ export function createPromptManager(getDependencies) {
       };
       onUpdate({
         ...preset,
-        prompts: [...prompts, n]
+        prompts: [...prompts, newPrompt]
       });
     }, [prompts, preset, onUpdate]);
-    let handleOpenEdit = (0, react.useCallback)(e => {
+    let handleOpenEdit = (0, react.useCallback)(index => {
       lastFocusedRef.current = document.activeElement;
-      setEditingPromptIndex(e);
+      setEditingPromptIndex(index);
     }, []);
     let handleCloseEdit = (0, react.useCallback)(() => {
       setEditingPromptIndex(null);
       setTimeout(() => lastFocusedRef.current?.focus(), 0);
     }, []);
-    let handleSaveEdit = (0, react.useCallback)(e => {
-      null !== editingPromptIndex && handleUpdatePrompt(editingPromptIndex, e);
+    let handleSaveEdit = (0, react.useCallback)(updatedPrompt => {
+      null !== editingPromptIndex && handleUpdatePrompt(editingPromptIndex, updatedPrompt);
       handleCloseEdit();
     }, [editingPromptIndex, handleUpdatePrompt, handleCloseEdit]);
-    let filteredPrompts = (0, react.useMemo)(() => prompts.map((e, t) => ({
-      prompt: e,
-      originalIndex: t
+    let filteredPrompts = (0, react.useMemo)(() => prompts.map((prompt, index) => ({
+      prompt: prompt,
+      originalIndex: index
     })).filter(({
-      prompt: e
-    }) => "enabled" === filterMode ? true === e.enabled : "disabled" !== filterMode || !e.enabled), [prompts, filterMode]);
-    let handleMovePrompt = (0, react.useCallback)(n => {
-      if (null === movingPromptIndex || movingPromptIndex === n) return void setMovingPromptIndex(null);
-      let r = [...prompts];
-      let [o] = r.splice(movingPromptIndex, 1);
-      let s = n > movingPromptIndex ? n - 1 : n;
-      r.splice(s, 0, o);
+      prompt: prompt
+    }) => "enabled" === filterMode ? true === prompt.enabled : "disabled" !== filterMode || !prompt.enabled), [prompts, filterMode]);
+    let handleMovePrompt = (0, react.useCallback)(targetIndex => {
+      if (null === movingPromptIndex || movingPromptIndex === targetIndex) return void setMovingPromptIndex(null);
+      let nextPrompts = [...prompts];
+      let [movedPrompt] = nextPrompts.splice(movingPromptIndex, 1);
+      let insertionIndex = targetIndex > movingPromptIndex ? targetIndex - 1 : targetIndex;
+      nextPrompts.splice(insertionIndex, 0, movedPrompt);
       onUpdate({
         ...preset,
-        prompts: r
+        prompts: nextPrompts
       });
       setMovingPromptIndex(null);
     }, [prompts, preset, onUpdate, movingPromptIndex]);
     let handleToggleAllVisible = (0, react.useCallback)(() => {
       if (!preset || 0 === filteredPrompts.length) return void alert("Không có lời nhắc nào để xuất cho bộ lọc hiện tại.");
-      let t = "all" === filterMode ? filteredPrompts.map(({
-        prompt: e
-      }) => `--- Lời nhắc: ${e.name || "Không có tiêu đề"} ---\n\n${e.content || ""}`).join("\n\n\n") : filteredPrompts.map(({
-        prompt: e
-      }) => e.content || "").join("\n\n----------------------------------------\n\n");
-      let r = new Blob([t], {
+      let exportText = "all" === filterMode ? filteredPrompts.map(({
+        prompt: prompt
+      }) => `--- Lời nhắc: ${prompt.name || "Không có tiêu đề"} ---\n\n${prompt.content || ""}`).join("\n\n\n") : filteredPrompts.map(({
+        prompt: prompt
+      }) => prompt.content || "").join("\n\n----------------------------------------\n\n");
+      let blob = new Blob([exportText], {
         type: "text/plain;charset=utf-8"
       });
-      let a = URL.createObjectURL(r);
-      let i = document.createElement("a");
-      i.href = a;
-      i.download = `${preset.name.replace(/\.json$/i, "")}_prompts_${filterMode}.txt`;
-      document.body.appendChild(i);
-      i.click();
-      document.body.removeChild(i);
-      URL.revokeObjectURL(a);
+      let downloadUrl = URL.createObjectURL(blob);
+      let anchor = document.createElement("a");
+      anchor.href = downloadUrl;
+      anchor.download = `${preset.name.replace(/\.json$/anchor, "")}_prompts_${filterMode}.txt`;
+      document.body.appendChild(anchor);
+      anchor.click();
+      document.body.removeChild(anchor);
+      URL.revokeObjectURL(downloadUrl);
     }, [preset, filteredPrompts, filterMode]);
     return (0, jsxRuntime.jsxs)("div", {
       className: "space-y-6",
@@ -983,11 +983,11 @@ export function createPromptManager(getDependencies) {
         id: "prompt-list",
         className: "space-y-3",
         children: [filteredPrompts.map(({
-          prompt: e,
-          originalIndex: t
+          prompt: prompt,
+          originalIndex: index
         }) => (0, jsxRuntime.jsx)(PromptListItem, {
-          prompt: e,
-          index: t,
+          prompt: prompt,
+          index: index,
           onUpdate: handleUpdatePrompt,
           onRemove: handleRemovePrompt,
           movingPromptIndex: movingPromptIndex,
@@ -995,7 +995,7 @@ export function createPromptManager(getDependencies) {
           onMoveTo: handleMovePrompt,
           onCancelMove: () => setMovingPromptIndex(null),
           onEdit: handleOpenEdit
-        }, e.identifier || t)), 0 === filteredPrompts.length && (0, jsxRuntime.jsx)("div", {
+        }, prompt.identifier || index)), 0 === filteredPrompts.length && (0, jsxRuntime.jsx)("div", {
           className: "text-center py-8 text-slate-500",
           children: (0, jsxRuntime.jsx)("p", {
             children: "Không có lời nhắc nào khớp với bộ lọc này."
