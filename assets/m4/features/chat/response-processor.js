@@ -1,5 +1,12 @@
 export async function processAIResponse(input, deps) {
   const state = deps.getState();
+  const sessionId = state.sessionId;
+  const revision = deps.getSessionRevision?.();
+  const ownsResponse = () => {
+    const current = deps.getState();
+    return current.sessionId === sessionId && deps.getSessionRevision?.() === revision &&
+      current.messages.some(item => item.id === input.messageId);
+  };
   const message = state.messages.find(item => item.id === input.messageId);
   if (!message) return;
 
@@ -9,7 +16,8 @@ export async function processAIResponse(input, deps) {
     deps.logSystemMessage('warn', 'system', `Phản hồi ngắn (${wordCount} từ). Mythic Engine có thể không hoạt động chính xác.`);
   }
 
-  await deps.processOutput(content, input.messageId);
+  const output = await deps.processOutput(content, input.messageId);
+  if (output === false || !ownsResponse()) return;
   deps.logResponse(content);
   if (!input.forced) deps.playSound('ai');
 

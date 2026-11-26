@@ -2,78 +2,76 @@ import { createGeminiGenerationProvider } from '../gemini/generation.js';
 import { createAiStudioTextProvider } from '../aistudio/text.js';
 import { createOpenRouterGenerationProvider } from '../openrouter/generation.js';
 import { createProxyGenerationProvider } from '../proxy/generation.js';
+import {
+  BUILTIN_PROVIDER_CONTRACTS,
+  createProviderRegistry,
+  normalizeGenerationResult,
+} from './provider-registry.js';
+import { redactHeaders } from '../../diagnostics/network-redaction.js';
+export { createAiStudioModelCatalog } from '../aistudio/model-catalog.js';
+
+const testPreset = Object.freeze({ temp: 0, max_tokens: 8 });
 
 export function createGenerationGateway(deps) {
+  const addNetworkLog = log => {
+    deps.addNetworkLog?.({ ...log, headers: redactHeaders(log?.headers) });
+  };
   const proxy = createProxyGenerationProvider({
-    request: deps.request,
-    addNetworkLog: deps.addNetworkLog,
-    normalizeProxyUrl: deps.normalizeProxyUrl,
-    getProxyUrl: deps.getProxyUrl,
-    getProxyPassword: deps.getProxyPassword,
-    getProxyLegacyMode: deps.getProxyLegacyMode,
+    request: deps.request, addNetworkLog,
+    normalizeProxyUrl: deps.normalizeProxyUrl, getProxyUrl: deps.getProxyUrl,
+    getProxyPassword: deps.getProxyPassword, getProxyLegacyMode: deps.getProxyLegacyMode,
+    getProxyProtocol: deps.getProxyProtocol || (() => deps.getConnectionSettings().proxy_protocol),
   });
   const openrouter = createOpenRouterGenerationProvider({
-    request: deps.request,
-    addNetworkLog: deps.addNetworkLog,
-    getHeaders: deps.getOpenRouterHeaders,
-    readResponseError: deps.readResponseError,
+    request: deps.request, addNetworkLog,
+    getHeaders: deps.getOpenRouterHeaders, readResponseError: deps.readResponseError,
+  });
+  const gemini = createGeminiGenerationProvider({
+    createClient: deps.createGeminiClient, buildRequest: deps.buildGeminiRequest,
+    safetySettings: deps.safetySettings, addNetworkLog,
   });
   const aistudio = createAiStudioTextProvider();
-  const gemini = createGeminiGenerationProvider({
-    generateOnce: deps.geminiGenerateOnce,
-    createClient: deps.createGeminiClient,
-    buildRequest: deps.buildGeminiRequest,
-    safetySettings: deps.safetySettings,
-  });
-
-  function resolve(sourceOverride, modelOverride) {
+  const registry = createProviderRegistry([
+    { ...BUILTIN_PROVIDER_CONTRACTS.gemini, adapter: gemini },
+    { ...BUILTIN_PROVIDER_CONTRACTS.openrouter, adapter: openrouter },
+    { ...BUILTIN_PROVIDER_CONTRACTS.proxy, adapter: proxy },
+    // Native cancel is currently session-wide, not request-scoped. Do not start a probe that could cancel a chat.
+    { ...BUILTIN_PROVIDER_CONTRACTS.aistudio, adapter: aistudio },
+    ...(deps.extraProviders || []),
+  ]);
+  function resolve(options) {
     const settings = deps.getConnectionSettings();
-    const source = sourceOverride || settings.source;
-    const model = modelOverride || (
-      source === 'aistudio'
-        ? (settings.aistudio_model || 'gemini-2.5-flash')
-        : source === 'gemini'
-          ? settings.gemini_model
-        : source === 'proxy'
-          ? settings.proxy_model
-          : settings.openrouter_model
-    );
-    return { source, model };
+    const { entry, model } = registry.resolve(settings, options.source, options.model);
+    return { entry, args: { ...options, model, preset: options.preset ?? {} } };
   }
-
-  async function generateOnce({ prompt, preset, model, source, proxyConfig, signal, thinkingLevel }) {
-    const resolved = resolve(source, model);
-    if (resolved.source === 'aistudio') {
-      return aistudio.generate({ model: resolved.model, prompt, signal, thinkingLevel });
-    }
-    if (resolved.source === 'proxy') {
-      const result = await proxy.generate({ model: resolved.model, prompt, preset, proxyConfig, signal });
-      return { response: { text: result.text } };
-    }
-    if (resolved.source === 'openrouter') {
-      const result = await openrouter.generate({ model: resolved.model, prompt, preset, signal });
-      return { response: { text: result.text }, reasoning: result.reasoning };
-    }
-    return gemini.generate({ model: resolved.model, prompt, preset, signal });
+  async function generateOnce(options) {
+    const { entry, args } = resolve(options);
+    if (args.signal?.aborted) throw new DOMException('Generation was stopped.', 'AbortError');
+    return normalizeGenerationResult(await entry.adapter.generate(args));
   }
-
   async function* stream(options) {
-    const resolved = resolve(options.source, options.model);
-    const args = { ...options, model: resolved.model };
-    if (resolved.source === 'aistudio') {
-      yield* aistudio.stream(args);
-      return;
-    }
-    if (resolved.source === 'proxy') {
-      yield* proxy.stream(args);
-      return;
-    }
-    if (resolved.source === 'openrouter') {
-      yield* openrouter.stream(args);
-      return;
-    }
-    yield* gemini.stream(args);
+    const { entry, args } = resolve(options);
+    if (args.signal?.aborted) throw new DOMException('Generation was stopped.', 'AbortError');
+    yield* entry.adapter.stream(args);
   }
-
-  return Object.freeze({ generateOnce, stream });
+  async function testModel({ provider, model, geminiApiKey = '', openRouterApiKey = '', proxy: proxyConfig, signal } = {}) {
+    const entry = registry.get(provider);
+    if (!entry.capabilities.connectionTest) throw new Error(entry.testUnavailableReason || `Provider ${entry.id} chưa hỗ trợ kiểm tra model.`);
+    if (!String(model ?? '').trim()) throw new Error('Model ID đang trống.');
+    if (signal?.aborted) throw new DOMException('Model test aborted.', 'AbortError');
+    const start = performance.now();
+    const { response } = await generateOnce({ source: provider, model, prompt: 'Trả lời duy nhất: OK', preset: testPreset,
+      credentials: { geminiApiKey, openRouterApiKey }, proxyConfig, signal, purpose: 'connection-test' });
+    if (signal?.aborted) throw new DOMException('Model test aborted.', 'AbortError');
+    if (!/\bOK\b/i.test(response.text.trim())) throw new Error('Máy chủ phản hồi thành công nhưng nội dung kiểm tra không hợp lệ.');
+    return { ok: true, provider, model, latencyMs: performance.now() - start, outputPreview: response.text.slice(0, 80) };
+  }
+  return Object.freeze({
+    generateOnce,
+    stream,
+    testModel,
+    listProviders: registry.list,
+    validateConfig: registry.validateConfig,
+    getCurrentModel: () => { const { entry, args } = resolve({}); return args.model || entry.id; },
+  });
 }

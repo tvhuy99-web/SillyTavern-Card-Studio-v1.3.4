@@ -1,6 +1,7 @@
 const controllers = new Set();
 const listeners = new Set();
 let lastFailure = null;
+let sessionRevision = 0;
 
 function emit(type, detail = {}) {
   const event = Object.freeze({ type, ...detail, snapshot: snapshot() });
@@ -51,6 +52,16 @@ export function abortAll(reason = 'user-stop') {
   return active.length;
 }
 
+// Invalidate outstanding asynchronous work even when a session is reopened
+// with the same ID. A user Stop does not change the session revision.
+export function invalidateSession(reason = 'session-change') {
+  sessionRevision += 1;
+  abortAll(reason);
+  return sessionRevision;
+}
+
+export function getSessionRevision() { return sessionRevision; }
+
 export function reportFailure(error, meta = {}) {
   lastFailure = Object.freeze({
     message: String(error?.message || error || 'unknown'),
@@ -79,6 +90,8 @@ export const runtimeState = Object.freeze({
   size,
   isBusy,
   abortAll,
+  invalidateSession,
+  getSessionRevision,
   reportFailure,
   clearFailure,
   subscribe,

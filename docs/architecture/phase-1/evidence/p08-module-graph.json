@@ -1,0 +1,749 @@
+{
+  "typescript": "5.8.3",
+  "graphs": [
+    {
+      "directory": "src",
+      "nodes": [
+        "src/app/entry.js",
+        "src/app/persistence/app-database.js",
+        "src/app/persistence/entity-repositories.js",
+        "src/app/persistence/session-save-coordinator.js",
+        "src/app/persistence/session-state.js",
+        "src/app/state/runtime-state.js",
+        "src/diagnostics/aistudio-log.js",
+        "src/diagnostics/aistudio-model-controls.js",
+        "src/diagnostics/android-export-download.js",
+        "src/diagnostics/state.js",
+        "src/features/arena/state-machine.js",
+        "src/features/chat/conversation-service.js",
+        "src/features/chat/live-stream-store.js",
+        "src/features/chat/response-processor.js",
+        "src/features/chat/turn-policy.js",
+        "src/features/presets/prompt-normalizer.js",
+        "src/features/prompts/prompt-service.js",
+        "src/features/state/initial-variable-service.js",
+        "src/features/state/smart-state-service.js",
+        "src/features/state/variable-scope-service.js",
+        "src/features/world-info/embedding-index-repository.js",
+        "src/features/world-info/embedding-service.js",
+        "src/features/world-info/embeddinggemma2-litert-bridge.js",
+        "src/features/world-info/native-embedding-bridge.js",
+        "src/features/world-info/smart-scan-service.js",
+        "src/features/world-info/sticky-compat.js",
+        "src/providers/aistudio/model-catalog.js",
+        "src/providers/aistudio/text.js",
+        "src/providers/common/connection-repository.js",
+        "src/providers/common/generation-gateway.js",
+        "src/providers/common/generation-utils.js",
+        "src/providers/common/model-catalog.js",
+        "src/providers/common/provider-registry.js",
+        "src/providers/gemini/generation.js",
+        "src/providers/openrouter/generation.js",
+        "src/providers/proxy/generation.js",
+        "src/providers/proxy/persistence.js",
+        "src/runtime/card-runtime/bridge/rpc-client.js",
+        "src/runtime/card-runtime/core.template.js",
+        "src/runtime/card-runtime/renderer.js",
+        "src/ui/model-connection-test.js",
+        "src/ui/runtime-guard.js"
+      ],
+      "edges": [
+        {
+          "from": "src/app/entry.js",
+          "specifier": "../providers/common/connection-repository.js",
+          "kind": "static-import",
+          "to": "src/providers/common/connection-repository.js",
+          "exists": true
+        },
+        {
+          "from": "src/app/entry.js",
+          "specifier": "../providers/aistudio/model-catalog.js",
+          "kind": "static-import",
+          "to": "src/providers/aistudio/model-catalog.js",
+          "exists": true
+        },
+        {
+          "from": "src/app/entry.js",
+          "specifier": "../diagnostics/aistudio-log.js",
+          "kind": "static-import",
+          "to": "src/diagnostics/aistudio-log.js",
+          "exists": true
+        },
+        {
+          "from": "src/app/entry.js",
+          "specifier": "../diagnostics/aistudio-model-controls.js",
+          "kind": "static-import",
+          "to": "src/diagnostics/aistudio-model-controls.js",
+          "exists": true
+        },
+        {
+          "from": "src/app/entry.js",
+          "specifier": "../diagnostics/android-export-download.js",
+          "kind": "static-import",
+          "to": "src/diagnostics/android-export-download.js",
+          "exists": true
+        },
+        {
+          "from": "src/app/entry.js",
+          "specifier": "../providers/proxy/persistence.js?v=1.3.6-m2-final",
+          "kind": "static-import",
+          "to": "src/providers/proxy/persistence.js",
+          "exists": true
+        },
+        {
+          "from": "src/app/entry.js",
+          "specifier": "../ui/model-connection-test.js?v=1.3.6-m7.1",
+          "kind": "static-import",
+          "to": "src/ui/model-connection-test.js",
+          "exists": true
+        },
+        {
+          "from": "src/app/entry.js",
+          "specifier": "../ui/runtime-guard.js?v=1.3.6-m7.1",
+          "kind": "static-import",
+          "to": "src/ui/runtime-guard.js",
+          "exists": true
+        },
+        {
+          "from": "src/app/entry.js",
+          "specifier": "../../assets/app-production-v1.3.6.js?v=1.3.6-m7.5",
+          "kind": "module-relative-url",
+          "to": "assets/app-production-v1.3.6.js",
+          "exists": true
+        },
+        {
+          "from": "src/app/persistence/entity-repositories.js",
+          "specifier": "./app-database.js",
+          "kind": "static-import",
+          "to": "src/app/persistence/app-database.js",
+          "exists": true
+        },
+        {
+          "from": "src/app/persistence/session-state.js",
+          "specifier": "../../features/arena/state-machine.js",
+          "kind": "static-import",
+          "to": "src/features/arena/state-machine.js",
+          "exists": true
+        },
+        {
+          "from": "src/features/prompts/prompt-service.js",
+          "specifier": "../chat/turn-policy.js",
+          "kind": "static-import",
+          "to": "src/features/chat/turn-policy.js",
+          "exists": true
+        },
+        {
+          "from": "src/features/world-info/embedding-service.js",
+          "specifier": "./native-embedding-bridge.js",
+          "kind": "static-import",
+          "to": "src/features/world-info/native-embedding-bridge.js",
+          "exists": true
+        },
+        {
+          "from": "src/features/world-info/embedding-service.js",
+          "specifier": "./embeddinggemma2-litert-bridge.js",
+          "kind": "static-import",
+          "to": "src/features/world-info/embeddinggemma2-litert-bridge.js",
+          "exists": true
+        },
+        {
+          "from": "src/features/world-info/embedding-service.js",
+          "specifier": "./embedding-index-repository.js",
+          "kind": "static-import",
+          "to": "src/features/world-info/embedding-index-repository.js",
+          "exists": true
+        },
+        {
+          "from": "src/providers/aistudio/text.js",
+          "specifier": "../common/connection-repository.js",
+          "kind": "static-import",
+          "to": "src/providers/common/connection-repository.js",
+          "exists": true
+        },
+        {
+          "from": "src/providers/common/connection-repository.js",
+          "specifier": "./provider-registry.js",
+          "kind": "static-import",
+          "to": "src/providers/common/provider-registry.js",
+          "exists": true
+        },
+        {
+          "from": "src/providers/common/generation-gateway.js",
+          "specifier": "../gemini/generation.js",
+          "kind": "static-import",
+          "to": "src/providers/gemini/generation.js",
+          "exists": true
+        },
+        {
+          "from": "src/providers/common/generation-gateway.js",
+          "specifier": "../aistudio/text.js",
+          "kind": "static-import",
+          "to": "src/providers/aistudio/text.js",
+          "exists": true
+        },
+        {
+          "from": "src/providers/common/generation-gateway.js",
+          "specifier": "../openrouter/generation.js",
+          "kind": "static-import",
+          "to": "src/providers/openrouter/generation.js",
+          "exists": true
+        },
+        {
+          "from": "src/providers/common/generation-gateway.js",
+          "specifier": "../proxy/generation.js",
+          "kind": "static-import",
+          "to": "src/providers/proxy/generation.js",
+          "exists": true
+        },
+        {
+          "from": "src/providers/common/generation-gateway.js",
+          "specifier": "./provider-registry.js",
+          "kind": "static-import",
+          "to": "src/providers/common/provider-registry.js",
+          "exists": true
+        },
+        {
+          "from": "src/providers/common/generation-gateway.js",
+          "specifier": "./provider-registry.js",
+          "kind": "re-export",
+          "to": "src/providers/common/provider-registry.js",
+          "exists": true
+        },
+        {
+          "from": "src/providers/common/generation-gateway.js",
+          "specifier": "../aistudio/model-catalog.js",
+          "kind": "re-export",
+          "to": "src/providers/aistudio/model-catalog.js",
+          "exists": true
+        },
+        {
+          "from": "src/providers/gemini/generation.js",
+          "specifier": "../common/generation-utils.js",
+          "kind": "static-import",
+          "to": "src/providers/common/generation-utils.js",
+          "exists": true
+        },
+        {
+          "from": "src/providers/openrouter/generation.js",
+          "specifier": "../common/generation-utils.js",
+          "kind": "static-import",
+          "to": "src/providers/common/generation-utils.js",
+          "exists": true
+        },
+        {
+          "from": "src/providers/proxy/generation.js",
+          "specifier": "../common/generation-utils.js",
+          "kind": "static-import",
+          "to": "src/providers/common/generation-utils.js",
+          "exists": true
+        },
+        {
+          "from": "src/ui/runtime-guard.js",
+          "specifier": "../app/state/runtime-state.js?v=1.3.6-m5.1",
+          "kind": "static-import",
+          "to": "src/app/state/runtime-state.js",
+          "exists": true
+        }
+      ],
+      "computed": [
+        {
+          "from": "src/app/entry.js",
+          "kind": "dynamic-import",
+          "offset": 2133
+        },
+        {
+          "from": "src/features/world-info/embedding-service.js",
+          "kind": "dynamic-import",
+          "offset": 10315
+        }
+      ],
+      "parseErrors": [],
+      "cycles": [],
+      "unresolved": []
+    },
+    {
+      "directory": "assets",
+      "nodes": [
+        "assets/app-entry-v1.3.6.js",
+        "assets/app-production-v1.3.6.js",
+        "assets/card-runtime-core-builder-v1.3.6.js",
+        "assets/card-runtime-renderer-v1.3.6.js",
+        "assets/ejs.min-Cthf3_XD.js",
+        "assets/index-yS4Vru8B.js",
+        "assets/initial-variable-service-v1.3.6.js",
+        "assets/jszip.min-CF4xG0Dr.js",
+        "assets/lodash.min-xZXeUb-0.js",
+        "assets/m4/features/chat/conversation-service.js",
+        "assets/m4/features/chat/live-stream-store.js",
+        "assets/m4/features/chat/response-processor.js",
+        "assets/m4/features/chat/turn-policy.js",
+        "assets/m4/features/prompts/prompt-service.js",
+        "assets/m4/features/world-info/embedding-index-repository.js",
+        "assets/m4/features/world-info/embedding-service.js",
+        "assets/m4/features/world-info/embeddinggemma2-litert-bridge.js",
+        "assets/m4/features/world-info/native-embedding-bridge.js",
+        "assets/m4/features/world-info/smart-scan-service.js",
+        "assets/m4/features/world-info/sticky-compat.js",
+        "assets/m4/providers/aistudio/model-catalog.js",
+        "assets/m4/providers/aistudio/text.js",
+        "assets/m4/providers/common/connection-repository.js",
+        "assets/m4/providers/common/generation-gateway.js",
+        "assets/m4/providers/common/generation-utils.js",
+        "assets/m4/providers/common/model-catalog.js",
+        "assets/m4/providers/common/provider-registry.js",
+        "assets/m4/providers/gemini/generation.js",
+        "assets/m4/providers/openrouter/generation.js",
+        "assets/m4/providers/proxy/generation.js",
+        "assets/m5/app/persistence/app-database.js",
+        "assets/m5/app/persistence/entity-repositories.js",
+        "assets/m5/app/persistence/session-save-coordinator.js",
+        "assets/m5/app/persistence/session-state.js",
+        "assets/m5/app/state/runtime-state.js",
+        "assets/m5/diagnostics/state.js",
+        "assets/m5/features/arena/state-machine.js",
+        "assets/m5/ui/runtime-guard.js",
+        "assets/m6/ui/model-connection-test.js",
+        "assets/m8/diagnostics/aistudio-log.js",
+        "assets/m8/diagnostics/aistudio-model-controls.js",
+        "assets/m8/diagnostics/android-export-download.js",
+        "assets/prompt-normalizer-v1.3.6.js",
+        "assets/proxy-persistence-service-v1.3.6.js",
+        "assets/smart-state-service-v1.3.6.js",
+        "assets/variable-scope-service-v1.3.6.js"
+      ],
+      "edges": [
+        {
+          "from": "assets/app-entry-v1.3.6.js",
+          "specifier": "./m4/providers/common/connection-repository.js",
+          "kind": "static-import",
+          "to": "assets/m4/providers/common/connection-repository.js",
+          "exists": true
+        },
+        {
+          "from": "assets/app-entry-v1.3.6.js",
+          "specifier": "./m4/providers/aistudio/model-catalog.js",
+          "kind": "static-import",
+          "to": "assets/m4/providers/aistudio/model-catalog.js",
+          "exists": true
+        },
+        {
+          "from": "assets/app-entry-v1.3.6.js",
+          "specifier": "./m8/diagnostics/aistudio-log.js",
+          "kind": "static-import",
+          "to": "assets/m8/diagnostics/aistudio-log.js",
+          "exists": true
+        },
+        {
+          "from": "assets/app-entry-v1.3.6.js",
+          "specifier": "./m8/diagnostics/aistudio-model-controls.js",
+          "kind": "static-import",
+          "to": "assets/m8/diagnostics/aistudio-model-controls.js",
+          "exists": true
+        },
+        {
+          "from": "assets/app-entry-v1.3.6.js",
+          "specifier": "./m8/diagnostics/android-export-download.js",
+          "kind": "static-import",
+          "to": "assets/m8/diagnostics/android-export-download.js",
+          "exists": true
+        },
+        {
+          "from": "assets/app-entry-v1.3.6.js",
+          "specifier": "./proxy-persistence-service-v1.3.6.js?v=1.3.6-m2-final",
+          "kind": "static-import",
+          "to": "assets/proxy-persistence-service-v1.3.6.js",
+          "exists": true
+        },
+        {
+          "from": "assets/app-entry-v1.3.6.js",
+          "specifier": "./m6/ui/model-connection-test.js?v=1.3.6-m7.1",
+          "kind": "static-import",
+          "to": "assets/m6/ui/model-connection-test.js",
+          "exists": true
+        },
+        {
+          "from": "assets/app-entry-v1.3.6.js",
+          "specifier": "./m5/ui/runtime-guard.js?v=1.3.6-m7.1",
+          "kind": "static-import",
+          "to": "assets/m5/ui/runtime-guard.js",
+          "exists": true
+        },
+        {
+          "from": "assets/app-entry-v1.3.6.js",
+          "specifier": "./app-production-v1.3.6.js?v=1.3.6-m7.5",
+          "kind": "module-relative-url",
+          "to": "assets/app-production-v1.3.6.js",
+          "exists": true
+        },
+        {
+          "from": "assets/app-production-v1.3.6.js",
+          "specifier": "./m4/providers/common/connection-repository.js",
+          "kind": "static-import",
+          "to": "assets/m4/providers/common/connection-repository.js",
+          "exists": true
+        },
+        {
+          "from": "assets/app-production-v1.3.6.js",
+          "specifier": "./m4/providers/common/model-catalog.js",
+          "kind": "static-import",
+          "to": "assets/m4/providers/common/model-catalog.js",
+          "exists": true
+        },
+        {
+          "from": "assets/app-production-v1.3.6.js",
+          "specifier": "./initial-variable-service-v1.3.6.js?v=1.3.6-initvar-3",
+          "kind": "static-import",
+          "to": "assets/initial-variable-service-v1.3.6.js",
+          "exists": true
+        },
+        {
+          "from": "assets/app-production-v1.3.6.js",
+          "specifier": "./m5/app/state/runtime-state.js?v=1.3.6-m5.1",
+          "kind": "static-import",
+          "to": "assets/m5/app/state/runtime-state.js",
+          "exists": true
+        },
+        {
+          "from": "assets/app-production-v1.3.6.js",
+          "specifier": "./m5/diagnostics/state.js?v=1.3.6-m5.3",
+          "kind": "static-import",
+          "to": "assets/m5/diagnostics/state.js",
+          "exists": true
+        },
+        {
+          "from": "assets/app-production-v1.3.6.js",
+          "specifier": "./m5/app/persistence/session-state.js?v=1.3.6-m5.3",
+          "kind": "static-import",
+          "to": "assets/m5/app/persistence/session-state.js",
+          "exists": true
+        },
+        {
+          "from": "assets/app-production-v1.3.6.js",
+          "specifier": "./m5/features/arena/state-machine.js?v=1.3.6-m5.1",
+          "kind": "static-import",
+          "to": "assets/m5/features/arena/state-machine.js",
+          "exists": true
+        },
+        {
+          "from": "assets/app-production-v1.3.6.js",
+          "specifier": "./m5/app/persistence/session-save-coordinator.js",
+          "kind": "static-import",
+          "to": "assets/m5/app/persistence/session-save-coordinator.js",
+          "exists": true
+        },
+        {
+          "from": "assets/app-production-v1.3.6.js",
+          "specifier": "./m5/app/persistence/entity-repositories.js",
+          "kind": "static-import",
+          "to": "assets/m5/app/persistence/entity-repositories.js",
+          "exists": true
+        },
+        {
+          "from": "assets/app-production-v1.3.6.js",
+          "specifier": "./variable-scope-service-v1.3.6.js?v=1.3.6-variable-scopes-1",
+          "kind": "static-import",
+          "to": "assets/variable-scope-service-v1.3.6.js",
+          "exists": true
+        },
+        {
+          "from": "assets/app-production-v1.3.6.js",
+          "specifier": "./m4/providers/common/generation-gateway.js?v=1.3.6-m4.1",
+          "kind": "static-import",
+          "to": "assets/m4/providers/common/generation-gateway.js",
+          "exists": true
+        },
+        {
+          "from": "assets/app-production-v1.3.6.js",
+          "specifier": "./m4/features/chat/turn-policy.js?v=1.3.6-m4.5",
+          "kind": "static-import",
+          "to": "assets/m4/features/chat/turn-policy.js",
+          "exists": true
+        },
+        {
+          "from": "assets/app-production-v1.3.6.js",
+          "specifier": "./m4/features/chat/conversation-service.js?v=1.3.6-m4.8",
+          "kind": "static-import",
+          "to": "assets/m4/features/chat/conversation-service.js",
+          "exists": true
+        },
+        {
+          "from": "assets/app-production-v1.3.6.js",
+          "specifier": "./m4/features/chat/live-stream-store.js?v=1.3.6-m4.10",
+          "kind": "static-import",
+          "to": "assets/m4/features/chat/live-stream-store.js",
+          "exists": true
+        },
+        {
+          "from": "assets/app-production-v1.3.6.js",
+          "specifier": "./m4/features/world-info/embedding-service.js?v=1.3.6-m4.9",
+          "kind": "static-import",
+          "to": "assets/m4/features/world-info/embedding-service.js",
+          "exists": true
+        },
+        {
+          "from": "assets/app-production-v1.3.6.js",
+          "specifier": "./m4/features/world-info/smart-scan-service.js?v=1.3.6-m4.8",
+          "kind": "static-import",
+          "to": "assets/m4/features/world-info/smart-scan-service.js",
+          "exists": true
+        },
+        {
+          "from": "assets/app-production-v1.3.6.js",
+          "specifier": "./m4/features/world-info/sticky-compat.js?v=1.3.6-m4.1",
+          "kind": "static-import",
+          "to": "assets/m4/features/world-info/sticky-compat.js",
+          "exists": true
+        },
+        {
+          "from": "assets/app-production-v1.3.6.js",
+          "specifier": "./m4/features/prompts/prompt-service.js?v=1.3.6-m4.3",
+          "kind": "static-import",
+          "to": "assets/m4/features/prompts/prompt-service.js",
+          "exists": true
+        },
+        {
+          "from": "assets/app-production-v1.3.6.js",
+          "specifier": "./m4/features/chat/response-processor.js?v=1.3.6-m4.3",
+          "kind": "static-import",
+          "to": "assets/m4/features/chat/response-processor.js",
+          "exists": true
+        },
+        {
+          "from": "assets/app-production-v1.3.6.js",
+          "specifier": "./proxy-persistence-service-v1.3.6.js?v=1.3.6-m2-final",
+          "kind": "static-import",
+          "to": "assets/proxy-persistence-service-v1.3.6.js",
+          "exists": true
+        },
+        {
+          "from": "assets/app-production-v1.3.6.js",
+          "specifier": "./initial-variable-service-v1.3.6.js?v=1.3.6-initvar-3",
+          "kind": "static-import",
+          "to": "assets/initial-variable-service-v1.3.6.js",
+          "exists": true
+        },
+        {
+          "from": "assets/app-production-v1.3.6.js",
+          "specifier": "./smart-state-service-v1.3.6.js?v=1.3.6-smartstate-2",
+          "kind": "static-import",
+          "to": "assets/smart-state-service-v1.3.6.js",
+          "exists": true
+        },
+        {
+          "from": "assets/app-production-v1.3.6.js",
+          "specifier": "./card-runtime-core-builder-v1.3.6.js?v=1.3.6-m3.10",
+          "kind": "static-import",
+          "to": "assets/card-runtime-core-builder-v1.3.6.js",
+          "exists": true
+        },
+        {
+          "from": "assets/app-production-v1.3.6.js",
+          "specifier": "./card-runtime-renderer-v1.3.6.js?v=1.3.6-m3.10",
+          "kind": "static-import",
+          "to": "assets/card-runtime-renderer-v1.3.6.js",
+          "exists": true
+        },
+        {
+          "from": "assets/app-production-v1.3.6.js",
+          "specifier": "./prompt-normalizer-v1.3.6.js?v=1.3.6-worldinfo-1",
+          "kind": "static-import",
+          "to": "assets/prompt-normalizer-v1.3.6.js",
+          "exists": true
+        },
+        {
+          "from": "assets/app-production-v1.3.6.js",
+          "specifier": "./jszip.min-CF4xG0Dr.js",
+          "kind": "dynamic-import",
+          "to": "assets/jszip.min-CF4xG0Dr.js",
+          "exists": true
+        },
+        {
+          "from": "assets/app-production-v1.3.6.js",
+          "specifier": "./lodash.min-xZXeUb-0.js",
+          "kind": "dynamic-import",
+          "to": "assets/lodash.min-xZXeUb-0.js",
+          "exists": true
+        },
+        {
+          "from": "assets/app-production-v1.3.6.js",
+          "specifier": "./ejs.min-Cthf3_XD.js",
+          "kind": "dynamic-import",
+          "to": "assets/ejs.min-Cthf3_XD.js",
+          "exists": true
+        },
+        {
+          "from": "assets/app-production-v1.3.6.js",
+          "specifier": "./jszip.min-CF4xG0Dr.js",
+          "kind": "dynamic-import",
+          "to": "assets/jszip.min-CF4xG0Dr.js",
+          "exists": true
+        },
+        {
+          "from": "assets/jszip.min-CF4xG0Dr.js",
+          "specifier": "./index-yS4Vru8B.js",
+          "kind": "static-import",
+          "to": "assets/index-yS4Vru8B.js",
+          "exists": true
+        },
+        {
+          "from": "assets/m4/features/prompts/prompt-service.js",
+          "specifier": "../chat/turn-policy.js",
+          "kind": "static-import",
+          "to": "assets/m4/features/chat/turn-policy.js",
+          "exists": true
+        },
+        {
+          "from": "assets/m4/features/world-info/embedding-service.js",
+          "specifier": "./native-embedding-bridge.js",
+          "kind": "static-import",
+          "to": "assets/m4/features/world-info/native-embedding-bridge.js",
+          "exists": true
+        },
+        {
+          "from": "assets/m4/features/world-info/embedding-service.js",
+          "specifier": "./embeddinggemma2-litert-bridge.js",
+          "kind": "static-import",
+          "to": "assets/m4/features/world-info/embeddinggemma2-litert-bridge.js",
+          "exists": true
+        },
+        {
+          "from": "assets/m4/features/world-info/embedding-service.js",
+          "specifier": "./embedding-index-repository.js",
+          "kind": "static-import",
+          "to": "assets/m4/features/world-info/embedding-index-repository.js",
+          "exists": true
+        },
+        {
+          "from": "assets/m4/providers/aistudio/text.js",
+          "specifier": "../common/connection-repository.js",
+          "kind": "static-import",
+          "to": "assets/m4/providers/common/connection-repository.js",
+          "exists": true
+        },
+        {
+          "from": "assets/m4/providers/common/connection-repository.js",
+          "specifier": "./provider-registry.js",
+          "kind": "static-import",
+          "to": "assets/m4/providers/common/provider-registry.js",
+          "exists": true
+        },
+        {
+          "from": "assets/m4/providers/common/generation-gateway.js",
+          "specifier": "../gemini/generation.js",
+          "kind": "static-import",
+          "to": "assets/m4/providers/gemini/generation.js",
+          "exists": true
+        },
+        {
+          "from": "assets/m4/providers/common/generation-gateway.js",
+          "specifier": "../aistudio/text.js",
+          "kind": "static-import",
+          "to": "assets/m4/providers/aistudio/text.js",
+          "exists": true
+        },
+        {
+          "from": "assets/m4/providers/common/generation-gateway.js",
+          "specifier": "../openrouter/generation.js",
+          "kind": "static-import",
+          "to": "assets/m4/providers/openrouter/generation.js",
+          "exists": true
+        },
+        {
+          "from": "assets/m4/providers/common/generation-gateway.js",
+          "specifier": "../proxy/generation.js",
+          "kind": "static-import",
+          "to": "assets/m4/providers/proxy/generation.js",
+          "exists": true
+        },
+        {
+          "from": "assets/m4/providers/common/generation-gateway.js",
+          "specifier": "./provider-registry.js",
+          "kind": "static-import",
+          "to": "assets/m4/providers/common/provider-registry.js",
+          "exists": true
+        },
+        {
+          "from": "assets/m4/providers/common/generation-gateway.js",
+          "specifier": "./provider-registry.js",
+          "kind": "re-export",
+          "to": "assets/m4/providers/common/provider-registry.js",
+          "exists": true
+        },
+        {
+          "from": "assets/m4/providers/common/generation-gateway.js",
+          "specifier": "../aistudio/model-catalog.js",
+          "kind": "re-export",
+          "to": "assets/m4/providers/aistudio/model-catalog.js",
+          "exists": true
+        },
+        {
+          "from": "assets/m4/providers/gemini/generation.js",
+          "specifier": "../common/generation-utils.js",
+          "kind": "static-import",
+          "to": "assets/m4/providers/common/generation-utils.js",
+          "exists": true
+        },
+        {
+          "from": "assets/m4/providers/openrouter/generation.js",
+          "specifier": "../common/generation-utils.js",
+          "kind": "static-import",
+          "to": "assets/m4/providers/common/generation-utils.js",
+          "exists": true
+        },
+        {
+          "from": "assets/m4/providers/proxy/generation.js",
+          "specifier": "../common/generation-utils.js",
+          "kind": "static-import",
+          "to": "assets/m4/providers/common/generation-utils.js",
+          "exists": true
+        },
+        {
+          "from": "assets/m5/app/persistence/entity-repositories.js",
+          "specifier": "./app-database.js",
+          "kind": "static-import",
+          "to": "assets/m5/app/persistence/app-database.js",
+          "exists": true
+        },
+        {
+          "from": "assets/m5/app/persistence/session-state.js",
+          "specifier": "../../features/arena/state-machine.js",
+          "kind": "static-import",
+          "to": "assets/m5/features/arena/state-machine.js",
+          "exists": true
+        },
+        {
+          "from": "assets/m5/ui/runtime-guard.js",
+          "specifier": "../app/state/runtime-state.js?v=1.3.6-m5.1",
+          "kind": "static-import",
+          "to": "assets/m5/app/state/runtime-state.js",
+          "exists": true
+        }
+      ],
+      "computed": [
+        {
+          "from": "assets/app-entry-v1.3.6.js",
+          "kind": "dynamic-import",
+          "offset": 2140
+        },
+        {
+          "from": "assets/app-production-v1.3.6.js",
+          "kind": "module-relative-url",
+          "offset": 652666
+        },
+        {
+          "from": "assets/m4/features/world-info/embedding-service.js",
+          "kind": "dynamic-import",
+          "offset": 10315
+        }
+      ],
+      "parseErrors": [],
+      "cycles": [],
+      "unresolved": []
+    }
+  ],
+  "limitations": [
+    "Only literal ESM dependencies and import.meta.url references; no runtime execution.",
+    "Card Runtime .jsfrag assembly and implicit dependencies need separate contract review.",
+    "No claim of complete call graph or absence of runtime cycles."
+  ]
+}

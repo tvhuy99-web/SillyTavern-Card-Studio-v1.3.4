@@ -53,3 +53,41 @@ export function normalizePromptVariableScopes(chatVariables, globalVariables) {
     migratedLegacyGlobalKeys: Object.freeze(Object.keys(legacyGlobal)),
   });
 }
+
+// Persisted key formats are compatibility contracts shared by host reads and writes.
+const encodeScopePart = value => encodeURIComponent(String(value ?? '').slice(0, 300));
+export const normalizeRuntimeScope = option => ({ ...(option || {}), type: option?.type || 'chat' });
+export function resolveRuntimeMessageIndex(value, length) {
+  if (length <= 0) return -1;
+  if (value === undefined || value === 'latest') return length - 1;
+  const index = Math.trunc(Number(value));
+  return Number.isFinite(index) ? index < 0 ? length + index : index : -1;
+}
+export function runtimeVariableStorageKey(option, context) {
+  const scope = normalizeRuntimeScope(option);
+  const prefix = STORAGE_PREFIX + ':variables:';
+  switch (scope.type) {
+    case 'global': return GLOBAL_VARIABLES_STORAGE_KEY;
+    case 'preset': return prefix + 'preset:' + encodeScopePart(context.presetName || 'default');
+    case 'character': return prefix + 'character:' + encodeScopePart(context.characterId);
+    case 'message': return prefix + 'message:' + encodeScopePart(context.chatId) + ':' + resolveRuntimeMessageIndex(scope.message_id, Math.max(1, (context.messageId ?? 0) + 1));
+    case 'script': return prefix + 'script:' + encodeScopePart(context.chatId) + ':' + encodeScopePart(scope.script_id || context.scriptId || 'default');
+    case 'extension': return prefix + 'extension:' + encodeScopePart(scope.extension_id || context.extensionId || 'unknown');
+    default: return null;
+  }
+}
+export function runtimeWebStorageKey(type, context) {
+  return STORAGE_PREFIX + ':web-storage:' + type + ':' + encodeScopePart(context.characterId) + ':' + encodeScopePart(context.chatId);
+}
+export function readRuntimeRecord(storage, key) {
+  if (!storage) return {};
+  try {
+    const value = JSON.parse(storage.getItem(key) || '{}');
+    return isRecord(value) ? value : {};
+  } catch { return {}; }
+}
+export function writeRuntimeRecord(storage, key, value, validate = () => {}) {
+  if (!storage) return;
+  validate(value);
+  storage.setItem(key, JSON.stringify(value));
+}

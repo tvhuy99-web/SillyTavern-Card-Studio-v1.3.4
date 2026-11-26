@@ -1,3 +1,4 @@
+import { getAndroidPlugin, ANDROID_PLUGINS } from '../../../recovered/platform/android/native-bridge.js';
 // EmbeddingGemma 2 Text 270M runs only in Capacitor Android APK via LiteRT-LM.
 // No model/backend switching: an absent plugin, model, or runtime is an error.
 // Browser users can keep using the original EmbeddingGemma 300M / Qwen3 paths.
@@ -6,8 +7,7 @@ export const EMBEDDINGGEMMA2_MODEL_ID = 'litert-community/embeddinggemma-2-text-
 export const EMBEDDINGGEMMA2_FILE_NAME = 'embeddinggemma-2-text-270m.litertlm';
 
 export function getEmbeddingGemma2Plugin(host = globalThis) {
-  if (host?.Capacitor?.getPlatform?.() !== 'android') return null;
-  return host.Capacitor.Plugins?.EmbeddingGemma2LiteRT || null;
+  return getAndroidPlugin(ANDROID_PLUGINS.liteRt, host);
 }
 
 function requirePlugin() {

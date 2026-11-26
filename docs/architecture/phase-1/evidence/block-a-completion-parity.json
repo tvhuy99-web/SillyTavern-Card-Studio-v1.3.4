@@ -1,0 +1,1898 @@
+{
+  "typescript": "5.8.3",
+  "verifiedDeclarations": 365,
+  "groups": [
+    {
+      "module": "src/features/world-info/lorebook-file.js",
+      "factory": "createLorebookFileCodec",
+      "bindings": [
+        "Dt",
+        "Ot",
+        "Rt",
+        "Pt",
+        "Mt",
+        "Lt"
+      ],
+      "dependencies": [
+        "jt"
+      ],
+      "originalChars": 2569,
+      "exported": [
+        {
+          "legacyAlias": "Mt",
+          "publicName": "normalizeLorebook"
+        },
+        {
+          "legacyAlias": "Lt",
+          "publicName": "parseLorebookFile"
+        }
+      ],
+      "privateBindings": [
+        "Dt",
+        "Ot",
+        "Rt",
+        "Pt"
+      ],
+      "verifiedBindings": 6
+    },
+    {
+      "module": "src/app/state/settings-keys.js",
+      "factory": "createSettingsKeys",
+      "bindings": [
+        "xo",
+        "_o",
+        "wo",
+        "ko",
+        "So",
+        "Co",
+        "Eo",
+        "No",
+        "To",
+        "Ao",
+        "Io",
+        "jo",
+        "Do",
+        "Oo",
+        "Ro",
+        "Po",
+        "Mo",
+        "Lo",
+        "Fo",
+        "Bo",
+        "Uo",
+        "Ho",
+        "$o",
+        "Go",
+        "zo",
+        "qo",
+        "Vo",
+        "Ko"
+      ],
+      "dependencies": [],
+      "originalChars": 1666,
+      "exported": [
+        {
+          "legacyAlias": "xo",
+          "publicName": "xo"
+        },
+        {
+          "legacyAlias": "_o",
+          "publicName": "_o"
+        },
+        {
+          "legacyAlias": "wo",
+          "publicName": "wo"
+        },
+        {
+          "legacyAlias": "ko",
+          "publicName": "ko"
+        },
+        {
+          "legacyAlias": "So",
+          "publicName": "So"
+        },
+        {
+          "legacyAlias": "Co",
+          "publicName": "Co"
+        },
+        {
+          "legacyAlias": "Eo",
+          "publicName": "Eo"
+        },
+        {
+          "legacyAlias": "No",
+          "publicName": "No"
+        },
+        {
+          "legacyAlias": "To",
+          "publicName": "To"
+        },
+        {
+          "legacyAlias": "Ao",
+          "publicName": "Ao"
+        },
+        {
+          "legacyAlias": "Io",
+          "publicName": "Io"
+        },
+        {
+          "legacyAlias": "jo",
+          "publicName": "jo"
+        },
+        {
+          "legacyAlias": "Do",
+          "publicName": "Do"
+        },
+        {
+          "legacyAlias": "Oo",
+          "publicName": "Oo"
+        },
+        {
+          "legacyAlias": "Ro",
+          "publicName": "Ro"
+        },
+        {
+          "legacyAlias": "Po",
+          "publicName": "Po"
+        },
+        {
+          "legacyAlias": "Mo",
+          "publicName": "Mo"
+        },
+        {
+          "legacyAlias": "Lo",
+          "publicName": "Lo"
+        },
+        {
+          "legacyAlias": "Fo",
+          "publicName": "Fo"
+        },
+        {
+          "legacyAlias": "Bo",
+          "publicName": "Bo"
+        },
+        {
+          "legacyAlias": "Uo",
+          "publicName": "Uo"
+        },
+        {
+          "legacyAlias": "Ho",
+          "publicName": "Ho"
+        },
+        {
+          "legacyAlias": "$o",
+          "publicName": "$o"
+        },
+        {
+          "legacyAlias": "Go",
+          "publicName": "Go"
+        },
+        {
+          "legacyAlias": "zo",
+          "publicName": "zo"
+        },
+        {
+          "legacyAlias": "qo",
+          "publicName": "qo"
+        },
+        {
+          "legacyAlias": "Vo",
+          "publicName": "Vo"
+        },
+        {
+          "legacyAlias": "Ko",
+          "publicName": "Ko"
+        }
+      ],
+      "privateBindings": [],
+      "verifiedBindings": 28
+    },
+    {
+      "module": "src/features/state/default-feature-settings.js",
+      "factory": "createFeatureDefaults",
+      "bindings": [
+        "Jo",
+        "Yo",
+        "Xo",
+        "Qo",
+        "Zo",
+        "es",
+        "ts"
+      ],
+      "dependencies": [],
+      "originalChars": 14091,
+      "exported": [
+        {
+          "legacyAlias": "Jo",
+          "publicName": "smartScanDefaults"
+        },
+        {
+          "legacyAlias": "Yo",
+          "publicName": "smartContextDefaults"
+        },
+        {
+          "legacyAlias": "Xo",
+          "publicName": "actionSuggestionPrompt"
+        },
+        {
+          "legacyAlias": "Qo",
+          "publicName": "writingRefinementPrompt"
+        },
+        {
+          "legacyAlias": "Zo",
+          "publicName": "actionSuggestionDefaults"
+        },
+        {
+          "legacyAlias": "es",
+          "publicName": "writingRefinementDefaults"
+        },
+        {
+          "legacyAlias": "ts",
+          "publicName": "speechDefaults"
+        }
+      ],
+      "privateBindings": [],
+      "verifiedBindings": 7
+    },
+    {
+      "module": "src/features/state/feature-settings.js",
+      "factory": "createFeatureSettings",
+      "bindings": [
+        "as",
+        "is",
+        "os",
+        "ss",
+        "ls"
+      ],
+      "dependencies": [
+        "$o",
+        "Go",
+        "Ho",
+        "Jo",
+        "Yo",
+        "Zo",
+        "__stsMarkSmartScanStickySettingsSaved",
+        "__stsMigrateSmartScanStickySettings",
+        "es",
+        "zo"
+      ],
+      "originalChars": 893,
+      "exported": [
+        {
+          "legacyAlias": "as",
+          "publicName": "getSmartScanSettings"
+        },
+        {
+          "legacyAlias": "is",
+          "publicName": "saveSmartScanSettings"
+        },
+        {
+          "legacyAlias": "os",
+          "publicName": "getSmartContextSettings"
+        },
+        {
+          "legacyAlias": "ss",
+          "publicName": "getActionSuggestionSettings"
+        },
+        {
+          "legacyAlias": "ls",
+          "publicName": "getWritingRefinementSettings"
+        }
+      ],
+      "privateBindings": [],
+      "verifiedBindings": 5
+    },
+    {
+      "module": "src/providers/common/legacy-transport.js",
+      "factory": "createTransportUtilities",
+      "bindings": [
+        "Ds",
+        "Os",
+        "Rs",
+        "Ps",
+        "Ms",
+        "Ls",
+        "Fs",
+        "Bs",
+        "Us",
+        "Hs"
+      ],
+      "dependencies": [
+        "ns"
+      ],
+      "originalChars": 3185,
+      "exported": [
+        {
+          "legacyAlias": "Bs",
+          "publicName": "redactNetworkLog"
+        },
+        {
+          "legacyAlias": "Hs",
+          "publicName": "request"
+        }
+      ],
+      "privateBindings": [
+        "Ds",
+        "Os",
+        "Rs",
+        "Ps",
+        "Ms",
+        "Ls",
+        "Fs",
+        "Us"
+      ],
+      "verifiedBindings": 10
+    },
+    {
+      "module": "src/providers/common/legacy-response-utils.js",
+      "factory": "createResponseUtilities",
+      "bindings": [
+        "$s",
+        "Gs",
+        "zs"
+      ],
+      "dependencies": [],
+      "originalChars": 1033,
+      "exported": [
+        {
+          "legacyAlias": "$s",
+          "publicName": "boundedNumber"
+        },
+        {
+          "legacyAlias": "Gs",
+          "publicName": "optionalNumber"
+        }
+      ],
+      "privateBindings": [
+        "zs"
+      ],
+      "verifiedBindings": 3
+    },
+    {
+      "module": "src/features/rpg/table-processing.js",
+      "factory": "createTableProcessing",
+      "bindings": [
+        "Js",
+        "Ys",
+        "Xs",
+        "Qs",
+        "Zs",
+        "el",
+        "tl",
+        "nl"
+      ],
+      "dependencies": [
+        "As",
+        "Ce",
+        "ke"
+      ],
+      "originalChars": 9386,
+      "exported": [
+        {
+          "legacyAlias": "Js",
+          "publicName": "Js"
+        },
+        {
+          "legacyAlias": "Ys",
+          "publicName": "Ys"
+        },
+        {
+          "legacyAlias": "Xs",
+          "publicName": "Xs"
+        },
+        {
+          "legacyAlias": "Qs",
+          "publicName": "Qs"
+        },
+        {
+          "legacyAlias": "Zs",
+          "publicName": "Zs"
+        },
+        {
+          "legacyAlias": "el",
+          "publicName": "el"
+        },
+        {
+          "legacyAlias": "tl",
+          "publicName": "tl"
+        },
+        {
+          "legacyAlias": "nl",
+          "publicName": "nl"
+        }
+      ],
+      "privateBindings": [],
+      "verifiedBindings": 8
+    },
+    {
+      "module": "src/features/catalog/character-export.js",
+      "factory": "createCharacterExport",
+      "bindings": [
+        "Fl",
+        "Bl",
+        "Ul",
+        "Hl",
+        "$l",
+        "Gl",
+        "zl",
+        "ql",
+        "Vl",
+        "Kl",
+        "Wl",
+        "Jl"
+      ],
+      "dependencies": [],
+      "originalChars": 3868,
+      "exported": [
+        {
+          "legacyAlias": "Hl",
+          "publicName": "Hl"
+        },
+        {
+          "legacyAlias": "$l",
+          "publicName": "$l"
+        },
+        {
+          "legacyAlias": "ql",
+          "publicName": "ql"
+        },
+        {
+          "legacyAlias": "Kl",
+          "publicName": "Kl"
+        },
+        {
+          "legacyAlias": "Wl",
+          "publicName": "Wl"
+        },
+        {
+          "legacyAlias": "Jl",
+          "publicName": "Jl"
+        }
+      ],
+      "privateBindings": [
+        "Fl",
+        "Bl",
+        "Ul",
+        "Gl",
+        "zl",
+        "Vl"
+      ],
+      "verifiedBindings": 12
+    },
+    {
+      "module": "src/features/catalog/character-file.js",
+      "factory": "createCharacterFileCodec",
+      "bindings": [
+        "rc",
+        "ac",
+        "ic",
+        "oc",
+        "sc",
+        "lc",
+        "cc",
+        "uc",
+        "dc",
+        "hc",
+        "pc",
+        "mc",
+        "gc",
+        "fc",
+        "yc",
+        "bc",
+        "vc",
+        "xc",
+        "_c"
+      ],
+      "dependencies": [
+        "Mt",
+        "jt",
+        "l",
+        "nc"
+      ],
+      "originalChars": 9563,
+      "exported": [
+        {
+          "legacyAlias": "oc",
+          "publicName": "oc"
+        },
+        {
+          "legacyAlias": "mc",
+          "publicName": "mc"
+        },
+        {
+          "legacyAlias": "gc",
+          "publicName": "gc"
+        },
+        {
+          "legacyAlias": "_c",
+          "publicName": "_c"
+        }
+      ],
+      "privateBindings": [
+        "rc",
+        "ac",
+        "ic",
+        "sc",
+        "lc",
+        "cc",
+        "uc",
+        "dc",
+        "hc",
+        "pc",
+        "fc",
+        "yc",
+        "bc",
+        "vc",
+        "xc"
+      ],
+      "verifiedBindings": 19
+    },
+    {
+      "module": "src/vendor/lodash-runtime.js",
+      "factory": "createLodashRuntime",
+      "bindings": [
+        "Pu"
+      ],
+      "dependencies": [
+        "l",
+        "o"
+      ],
+      "originalChars": 70646,
+      "exported": [
+        {
+          "legacyAlias": "Pu",
+          "publicName": "lodash"
+        }
+      ],
+      "privateBindings": [],
+      "verifiedBindings": 1
+    },
+    {
+      "module": "src/features/state/script-execution.js",
+      "factory": "createScriptExecution",
+      "bindings": [
+        "Mu",
+        "Lu",
+        "Fu",
+        "Bu",
+        "Uu",
+        "Hu",
+        "$u",
+        "Gu"
+      ],
+      "dependencies": [
+        "Pu",
+        "nc"
+      ],
+      "originalChars": 10597,
+      "exported": [
+        {
+          "legacyAlias": "Lu",
+          "publicName": "runIsolatedScript"
+        },
+        {
+          "legacyAlias": "Uu",
+          "publicName": "getVariable"
+        },
+        {
+          "legacyAlias": "$u",
+          "publicName": "$u"
+        },
+        {
+          "legacyAlias": "Gu",
+          "publicName": "mutateVariable"
+        }
+      ],
+      "privateBindings": [
+        "Mu",
+        "Fu",
+        "Bu",
+        "Hu"
+      ],
+      "verifiedBindings": 8
+    },
+    {
+      "module": "src/features/prompts/macro-processing.js",
+      "factory": "createMacroProcessing",
+      "bindings": [
+        "Vu",
+        "Ku",
+        "Wu",
+        "Ju",
+        "Yu",
+        "Xu",
+        "Qu",
+        "Zu"
+      ],
+      "dependencies": [],
+      "originalChars": 2548,
+      "exported": [
+        {
+          "legacyAlias": "Vu",
+          "publicName": "Vu"
+        },
+        {
+          "legacyAlias": "Ku",
+          "publicName": "Ku"
+        },
+        {
+          "legacyAlias": "Ju",
+          "publicName": "Ju"
+        },
+        {
+          "legacyAlias": "Xu",
+          "publicName": "Xu"
+        },
+        {
+          "legacyAlias": "Zu",
+          "publicName": "Zu"
+        }
+      ],
+      "privateBindings": [
+        "Wu",
+        "Yu",
+        "Qu"
+      ],
+      "verifiedBindings": 8
+    },
+    {
+      "module": "src/features/chat/regex-processing.js",
+      "factory": "createRegexProcessing",
+      "bindings": [
+        "ed",
+        "td",
+        "nd",
+        "rd",
+        "ad",
+        "id",
+        "od",
+        "sd",
+        "ld",
+        "cd",
+        "ud",
+        "dd",
+        "hd",
+        "pd",
+        "md",
+        "gd"
+      ],
+      "dependencies": [
+        "Co"
+      ],
+      "originalChars": 8740,
+      "exported": [
+        {
+          "legacyAlias": "gd",
+          "publicName": "processRegex"
+        }
+      ],
+      "privateBindings": [
+        "ed",
+        "td",
+        "nd",
+        "rd",
+        "ad",
+        "id",
+        "od",
+        "sd",
+        "ld",
+        "cd",
+        "ud",
+        "dd",
+        "hd",
+        "pd",
+        "md"
+      ],
+      "verifiedBindings": 16
+    },
+    {
+      "module": "src/features/prompts/legacy-prompt-builder.js",
+      "factory": "createPromptBuilder",
+      "bindings": [
+        "fd",
+        "yd",
+        "bd",
+        "vd",
+        "xd"
+      ],
+      "dependencies": [
+        "Co",
+        "Gu",
+        "Js",
+        "Ju",
+        "Ku",
+        "Lu",
+        "Qs",
+        "Uu",
+        "Vu",
+        "Xs",
+        "Xu",
+        "Zs",
+        "Zu",
+        "__stsBuildSmartStateBlock",
+        "__stsNormalizePromptVariableScopes",
+        "__stsReadGlobalVariables",
+        "el",
+        "gd",
+        "nc",
+        "qu"
+      ],
+      "originalChars": 13086,
+      "exported": [
+        {
+          "legacyAlias": "bd",
+          "publicName": "extractStoryContent"
+        },
+        {
+          "legacyAlias": "vd",
+          "publicName": "buildPromptPreview"
+        },
+        {
+          "legacyAlias": "xd",
+          "publicName": "buildPrompt"
+        }
+      ],
+      "privateBindings": [
+        "fd",
+        "yd"
+      ],
+      "verifiedBindings": 5
+    },
+    {
+      "module": "src/features/speech/audio-conversion.js",
+      "factory": "createAudioConversion",
+      "bindings": [
+        "Dd",
+        "Od",
+        "Rd",
+        "Pd"
+      ],
+      "dependencies": [],
+      "originalChars": 458,
+      "exported": [
+        {
+          "legacyAlias": "Od",
+          "publicName": "Od"
+        },
+        {
+          "legacyAlias": "Rd",
+          "publicName": "Rd"
+        },
+        {
+          "legacyAlias": "Pd",
+          "publicName": "Pd"
+        }
+      ],
+      "privateBindings": [
+        "Dd"
+      ],
+      "verifiedBindings": 4
+    },
+    {
+      "module": "src/features/speech/speech-engine.js",
+      "factory": "createSpeechEngine",
+      "bindings": [
+        "Md",
+        "Ld",
+        "Fd",
+        "Bd",
+        "Ud",
+        "Hd",
+        "$d"
+      ],
+      "dependencies": [
+        "Ce",
+        "De",
+        "Od",
+        "Pd",
+        "Rd",
+        "ke",
+        "vo",
+        "ys"
+      ],
+      "originalChars": 2919,
+      "exported": [
+        {
+          "legacyAlias": "Md",
+          "publicName": "Md"
+        },
+        {
+          "legacyAlias": "Ld",
+          "publicName": "Ld"
+        },
+        {
+          "legacyAlias": "Bd",
+          "publicName": "Bd"
+        },
+        {
+          "legacyAlias": "Ud",
+          "publicName": "Ud"
+        },
+        {
+          "legacyAlias": "Hd",
+          "publicName": "Hd"
+        },
+        {
+          "legacyAlias": "$d",
+          "publicName": "$d"
+        }
+      ],
+      "privateBindings": [
+        "Fd"
+      ],
+      "verifiedBindings": 7
+    },
+    {
+      "module": "src/app/persistence/backup-codec.js",
+      "factory": "createBackupCodec",
+      "bindings": [
+        "Kd",
+        "Wd",
+        "Jd",
+        "Yd",
+        "Xd"
+      ],
+      "dependencies": [],
+      "originalChars": 717,
+      "exported": [
+        {
+          "legacyAlias": "Kd",
+          "publicName": "Kd"
+        },
+        {
+          "legacyAlias": "Wd",
+          "publicName": "Wd"
+        },
+        {
+          "legacyAlias": "Jd",
+          "publicName": "Jd"
+        },
+        {
+          "legacyAlias": "Yd",
+          "publicName": "Yd"
+        },
+        {
+          "legacyAlias": "Xd",
+          "publicName": "Xd"
+        }
+      ],
+      "privateBindings": [],
+      "verifiedBindings": 5
+    },
+    {
+      "module": "src/features/world-info/keyword-matching.js",
+      "factory": "createKeywordMatching",
+      "bindings": [
+        "ih",
+        "oh",
+        "sh",
+        "lh",
+        "ch"
+      ],
+      "dependencies": [],
+      "originalChars": 3240,
+      "exported": [
+        {
+          "legacyAlias": "ch",
+          "publicName": "resolveWorldInfo"
+        }
+      ],
+      "privateBindings": [
+        "ih",
+        "oh",
+        "sh",
+        "lh"
+      ],
+      "verifiedBindings": 5
+    },
+    {
+      "module": "src/runtime/card-runtime/host/slash-commands.js",
+      "factory": "createSlashCommands",
+      "bindings": [
+        "tp",
+        "np",
+        "rp",
+        "ap",
+        "ip",
+        "op",
+        "sp"
+      ],
+      "dependencies": [
+        "Gu",
+        "Uu",
+        "Xu"
+      ],
+      "originalChars": 7006,
+      "exported": [
+        {
+          "legacyAlias": "tp",
+          "publicName": "tp"
+        },
+        {
+          "legacyAlias": "ip",
+          "publicName": "ip"
+        },
+        {
+          "legacyAlias": "op",
+          "publicName": "op"
+        },
+        {
+          "legacyAlias": "sp",
+          "publicName": "sp"
+        }
+      ],
+      "privateBindings": [
+        "np",
+        "rp",
+        "ap"
+      ],
+      "verifiedBindings": 7
+    },
+    {
+      "module": "src/runtime/card-runtime/frame-context.js",
+      "factory": "createFrameContext",
+      "bindings": [
+        "bp",
+        "vp",
+        "xp",
+        "_p",
+        "wp",
+        "kp",
+        "Sp",
+        "Cp",
+        "Ep",
+        "Np",
+        "Tp",
+        "Ap",
+        "Ip"
+      ],
+      "dependencies": [
+        "Ah",
+        "Ih",
+        "__stsBuildSmartStateBlock",
+        "__stsSeedInitialVariablesFromCard",
+        "__stsSelectInitialVariableOpening",
+        "jh",
+        "jt"
+      ],
+      "originalChars": 11954,
+      "exported": [
+        {
+          "legacyAlias": "bp",
+          "publicName": "bp"
+        },
+        {
+          "legacyAlias": "vp",
+          "publicName": "vp"
+        },
+        {
+          "legacyAlias": "_p",
+          "publicName": "_p"
+        },
+        {
+          "legacyAlias": "wp",
+          "publicName": "wp"
+        },
+        {
+          "legacyAlias": "kp",
+          "publicName": "kp"
+        },
+        {
+          "legacyAlias": "Sp",
+          "publicName": "Sp"
+        },
+        {
+          "legacyAlias": "Cp",
+          "publicName": "Cp"
+        },
+        {
+          "legacyAlias": "Ep",
+          "publicName": "Ep"
+        },
+        {
+          "legacyAlias": "Np",
+          "publicName": "Np"
+        },
+        {
+          "legacyAlias": "Ap",
+          "publicName": "Ap"
+        },
+        {
+          "legacyAlias": "Ip",
+          "publicName": "Ip"
+        }
+      ],
+      "privateBindings": [
+        "xp",
+        "Tp"
+      ],
+      "verifiedBindings": 13
+    },
+    {
+      "module": "src/vendor/markdown-runtime.js",
+      "factory": "createMarkdownRuntime",
+      "bindings": [
+        "Op",
+        "Rp",
+        "Pp",
+        "Mp",
+        "Lp",
+        "Fp",
+        "Bp",
+        "Up",
+        "Hp",
+        "$p",
+        "Gp",
+        "zp",
+        "qp",
+        "Vp",
+        "Kp",
+        "Wp",
+        "Jp",
+        "Yp",
+        "Xp",
+        "Qp",
+        "Zp",
+        "em",
+        "tm",
+        "nm",
+        "rm",
+        "am",
+        "im",
+        "om",
+        "sm",
+        "lm",
+        "cm",
+        "um",
+        "dm",
+        "hm",
+        "pm",
+        "mm",
+        "gm",
+        "fm",
+        "ym",
+        "bm",
+        "vm",
+        "xm",
+        "_m",
+        "wm",
+        "km",
+        "Sm",
+        "Cm",
+        "Em",
+        "Nm",
+        "Tm",
+        "Am",
+        "Im",
+        "jm",
+        "Dm",
+        "Om",
+        "Rm",
+        "Pm",
+        "Mm",
+        "Lm",
+        "Fm",
+        "Bm",
+        "Um",
+        "Hm"
+      ],
+      "dependencies": [],
+      "originalChars": 38942,
+      "exported": [
+        {
+          "legacyAlias": "Bm",
+          "publicName": "markdown"
+        },
+        {
+          "legacyAlias": "Hm",
+          "publicName": "toArray"
+        }
+      ],
+      "privateBindings": [
+        "Op",
+        "Rp",
+        "Pp",
+        "Mp",
+        "Lp",
+        "Fp",
+        "Bp",
+        "Up",
+        "Hp",
+        "$p",
+        "Gp",
+        "zp",
+        "qp",
+        "Vp",
+        "Kp",
+        "Wp",
+        "Jp",
+        "Yp",
+        "Xp",
+        "Qp",
+        "Zp",
+        "em",
+        "tm",
+        "nm",
+        "rm",
+        "am",
+        "im",
+        "om",
+        "sm",
+        "lm",
+        "cm",
+        "um",
+        "dm",
+        "hm",
+        "pm",
+        "mm",
+        "gm",
+        "fm",
+        "ym",
+        "bm",
+        "vm",
+        "xm",
+        "_m",
+        "wm",
+        "km",
+        "Sm",
+        "Cm",
+        "Em",
+        "Nm",
+        "Tm",
+        "Am",
+        "Im",
+        "jm",
+        "Dm",
+        "Om",
+        "Rm",
+        "Pm",
+        "Mm",
+        "Lm",
+        "Fm",
+        "Um"
+      ],
+      "verifiedBindings": 63
+    },
+    {
+      "module": "src/vendor/html-sanitizer-runtime.js",
+      "factory": "createHtmlSanitizerRuntime",
+      "bindings": [
+        "$m",
+        "Gm",
+        "zm",
+        "qm",
+        "Vm",
+        "Km",
+        "Wm",
+        "Jm",
+        "Ym",
+        "Xm",
+        "Qm",
+        "Zm",
+        "eg",
+        "tg",
+        "ng",
+        "rg",
+        "ag",
+        "ig",
+        "og",
+        "sg",
+        "lg",
+        "cg",
+        "ug",
+        "dg",
+        "hg",
+        "pg",
+        "mg",
+        "gg",
+        "fg",
+        "yg",
+        "bg",
+        "vg",
+        "xg",
+        "_g",
+        "wg",
+        "kg",
+        "Sg",
+        "Cg",
+        "Eg",
+        "Ng",
+        "Tg",
+        "Ag",
+        "Ig",
+        "jg",
+        "Dg",
+        "Og",
+        "Rg",
+        "Pg",
+        "Mg",
+        "Lg",
+        "Fg",
+        "Bg",
+        "Ug",
+        "Hg",
+        "$g",
+        "Gg",
+        "zg",
+        "qg",
+        "Vg",
+        "Kg",
+        "Wg",
+        "Jg",
+        "Yg"
+      ],
+      "dependencies": [
+        "Hm"
+      ],
+      "originalChars": 26078,
+      "exported": [
+        {
+          "legacyAlias": "Yg",
+          "publicName": "sanitizer"
+        }
+      ],
+      "privateBindings": [
+        "$m",
+        "Gm",
+        "zm",
+        "qm",
+        "Vm",
+        "Km",
+        "Wm",
+        "Jm",
+        "Ym",
+        "Xm",
+        "Qm",
+        "Zm",
+        "eg",
+        "tg",
+        "ng",
+        "rg",
+        "ag",
+        "ig",
+        "og",
+        "sg",
+        "lg",
+        "cg",
+        "ug",
+        "dg",
+        "hg",
+        "pg",
+        "mg",
+        "gg",
+        "fg",
+        "yg",
+        "bg",
+        "vg",
+        "xg",
+        "_g",
+        "wg",
+        "kg",
+        "Sg",
+        "Cg",
+        "Eg",
+        "Ng",
+        "Tg",
+        "Ag",
+        "Ig",
+        "jg",
+        "Dg",
+        "Og",
+        "Rg",
+        "Pg",
+        "Mg",
+        "Lg",
+        "Fg",
+        "Bg",
+        "Ug",
+        "Hg",
+        "$g",
+        "Gg",
+        "zg",
+        "qg",
+        "Vg",
+        "Kg",
+        "Wg",
+        "Jg"
+      ],
+      "verifiedBindings": 63
+    },
+    {
+      "module": "src/core/parse-relaxed-json.js",
+      "factory": "createRelaxedJsonParser",
+      "bindings": [
+        "As"
+      ],
+      "dependencies": [
+        "jt"
+      ],
+      "originalChars": 142,
+      "exported": [
+        {
+          "legacyAlias": "As",
+          "publicName": "parseRelaxedJson"
+        }
+      ],
+      "privateBindings": [],
+      "verifiedBindings": 1
+    },
+    {
+      "module": "src/ui/components/display-formatting.js",
+      "factory": "createDisplayFormatting",
+      "bindings": [
+        "Is",
+        "js"
+      ],
+      "dependencies": [],
+      "originalChars": 271,
+      "exported": [
+        {
+          "legacyAlias": "Is",
+          "publicName": "truncateText"
+        },
+        {
+          "legacyAlias": "js",
+          "publicName": "relativeTimeUnits"
+        }
+      ],
+      "privateBindings": [],
+      "verifiedBindings": 2
+    },
+    {
+      "module": "src/features/rpg/table-lorebook-links.js",
+      "factory": "createTableLorebookLinks",
+      "bindings": [
+        "rl"
+      ],
+      "dependencies": [],
+      "originalChars": 646,
+      "exported": [
+        {
+          "legacyAlias": "rl",
+          "publicName": "buildLinkedLorebookEntries"
+        }
+      ],
+      "privateBindings": [],
+      "verifiedBindings": 1
+    },
+    {
+      "module": "src/app/state/session-defaults.js",
+      "factory": "createSessionDefaults",
+      "bindings": [
+        "al",
+        "il"
+      ],
+      "dependencies": [
+        "Eo",
+        "__stsDiagnosticsState"
+      ],
+      "originalChars": 948,
+      "exported": [
+        {
+          "legacyAlias": "il",
+          "publicName": "initialState"
+        }
+      ],
+      "privateBindings": [
+        "al"
+      ],
+      "verifiedBindings": 2
+    },
+    {
+      "module": "src/providers/common/legacy-generation-adapters.js",
+      "factory": "createGenerationAdapters",
+      "bindings": [
+        "sl",
+        "ll",
+        "cl",
+        "ul"
+      ],
+      "dependencies": [
+        "$s",
+        "Ce",
+        "Gs",
+        "__stsGenerationGateway",
+        "ke",
+        "vo",
+        "xe",
+        "ys"
+      ],
+      "originalChars": 1055,
+      "exported": [
+        {
+          "legacyAlias": "sl",
+          "publicName": "sl"
+        },
+        {
+          "legacyAlias": "ll",
+          "publicName": "ll"
+        },
+        {
+          "legacyAlias": "cl",
+          "publicName": "cl"
+        },
+        {
+          "legacyAlias": "ul",
+          "publicName": "ul"
+        }
+      ],
+      "privateBindings": [],
+      "verifiedBindings": 4
+    },
+    {
+      "module": "src/features/rpg/rpg-import.js",
+      "factory": "createRpgImport",
+      "bindings": [
+        "Ol",
+        "Rl"
+      ],
+      "dependencies": [],
+      "originalChars": 1457,
+      "exported": [
+        {
+          "legacyAlias": "Ol",
+          "publicName": "Ol"
+        },
+        {
+          "legacyAlias": "Rl",
+          "publicName": "Rl"
+        }
+      ],
+      "privateBindings": [],
+      "verifiedBindings": 2
+    },
+    {
+      "module": "src/ui/settings/gemini-catalog-hook.js",
+      "factory": "createGeminiCatalogHook",
+      "bindings": [
+        "jl"
+      ],
+      "dependencies": [
+        "__stsCatalog",
+        "b"
+      ],
+      "originalChars": 349,
+      "exported": [
+        {
+          "legacyAlias": "jl",
+          "publicName": "useGeminiCatalog"
+        }
+      ],
+      "privateBindings": [],
+      "verifiedBindings": 1
+    },
+    {
+      "module": "src/ui/components/dialog-focus.js",
+      "factory": "createDialogFocusHook",
+      "bindings": [
+        "Yl",
+        "Xl"
+      ],
+      "dependencies": [
+        "b"
+      ],
+      "originalChars": 1038,
+      "exported": [
+        {
+          "legacyAlias": "Xl",
+          "publicName": "useDialogFocus"
+        }
+      ],
+      "privateBindings": [
+        "Yl"
+      ],
+      "verifiedBindings": 2
+    },
+    {
+      "module": "src/features/world-info/ui/embedding-sync-hook.js",
+      "factory": "createEmbeddingSyncHook",
+      "bindings": [
+        "Jc"
+      ],
+      "dependencies": [
+        "Fc",
+        "Lc",
+        "Vc",
+        "as",
+        "b",
+        "hl",
+        "qc",
+        "zc"
+      ],
+      "originalChars": 1322,
+      "exported": [
+        {
+          "legacyAlias": "Jc",
+          "publicName": "useEmbeddingSync"
+        }
+      ],
+      "privateBindings": [],
+      "verifiedBindings": 1
+    },
+    {
+      "module": "src/features/prompts/macro-reference.js",
+      "factory": "createMacroReferenceData",
+      "bindings": [
+        "cu"
+      ],
+      "dependencies": [],
+      "originalChars": 3015,
+      "exported": [
+        {
+          "legacyAlias": "cu",
+          "publicName": "macroReference"
+        }
+      ],
+      "privateBindings": [],
+      "verifiedBindings": 1
+    },
+    {
+      "module": "src/features/presets/preset-file.js",
+      "factory": "createPresetFileCodec",
+      "bindings": [
+        "yu"
+      ],
+      "dependencies": [
+        "__stsNormalizePresetConfig",
+        "fu"
+      ],
+      "originalChars": 1548,
+      "exported": [
+        {
+          "legacyAlias": "yu",
+          "publicName": "parsePresetFile"
+        }
+      ],
+      "privateBindings": [],
+      "verifiedBindings": 1
+    },
+    {
+      "module": "src/ui/components/radio-navigation.js",
+      "factory": "createRadioNavigation",
+      "bindings": [
+        "xu"
+      ],
+      "dependencies": [],
+      "originalChars": 398,
+      "exported": [
+        {
+          "legacyAlias": "xu",
+          "publicName": "handleRadioKeyDown"
+        }
+      ],
+      "privateBindings": [],
+      "verifiedBindings": 1
+    },
+    {
+      "module": "src/features/chat/summary-generation.js",
+      "factory": "createSummaryGeneration",
+      "bindings": [
+        "wd"
+      ],
+      "dependencies": [
+        "Cs",
+        "Ks",
+        "__stsAiStudioToolText",
+        "_d",
+        "bd",
+        "cl",
+        "ns"
+      ],
+      "originalChars": 543,
+      "exported": [
+        {
+          "legacyAlias": "wd",
+          "publicName": "generateSummary"
+        }
+      ],
+      "privateBindings": [],
+      "verifiedBindings": 1
+    },
+    {
+      "module": "src/features/chat/epub-import.js",
+      "factory": "createEpubImport",
+      "bindings": [
+        "rh"
+      ],
+      "dependencies": [
+        "l",
+        "nc"
+      ],
+      "originalChars": 1653,
+      "exported": [
+        {
+          "legacyAlias": "rh",
+          "publicName": "readEpub"
+        }
+      ],
+      "privateBindings": [],
+      "verifiedBindings": 1
+    },
+    {
+      "module": "src/runtime/card-runtime/host/compatibility-data.js",
+      "factory": "createRuntimeCompatibilityData",
+      "bindings": [
+        "yh",
+        "vh",
+        "xh",
+        "_h",
+        "wh",
+        "kh",
+        "Sh",
+        "Ch",
+        "Eh",
+        "Nh",
+        "Ah",
+        "Ih",
+        "jh",
+        "Dh"
+      ],
+      "dependencies": [
+        "__stsNormalizeRuntimeScope",
+        "__stsReadRuntimeRecord",
+        "__stsResolveRuntimeMessageIndex",
+        "__stsRuntimeVariableStorageKey",
+        "__stsRuntimeWebStorageKey",
+        "__stsWriteRuntimeRecord"
+      ],
+      "originalChars": 2236,
+      "exported": [
+        {
+          "legacyAlias": "yh",
+          "publicName": "yh"
+        },
+        {
+          "legacyAlias": "vh",
+          "publicName": "vh"
+        },
+        {
+          "legacyAlias": "xh",
+          "publicName": "xh"
+        },
+        {
+          "legacyAlias": "_h",
+          "publicName": "_h"
+        },
+        {
+          "legacyAlias": "wh",
+          "publicName": "wh"
+        },
+        {
+          "legacyAlias": "kh",
+          "publicName": "kh"
+        },
+        {
+          "legacyAlias": "Sh",
+          "publicName": "Sh"
+        },
+        {
+          "legacyAlias": "Ch",
+          "publicName": "Ch"
+        },
+        {
+          "legacyAlias": "Eh",
+          "publicName": "Eh"
+        },
+        {
+          "legacyAlias": "Nh",
+          "publicName": "Nh"
+        },
+        {
+          "legacyAlias": "Ah",
+          "publicName": "Ah"
+        },
+        {
+          "legacyAlias": "Ih",
+          "publicName": "Ih"
+        },
+        {
+          "legacyAlias": "jh",
+          "publicName": "jh"
+        },
+        {
+          "legacyAlias": "Dh",
+          "publicName": "Dh"
+        }
+      ],
+      "privateBindings": [],
+      "verifiedBindings": 14
+    },
+    {
+      "module": "src/diagnostics/card-runtime-diagnostics.js",
+      "factory": "createRuntimeDiagnostics",
+      "bindings": [
+        "Oh",
+        "Rh",
+        "Ph",
+        "Mh",
+        "Lh",
+        "Fh",
+        "Bh",
+        "Uh"
+      ],
+      "dependencies": [],
+      "originalChars": 5611,
+      "exported": [
+        {
+          "legacyAlias": "Oh",
+          "publicName": "storageKey"
+        },
+        {
+          "legacyAlias": "Lh",
+          "publicName": "createDiagnostic"
+        },
+        {
+          "legacyAlias": "Fh",
+          "publicName": "normalizeDiagnostic"
+        },
+        {
+          "legacyAlias": "Bh",
+          "publicName": "formatDiagnostic"
+        },
+        {
+          "legacyAlias": "Uh",
+          "publicName": "appendDiagnostic"
+        }
+      ],
+      "privateBindings": [
+        "Rh",
+        "Ph",
+        "Mh"
+      ],
+      "verifiedBindings": 8
+    },
+    {
+      "module": "src/runtime/card-runtime/host/context-adapters.js",
+      "factory": "createRuntimeContextAdapters",
+      "bindings": [
+        "Hh",
+        "$h",
+        "Gh",
+        "zh",
+        "qh",
+        "Vh",
+        "Kh",
+        "Wh",
+        "Jh",
+        "Yh",
+        "Xh",
+        "Zh"
+      ],
+      "dependencies": [
+        "bu",
+        "gc",
+        "kc",
+        "ol",
+        "xh"
+      ],
+      "originalChars": 2620,
+      "exported": [
+        {
+          "legacyAlias": "Hh",
+          "publicName": "Hh"
+        },
+        {
+          "legacyAlias": "$h",
+          "publicName": "$h"
+        },
+        {
+          "legacyAlias": "Gh",
+          "publicName": "Gh"
+        },
+        {
+          "legacyAlias": "zh",
+          "publicName": "zh"
+        },
+        {
+          "legacyAlias": "qh",
+          "publicName": "qh"
+        },
+        {
+          "legacyAlias": "Vh",
+          "publicName": "Vh"
+        },
+        {
+          "legacyAlias": "Kh",
+          "publicName": "Kh"
+        },
+        {
+          "legacyAlias": "Wh",
+          "publicName": "Wh"
+        },
+        {
+          "legacyAlias": "Jh",
+          "publicName": "Jh"
+        },
+        {
+          "legacyAlias": "Yh",
+          "publicName": "Yh"
+        },
+        {
+          "legacyAlias": "Xh",
+          "publicName": "Xh"
+        },
+        {
+          "legacyAlias": "Zh",
+          "publicName": "Zh"
+        }
+      ],
+      "privateBindings": [],
+      "verifiedBindings": 12
+    },
+    {
+      "module": "src/runtime/card-runtime/host/slash-command-reference.js",
+      "factory": "createSlashCommandReference",
+      "bindings": [
+        "of"
+      ],
+      "dependencies": [],
+      "originalChars": 725,
+      "exported": [
+        {
+          "legacyAlias": "of",
+          "publicName": "commands"
+        }
+      ],
+      "privateBindings": [],
+      "verifiedBindings": 1
+    },
+    {
+      "module": "src/features/rpg/action-proposal-prompt.js",
+      "factory": "createActionProposalPrompt",
+      "bindings": [
+        "Rf"
+      ],
+      "dependencies": [],
+      "originalChars": 2026,
+      "exported": [
+        {
+          "legacyAlias": "Rf",
+          "publicName": "prompt"
+        }
+      ],
+      "privateBindings": [],
+      "verifiedBindings": 1
+    },
+    {
+      "module": "src/app/lifecycle/application-lifecycle.js",
+      "factory": "createApplicationLifecycle",
+      "bindings": [
+        "Zf",
+        "ey",
+        "ty",
+        "ny",
+        "ry"
+      ],
+      "dependencies": [
+        "Au",
+        "b",
+        "bu",
+        "kc",
+        "qu",
+        "sn",
+        "wt"
+      ],
+      "originalChars": 4554,
+      "exported": [
+        {
+          "legacyAlias": "Zf",
+          "publicName": "ErrorBoundary"
+        },
+        {
+          "legacyAlias": "ry",
+          "publicName": "InitialLoader"
+        }
+      ],
+      "privateBindings": [
+        "ey",
+        "ty",
+        "ny"
+      ],
+      "verifiedBindings": 5
+    }
+  ],
+  "limitations": [
+    "Compared original named declaration text after reversing dependency qualification and relocating dynamic imports. Not a whole-program behavioral equivalence proof.",
+    "Standalone setup expressions and deliberately rewritten session store, mount and Smart Context are not part of this comparison."
+  ]
+}

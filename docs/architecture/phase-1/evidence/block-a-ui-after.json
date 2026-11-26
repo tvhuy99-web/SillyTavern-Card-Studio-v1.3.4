@@ -1,0 +1,12 @@
+{
+  "typescript": "5.8.3",
+  "file": "src/app/host.js",
+  "syntaxDiagnostics": 0,
+  "candidateCount": 0,
+  "candidates": [],
+  "limitations": [
+    "Top-level functions and function-valued declarations containing JSX factory calls only. Nested components, component wrappers and dynamic references need manual review.",
+    "Bindings are lexical references in this bundle, not a complete runtime dependency graph. Labels are hints, not recovered component names.",
+    "Extraction requires explicit dependencies and behavioral parity; formatting minified code alone is not source recovery."
+  ]
+}

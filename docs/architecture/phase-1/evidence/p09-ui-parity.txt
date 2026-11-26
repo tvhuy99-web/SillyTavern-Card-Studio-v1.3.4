@@ -1,0 +1,1 @@
+Baseline comparison: 8 fixture render trees identical (callbacks normalized).

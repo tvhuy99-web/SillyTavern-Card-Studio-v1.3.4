@@ -8,17 +8,18 @@
   "entryBundle": "./assets/app-production-v1.3.6.js",
   "uiBundle": "./assets/ui-d8367f0f.css",
   "deploymentFormat": "portable-static-root",
-  "runtimeSwitchLocation": "Cài đặt > Thẻ HTML",
+  "runtimeSwitchLocation": "C\u00e0i \u0111\u1eb7t > Th\u1ebb HTML",
   "architectureStage": "M7-complete",
   "assetPolicy": "generated-vendor-static-only",
-  "legacyBuildInput": "./legacy/app-bundle-input-v1.3.6.js",
   "sourceOwnership": "./src",
   "buildPipeline": "./build/build-production-bundle.mjs",
   "promptNormalizer": "./assets/prompt-normalizer-v1.3.6.js",
   "proxyPersistence": "./assets/proxy-persistence-service-v1.3.6.js",
   "cardRuntimeRenderer": "./assets/card-runtime-renderer-v1.3.6.js",
   "cardRuntimeCoreBuilder": "./assets/card-runtime-core-builder-v1.3.6.js",
-  "geminiModelListDiagnostics": "./assets/m7/diagnostics/gemini-model-list.js",
   "promptRecovery": "scoped-preset-boundary",
-  "cardRuntimeOwnership": "src/runtime/card-runtime"
+  "cardRuntimeOwnership": "src/runtime/card-runtime",
+  "modelCatalog": "./assets/m4/providers/common/model-catalog.js",
+  "hostSource": "./src/app/host.js",
+  "historicalTransformsExecuted": 0
 }

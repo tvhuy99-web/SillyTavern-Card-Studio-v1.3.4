@@ -122,13 +122,14 @@ export async function scanWorldInfo(input, deps) {
         const limit = Number.isFinite(requestedLimit) && requestedLimit > 0
           ? Math.floor(requestedLimit) : 20;
         if (query.trim()) {
-          const queryVector = await deps.embed(query);
+          const providerId = settings.embedding_provider || 'gemini';
+          const queryVector = await deps.embed(query, providerId);
           if (!queryVector?.length || !Array.from(queryVector).every(Number.isFinite)) {
             throw new Error('Embedding truy vấn rỗng hoặc chứa giá trị không hợp lệ.');
           }
           const indexName = input.card?.fileName || input.card?.name || 'default';
-          await deps.loadIndex(indexName);
-          const records = deps.getIndex(indexName) || [];
+          await deps.loadIndex(indexName, providerId);
+          const records = deps.getIndex(indexName, providerId) || [];
           const matches = [];
           let eligibleVectors = 0;
           let invalidDimensions = 0;

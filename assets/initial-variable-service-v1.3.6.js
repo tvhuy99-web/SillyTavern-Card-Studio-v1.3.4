@@ -325,7 +325,7 @@ function parseRecord(value, parseStructured) {
   return parseInitialVariableDocument(value, parseStructured);
 }
 
-export function extractCardExtensionVariables(card, parseStructured) {
+function extractCardExtensionVariables(card, parseStructured) {
   const extensions = isRecord(card?.extensions) ? card.extensions : {};
   const variables = {};
 

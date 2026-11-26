@@ -1,3 +1,5 @@
+import { HOST_RPC_METHODS } from '../assets/recovered/runtime/card-runtime/host/method-router.js';
+import { readRecoveredHostView } from './helpers/recovered-host-view.mjs';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 
@@ -17,8 +19,9 @@ const handshake = read('src/runtime/card-runtime/modules/bridge-handshake.jsfrag
 const coreTemplate = read('src/runtime/card-runtime/core.template.js');
 assert.ok(handshake.includes('readyReject'));
 assert.ok(handshake.includes('handshakeSettled'));
-assert.ok(coreTemplate.includes('handshake timed out before HANDSHAKE_ACK'));
-assert.ok(coreTemplate.includes('readyReject(new Error(message))'));
+assert.ok(handshake.includes('handshake timed out before HANDSHAKE_ACK'));
+assert.ok(handshake.includes('failHandshake(new Error(message))'));
+assert.ok(coreTemplate.includes('startHandshake();'));
 assert.ok(!coreTemplate.includes('setTimeout(function () { readyResolve(true); }, 5000)'));
 assert.ok(coreTemplate.includes('groupChat: false'));
 assert.ok(coreTemplate.includes('toolCalling: false'));
@@ -66,10 +69,11 @@ assert.ok(handshake.includes("applyVariableScopesPayload(data.payload && data.pa
 assert.ok(coreTemplate.includes('CARD_RUNTIME_OPTIONAL_RESOURCE_LOAD_FAILED'));
 assert.ok(coreTemplate.includes('fontsapi\\.zeoseven\\.com'));
 
-const production = read('assets/app-production-v1.3.6.js');
-assert.ok(production.includes('case"chat.refresh"'));
-assert.ok(production.includes('e.apiurl?await Ws(String(e.apiurl),String(e.key||""),!1):[Qh()]'));
-assert.ok(production.includes('a&&(o.config={...o.config,abortSignal:a})'));
-assert.ok(production.includes('"type"in r&&"value"in r?{[r.type]:r.value}'));
+const production = readRecoveredHostView();
+assert.ok(HOST_RPC_METHODS.includes('chat.refresh'));
+assert.ok(HOST_RPC_METHODS.includes('generation.models') && production.includes('utility: utilityRpc'));
+assert.ok(production.includes('currentModel: () => deps.gateway.getCurrentModel()'));
+assert.ok(production.includes('safetySettings, signal })).response.text')); // Gemini tool adapter delegates abort to source provider.
+assert.ok(production.includes("'type' in payload && 'value' in payload ? { [payload.type]: payload.value }"));
 
 console.log('runtime surface gap tests: OK');

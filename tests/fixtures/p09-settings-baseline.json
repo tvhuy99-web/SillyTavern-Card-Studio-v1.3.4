@@ -1,0 +1,2554 @@
+[
+  {
+    "type": "div",
+    "props": {
+      "className": "bg-slate-800/50 p-6 rounded-xl shadow-lg max-w-3xl mx-auto space-y-8",
+      "children": [
+        {
+          "type": "div",
+          "props": {
+            "children": [
+              {
+                "type": "h2",
+                "props": {
+                  "className": "text-xl font-bold text-sky-400 mb-4",
+                  "children": "1. Chọn Nguồn Kết Nối (API Source)"
+                }
+              },
+              {
+                "type": "select",
+                "props": {
+                  "value": "gemini",
+                  "onChange": "[callback]",
+                  "aria-label": "Nhà cung cấp AI",
+                  "className": "w-full bg-slate-900 border border-slate-600 rounded-lg p-3 text-white focus:border-sky-500 outline-none",
+                  "children": [
+                    {
+                      "type": "option",
+                      "props": {
+                        "value": "gemini",
+                        "children": "Google Gemini"
+                      }
+                    },
+                    {
+                      "type": "option",
+                      "props": {
+                        "value": "openrouter",
+                        "children": "OpenRouter"
+                      }
+                    },
+                    {
+                      "type": "option",
+                      "props": {
+                        "value": "proxy",
+                        "children": "Reverse Proxy"
+                      }
+                    },
+                    {
+                      "type": "option",
+                      "props": {
+                        "value": "aistudio",
+                        "children": "Tài khoản Google / AI Studio"
+                      }
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        {
+          "type": "div",
+          "props": {
+            "className": "border-t border-slate-700"
+          }
+        },
+        {
+          "type": "div",
+          "props": {
+            "children": [
+              {
+                "type": "h3",
+                "props": {
+                  "className": "text-xl font-bold text-sky-400 mb-4",
+                  "children": "2. Cấu hình Chi tiết"
+                }
+              },
+              {
+                "type": "div",
+                "props": {
+                  "className": "space-y-6 ",
+                  "children": [
+                    {
+                      "type": "div",
+                      "props": {
+                        "className": "bg-slate-900/50 p-4 rounded-lg border border-slate-700",
+                        "children": [
+                          {
+                            "type": "label",
+                            "props": {
+                              "className": "block text-sm font-bold text-indigo-300 mb-2",
+                              "children": "Mô hình Chính"
+                            }
+                          },
+                          {
+                            "type": "div",
+                            "props": {
+                              "className": "flex gap-2",
+                              "children": [
+                                {
+                                  "type": "div",
+                                  "props": {
+                                    "className": "flex-grow",
+                                    "children": {
+                                      "type": "SearchableSelect",
+                                      "props": {
+                                        "ariaLabel": "Mô hình Chính",
+                                        "value": "gemini-2.5-pro",
+                                        "onChange": "[callback]",
+                                        "options": [
+                                          {
+                                            "value": "gemini-2.5-pro",
+                                            "label": "Gemini Pro"
+                                          }
+                                        ]
+                                      }
+                                    }
+                                  }
+                                },
+                                {
+                                  "type": "button",
+                                  "props": {
+                                    "onClick": "[callback]",
+                                    "disabled": false,
+                                    "className": "px-3 bg-slate-700 text-slate-300 rounded hover:bg-slate-600 flex items-center justify-center",
+                                    "title": "Tải danh sách Model từ Google Gemini",
+                                    "children": {
+                                      "type": "svg",
+                                      "props": {
+                                        "aria-hidden": "true",
+                                        "xmlns": "http://www.w3.org/2000/svg",
+                                        "className": "h-5 w-5",
+                                        "viewBox": "0 0 20 20",
+                                        "fill": "currentColor",
+                                        "children": {
+                                          "type": "path",
+                                          "props": {
+                                            "fillRule": "evenodd",
+                                            "d": "M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z",
+                                            "clipRule": "evenodd"
+                                          }
+                                        }
+                                      }
+                                    }
+                                  }
+                                }
+                              ]
+                            }
+                          }
+                        ]
+                      }
+                    },
+                    {
+                      "type": "div",
+                      "props": {
+                        "children": [
+                          {
+                            "type": "h4",
+                            "props": {
+                              "className": "font-bold text-slate-300 mb-3",
+                              "children": "API Key (Gemini)"
+                            }
+                          },
+                          {
+                            "type": "div",
+                            "props": {
+                              "className": "space-y-4 pl-2 border-l-2 border-slate-700",
+                              "children": [
+                                {
+                                  "type": "ToggleSwitch",
+                                  "props": {
+                                    "label": "Sử dụng API Key Mặc định (Environment)",
+                                    "checked": true,
+                                    "onChange": "[callback]"
+                                  }
+                                },
+                                false
+                              ]
+                            }
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              },
+              false,
+              false,
+              false
+            ]
+          }
+        },
+        {
+          "type": "div",
+          "props": {
+            "className": "border-t border-slate-700 pt-6",
+            "children": [
+              {
+                "type": "h3",
+                "props": {
+                  "className": "text-xl font-bold text-sky-400 mb-4",
+                  "children": "3. Cấu hình Nâng cao"
+                }
+              },
+              {
+                "type": "div",
+                "props": {
+                  "className": "bg-slate-900/50 p-4 rounded-lg border border-slate-700 space-y-4",
+                  "children": [
+                    {
+                      "type": "ToggleSwitch",
+                      "props": {
+                        "label": "Tự động Kết nối Trực tiếp (Direct Fetch Bypass)",
+                        "checked": true,
+                        "onChange": "[callback]"
+                      }
+                    },
+                    {
+                      "type": "p",
+                      "props": {
+                        "className": "text-xs text-slate-400 ml-8",
+                        "children": "Bỏ qua máy chủ trung gian (proxy) đối với các API an toàn (như Google, OpenRouter) để tối ưu tốc độ và tránh lỗi timeout. Tắt chế độ này có thể giải quyết các vấn đề CORS trên một số trình duyệt, nhưng tăng nguy cơ lỗi Timeout."
+                      }
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        {
+          "type": "div",
+          "props": {
+            "className": "flex justify-end items-center gap-4 pt-4 border-t border-slate-700 sticky bottom-0 bg-slate-800/90 p-2  rounded-b-xl",
+            "children": [
+              false,
+              false,
+              {
+                "type": "button",
+                "props": {
+                  "onClick": "[callback]",
+                  "className": "bg-sky-600 hover:bg-sky-700 text-white font-bold py-3 px-8 rounded-lg  active:scale-95 shadow-lg shadow-sky-900/30",
+                  "children": "Áp Dụng"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    }
+  },
+  {
+    "type": "div",
+    "props": {
+      "className": "bg-slate-800/50 p-6 rounded-xl shadow-lg max-w-3xl mx-auto space-y-8",
+      "children": [
+        {
+          "type": "div",
+          "props": {
+            "children": [
+              {
+                "type": "h2",
+                "props": {
+                  "className": "text-xl font-bold text-sky-400 mb-4",
+                  "children": "1. Chọn Nguồn Kết Nối (API Source)"
+                }
+              },
+              {
+                "type": "select",
+                "props": {
+                  "value": "gemini",
+                  "onChange": "[callback]",
+                  "aria-label": "Nhà cung cấp AI",
+                  "className": "w-full bg-slate-900 border border-slate-600 rounded-lg p-3 text-white focus:border-sky-500 outline-none",
+                  "children": [
+                    {
+                      "type": "option",
+                      "props": {
+                        "value": "gemini",
+                        "children": "Google Gemini"
+                      }
+                    },
+                    {
+                      "type": "option",
+                      "props": {
+                        "value": "openrouter",
+                        "children": "OpenRouter"
+                      }
+                    },
+                    {
+                      "type": "option",
+                      "props": {
+                        "value": "proxy",
+                        "children": "Reverse Proxy"
+                      }
+                    },
+                    {
+                      "type": "option",
+                      "props": {
+                        "value": "aistudio",
+                        "children": "Tài khoản Google / AI Studio"
+                      }
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        {
+          "type": "div",
+          "props": {
+            "className": "border-t border-slate-700"
+          }
+        },
+        {
+          "type": "div",
+          "props": {
+            "children": [
+              {
+                "type": "h3",
+                "props": {
+                  "className": "text-xl font-bold text-sky-400 mb-4",
+                  "children": "2. Cấu hình Chi tiết"
+                }
+              },
+              {
+                "type": "div",
+                "props": {
+                  "className": "space-y-6 ",
+                  "children": [
+                    {
+                      "type": "div",
+                      "props": {
+                        "className": "bg-slate-900/50 p-4 rounded-lg border border-slate-700",
+                        "children": [
+                          {
+                            "type": "label",
+                            "props": {
+                              "className": "block text-sm font-bold text-indigo-300 mb-2",
+                              "children": "Mô hình Chính"
+                            }
+                          },
+                          {
+                            "type": "div",
+                            "props": {
+                              "className": "flex gap-2",
+                              "children": [
+                                {
+                                  "type": "div",
+                                  "props": {
+                                    "className": "flex-grow",
+                                    "children": {
+                                      "type": "SearchableSelect",
+                                      "props": {
+                                        "ariaLabel": "Mô hình Chính",
+                                        "value": "gemini-2.5-pro",
+                                        "onChange": "[callback]",
+                                        "options": [
+                                          {
+                                            "value": "gemini-2.5-pro",
+                                            "label": "Gemini Pro"
+                                          }
+                                        ]
+                                      }
+                                    }
+                                  }
+                                },
+                                {
+                                  "type": "button",
+                                  "props": {
+                                    "onClick": "[callback]",
+                                    "disabled": false,
+                                    "className": "px-3 bg-slate-700 text-slate-300 rounded hover:bg-slate-600 flex items-center justify-center",
+                                    "title": "Tải danh sách Model từ Google Gemini",
+                                    "children": {
+                                      "type": "svg",
+                                      "props": {
+                                        "aria-hidden": "true",
+                                        "xmlns": "http://www.w3.org/2000/svg",
+                                        "className": "h-5 w-5",
+                                        "viewBox": "0 0 20 20",
+                                        "fill": "currentColor",
+                                        "children": {
+                                          "type": "path",
+                                          "props": {
+                                            "fillRule": "evenodd",
+                                            "d": "M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z",
+                                            "clipRule": "evenodd"
+                                          }
+                                        }
+                                      }
+                                    }
+                                  }
+                                }
+                              ]
+                            }
+                          }
+                        ]
+                      }
+                    },
+                    {
+                      "type": "div",
+                      "props": {
+                        "children": [
+                          {
+                            "type": "h4",
+                            "props": {
+                              "className": "font-bold text-slate-300 mb-3",
+                              "children": "API Key (Gemini)"
+                            }
+                          },
+                          {
+                            "type": "div",
+                            "props": {
+                              "className": "space-y-4 pl-2 border-l-2 border-slate-700",
+                              "children": [
+                                {
+                                  "type": "ToggleSwitch",
+                                  "props": {
+                                    "label": "Sử dụng API Key Mặc định (Environment)",
+                                    "checked": false,
+                                    "onChange": "[callback]"
+                                  }
+                                },
+                                {
+                                  "type": "textarea",
+                                  "props": {
+                                    "aria-label": "API Key Gemini",
+                                    "value": "manual-test\nbackup-test",
+                                    "onChange": "[callback]",
+                                    "rows": 3,
+                                    "className": "w-full bg-slate-700 border border-slate-600 rounded-md p-2 text-slate-200 font-mono text-xs",
+                                    "placeholder": "Nhập API Key cá nhân (Mỗi dòng 1 key)..."
+                                  }
+                                }
+                              ]
+                            }
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              },
+              false,
+              false,
+              false
+            ]
+          }
+        },
+        {
+          "type": "div",
+          "props": {
+            "className": "border-t border-slate-700 pt-6",
+            "children": [
+              {
+                "type": "h3",
+                "props": {
+                  "className": "text-xl font-bold text-sky-400 mb-4",
+                  "children": "3. Cấu hình Nâng cao"
+                }
+              },
+              {
+                "type": "div",
+                "props": {
+                  "className": "bg-slate-900/50 p-4 rounded-lg border border-slate-700 space-y-4",
+                  "children": [
+                    {
+                      "type": "ToggleSwitch",
+                      "props": {
+                        "label": "Tự động Kết nối Trực tiếp (Direct Fetch Bypass)",
+                        "checked": true,
+                        "onChange": "[callback]"
+                      }
+                    },
+                    {
+                      "type": "p",
+                      "props": {
+                        "className": "text-xs text-slate-400 ml-8",
+                        "children": "Bỏ qua máy chủ trung gian (proxy) đối với các API an toàn (như Google, OpenRouter) để tối ưu tốc độ và tránh lỗi timeout. Tắt chế độ này có thể giải quyết các vấn đề CORS trên một số trình duyệt, nhưng tăng nguy cơ lỗi Timeout."
+                      }
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        {
+          "type": "div",
+          "props": {
+            "className": "flex justify-end items-center gap-4 pt-4 border-t border-slate-700 sticky bottom-0 bg-slate-800/90 p-2  rounded-b-xl",
+            "children": [
+              false,
+              false,
+              {
+                "type": "button",
+                "props": {
+                  "onClick": "[callback]",
+                  "className": "bg-sky-600 hover:bg-sky-700 text-white font-bold py-3 px-8 rounded-lg  active:scale-95 shadow-lg shadow-sky-900/30",
+                  "children": "Áp Dụng"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    }
+  },
+  {
+    "type": "div",
+    "props": {
+      "className": "bg-slate-800/50 p-6 rounded-xl shadow-lg max-w-3xl mx-auto space-y-8",
+      "children": [
+        {
+          "type": "div",
+          "props": {
+            "children": [
+              {
+                "type": "h2",
+                "props": {
+                  "className": "text-xl font-bold text-sky-400 mb-4",
+                  "children": "1. Chọn Nguồn Kết Nối (API Source)"
+                }
+              },
+              {
+                "type": "select",
+                "props": {
+                  "value": "gemini",
+                  "onChange": "[callback]",
+                  "aria-label": "Nhà cung cấp AI",
+                  "className": "w-full bg-slate-900 border border-slate-600 rounded-lg p-3 text-white focus:border-sky-500 outline-none",
+                  "children": [
+                    {
+                      "type": "option",
+                      "props": {
+                        "value": "gemini",
+                        "children": "Google Gemini"
+                      }
+                    },
+                    {
+                      "type": "option",
+                      "props": {
+                        "value": "openrouter",
+                        "children": "OpenRouter"
+                      }
+                    },
+                    {
+                      "type": "option",
+                      "props": {
+                        "value": "proxy",
+                        "children": "Reverse Proxy"
+                      }
+                    },
+                    {
+                      "type": "option",
+                      "props": {
+                        "value": "aistudio",
+                        "children": "Tài khoản Google / AI Studio"
+                      }
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        {
+          "type": "div",
+          "props": {
+            "className": "border-t border-slate-700"
+          }
+        },
+        {
+          "type": "div",
+          "props": {
+            "children": [
+              {
+                "type": "h3",
+                "props": {
+                  "className": "text-xl font-bold text-sky-400 mb-4",
+                  "children": "2. Cấu hình Chi tiết"
+                }
+              },
+              {
+                "type": "div",
+                "props": {
+                  "className": "space-y-6 ",
+                  "children": [
+                    {
+                      "type": "div",
+                      "props": {
+                        "className": "bg-slate-900/50 p-4 rounded-lg border border-slate-700",
+                        "children": [
+                          {
+                            "type": "label",
+                            "props": {
+                              "className": "block text-sm font-bold text-indigo-300 mb-2",
+                              "children": "Mô hình Chính"
+                            }
+                          },
+                          {
+                            "type": "div",
+                            "props": {
+                              "className": "flex gap-2",
+                              "children": [
+                                {
+                                  "type": "div",
+                                  "props": {
+                                    "className": "flex-grow",
+                                    "children": {
+                                      "type": "SearchableSelect",
+                                      "props": {
+                                        "ariaLabel": "Mô hình Chính",
+                                        "value": "gemini-2.5-pro",
+                                        "onChange": "[callback]",
+                                        "options": [
+                                          {
+                                            "value": "gemini-2.5-pro",
+                                            "label": "Gemini Pro"
+                                          }
+                                        ]
+                                      }
+                                    }
+                                  }
+                                },
+                                {
+                                  "type": "button",
+                                  "props": {
+                                    "onClick": "[callback]",
+                                    "disabled": true,
+                                    "className": "px-3 bg-slate-700 text-slate-300 rounded hover:bg-slate-600 flex items-center justify-center",
+                                    "title": "Tải danh sách Model từ Google Gemini",
+                                    "children": {
+                                      "type": "LoadingIndicator",
+                                      "props": {
+                                        "message": ""
+                                      }
+                                    }
+                                  }
+                                }
+                              ]
+                            }
+                          }
+                        ]
+                      }
+                    },
+                    {
+                      "type": "div",
+                      "props": {
+                        "children": [
+                          {
+                            "type": "h4",
+                            "props": {
+                              "className": "font-bold text-slate-300 mb-3",
+                              "children": "API Key (Gemini)"
+                            }
+                          },
+                          {
+                            "type": "div",
+                            "props": {
+                              "className": "space-y-4 pl-2 border-l-2 border-slate-700",
+                              "children": [
+                                {
+                                  "type": "ToggleSwitch",
+                                  "props": {
+                                    "label": "Sử dụng API Key Mặc định (Environment)",
+                                    "checked": true,
+                                    "onChange": "[callback]"
+                                  }
+                                },
+                                false
+                              ]
+                            }
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              },
+              false,
+              false,
+              false
+            ]
+          }
+        },
+        {
+          "type": "div",
+          "props": {
+            "className": "border-t border-slate-700 pt-6",
+            "children": [
+              {
+                "type": "h3",
+                "props": {
+                  "className": "text-xl font-bold text-sky-400 mb-4",
+                  "children": "3. Cấu hình Nâng cao"
+                }
+              },
+              {
+                "type": "div",
+                "props": {
+                  "className": "bg-slate-900/50 p-4 rounded-lg border border-slate-700 space-y-4",
+                  "children": [
+                    {
+                      "type": "ToggleSwitch",
+                      "props": {
+                        "label": "Tự động Kết nối Trực tiếp (Direct Fetch Bypass)",
+                        "checked": true,
+                        "onChange": "[callback]"
+                      }
+                    },
+                    {
+                      "type": "p",
+                      "props": {
+                        "className": "text-xs text-slate-400 ml-8",
+                        "children": "Bỏ qua máy chủ trung gian (proxy) đối với các API an toàn (như Google, OpenRouter) để tối ưu tốc độ và tránh lỗi timeout. Tắt chế độ này có thể giải quyết các vấn đề CORS trên một số trình duyệt, nhưng tăng nguy cơ lỗi Timeout."
+                      }
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        {
+          "type": "div",
+          "props": {
+            "className": "flex justify-end items-center gap-4 pt-4 border-t border-slate-700 sticky bottom-0 bg-slate-800/90 p-2  rounded-b-xl",
+            "children": [
+              false,
+              false,
+              {
+                "type": "button",
+                "props": {
+                  "onClick": "[callback]",
+                  "className": "bg-sky-600 hover:bg-sky-700 text-white font-bold py-3 px-8 rounded-lg  active:scale-95 shadow-lg shadow-sky-900/30",
+                  "children": "Áp Dụng"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    }
+  },
+  {
+    "type": "div",
+    "props": {
+      "className": "bg-slate-800/50 p-6 rounded-xl shadow-lg max-w-3xl mx-auto space-y-8",
+      "children": [
+        {
+          "type": "div",
+          "props": {
+            "children": [
+              {
+                "type": "h2",
+                "props": {
+                  "className": "text-xl font-bold text-sky-400 mb-4",
+                  "children": "1. Chọn Nguồn Kết Nối (API Source)"
+                }
+              },
+              {
+                "type": "select",
+                "props": {
+                  "value": "openrouter",
+                  "onChange": "[callback]",
+                  "aria-label": "Nhà cung cấp AI",
+                  "className": "w-full bg-slate-900 border border-slate-600 rounded-lg p-3 text-white focus:border-sky-500 outline-none",
+                  "children": [
+                    {
+                      "type": "option",
+                      "props": {
+                        "value": "gemini",
+                        "children": "Google Gemini"
+                      }
+                    },
+                    {
+                      "type": "option",
+                      "props": {
+                        "value": "openrouter",
+                        "children": "OpenRouter"
+                      }
+                    },
+                    {
+                      "type": "option",
+                      "props": {
+                        "value": "proxy",
+                        "children": "Reverse Proxy"
+                      }
+                    },
+                    {
+                      "type": "option",
+                      "props": {
+                        "value": "aistudio",
+                        "children": "Tài khoản Google / AI Studio"
+                      }
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        {
+          "type": "div",
+          "props": {
+            "className": "border-t border-slate-700"
+          }
+        },
+        {
+          "type": "div",
+          "props": {
+            "children": [
+              {
+                "type": "h3",
+                "props": {
+                  "className": "text-xl font-bold text-sky-400 mb-4",
+                  "children": "2. Cấu hình Chi tiết"
+                }
+              },
+              false,
+              {
+                "type": "div",
+                "props": {
+                  "className": "space-y-6 ",
+                  "children": [
+                    {
+                      "type": "div",
+                      "props": {
+                        "className": "bg-slate-900/50 p-4 rounded-lg border border-slate-700",
+                        "children": [
+                          {
+                            "type": "label",
+                            "props": {
+                              "className": "block text-sm font-bold text-indigo-300 mb-2",
+                              "children": "Mô hình OpenRouter"
+                            }
+                          },
+                          {
+                            "type": "div",
+                            "props": {
+                              "className": "flex gap-2",
+                              "children": [
+                                {
+                                  "type": "div",
+                                  "props": {
+                                    "className": "flex-grow",
+                                    "children": {
+                                      "type": "SearchableSelect",
+                                      "props": {
+                                        "ariaLabel": "Mô hình OpenRouter",
+                                        "options": [
+                                          {
+                                            "value": "free",
+                                            "label": "Free model (Free)"
+                                          },
+                                          {
+                                            "value": "paid",
+                                            "label": "Paid model ($)"
+                                          }
+                                        ],
+                                        "value": "free",
+                                        "onChange": "[callback]",
+                                        "placeholder": "Chọn mô hình..."
+                                      }
+                                    }
+                                  }
+                                },
+                                {
+                                  "type": "button",
+                                  "props": {
+                                    "onClick": "[callback]",
+                                    "className": "px-3 bg-slate-700 rounded hover:bg-slate-600 text-slate-300",
+                                    "title": "Tải lại danh sách",
+                                    "aria-label": "Tải lại danh sách mô hình",
+                                    "children": "↻"
+                                  }
+                                }
+                              ]
+                            }
+                          },
+                          {
+                            "type": "div",
+                            "props": {
+                              "className": "mt-2",
+                              "children": {
+                                "type": "ToggleSwitch",
+                                "props": {
+                                  "label": "Chỉ hiện model miễn phí",
+                                  "checked": false,
+                                  "onChange": "[callback]"
+                                }
+                              }
+                            }
+                          }
+                        ]
+                      }
+                    },
+                    {
+                      "type": "div",
+                      "props": {
+                        "children": [
+                          {
+                            "type": "h4",
+                            "props": {
+                              "className": "font-bold text-slate-300 mb-3",
+                              "children": "API Key (OpenRouter)"
+                            }
+                          },
+                          {
+                            "type": "div",
+                            "props": {
+                              "className": "flex gap-2",
+                              "children": [
+                                {
+                                  "type": "input",
+                                  "props": {
+                                    "type": "password",
+                                    "aria-label": "API Key OpenRouter",
+                                    "value": "router-test",
+                                    "onChange": "[callback]",
+                                    "className": "flex-grow bg-slate-700 border border-slate-600 rounded-md p-2 text-white",
+                                    "placeholder": "sk-or-..."
+                                  }
+                                },
+                                {
+                                  "type": "button",
+                                  "props": {
+                                    "onClick": "[callback]",
+                                    "disabled": false,
+                                    "className": "px-4 bg-indigo-600 text-white rounded hover:bg-indigo-500 disabled:bg-slate-600",
+                                    "children": "Check"
+                                  }
+                                }
+                              ]
+                            }
+                          },
+                          false,
+                          false
+                        ]
+                      }
+                    }
+                  ]
+                }
+              },
+              false,
+              false
+            ]
+          }
+        },
+        {
+          "type": "div",
+          "props": {
+            "className": "border-t border-slate-700 pt-6",
+            "children": [
+              {
+                "type": "h3",
+                "props": {
+                  "className": "text-xl font-bold text-sky-400 mb-4",
+                  "children": "3. Cấu hình Nâng cao"
+                }
+              },
+              {
+                "type": "div",
+                "props": {
+                  "className": "bg-slate-900/50 p-4 rounded-lg border border-slate-700 space-y-4",
+                  "children": [
+                    {
+                      "type": "ToggleSwitch",
+                      "props": {
+                        "label": "Tự động Kết nối Trực tiếp (Direct Fetch Bypass)",
+                        "checked": true,
+                        "onChange": "[callback]"
+                      }
+                    },
+                    {
+                      "type": "p",
+                      "props": {
+                        "className": "text-xs text-slate-400 ml-8",
+                        "children": "Bỏ qua máy chủ trung gian (proxy) đối với các API an toàn (như Google, OpenRouter) để tối ưu tốc độ và tránh lỗi timeout. Tắt chế độ này có thể giải quyết các vấn đề CORS trên một số trình duyệt, nhưng tăng nguy cơ lỗi Timeout."
+                      }
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        {
+          "type": "div",
+          "props": {
+            "className": "flex justify-end items-center gap-4 pt-4 border-t border-slate-700 sticky bottom-0 bg-slate-800/90 p-2  rounded-b-xl",
+            "children": [
+              false,
+              false,
+              {
+                "type": "button",
+                "props": {
+                  "onClick": "[callback]",
+                  "className": "bg-sky-600 hover:bg-sky-700 text-white font-bold py-3 px-8 rounded-lg  active:scale-95 shadow-lg shadow-sky-900/30",
+                  "children": "Áp Dụng"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    }
+  },
+  {
+    "type": "div",
+    "props": {
+      "className": "bg-slate-800/50 p-6 rounded-xl shadow-lg max-w-3xl mx-auto space-y-8",
+      "children": [
+        {
+          "type": "div",
+          "props": {
+            "children": [
+              {
+                "type": "h2",
+                "props": {
+                  "className": "text-xl font-bold text-sky-400 mb-4",
+                  "children": "1. Chọn Nguồn Kết Nối (API Source)"
+                }
+              },
+              {
+                "type": "select",
+                "props": {
+                  "value": "aistudio",
+                  "onChange": "[callback]",
+                  "aria-label": "Nhà cung cấp AI",
+                  "className": "w-full bg-slate-900 border border-slate-600 rounded-lg p-3 text-white focus:border-sky-500 outline-none",
+                  "children": [
+                    {
+                      "type": "option",
+                      "props": {
+                        "value": "gemini",
+                        "children": "Google Gemini"
+                      }
+                    },
+                    {
+                      "type": "option",
+                      "props": {
+                        "value": "openrouter",
+                        "children": "OpenRouter"
+                      }
+                    },
+                    {
+                      "type": "option",
+                      "props": {
+                        "value": "proxy",
+                        "children": "Reverse Proxy"
+                      }
+                    },
+                    {
+                      "type": "option",
+                      "props": {
+                        "value": "aistudio",
+                        "children": "Tài khoản Google / AI Studio"
+                      }
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        {
+          "type": "div",
+          "props": {
+            "className": "border-t border-slate-700"
+          }
+        },
+        {
+          "type": "div",
+          "props": {
+            "children": [
+              {
+                "type": "h3",
+                "props": {
+                  "className": "text-xl font-bold text-sky-400 mb-4",
+                  "children": "2. Cấu hình Chi tiết"
+                }
+              },
+              false,
+              false,
+              {
+                "type": "div",
+                "props": {
+                  "className": "space-y-4",
+                  "children": [
+                    {
+                      "type": "div",
+                      "props": {
+                        "className": "bg-slate-900/50 p-4 rounded-lg border border-slate-600 space-y-4",
+                        "children": [
+                          {
+                            "type": "div",
+                            "props": {
+                              "className": "flex flex-wrap justify-between gap-3 items-center",
+                              "children": [
+                                {
+                                  "type": "div",
+                                  "props": {
+                                    "className": "font-bold text-sky-300",
+                                    "children": "Mô hình Google AI Studio"
+                                  }
+                                },
+                                {
+                                  "type": "div",
+                                  "props": {
+                                    "className": "flex flex-wrap gap-2",
+                                    "children": [
+                                      {
+                                        "type": "button",
+                                        "props": {
+                                          "type": "button",
+                                          "disabled": false,
+                                          "onClick": "[callback]",
+                                          "className": "rounded bg-sky-700 hover:bg-sky-600 disabled:opacity-50 px-3 py-2 text-sm text-white",
+                                          "children": "Tải danh sách Model"
+                                        }
+                                      },
+                                      {
+                                        "type": "button",
+                                        "props": {
+                                          "type": "button",
+                                          "onClick": "[callback]",
+                                          "className": "rounded bg-slate-700 hover:bg-slate-600 px-3 py-2 text-sm text-white",
+                                          "children": "Xóa danh sách"
+                                        }
+                                      }
+                                    ]
+                                  }
+                                }
+                              ]
+                            }
+                          },
+                          {
+                            "type": "div",
+                            "props": {
+                              "className": "grid grid-cols-1 gap-4",
+                              "children": [
+                                {
+                                  "type": "ModelSelect",
+                                  "props": {
+                                    "provider": "aistudio",
+                                    "label": "Chat Model ID",
+                                    "value": "custom-id",
+                                    "onChange": "[callback]",
+                                    "options": [
+                                      {
+                                        "id": "default",
+                                        "name": "Mặc định theo trang web (AI Studio)"
+                                      },
+                                      {
+                                        "id": "gemini-2.5-flash",
+                                        "name": "Gemini 2.5 Flash"
+                                      },
+                                      {
+                                        "id": "gemini-2.5-pro",
+                                        "name": "Gemini Pro"
+                                      },
+                                      {
+                                        "id": "gemini-native",
+                                        "name": "Native model"
+                                      }
+                                    ]
+                                  }
+                                },
+                                {
+                                  "type": "ModelSelect",
+                                  "props": {
+                                    "provider": "aistudio",
+                                    "label": "Tool Model ID",
+                                    "value": "",
+                                    "onChange": "[callback]",
+                                    "options": [
+                                      {
+                                        "id": "default",
+                                        "name": "Mặc định theo trang web (AI Studio)"
+                                      },
+                                      {
+                                        "id": "gemini-2.5-flash",
+                                        "name": "Gemini 2.5 Flash"
+                                      },
+                                      {
+                                        "id": "gemini-2.5-pro",
+                                        "name": "Gemini Pro"
+                                      },
+                                      {
+                                        "id": "gemini-native",
+                                        "name": "Native model"
+                                      }
+                                    ]
+                                  }
+                                }
+                              ]
+                            }
+                          },
+                          {
+                            "type": "div",
+                            "props": {
+                              "className": "grid grid-cols-1 md:grid-cols-2 gap-4",
+                              "children": [
+                                {
+                                  "type": "label",
+                                  "props": {
+                                    "className": "text-sm text-indigo-200 block",
+                                    "children": [
+                                      {
+                                        "type": "span",
+                                        "props": {
+                                          "className": "block mb-2 font-bold",
+                                          "children": "Mức suy nghĩ Chat"
+                                        }
+                                      },
+                                      {
+                                        "type": "select",
+                                        "props": {
+                                          "aria-label": "Mức suy nghĩ Chat",
+                                          "className": "w-full rounded bg-slate-800 border border-slate-600 p-2 text-white",
+                                          "value": "high",
+                                          "onChange": "[callback]",
+                                          "children": [
+                                            {
+                                              "type": "option",
+                                              "props": {
+                                                "value": "default",
+                                                "children": "Mặc định theo trang web (AI Studio)"
+                                              }
+                                            },
+                                            {
+                                              "type": "option",
+                                              "props": {
+                                                "value": "minimal",
+                                                "children": "Tối thiểu"
+                                              }
+                                            },
+                                            {
+                                              "type": "option",
+                                              "props": {
+                                                "value": "low",
+                                                "children": "Thấp"
+                                              }
+                                            },
+                                            {
+                                              "type": "option",
+                                              "props": {
+                                                "value": "medium",
+                                                "children": "Trung bình"
+                                              }
+                                            },
+                                            {
+                                              "type": "option",
+                                              "props": {
+                                                "value": "high",
+                                                "children": "Cao"
+                                              }
+                                            }
+                                          ]
+                                        }
+                                      }
+                                    ]
+                                  }
+                                },
+                                {
+                                  "type": "label",
+                                  "props": {
+                                    "className": "text-sm text-indigo-200 block",
+                                    "children": [
+                                      {
+                                        "type": "span",
+                                        "props": {
+                                          "className": "block mb-2 font-bold",
+                                          "children": "Mức suy nghĩ Tool"
+                                        }
+                                      },
+                                      {
+                                        "type": "select",
+                                        "props": {
+                                          "aria-label": "Mức suy nghĩ Tool",
+                                          "className": "w-full rounded bg-slate-800 border border-slate-600 p-2 text-white",
+                                          "value": "low",
+                                          "onChange": "[callback]",
+                                          "children": [
+                                            {
+                                              "type": "option",
+                                              "props": {
+                                                "value": "default",
+                                                "children": "Mặc định theo trang web (AI Studio)"
+                                              }
+                                            },
+                                            {
+                                              "type": "option",
+                                              "props": {
+                                                "value": "minimal",
+                                                "children": "Tối thiểu"
+                                              }
+                                            },
+                                            {
+                                              "type": "option",
+                                              "props": {
+                                                "value": "low",
+                                                "children": "Thấp"
+                                              }
+                                            },
+                                            {
+                                              "type": "option",
+                                              "props": {
+                                                "value": "medium",
+                                                "children": "Trung bình"
+                                              }
+                                            },
+                                            {
+                                              "type": "option",
+                                              "props": {
+                                                "value": "high",
+                                                "children": "Cao"
+                                              }
+                                            }
+                                          ]
+                                        }
+                                      }
+                                    ]
+                                  }
+                                }
+                              ]
+                            }
+                          },
+                          {
+                            "type": "p",
+                            "props": {
+                              "className": "text-xs text-amber-200",
+                              "children": "Các mức suy nghĩ phụ thuộc model và giao diện Google AI Studio. Nếu không áp dụng được, ứng dụng sẽ báo lỗi thay vì lặng lẽ bỏ qua."
+                            }
+                          }
+                        ]
+                      }
+                    },
+                    {
+                      "type": "label",
+                      "props": {
+                        "className": "flex items-center gap-3 rounded-lg border border-slate-600 bg-slate-900/60 p-3 cursor-pointer",
+                        "children": [
+                          {
+                            "type": "input",
+                            "props": {
+                              "type": "checkbox",
+                              "defaultChecked": true,
+                              "onChange": "[callback]",
+                              "className": "h-5 w-5 accent-indigo-500",
+                              "aria-label": "Hiển thị trang web AI Studio"
+                            }
+                          },
+                          {
+                            "type": "span",
+                            "props": {
+                              "className": "text-sm text-white font-semibold",
+                              "children": "Hiển thị trang web AI Studio"
+                            }
+                          }
+                        ]
+                      }
+                    },
+                    {
+                      "type": "button",
+                      "props": {
+                        "type": "button",
+                        "onClick": "[callback]",
+                        "className": "bg-indigo-600 hover:bg-indigo-500 text-white rounded px-4 py-2",
+                        "children": "Mở Google / AI Studio để đăng nhập"
+                      }
+                    }
+                  ]
+                }
+              },
+              false
+            ]
+          }
+        },
+        {
+          "type": "div",
+          "props": {
+            "className": "border-t border-slate-700 pt-6",
+            "children": [
+              {
+                "type": "h3",
+                "props": {
+                  "className": "text-xl font-bold text-sky-400 mb-4",
+                  "children": "3. Cấu hình Nâng cao"
+                }
+              },
+              {
+                "type": "div",
+                "props": {
+                  "className": "bg-slate-900/50 p-4 rounded-lg border border-slate-700 space-y-4",
+                  "children": [
+                    {
+                      "type": "ToggleSwitch",
+                      "props": {
+                        "label": "Tự động Kết nối Trực tiếp (Direct Fetch Bypass)",
+                        "checked": true,
+                        "onChange": "[callback]"
+                      }
+                    },
+                    {
+                      "type": "p",
+                      "props": {
+                        "className": "text-xs text-slate-400 ml-8",
+                        "children": "Bỏ qua máy chủ trung gian (proxy) đối với các API an toàn (như Google, OpenRouter) để tối ưu tốc độ và tránh lỗi timeout. Tắt chế độ này có thể giải quyết các vấn đề CORS trên một số trình duyệt, nhưng tăng nguy cơ lỗi Timeout."
+                      }
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        {
+          "type": "div",
+          "props": {
+            "className": "flex justify-end items-center gap-4 pt-4 border-t border-slate-700 sticky bottom-0 bg-slate-800/90 p-2  rounded-b-xl",
+            "children": [
+              false,
+              false,
+              {
+                "type": "button",
+                "props": {
+                  "onClick": "[callback]",
+                  "className": "bg-sky-600 hover:bg-sky-700 text-white font-bold py-3 px-8 rounded-lg  active:scale-95 shadow-lg shadow-sky-900/30",
+                  "children": "Áp Dụng"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    }
+  },
+  {
+    "type": "div",
+    "props": {
+      "className": "bg-slate-800/50 p-6 rounded-xl shadow-lg max-w-3xl mx-auto space-y-8",
+      "children": [
+        {
+          "type": "div",
+          "props": {
+            "children": [
+              {
+                "type": "h2",
+                "props": {
+                  "className": "text-xl font-bold text-sky-400 mb-4",
+                  "children": "1. Chọn Nguồn Kết Nối (API Source)"
+                }
+              },
+              {
+                "type": "select",
+                "props": {
+                  "value": "proxy",
+                  "onChange": "[callback]",
+                  "aria-label": "Nhà cung cấp AI",
+                  "className": "w-full bg-slate-900 border border-slate-600 rounded-lg p-3 text-white focus:border-sky-500 outline-none",
+                  "children": [
+                    {
+                      "type": "option",
+                      "props": {
+                        "value": "gemini",
+                        "children": "Google Gemini"
+                      }
+                    },
+                    {
+                      "type": "option",
+                      "props": {
+                        "value": "openrouter",
+                        "children": "OpenRouter"
+                      }
+                    },
+                    {
+                      "type": "option",
+                      "props": {
+                        "value": "proxy",
+                        "children": "Reverse Proxy"
+                      }
+                    },
+                    {
+                      "type": "option",
+                      "props": {
+                        "value": "aistudio",
+                        "children": "Tài khoản Google / AI Studio"
+                      }
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        {
+          "type": "div",
+          "props": {
+            "className": "border-t border-slate-700"
+          }
+        },
+        {
+          "type": "div",
+          "props": {
+            "children": [
+              {
+                "type": "h3",
+                "props": {
+                  "className": "text-xl font-bold text-sky-400 mb-4",
+                  "children": "2. Cấu hình Chi tiết"
+                }
+              },
+              false,
+              false,
+              false,
+              {
+                "type": "div",
+                "props": {
+                  "className": "space-y-6 ",
+                  "children": [
+                    {
+                      "type": "div",
+                      "props": {
+                        "className": "bg-slate-900/50 p-3 rounded-lg border border-slate-700 flex flex-col gap-3",
+                        "children": [
+                          {
+                            "type": "div",
+                            "props": {
+                              "className": "flex items-center justify-between",
+                              "children": [
+                                {
+                                  "type": "label",
+                                  "props": {
+                                    "className": "text-xs font-bold text-slate-400 uppercase tracking-wide",
+                                    "children": "Quản lý Cấu hình (Profile)"
+                                  }
+                                },
+                                {
+                                  "type": "div",
+                                  "props": {
+                                    "className": "flex gap-2",
+                                    "children": [
+                                      {
+                                        "type": "input",
+                                        "props": {
+                                          "type": "file",
+                                          "aria-label": "Nhập cấu hình proxy JSON",
+                                          "ref": {
+                                            "current": null
+                                          },
+                                          "accept": ".json",
+                                          "className": "hidden",
+                                          "onChange": "[callback]"
+                                        }
+                                      },
+                                      {
+                                        "type": "button",
+                                        "props": {
+                                          "onClick": "[callback]",
+                                          "className": "text-[10px] bg-slate-700 hover:bg-slate-600 px-2 py-1 rounded text-slate-300",
+                                          "title": "Nhập Profile",
+                                          "children": "Nhập"
+                                        }
+                                      },
+                                      {
+                                        "type": "button",
+                                        "props": {
+                                          "onClick": "[callback]",
+                                          "className": "text-[10px] bg-slate-700 hover:bg-slate-600 px-2 py-1 rounded text-slate-300",
+                                          "title": "Xuất Profile",
+                                          "children": "Xuất"
+                                        }
+                                      }
+                                    ]
+                                  }
+                                }
+                              ]
+                            }
+                          },
+                          {
+                            "type": "div",
+                            "props": {
+                              "className": "flex gap-2 items-center",
+                              "children": [
+                                {
+                                  "type": "select",
+                                  "props": {
+                                    "aria-label": "Cấu hình proxy",
+                                    "value": "",
+                                    "onChange": "[callback]",
+                                    "className": "flex-grow bg-slate-800 border border-slate-600 rounded p-2 text-sm text-white",
+                                    "children": [
+                                      {
+                                        "type": "option",
+                                        "props": {
+                                          "value": "",
+                                          "children": "-- Chọn cấu hình --"
+                                        }
+                                      },
+                                      [
+                                        {
+                                          "type": "option",
+                                          "props": {
+                                            "value": "p1",
+                                            "children": "Native"
+                                          },
+                                          "key": "p1"
+                                        },
+                                        {
+                                          "type": "option",
+                                          "props": {
+                                            "value": "p2",
+                                            "children": "OpenAI"
+                                          },
+                                          "key": "p2"
+                                        }
+                                      ]
+                                    ]
+                                  }
+                                },
+                                {
+                                  "type": "button",
+                                  "props": {
+                                    "onClick": "[callback]",
+                                    "className": "px-3 py-2 bg-sky-600 hover:bg-sky-500 text-white rounded text-sm font-bold",
+                                    "title": "Lưu thay đổi vào Profile hiện tại",
+                                    "children": "Lưu"
+                                  }
+                                },
+                                {
+                                  "type": "button",
+                                  "props": {
+                                    "onClick": "[callback]",
+                                    "className": "px-3 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded text-sm font-bold",
+                                    "title": "Tạo Profile mới từ cài đặt hiện tại",
+                                    "children": "+"
+                                  }
+                                },
+                                {
+                                  "type": "button",
+                                  "props": {
+                                    "onClick": "[callback]",
+                                    "disabled": true,
+                                    "className": "px-3 py-2 bg-red-900/50 hover:bg-red-900 text-red-200 rounded text-sm font-bold disabled:opacity-50",
+                                    "title": "Xóa Profile",
+                                    "children": "✕"
+                                  }
+                                }
+                              ]
+                            }
+                          }
+                        ]
+                      }
+                    },
+                    {
+                      "type": "div",
+                      "props": {
+                        "className": "space-y-4 border border-slate-700 p-4 rounded-lg bg-slate-900/30",
+                        "children": [
+                          {
+                            "type": "div",
+                            "props": {
+                              "children": [
+                                {
+                                  "type": "label",
+                                  "props": {
+                                    "className": "block text-sm font-medium text-slate-300 mb-1",
+                                    "children": "Proxy URL"
+                                  }
+                                },
+                                {
+                                  "type": "div",
+                                  "props": {
+                                    "className": "flex gap-2",
+                                    "children": [
+                                      {
+                                        "type": "input",
+                                        "props": {
+                                          "type": "text",
+                                          "aria-label": "Proxy URL",
+                                          "value": "https://proxy.test/",
+                                          "onChange": "[callback]",
+                                          "className": "flex-grow bg-slate-700 border border-slate-600 rounded-md p-2 text-white font-mono text-sm",
+                                          "placeholder": "http://127.0.0.1:8889"
+                                        }
+                                      },
+                                      {
+                                        "type": "button",
+                                        "props": {
+                                          "onClick": "[callback]",
+                                          "disabled": false,
+                                          "className": "px-3 bg-slate-700 text-slate-300 rounded hover:bg-slate-600 flex items-center justify-center",
+                                          "title": "Tải danh sách Model từ Proxy",
+                                          "children": {
+                                            "type": "svg",
+                                            "props": {
+                                              "aria-hidden": "true",
+                                              "xmlns": "http://www.w3.org/2000/svg",
+                                              "className": "h-5 w-5",
+                                              "viewBox": "0 0 20 20",
+                                              "fill": "currentColor",
+                                              "children": {
+                                                "type": "path",
+                                                "props": {
+                                                  "fillRule": "evenodd",
+                                                  "d": "M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z",
+                                                  "clipRule": "evenodd"
+                                                }
+                                              }
+                                            }
+                                          }
+                                        }
+                                      },
+                                      {
+                                        "type": "button",
+                                        "props": {
+                                          "onClick": "[callback]",
+                                          "className": "px-3 bg-red-900/30 text-red-400 rounded hover:bg-red-900/50 flex items-center justify-center border border-red-900/50",
+                                          "title": "Xoá Models lưu cục bộ (kể cả Model nhập tay)",
+                                          "children": {
+                                            "type": "svg",
+                                            "props": {
+                                              "xmlns": "http://www.w3.org/2000/svg",
+                                              "className": "h-5 w-5",
+                                              "viewBox": "0 0 20 20",
+                                              "fill": "currentColor",
+                                              "children": {
+                                                "type": "path",
+                                                "props": {
+                                                  "fillRule": "evenodd",
+                                                  "d": "M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z",
+                                                  "clipRule": "evenodd"
+                                                }
+                                              }
+                                            }
+                                          }
+                                        }
+                                      },
+                                      {
+                                        "type": "button",
+                                        "props": {
+                                          "onClick": "[callback]",
+                                          "disabled": false,
+                                          "className": "px-4 bg-indigo-600 text-white rounded hover:bg-indigo-500 disabled:bg-slate-600",
+                                          "children": "Ping"
+                                        }
+                                      }
+                                    ]
+                                  }
+                                },
+                                false,
+                                false
+                              ]
+                            }
+                          },
+                          {
+                            "type": "TextInput",
+                            "props": {
+                              "label": "Password / Key",
+                              "value": "proxy-test",
+                              "onChange": "[callback]",
+                              "type": "password"
+                            }
+                          },
+                          {
+                            "type": "ToggleSwitch",
+                            "props": {
+                              "label": "Ghi nhớ Password / Key trên thiết bị này",
+                              "checked": false,
+                              "onChange": "[callback]"
+                            }
+                          },
+                          {
+                            "type": "div",
+                            "props": {
+                              "className": "grid grid-cols-1 md:grid-cols-2 gap-4 pt-2",
+                              "children": [
+                                {
+                                  "type": "div",
+                                  "props": {
+                                    "children": {
+                                      "type": "ToggleSwitch",
+                                      "props": {
+                                        "label": "Legacy Mode",
+                                        "checked": false,
+                                        "onChange": "[callback]"
+                                      }
+                                    }
+                                  }
+                                },
+                                {
+                                  "type": "div",
+                                  "props": {
+                                    "children": {
+                                      "type": "ToggleSwitch",
+                                      "props": {
+                                        "label": "Proxy cho Tools",
+                                        "checked": true,
+                                        "onChange": "[callback]"
+                                      }
+                                    }
+                                  }
+                                }
+                              ]
+                            }
+                          }
+                        ]
+                      }
+                    },
+                    {
+                      "type": "div",
+                      "props": {
+                        "className": "bg-slate-900/50 p-4 rounded-lg border border-slate-700",
+                        "children": [
+                          {
+                            "type": "label",
+                            "props": {
+                              "className": "block text-sm font-bold text-sky-400 mb-3",
+                              "children": "Giao thức Proxy"
+                            }
+                          },
+                          {
+                            "type": "div",
+                            "props": {
+                              "className": "grid grid-cols-1 md:grid-cols-2 gap-3",
+                              "children": [
+                                {
+                                  "type": "button",
+                                  "props": {
+                                    "onClick": "[callback]",
+                                    "aria-pressed": true,
+                                    "className": "p-3 rounded-lg border text-sm flex items-center justify-center gap-2  bg-indigo-600/30 border-indigo-500 text-indigo-200",
+                                    "children": [
+                                      {
+                                        "type": "span",
+                                        "props": {
+                                          "children": "🌐"
+                                        }
+                                      },
+                                      " Chuẩn OpenAI"
+                                    ]
+                                  }
+                                },
+                                {
+                                  "type": "button",
+                                  "props": {
+                                    "onClick": "[callback]",
+                                    "aria-pressed": false,
+                                    "className": "p-3 rounded-lg border text-sm flex items-center justify-center gap-2  bg-slate-800 border-slate-600 text-slate-400 hover:bg-slate-700",
+                                    "children": [
+                                      {
+                                        "type": "span",
+                                        "props": {
+                                          "children": "⚡"
+                                        }
+                                      },
+                                      " Google Native"
+                                    ]
+                                  }
+                                }
+                              ]
+                            }
+                          }
+                        ]
+                      }
+                    },
+                    {
+                      "type": "div",
+                      "props": {
+                        "className": "grid grid-cols-1 gap-4",
+                        "children": [
+                          {
+                            "type": "ModelSelect",
+                            "props": {
+                              "provider": "proxy",
+                              "label": "Chat Model ID",
+                              "value": "custom-proxy",
+                              "onChange": "[callback]",
+                              "options": [
+                                {
+                                  "id": "gemini-2.5-pro",
+                                  "name": "Gemini Pro"
+                                },
+                                {
+                                  "id": "claude-opus-4.5",
+                                  "name": "Claude Opus 4.5"
+                                },
+                                {
+                                  "id": "claude-3-5-sonnet-latest",
+                                  "name": "Claude 3.5 Sonnet"
+                                },
+                                {
+                                  "id": "gpt-4o",
+                                  "name": "GPT-4o"
+                                }
+                              ]
+                            }
+                          },
+                          {
+                            "type": "ModelSelect",
+                            "props": {
+                              "provider": "proxy",
+                              "label": "Tool Model ID",
+                              "value": "tool-proxy",
+                              "onChange": "[callback]",
+                              "options": [
+                                {
+                                  "id": "gemini-2.5-pro",
+                                  "name": "Gemini Pro"
+                                },
+                                {
+                                  "id": "claude-opus-4.5",
+                                  "name": "Claude Opus 4.5"
+                                },
+                                {
+                                  "id": "claude-3-5-sonnet-latest",
+                                  "name": "Claude 3.5 Sonnet"
+                                },
+                                {
+                                  "id": "gpt-4o",
+                                  "name": "GPT-4o"
+                                }
+                              ]
+                            }
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        {
+          "type": "div",
+          "props": {
+            "className": "border-t border-slate-700 pt-6",
+            "children": [
+              {
+                "type": "h3",
+                "props": {
+                  "className": "text-xl font-bold text-sky-400 mb-4",
+                  "children": "3. Cấu hình Nâng cao"
+                }
+              },
+              {
+                "type": "div",
+                "props": {
+                  "className": "bg-slate-900/50 p-4 rounded-lg border border-slate-700 space-y-4",
+                  "children": [
+                    {
+                      "type": "ToggleSwitch",
+                      "props": {
+                        "label": "Tự động Kết nối Trực tiếp (Direct Fetch Bypass)",
+                        "checked": true,
+                        "onChange": "[callback]"
+                      }
+                    },
+                    {
+                      "type": "p",
+                      "props": {
+                        "className": "text-xs text-slate-400 ml-8",
+                        "children": "Bỏ qua máy chủ trung gian (proxy) đối với các API an toàn (như Google, OpenRouter) để tối ưu tốc độ và tránh lỗi timeout. Tắt chế độ này có thể giải quyết các vấn đề CORS trên một số trình duyệt, nhưng tăng nguy cơ lỗi Timeout."
+                      }
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        {
+          "type": "div",
+          "props": {
+            "className": "flex justify-end items-center gap-4 pt-4 border-t border-slate-700 sticky bottom-0 bg-slate-800/90 p-2  rounded-b-xl",
+            "children": [
+              false,
+              false,
+              {
+                "type": "button",
+                "props": {
+                  "onClick": "[callback]",
+                  "className": "bg-sky-600 hover:bg-sky-700 text-white font-bold py-3 px-8 rounded-lg  active:scale-95 shadow-lg shadow-sky-900/30",
+                  "children": "Áp Dụng"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    }
+  },
+  {
+    "type": "div",
+    "props": {
+      "className": "bg-slate-800/50 p-6 rounded-xl shadow-lg max-w-3xl mx-auto space-y-8",
+      "children": [
+        {
+          "type": "div",
+          "props": {
+            "children": [
+              {
+                "type": "h2",
+                "props": {
+                  "className": "text-xl font-bold text-sky-400 mb-4",
+                  "children": "1. Chọn Nguồn Kết Nối (API Source)"
+                }
+              },
+              {
+                "type": "select",
+                "props": {
+                  "value": "proxy",
+                  "onChange": "[callback]",
+                  "aria-label": "Nhà cung cấp AI",
+                  "className": "w-full bg-slate-900 border border-slate-600 rounded-lg p-3 text-white focus:border-sky-500 outline-none",
+                  "children": [
+                    {
+                      "type": "option",
+                      "props": {
+                        "value": "gemini",
+                        "children": "Google Gemini"
+                      }
+                    },
+                    {
+                      "type": "option",
+                      "props": {
+                        "value": "openrouter",
+                        "children": "OpenRouter"
+                      }
+                    },
+                    {
+                      "type": "option",
+                      "props": {
+                        "value": "proxy",
+                        "children": "Reverse Proxy"
+                      }
+                    },
+                    {
+                      "type": "option",
+                      "props": {
+                        "value": "aistudio",
+                        "children": "Tài khoản Google / AI Studio"
+                      }
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        {
+          "type": "div",
+          "props": {
+            "className": "border-t border-slate-700"
+          }
+        },
+        {
+          "type": "div",
+          "props": {
+            "children": [
+              {
+                "type": "h3",
+                "props": {
+                  "className": "text-xl font-bold text-sky-400 mb-4",
+                  "children": "2. Cấu hình Chi tiết"
+                }
+              },
+              false,
+              false,
+              false,
+              {
+                "type": "div",
+                "props": {
+                  "className": "space-y-6 ",
+                  "children": [
+                    {
+                      "type": "div",
+                      "props": {
+                        "className": "bg-slate-900/50 p-3 rounded-lg border border-slate-700 flex flex-col gap-3",
+                        "children": [
+                          {
+                            "type": "div",
+                            "props": {
+                              "className": "flex items-center justify-between",
+                              "children": [
+                                {
+                                  "type": "label",
+                                  "props": {
+                                    "className": "text-xs font-bold text-slate-400 uppercase tracking-wide",
+                                    "children": "Quản lý Cấu hình (Profile)"
+                                  }
+                                },
+                                {
+                                  "type": "div",
+                                  "props": {
+                                    "className": "flex gap-2",
+                                    "children": [
+                                      {
+                                        "type": "input",
+                                        "props": {
+                                          "type": "file",
+                                          "aria-label": "Nhập cấu hình proxy JSON",
+                                          "ref": {
+                                            "current": null
+                                          },
+                                          "accept": ".json",
+                                          "className": "hidden",
+                                          "onChange": "[callback]"
+                                        }
+                                      },
+                                      {
+                                        "type": "button",
+                                        "props": {
+                                          "onClick": "[callback]",
+                                          "className": "text-[10px] bg-slate-700 hover:bg-slate-600 px-2 py-1 rounded text-slate-300",
+                                          "title": "Nhập Profile",
+                                          "children": "Nhập"
+                                        }
+                                      },
+                                      {
+                                        "type": "button",
+                                        "props": {
+                                          "onClick": "[callback]",
+                                          "className": "text-[10px] bg-slate-700 hover:bg-slate-600 px-2 py-1 rounded text-slate-300",
+                                          "title": "Xuất Profile",
+                                          "children": "Xuất"
+                                        }
+                                      }
+                                    ]
+                                  }
+                                }
+                              ]
+                            }
+                          },
+                          {
+                            "type": "div",
+                            "props": {
+                              "className": "flex gap-2 items-center",
+                              "children": [
+                                {
+                                  "type": "select",
+                                  "props": {
+                                    "aria-label": "Cấu hình proxy",
+                                    "value": "p1",
+                                    "onChange": "[callback]",
+                                    "className": "flex-grow bg-slate-800 border border-slate-600 rounded p-2 text-sm text-white",
+                                    "children": [
+                                      {
+                                        "type": "option",
+                                        "props": {
+                                          "value": "",
+                                          "children": "-- Chọn cấu hình --"
+                                        }
+                                      },
+                                      [
+                                        {
+                                          "type": "option",
+                                          "props": {
+                                            "value": "p1",
+                                            "children": "Native"
+                                          },
+                                          "key": "p1"
+                                        },
+                                        {
+                                          "type": "option",
+                                          "props": {
+                                            "value": "p2",
+                                            "children": "OpenAI"
+                                          },
+                                          "key": "p2"
+                                        }
+                                      ]
+                                    ]
+                                  }
+                                },
+                                {
+                                  "type": "button",
+                                  "props": {
+                                    "onClick": "[callback]",
+                                    "className": "px-3 py-2 bg-sky-600 hover:bg-sky-500 text-white rounded text-sm font-bold",
+                                    "title": "Lưu thay đổi vào Profile hiện tại",
+                                    "children": "Lưu"
+                                  }
+                                },
+                                {
+                                  "type": "button",
+                                  "props": {
+                                    "onClick": "[callback]",
+                                    "className": "px-3 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded text-sm font-bold",
+                                    "title": "Tạo Profile mới từ cài đặt hiện tại",
+                                    "children": "+"
+                                  }
+                                },
+                                {
+                                  "type": "button",
+                                  "props": {
+                                    "onClick": "[callback]",
+                                    "disabled": false,
+                                    "className": "px-3 py-2 bg-red-900/50 hover:bg-red-900 text-red-200 rounded text-sm font-bold disabled:opacity-50",
+                                    "title": "Xóa Profile",
+                                    "children": "✕"
+                                  }
+                                }
+                              ]
+                            }
+                          }
+                        ]
+                      }
+                    },
+                    {
+                      "type": "div",
+                      "props": {
+                        "className": "space-y-4 border border-slate-700 p-4 rounded-lg bg-slate-900/30",
+                        "children": [
+                          {
+                            "type": "div",
+                            "props": {
+                              "children": [
+                                {
+                                  "type": "label",
+                                  "props": {
+                                    "className": "block text-sm font-medium text-slate-300 mb-1",
+                                    "children": "Proxy URL"
+                                  }
+                                },
+                                {
+                                  "type": "div",
+                                  "props": {
+                                    "className": "flex gap-2",
+                                    "children": [
+                                      {
+                                        "type": "input",
+                                        "props": {
+                                          "type": "text",
+                                          "aria-label": "Proxy URL",
+                                          "value": "https://proxy.test/",
+                                          "onChange": "[callback]",
+                                          "className": "flex-grow bg-slate-700 border border-slate-600 rounded-md p-2 text-white font-mono text-sm",
+                                          "placeholder": "http://127.0.0.1:8889"
+                                        }
+                                      },
+                                      {
+                                        "type": "button",
+                                        "props": {
+                                          "onClick": "[callback]",
+                                          "disabled": false,
+                                          "className": "px-3 bg-slate-700 text-slate-300 rounded hover:bg-slate-600 flex items-center justify-center",
+                                          "title": "Tải danh sách Model từ Proxy",
+                                          "children": {
+                                            "type": "svg",
+                                            "props": {
+                                              "aria-hidden": "true",
+                                              "xmlns": "http://www.w3.org/2000/svg",
+                                              "className": "h-5 w-5",
+                                              "viewBox": "0 0 20 20",
+                                              "fill": "currentColor",
+                                              "children": {
+                                                "type": "path",
+                                                "props": {
+                                                  "fillRule": "evenodd",
+                                                  "d": "M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z",
+                                                  "clipRule": "evenodd"
+                                                }
+                                              }
+                                            }
+                                          }
+                                        }
+                                      },
+                                      {
+                                        "type": "button",
+                                        "props": {
+                                          "onClick": "[callback]",
+                                          "className": "px-3 bg-red-900/30 text-red-400 rounded hover:bg-red-900/50 flex items-center justify-center border border-red-900/50",
+                                          "title": "Xoá Models lưu cục bộ (kể cả Model nhập tay)",
+                                          "children": {
+                                            "type": "svg",
+                                            "props": {
+                                              "xmlns": "http://www.w3.org/2000/svg",
+                                              "className": "h-5 w-5",
+                                              "viewBox": "0 0 20 20",
+                                              "fill": "currentColor",
+                                              "children": {
+                                                "type": "path",
+                                                "props": {
+                                                  "fillRule": "evenodd",
+                                                  "d": "M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z",
+                                                  "clipRule": "evenodd"
+                                                }
+                                              }
+                                            }
+                                          }
+                                        }
+                                      },
+                                      {
+                                        "type": "button",
+                                        "props": {
+                                          "onClick": "[callback]",
+                                          "disabled": false,
+                                          "className": "px-4 bg-indigo-600 text-white rounded hover:bg-indigo-500 disabled:bg-slate-600",
+                                          "children": "Ping"
+                                        }
+                                      }
+                                    ]
+                                  }
+                                },
+                                false,
+                                false
+                              ]
+                            }
+                          },
+                          {
+                            "type": "TextInput",
+                            "props": {
+                              "label": "Password / Key",
+                              "value": "proxy-test",
+                              "onChange": "[callback]",
+                              "type": "password"
+                            }
+                          },
+                          {
+                            "type": "ToggleSwitch",
+                            "props": {
+                              "label": "Ghi nhớ Password / Key trên thiết bị này",
+                              "checked": false,
+                              "onChange": "[callback]"
+                            }
+                          },
+                          {
+                            "type": "div",
+                            "props": {
+                              "className": "grid grid-cols-1 md:grid-cols-2 gap-4 pt-2",
+                              "children": [
+                                {
+                                  "type": "div",
+                                  "props": {
+                                    "children": {
+                                      "type": "ToggleSwitch",
+                                      "props": {
+                                        "label": "Legacy Mode",
+                                        "checked": false,
+                                        "onChange": "[callback]"
+                                      }
+                                    }
+                                  }
+                                },
+                                {
+                                  "type": "div",
+                                  "props": {
+                                    "children": {
+                                      "type": "ToggleSwitch",
+                                      "props": {
+                                        "label": "Proxy cho Tools",
+                                        "checked": true,
+                                        "onChange": "[callback]"
+                                      }
+                                    }
+                                  }
+                                }
+                              ]
+                            }
+                          }
+                        ]
+                      }
+                    },
+                    {
+                      "type": "div",
+                      "props": {
+                        "className": "bg-slate-900/50 p-4 rounded-lg border border-slate-700",
+                        "children": [
+                          {
+                            "type": "label",
+                            "props": {
+                              "className": "block text-sm font-bold text-sky-400 mb-3",
+                              "children": "Giao thức Proxy"
+                            }
+                          },
+                          {
+                            "type": "div",
+                            "props": {
+                              "className": "grid grid-cols-1 md:grid-cols-2 gap-3",
+                              "children": [
+                                {
+                                  "type": "button",
+                                  "props": {
+                                    "onClick": "[callback]",
+                                    "aria-pressed": false,
+                                    "className": "p-3 rounded-lg border text-sm flex items-center justify-center gap-2  bg-slate-800 border-slate-600 text-slate-400 hover:bg-slate-700",
+                                    "children": [
+                                      {
+                                        "type": "span",
+                                        "props": {
+                                          "children": "🌐"
+                                        }
+                                      },
+                                      " Chuẩn OpenAI"
+                                    ]
+                                  }
+                                },
+                                {
+                                  "type": "button",
+                                  "props": {
+                                    "onClick": "[callback]",
+                                    "aria-pressed": true,
+                                    "className": "p-3 rounded-lg border text-sm flex items-center justify-center gap-2  bg-amber-600/30 border-amber-500 text-amber-200",
+                                    "children": [
+                                      {
+                                        "type": "span",
+                                        "props": {
+                                          "children": "⚡"
+                                        }
+                                      },
+                                      " Google Native"
+                                    ]
+                                  }
+                                }
+                              ]
+                            }
+                          }
+                        ]
+                      }
+                    },
+                    {
+                      "type": "div",
+                      "props": {
+                        "className": "grid grid-cols-1 gap-4",
+                        "children": [
+                          {
+                            "type": "ModelSelect",
+                            "props": {
+                              "provider": "proxy",
+                              "label": "Chat Model ID",
+                              "value": "custom-proxy",
+                              "onChange": "[callback]",
+                              "options": [
+                                {
+                                  "id": "gemini-2.5-pro",
+                                  "name": "Gemini Pro"
+                                },
+                                {
+                                  "id": "claude-opus-4.5",
+                                  "name": "Claude Opus 4.5"
+                                },
+                                {
+                                  "id": "claude-3-5-sonnet-latest",
+                                  "name": "Claude 3.5 Sonnet"
+                                },
+                                {
+                                  "id": "gpt-4o",
+                                  "name": "GPT-4o"
+                                }
+                              ]
+                            }
+                          },
+                          {
+                            "type": "ModelSelect",
+                            "props": {
+                              "provider": "proxy",
+                              "label": "Tool Model ID",
+                              "value": "tool-proxy",
+                              "onChange": "[callback]",
+                              "options": [
+                                {
+                                  "id": "gemini-2.5-pro",
+                                  "name": "Gemini Pro"
+                                },
+                                {
+                                  "id": "claude-opus-4.5",
+                                  "name": "Claude Opus 4.5"
+                                },
+                                {
+                                  "id": "claude-3-5-sonnet-latest",
+                                  "name": "Claude 3.5 Sonnet"
+                                },
+                                {
+                                  "id": "gpt-4o",
+                                  "name": "GPT-4o"
+                                }
+                              ]
+                            }
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        {
+          "type": "div",
+          "props": {
+            "className": "border-t border-slate-700 pt-6",
+            "children": [
+              {
+                "type": "h3",
+                "props": {
+                  "className": "text-xl font-bold text-sky-400 mb-4",
+                  "children": "3. Cấu hình Nâng cao"
+                }
+              },
+              {
+                "type": "div",
+                "props": {
+                  "className": "bg-slate-900/50 p-4 rounded-lg border border-slate-700 space-y-4",
+                  "children": [
+                    {
+                      "type": "ToggleSwitch",
+                      "props": {
+                        "label": "Tự động Kết nối Trực tiếp (Direct Fetch Bypass)",
+                        "checked": true,
+                        "onChange": "[callback]"
+                      }
+                    },
+                    {
+                      "type": "p",
+                      "props": {
+                        "className": "text-xs text-slate-400 ml-8",
+                        "children": "Bỏ qua máy chủ trung gian (proxy) đối với các API an toàn (như Google, OpenRouter) để tối ưu tốc độ và tránh lỗi timeout. Tắt chế độ này có thể giải quyết các vấn đề CORS trên một số trình duyệt, nhưng tăng nguy cơ lỗi Timeout."
+                      }
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        {
+          "type": "div",
+          "props": {
+            "className": "flex justify-end items-center gap-4 pt-4 border-t border-slate-700 sticky bottom-0 bg-slate-800/90 p-2  rounded-b-xl",
+            "children": [
+              false,
+              false,
+              {
+                "type": "button",
+                "props": {
+                  "onClick": "[callback]",
+                  "className": "bg-sky-600 hover:bg-sky-700 text-white font-bold py-3 px-8 rounded-lg  active:scale-95 shadow-lg shadow-sky-900/30",
+                  "children": "Áp Dụng"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    }
+  }
+]

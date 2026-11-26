@@ -1,0 +1,143 @@
+{
+  "typescript": "5.8.3",
+  "sourceFiles": 156,
+  "parseErrors": [],
+  "scopeCandidatesReviewed": 5985,
+  "zeroReferenceCandidates": [
+    {
+      "file": "src/app/persistence/entity-repositories.js",
+      "name": "_editor",
+      "kind": "binding-element",
+      "line": 17,
+      "refs": 0
+    },
+    {
+      "file": "src/app/persistence/entity-repositories.js",
+      "name": "_generation",
+      "kind": "binding-element",
+      "line": 115,
+      "refs": 0
+    },
+    {
+      "file": "src/app/persistence/entity-repositories.js",
+      "name": "_editor",
+      "kind": "binding-element",
+      "line": 115,
+      "refs": 0
+    },
+    {
+      "file": "src/features/catalog/character-file.js",
+      "name": "n",
+      "kind": "binding-element",
+      "line": 15,
+      "refs": 0
+    },
+    {
+      "file": "src/runtime/card-runtime/core.template.js",
+      "name": "TAVERN_VERSION",
+      "kind": "local-pure-value",
+      "line": 12,
+      "refs": 0
+    },
+    {
+      "file": "src/runtime/card-runtime/core.template.js",
+      "name": "asObject",
+      "kind": "local-function",
+      "line": 53,
+      "refs": 0
+    },
+    {
+      "file": "src/runtime/card-runtime/core.template.js",
+      "name": "uuid",
+      "kind": "local-function",
+      "line": 61,
+      "refs": 0
+    },
+    {
+      "file": "src/runtime/card-runtime/core.template.js",
+      "name": "unsupported",
+      "kind": "local-function",
+      "line": 302,
+      "refs": 0
+    },
+    {
+      "file": "src/vendor/google-genai-runtime.js",
+      "name": "n",
+      "kind": "binding-element",
+      "line": 5,
+      "refs": 0
+    },
+    {
+      "file": "src/vendor/google-genai-runtime.js",
+      "name": "n",
+      "kind": "binding-element",
+      "line": 5,
+      "refs": 0
+    },
+    {
+      "file": "src/vendor/google-genai-runtime.js",
+      "name": "e",
+      "kind": "binding-element",
+      "line": 5,
+      "refs": 0
+    },
+    {
+      "file": "src/vendor/google-genai-runtime.js",
+      "name": "n",
+      "kind": "binding-element",
+      "line": 5,
+      "refs": 0
+    },
+    {
+      "file": "src/vendor/google-genai-runtime.js",
+      "name": "e",
+      "kind": "binding-element",
+      "line": 5,
+      "refs": 0
+    },
+    {
+      "file": "src/vendor/google-genai-runtime.js",
+      "name": "t",
+      "kind": "binding-element",
+      "line": 5,
+      "refs": 0
+    },
+    {
+      "file": "src/vendor/google-genai-runtime.js",
+      "name": "n",
+      "kind": "binding-element",
+      "line": 5,
+      "refs": 0
+    },
+    {
+      "file": "src/vendor/google-genai-runtime.js",
+      "name": "r",
+      "kind": "binding-element",
+      "line": 5,
+      "refs": 0
+    },
+    {
+      "file": "src/vendor/react-state-runtime.js",
+      "name": "At",
+      "kind": "local-pure-value",
+      "line": 6,
+      "refs": 0
+    },
+    {
+      "file": "src/vendor/react-state-runtime.js",
+      "name": "It",
+      "kind": "local-pure-value",
+      "line": 6,
+      "refs": 0
+    }
+  ],
+  "unreachableFromLiteralRoots": [
+    "src/runtime/card-runtime/bridge/rpc-client.js",
+    "src/runtime/card-runtime/core.template.js"
+  ],
+  "limitations": [
+    "Zero lexical references is not proof of dead code. Review exports, eval, generated scripts, side effects, tests and external consumers before removal.",
+    "Literal root reachability does not model computed imports or generated build-time modules.",
+    "Vendor code is inventoried but not automatically edited."
+  ]
+}

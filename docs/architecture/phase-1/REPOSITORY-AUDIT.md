@@ -1,0 +1,28 @@
+# R1.0 | Kiểm toán repository
+
+> Baseline: `398165a0954f98de6c3553f32e6af2308c963260` (main, ứng dụng 1.3.6). Phân tích tĩnh; chưa chạy build/AST/runtime. Quyết định kiến trúc là đề xuất cho Phase 1, chưa thay đổi repository.
+
+## Kiểm kê baseline
+191 file; 64 trong src, 42 assets, 1 legacy, 14 build, 6 android-native, 36 tests, 2 scripts, 13 docs, 3 .github và 10 root. Tổng 5.322.006 byte (kích thước file Git, không phải APK). Legacy 1.718.630 byte; production 1.528.860 byte. 34 cặp blob giống hệt, 300.944 byte bản sao. Production có 28 dòng, dòng dài nhất 1.472.422 ký tự. 23 đường dẫn import tương đối phát hiện bằng văn bản.
+
+## Register
+| ID | Phát hiện | Mức | Bằng chứng / hành động |
+|---|---|---|---|
+| A-001–003 | Legacy minified làm đầu vào, 12 transform, thiếu component source hoàn chỉnh | P0 | [build/build-production-bundle.mjs](https://github.com/tvhuy99-web/SillyTavern-Card-Studio-v1.3.4/blob/398165a0954f98de6c3553f32e6af2308c963260/build/build-production-bundle.mjs); trích xuất source, build tiêu chuẩn |
+| A-004–005 | Nghiệp vụ trùng, UI đọc DOM | P0 | [src/ui/model-connection-test.js](https://github.com/tvhuy99-web/SillyTavern-Card-Studio-v1.3.4/blob/398165a0954f98de6c3553f32e6af2308c963260/src/ui/model-connection-test.js); chuyển sang controller và state |
+| A-006 | Source entry import đường dẫn generated | P1 | [src/app/entry.js](https://github.com/tvhuy99-web/SillyTavern-Card-Studio-v1.3.4/blob/398165a0954f98de6c3553f32e6af2308c963260/src/app/entry.js); entry thực sự chạy từ src |
+| A-007–010 | Provider, storage, diagnostics và DI chưa có quyền sở hữu nhất quán | P1 | [src/providers/common/generation-gateway.js](https://github.com/tvhuy99-web/SillyTavern-Card-Studio-v1.3.4/blob/398165a0954f98de6c3553f32e6af2308c963260/src/providers/common/generation-gateway.js), [src/features/chat/conversation-service.js](https://github.com/tvhuy99-web/SillyTavern-Card-Studio-v1.3.4/blob/398165a0954f98de6c3553f32e6af2308c963260/src/features/chat/conversation-service.js) |
+| A-011 | 23 jsfrag dùng scope chung | P1 | [build/build-card-runtime.mjs](https://github.com/tvhuy99-web/SillyTavern-Card-Studio-v1.3.4/blob/398165a0954f98de6c3553f32e6af2308c963260/build/build-card-runtime.mjs); module hóa, giữ ABI |
+| A-012 | AI Studio Java plugin 1.356 dòng, nhiều trách nhiệm | P1 | [android-native/AiStudioTextPlugin.java](https://github.com/tvhuy99-web/SillyTavern-Card-Studio-v1.3.4/blob/398165a0954f98de6c3553f32e6af2308c963260/android-native/AiStudioTextPlugin.java) |
+| A-013–014 | Test tìm chuỗi minify; thiếu lockfile và dependency manifest đầy đủ | P1 | [tests/architecture-m4.mjs](https://github.com/tvhuy99-web/SillyTavern-Card-Studio-v1.3.4/blob/398165a0954f98de6c3553f32e6af2308c963260/tests/architecture-m4.mjs), [package.json](https://github.com/tvhuy99-web/SillyTavern-Card-Studio-v1.3.4/blob/398165a0954f98de6c3553f32e6af2308c963260/package.json) |
+| A-015–016 | Metadata phân tán, tên runtime gắn mốc M4–M8 | P2 | [version.json](https://github.com/tvhuy99-web/SillyTavern-Card-Studio-v1.3.4/blob/398165a0954f98de6c3553f32e6af2308c963260/version.json), [src/app/entry.js](https://github.com/tvhuy99-web/SillyTavern-Card-Studio-v1.3.4/blob/398165a0954f98de6c3553f32e6af2308c963260/src/app/entry.js) |
+| A-017–018 | Chưa có boundary checker; Android config tạo qua CI | P1 | [.github/workflows/android-apk.yml](https://github.com/tvhuy99-web/SillyTavern-Card-Studio-v1.3.4/blob/398165a0954f98de6c3553f32e6af2308c963260/.github/workflows/android-apk.yml) |
+| BUG-001 | Model Test Proxy gọi Vs sau khi transform xóa hàm cũ | P0 | [build/transforms/m4-chat-generation.mjs#L66](https://github.com/tvhuy99-web/SillyTavern-Card-Studio-v1.3.4/blob/398165a0954f98de6c3553f32e6af2308c963260/build/transforms/m4-chat-generation.mjs#L66); production blob; test hành vi |
+| BUG-002 | Nhãn Chat/Tool Model ID suy luận Proxy, AI Studio cũng dùng nhãn này | P0 | [src/ui/model-connection-test.js#L132-L154](https://github.com/tvhuy99-web/SillyTavern-Card-Studio-v1.3.4/blob/398165a0954f98de6c3553f32e6af2308c963260/src/ui/model-connection-test.js#L132-L154); kiểm tra điều kiện enhancer thật |
+| BUG-003 | Provider ID lạ rơi vào Gemini | P1 | [src/providers/common/generation-gateway.js](https://github.com/tvhuy99-web/SillyTavern-Card-Studio-v1.3.4/blob/398165a0954f98de6c3553f32e6af2308c963260/src/providers/common/generation-gateway.js); reject cấu hình không hợp lệ |
+| BUG-004 | Proxy generation dùng OpenAI endpoint, test có Google Native | P0 | [src/providers/proxy/generation.js](https://github.com/tvhuy99-web/SillyTavern-Card-Studio-v1.3.4/blob/398165a0954f98de6c3553f32e6af2308c963260/src/providers/proxy/generation.js); xác minh routing toàn luồng |
+| CI-001 | git diff generated output chưa bao gồm M8 | P1 | [.github/workflows/bundle-regression.yml#L33-L47](https://github.com/tvhuy99-web/SillyTavern-Card-Studio-v1.3.4/blob/398165a0954f98de6c3553f32e6af2308c963260/.github/workflows/bundle-regression.yml#L33-L47); check toàn bộ output |
+| DUP-011 | 21 thuộc tính API runtime khai báo lại | P1 | [src/runtime/card-runtime/core.template.js#L309-L349](https://github.com/tvhuy99-web/SillyTavern-Card-Studio-v1.3.4/blob/398165a0954f98de6c3553f32e6af2308c963260/src/runtime/card-runtime/core.template.js#L309-L349); xem DEAD-CODE-REGISTER |
+
+## Ranh giới bằng chứng
+Đã đọc hai bundle trực tiếp bằng Git blob, cây Git và nhiều module/transform. Các số đếm từ văn bản không phải AST hoặc runtime coverage. 36 test được tham chiếu ở CI, chưa chạy test. Git clone thất bại do DNS trong môi trường thực thi; không có bản source React gốc đầy đủ trong cây hiện tại. Không khẳng định lỗi runtime đã tái hiện. Chưa xóa hoặc sửa file nào.

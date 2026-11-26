@@ -5,7 +5,6 @@ import {
   createMemoryStorage,
   createProxyPersistence,
 } from '../src/providers/proxy/persistence.js';
-import { applyProxyPersistenceTransform } from '../build/transforms/proxy-persistence.mjs';
 
 const local = createMemoryStorage({
   [K.profilesLegacy]: JSON.stringify([
@@ -54,19 +53,10 @@ imported.importProfilesFromBackup(exportedProfiles);
 assert.equal(imported.getProfiles()[0].id, 'p2');
 assert.equal(imported.getProfiles()[0].password, 'temporary');
 
-const legacyBundle = fs.readFileSync(
-  new URL('../legacy/app-bundle-input-v1.3.6.js', import.meta.url),
-  'utf8',
-);
-const transformed = applyProxyPersistenceTransform(legacyBundle);
-assert.ok(transformed.includes('proxy-persistence-service-v1.3.6.js?v=1.3.6-m2-final'));
-assert.ok(transformed.includes('Ghi nhớ Password / Key trên thiết bị này'));
-assert.ok(!transformed.includes('sessionStorage.getItem(Mo)'));
-assert.ok(!transformed.includes('sessionStorage.setItem(Mo,JSON.stringify(e))'));
-assert.ok(!transformed.includes('sessionStorage.getItem(Oo)||""'));
-assert.ok(!transformed.includes('sessionStorage.setItem(Oo,e.trim())'));
-assert.ok(!transformed.includes('Storage.prototype.getItem ='));
-assert.ok(transformed.includes('__stsProxyPersistence.exportProfilesForBackup()'));
-assert.ok(transformed.includes('__stsProxyPersistence.importProfilesFromBackup(r)'));
-
+const sections = fs.readFileSync(new URL('../src/ui/settings/provider-sections.js', import.meta.url), 'utf8');
+const settings = fs.readFileSync(new URL('../src/app/persistence/backup-codec.js', import.meta.url), 'utf8');
+assert.match(sections,/Ghi nhớ Password/);
+assert.match(settings,/exportProfilesForBackup/);
+assert.match(settings,/importProfilesFromBackup/);
+assert.doesNotMatch(sections,/Storage.prototype.getItem =/);
 console.log('proxy persistence ownership tests: OK');

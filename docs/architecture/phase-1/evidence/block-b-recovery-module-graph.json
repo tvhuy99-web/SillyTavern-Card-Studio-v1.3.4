@@ -1,0 +1,3086 @@
+{
+  "typescript": "5.8.3",
+  "graphs": [
+    {
+      "directory": "src",
+      "nodes": [
+        "src/app/entry.js",
+        "src/app/host.js",
+        "src/app/lifecycle/application-lifecycle.js",
+        "src/app/lifecycle/mount-application.js",
+        "src/app/persistence/app-database.js",
+        "src/app/persistence/backup-codec.js",
+        "src/app/persistence/entity-repositories.js",
+        "src/app/persistence/session-save-coordinator.js",
+        "src/app/persistence/session-state.js",
+        "src/app/state/application-stores.js",
+        "src/app/state/character-store.js",
+        "src/app/state/lorebook-store.js",
+        "src/app/state/persona-store.js",
+        "src/app/state/preset-store.js",
+        "src/app/state/runtime-state.js",
+        "src/app/state/session-defaults.js",
+        "src/app/state/session-rpg-actions.js",
+        "src/app/state/session-store.js",
+        "src/app/state/settings-keys.js",
+        "src/core/async/cancellation.js",
+        "src/core/async/optional-module.js",
+        "src/core/async/serial-queue.js",
+        "src/core/parse-relaxed-json.js",
+        "src/diagnostics/aistudio-log.js",
+        "src/diagnostics/android-export-download.js",
+        "src/diagnostics/card-runtime-diagnostics.js",
+        "src/diagnostics/state.js",
+        "src/diagnostics/ui/diagnostic-panels.js",
+        "src/features/arena/state-machine.js",
+        "src/features/catalog/catalog-mutations.js",
+        "src/features/catalog/character-export.js",
+        "src/features/catalog/character-file.js",
+        "src/features/catalog/default-character.js",
+        "src/features/catalog/ui/catalog-screens.js",
+        "src/features/catalog/ui/character-sections.js",
+        "src/features/chat/chat-import.js",
+        "src/features/chat/conversation-service.js",
+        "src/features/chat/epub-import.js",
+        "src/features/chat/hooks/session-hooks.js",
+        "src/features/chat/hooks/use-card-runtime.js",
+        "src/features/chat/hooks/use-chat-session.js",
+        "src/features/chat/hooks/use-conversation.js",
+        "src/features/chat/hooks/use-diagnostics.js",
+        "src/features/chat/hooks/use-message-history.js",
+        "src/features/chat/hooks/use-response-pipeline.js",
+        "src/features/chat/hooks/use-session-persistence.js",
+        "src/features/chat/hooks/use-slash-commands.js",
+        "src/features/chat/hooks/use-smart-context.js",
+        "src/features/chat/hooks/use-smart-scan.js",
+        "src/features/chat/live-stream-store.js",
+        "src/features/chat/regex-processing.js",
+        "src/features/chat/response-processor.js",
+        "src/features/chat/summary-generation.js",
+        "src/features/chat/turn-policy.js",
+        "src/features/chat/ui/chat-controls.js",
+        "src/features/chat/ui/chat-route.js",
+        "src/features/chat/ui/message-rendering.js",
+        "src/features/chat/ui/session-screens.js",
+        "src/features/presets/default-preset.js",
+        "src/features/presets/preset-file.js",
+        "src/features/presets/prompt-normalizer.js",
+        "src/features/presets/ui/preset-sections.js",
+        "src/features/prompts/legacy-prompt-builder.js",
+        "src/features/prompts/macro-processing.js",
+        "src/features/prompts/macro-reference.js",
+        "src/features/prompts/prompt-service.js",
+        "src/features/rpg/action-proposal-prompt.js",
+        "src/features/rpg/default-database.js",
+        "src/features/rpg/rpg-import.js",
+        "src/features/rpg/table-lorebook-links.js",
+        "src/features/rpg/table-processing.js",
+        "src/features/rpg/ui/rpg-screens.js",
+        "src/features/speech/audio-conversion.js",
+        "src/features/speech/speech-engine.js",
+        "src/features/state/default-feature-settings.js",
+        "src/features/state/feature-settings.js",
+        "src/features/state/initial-variable-service.js",
+        "src/features/state/script-execution.js",
+        "src/features/state/smart-state-service.js",
+        "src/features/state/variable-scope-service.js",
+        "src/features/world-info/embedding-index-repository.js",
+        "src/features/world-info/embedding-service.js",
+        "src/features/world-info/embeddinggemma2-litert-bridge.js",
+        "src/features/world-info/keyword-matching.js",
+        "src/features/world-info/lorebook-file.js",
+        "src/features/world-info/lorebook-mutations.js",
+        "src/features/world-info/native-embedding-bridge.js",
+        "src/features/world-info/smart-scan-service.js",
+        "src/features/world-info/sticky-compat.js",
+        "src/features/world-info/ui/embedding-sync-hook.js",
+        "src/features/world-info/ui/generate-entry-button.js",
+        "src/features/world-info/ui/lorebook-controls.js",
+        "src/features/world-info/ui/world-info-screens.js",
+        "src/platform/android/native-bridge.js",
+        "src/providers/aistudio/model-catalog.js",
+        "src/providers/aistudio/text.js",
+        "src/providers/common/connection-repository.js",
+        "src/providers/common/generation-gateway.js",
+        "src/providers/common/generation-utils.js",
+        "src/providers/common/host-provider-bindings.js",
+        "src/providers/common/legacy-generation-adapters.js",
+        "src/providers/common/legacy-response-utils.js",
+        "src/providers/common/legacy-transport.js",
+        "src/providers/common/model-catalog.js",
+        "src/providers/common/provider-registry.js",
+        "src/providers/gemini/generation.js",
+        "src/providers/openrouter/generation.js",
+        "src/providers/proxy/generation.js",
+        "src/providers/proxy/persistence.js",
+        "src/runtime/card-runtime/bridge/rpc-client.js",
+        "src/runtime/card-runtime/core.template.js",
+        "src/runtime/card-runtime/frame-context.js",
+        "src/runtime/card-runtime/host/catalog-rpc.js",
+        "src/runtime/card-runtime/host/chat-rpc.js",
+        "src/runtime/card-runtime/host/compatibility-data.js",
+        "src/runtime/card-runtime/host/context-adapters.js",
+        "src/runtime/card-runtime/host/generation-tasks.js",
+        "src/runtime/card-runtime/host/lorebook-rpc.js",
+        "src/runtime/card-runtime/host/method-router.js",
+        "src/runtime/card-runtime/host/rpc-dispatcher.js",
+        "src/runtime/card-runtime/host/runtime-events.js",
+        "src/runtime/card-runtime/host/runtime-prompt.js",
+        "src/runtime/card-runtime/host/slash-command-reference.js",
+        "src/runtime/card-runtime/host/slash-commands.js",
+        "src/runtime/card-runtime/host/state-rpc.js",
+        "src/runtime/card-runtime/host/utility-rpc.js",
+        "src/runtime/card-runtime/renderer.js",
+        "src/ui/components/dialog-focus.js",
+        "src/ui/components/display-formatting.js",
+        "src/ui/components/file-name-dialog.js",
+        "src/ui/components/form-controls.js",
+        "src/ui/components/icon.js",
+        "src/ui/components/input-controls.js",
+        "src/ui/components/radio-navigation.js",
+        "src/ui/components/recovered-primitives.js",
+        "src/ui/components/section-controls.js",
+        "src/ui/components/tab-controls.js",
+        "src/ui/model-connection-test.js",
+        "src/ui/runtime-guard.js",
+        "src/ui/settings/connection-settings-screen.js",
+        "src/ui/settings/gemini-catalog-hook.js",
+        "src/ui/settings/model-test-button.js",
+        "src/ui/settings/provider-sections.js",
+        "src/ui/settings/settings-controller.js",
+        "src/ui/settings/settings-screens.js",
+        "src/ui/shell/application-shell.js",
+        "src/ui/shell/providers.js",
+        "src/vendor/google-genai-runtime.js",
+        "src/vendor/html-sanitizer-runtime.js",
+        "src/vendor/immer-mapset.js",
+        "src/vendor/lodash-runtime.js",
+        "src/vendor/markdown-runtime.js",
+        "src/vendor/react-state-runtime.js"
+      ],
+      "edges": [
+        {
+          "from": "src/app/entry.js",
+          "specifier": "../providers/common/connection-repository.js",
+          "kind": "static-import",
+          "to": "src/providers/common/connection-repository.js",
+          "exists": true
+        },
+        {
+          "from": "src/app/entry.js",
+          "specifier": "../diagnostics/aistudio-log.js",
+          "kind": "static-import",
+          "to": "src/diagnostics/aistudio-log.js",
+          "exists": true
+        },
+        {
+          "from": "src/app/entry.js",
+          "specifier": "../diagnostics/android-export-download.js",
+          "kind": "static-import",
+          "to": "src/diagnostics/android-export-download.js",
+          "exists": true
+        },
+        {
+          "from": "src/app/entry.js",
+          "specifier": "../providers/proxy/persistence.js?v=1.3.6-m2-final",
+          "kind": "static-import",
+          "to": "src/providers/proxy/persistence.js",
+          "exists": true
+        },
+        {
+          "from": "src/app/entry.js",
+          "specifier": "../ui/model-connection-test.js?v=1.3.6-m7.1",
+          "kind": "static-import",
+          "to": "src/ui/model-connection-test.js",
+          "exists": true
+        },
+        {
+          "from": "src/app/entry.js",
+          "specifier": "../ui/runtime-guard.js?v=1.3.6-m7.1",
+          "kind": "static-import",
+          "to": "src/ui/runtime-guard.js",
+          "exists": true
+        },
+        {
+          "from": "src/app/entry.js",
+          "specifier": "../../assets/app-production-v1.3.6.js?v=1.3.6-m7.5",
+          "kind": "module-relative-url",
+          "to": "assets/app-production-v1.3.6.js",
+          "exists": true
+        },
+        {
+          "from": "src/app/host.js",
+          "specifier": "../providers/common/host-provider-bindings.js",
+          "kind": "static-import",
+          "to": "src/providers/common/host-provider-bindings.js",
+          "exists": true
+        },
+        {
+          "from": "src/app/host.js",
+          "specifier": "../core/async/optional-module.js",
+          "kind": "static-import",
+          "to": "src/core/async/optional-module.js",
+          "exists": true
+        },
+        {
+          "from": "src/app/host.js",
+          "specifier": "../vendor/immer-mapset.js",
+          "kind": "static-import",
+          "to": "src/vendor/immer-mapset.js",
+          "exists": true
+        },
+        {
+          "from": "src/app/host.js",
+          "specifier": "./lifecycle/mount-application.js",
+          "kind": "static-import",
+          "to": "src/app/lifecycle/mount-application.js",
+          "exists": true
+        },
+        {
+          "from": "src/app/host.js",
+          "specifier": "../vendor/react-state-runtime.js",
+          "kind": "static-import",
+          "to": "src/vendor/react-state-runtime.js",
+          "exists": true
+        },
+        {
+          "from": "src/app/host.js",
+          "specifier": "../vendor/google-genai-runtime.js",
+          "kind": "static-import",
+          "to": "src/vendor/google-genai-runtime.js",
+          "exists": true
+        },
+        {
+          "from": "src/app/host.js",
+          "specifier": "../ui/shell/providers.js",
+          "kind": "static-import",
+          "to": "src/ui/shell/providers.js",
+          "exists": true
+        },
+        {
+          "from": "src/app/host.js",
+          "specifier": "../features/catalog/ui/catalog-screens.js",
+          "kind": "static-import",
+          "to": "src/features/catalog/ui/catalog-screens.js",
+          "exists": true
+        },
+        {
+          "from": "src/app/host.js",
+          "specifier": "../features/rpg/ui/rpg-screens.js",
+          "kind": "static-import",
+          "to": "src/features/rpg/ui/rpg-screens.js",
+          "exists": true
+        },
+        {
+          "from": "src/app/host.js",
+          "specifier": "../features/world-info/ui/world-info-screens.js",
+          "kind": "static-import",
+          "to": "src/features/world-info/ui/world-info-screens.js",
+          "exists": true
+        },
+        {
+          "from": "src/app/host.js",
+          "specifier": "../ui/settings/settings-screens.js",
+          "kind": "static-import",
+          "to": "src/ui/settings/settings-screens.js",
+          "exists": true
+        },
+        {
+          "from": "src/app/host.js",
+          "specifier": "../features/chat/ui/session-screens.js",
+          "kind": "static-import",
+          "to": "src/features/chat/ui/session-screens.js",
+          "exists": true
+        },
+        {
+          "from": "src/app/host.js",
+          "specifier": "../features/chat/ui/message-rendering.js",
+          "kind": "static-import",
+          "to": "src/features/chat/ui/message-rendering.js",
+          "exists": true
+        },
+        {
+          "from": "src/app/host.js",
+          "specifier": "../diagnostics/ui/diagnostic-panels.js",
+          "kind": "static-import",
+          "to": "src/diagnostics/ui/diagnostic-panels.js",
+          "exists": true
+        },
+        {
+          "from": "src/app/host.js",
+          "specifier": "./state/application-stores.js",
+          "kind": "static-import",
+          "to": "src/app/state/application-stores.js",
+          "exists": true
+        },
+        {
+          "from": "src/app/host.js",
+          "specifier": "../features/chat/hooks/session-hooks.js",
+          "kind": "static-import",
+          "to": "src/features/chat/hooks/session-hooks.js",
+          "exists": true
+        },
+        {
+          "from": "src/app/host.js",
+          "specifier": "../features/rpg/default-database.js",
+          "kind": "static-import",
+          "to": "src/features/rpg/default-database.js",
+          "exists": true
+        },
+        {
+          "from": "src/app/host.js",
+          "specifier": "../features/catalog/default-character.js",
+          "kind": "static-import",
+          "to": "src/features/catalog/default-character.js",
+          "exists": true
+        },
+        {
+          "from": "src/app/host.js",
+          "specifier": "../features/presets/default-preset.js",
+          "kind": "static-import",
+          "to": "src/features/presets/default-preset.js",
+          "exists": true
+        },
+        {
+          "from": "src/app/host.js",
+          "specifier": "../ui/components/input-controls.js",
+          "kind": "static-import",
+          "to": "src/ui/components/input-controls.js",
+          "exists": true
+        },
+        {
+          "from": "src/app/host.js",
+          "specifier": "../features/catalog/ui/character-sections.js",
+          "kind": "static-import",
+          "to": "src/features/catalog/ui/character-sections.js",
+          "exists": true
+        },
+        {
+          "from": "src/app/host.js",
+          "specifier": "../features/presets/ui/preset-sections.js",
+          "kind": "static-import",
+          "to": "src/features/presets/ui/preset-sections.js",
+          "exists": true
+        },
+        {
+          "from": "src/app/host.js",
+          "specifier": "../features/world-info/ui/lorebook-controls.js",
+          "kind": "static-import",
+          "to": "src/features/world-info/ui/lorebook-controls.js",
+          "exists": true
+        },
+        {
+          "from": "src/app/host.js",
+          "specifier": "../features/chat/ui/chat-controls.js",
+          "kind": "static-import",
+          "to": "src/features/chat/ui/chat-controls.js",
+          "exists": true
+        },
+        {
+          "from": "src/app/host.js",
+          "specifier": "../ui/components/file-name-dialog.js",
+          "kind": "static-import",
+          "to": "src/ui/components/file-name-dialog.js",
+          "exists": true
+        },
+        {
+          "from": "src/app/host.js",
+          "specifier": "../ui/settings/connection-settings-screen.js",
+          "kind": "static-import",
+          "to": "src/ui/settings/connection-settings-screen.js",
+          "exists": true
+        },
+        {
+          "from": "src/app/host.js",
+          "specifier": "../ui/components/icon.js",
+          "kind": "static-import",
+          "to": "src/ui/components/icon.js",
+          "exists": true
+        },
+        {
+          "from": "src/app/host.js",
+          "specifier": "../ui/components/form-controls.js",
+          "kind": "static-import",
+          "to": "src/ui/components/form-controls.js",
+          "exists": true
+        },
+        {
+          "from": "src/app/host.js",
+          "specifier": "../ui/components/tab-controls.js",
+          "kind": "static-import",
+          "to": "src/ui/components/tab-controls.js",
+          "exists": true
+        },
+        {
+          "from": "src/app/host.js",
+          "specifier": "../ui/shell/application-shell.js",
+          "kind": "static-import",
+          "to": "src/ui/shell/application-shell.js",
+          "exists": true
+        },
+        {
+          "from": "src/app/host.js",
+          "specifier": "../features/chat/ui/chat-route.js",
+          "kind": "static-import",
+          "to": "src/features/chat/ui/chat-route.js",
+          "exists": true
+        },
+        {
+          "from": "src/app/host.js",
+          "specifier": "../ui/components/form-controls.js",
+          "kind": "static-import",
+          "to": "src/ui/components/form-controls.js",
+          "exists": true
+        },
+        {
+          "from": "src/app/host.js",
+          "specifier": "../ui/components/section-controls.js",
+          "kind": "static-import",
+          "to": "src/ui/components/section-controls.js",
+          "exists": true
+        },
+        {
+          "from": "src/app/host.js",
+          "specifier": "../features/world-info/ui/generate-entry-button.js",
+          "kind": "static-import",
+          "to": "src/features/world-info/ui/generate-entry-button.js",
+          "exists": true
+        },
+        {
+          "from": "src/app/host.js",
+          "specifier": "../ui/components/recovered-primitives.js",
+          "kind": "static-import",
+          "to": "src/ui/components/recovered-primitives.js",
+          "exists": true
+        },
+        {
+          "from": "src/app/host.js",
+          "specifier": "../features/state/variable-scope-service.js?v=1.3.6-variable-scopes-1",
+          "kind": "static-import",
+          "to": "src/features/state/variable-scope-service.js",
+          "exists": true
+        },
+        {
+          "from": "src/app/host.js",
+          "specifier": "../features/state/initial-variable-service.js?v=1.3.6-initvar-3",
+          "kind": "static-import",
+          "to": "src/features/state/initial-variable-service.js",
+          "exists": true
+        },
+        {
+          "from": "src/app/host.js",
+          "specifier": "./state/runtime-state.js?v=1.3.6-m5.1",
+          "kind": "static-import",
+          "to": "src/app/state/runtime-state.js",
+          "exists": true
+        },
+        {
+          "from": "src/app/host.js",
+          "specifier": "../diagnostics/state.js?v=1.3.6-m5.3",
+          "kind": "static-import",
+          "to": "src/diagnostics/state.js",
+          "exists": true
+        },
+        {
+          "from": "src/app/host.js",
+          "specifier": "./persistence/session-state.js?v=1.3.6-m5.3",
+          "kind": "static-import",
+          "to": "src/app/persistence/session-state.js",
+          "exists": true
+        },
+        {
+          "from": "src/app/host.js",
+          "specifier": "../features/arena/state-machine.js?v=1.3.6-m5.1",
+          "kind": "static-import",
+          "to": "src/features/arena/state-machine.js",
+          "exists": true
+        },
+        {
+          "from": "src/app/host.js",
+          "specifier": "./persistence/session-save-coordinator.js",
+          "kind": "static-import",
+          "to": "src/app/persistence/session-save-coordinator.js",
+          "exists": true
+        },
+        {
+          "from": "src/app/host.js",
+          "specifier": "./persistence/entity-repositories.js",
+          "kind": "static-import",
+          "to": "src/app/persistence/entity-repositories.js",
+          "exists": true
+        },
+        {
+          "from": "src/app/host.js",
+          "specifier": "../features/state/variable-scope-service.js?v=1.3.6-variable-scopes-1",
+          "kind": "static-import",
+          "to": "src/features/state/variable-scope-service.js",
+          "exists": true
+        },
+        {
+          "from": "src/app/host.js",
+          "specifier": "../providers/common/generation-gateway.js?v=1.3.6-m4.1",
+          "kind": "static-import",
+          "to": "src/providers/common/generation-gateway.js",
+          "exists": true
+        },
+        {
+          "from": "src/app/host.js",
+          "specifier": "../features/chat/turn-policy.js?v=1.3.6-m4.5",
+          "kind": "static-import",
+          "to": "src/features/chat/turn-policy.js",
+          "exists": true
+        },
+        {
+          "from": "src/app/host.js",
+          "specifier": "../features/chat/conversation-service.js?v=1.3.6-m4.8",
+          "kind": "static-import",
+          "to": "src/features/chat/conversation-service.js",
+          "exists": true
+        },
+        {
+          "from": "src/app/host.js",
+          "specifier": "../features/chat/live-stream-store.js?v=1.3.6-m4.10",
+          "kind": "static-import",
+          "to": "src/features/chat/live-stream-store.js",
+          "exists": true
+        },
+        {
+          "from": "src/app/host.js",
+          "specifier": "../features/world-info/embedding-service.js?v=1.3.6-m4.9",
+          "kind": "static-import",
+          "to": "src/features/world-info/embedding-service.js",
+          "exists": true
+        },
+        {
+          "from": "src/app/host.js",
+          "specifier": "../features/world-info/smart-scan-service.js?v=1.3.6-m4.8",
+          "kind": "static-import",
+          "to": "src/features/world-info/smart-scan-service.js",
+          "exists": true
+        },
+        {
+          "from": "src/app/host.js",
+          "specifier": "../features/world-info/sticky-compat.js?v=1.3.6-m4.1",
+          "kind": "static-import",
+          "to": "src/features/world-info/sticky-compat.js",
+          "exists": true
+        },
+        {
+          "from": "src/app/host.js",
+          "specifier": "../features/prompts/prompt-service.js?v=1.3.6-m4.3",
+          "kind": "static-import",
+          "to": "src/features/prompts/prompt-service.js",
+          "exists": true
+        },
+        {
+          "from": "src/app/host.js",
+          "specifier": "../features/chat/response-processor.js?v=1.3.6-m4.3",
+          "kind": "static-import",
+          "to": "src/features/chat/response-processor.js",
+          "exists": true
+        },
+        {
+          "from": "src/app/host.js",
+          "specifier": "../providers/proxy/persistence.js?v=1.3.6-m2-final",
+          "kind": "static-import",
+          "to": "src/providers/proxy/persistence.js",
+          "exists": true
+        },
+        {
+          "from": "src/app/host.js",
+          "specifier": "../features/state/initial-variable-service.js?v=1.3.6-initvar-3",
+          "kind": "static-import",
+          "to": "src/features/state/initial-variable-service.js",
+          "exists": true
+        },
+        {
+          "from": "src/app/host.js",
+          "specifier": "../features/state/smart-state-service.js?v=1.3.6-smartstate-2",
+          "kind": "static-import",
+          "to": "src/features/state/smart-state-service.js",
+          "exists": true
+        },
+        {
+          "from": "src/app/host.js",
+          "specifier": "../../assets/card-runtime-core-builder-v1.3.6.js?v=1.3.6-m3.10",
+          "kind": "static-import",
+          "to": "assets/card-runtime-core-builder-v1.3.6.js",
+          "exists": true
+        },
+        {
+          "from": "src/app/host.js",
+          "specifier": "../runtime/card-runtime/renderer.js?v=1.3.6-m3.10",
+          "kind": "static-import",
+          "to": "src/runtime/card-runtime/renderer.js",
+          "exists": true
+        },
+        {
+          "from": "src/app/host.js",
+          "specifier": "../features/presets/prompt-normalizer.js?v=1.3.6-worldinfo-1",
+          "kind": "static-import",
+          "to": "src/features/presets/prompt-normalizer.js",
+          "exists": true
+        },
+        {
+          "from": "src/app/host.js",
+          "specifier": "../features/world-info/lorebook-file.js",
+          "kind": "static-import",
+          "to": "src/features/world-info/lorebook-file.js",
+          "exists": true
+        },
+        {
+          "from": "src/app/host.js",
+          "specifier": "./state/settings-keys.js",
+          "kind": "static-import",
+          "to": "src/app/state/settings-keys.js",
+          "exists": true
+        },
+        {
+          "from": "src/app/host.js",
+          "specifier": "../features/state/default-feature-settings.js",
+          "kind": "static-import",
+          "to": "src/features/state/default-feature-settings.js",
+          "exists": true
+        },
+        {
+          "from": "src/app/host.js",
+          "specifier": "../features/state/feature-settings.js",
+          "kind": "static-import",
+          "to": "src/features/state/feature-settings.js",
+          "exists": true
+        },
+        {
+          "from": "src/app/host.js",
+          "specifier": "../providers/common/legacy-transport.js",
+          "kind": "static-import",
+          "to": "src/providers/common/legacy-transport.js",
+          "exists": true
+        },
+        {
+          "from": "src/app/host.js",
+          "specifier": "../providers/common/legacy-response-utils.js",
+          "kind": "static-import",
+          "to": "src/providers/common/legacy-response-utils.js",
+          "exists": true
+        },
+        {
+          "from": "src/app/host.js",
+          "specifier": "../features/rpg/table-processing.js",
+          "kind": "static-import",
+          "to": "src/features/rpg/table-processing.js",
+          "exists": true
+        },
+        {
+          "from": "src/app/host.js",
+          "specifier": "../features/catalog/character-export.js",
+          "kind": "static-import",
+          "to": "src/features/catalog/character-export.js",
+          "exists": true
+        },
+        {
+          "from": "src/app/host.js",
+          "specifier": "../features/catalog/character-file.js",
+          "kind": "static-import",
+          "to": "src/features/catalog/character-file.js",
+          "exists": true
+        },
+        {
+          "from": "src/app/host.js",
+          "specifier": "../vendor/lodash-runtime.js",
+          "kind": "static-import",
+          "to": "src/vendor/lodash-runtime.js",
+          "exists": true
+        },
+        {
+          "from": "src/app/host.js",
+          "specifier": "../features/state/script-execution.js",
+          "kind": "static-import",
+          "to": "src/features/state/script-execution.js",
+          "exists": true
+        },
+        {
+          "from": "src/app/host.js",
+          "specifier": "../features/prompts/macro-processing.js",
+          "kind": "static-import",
+          "to": "src/features/prompts/macro-processing.js",
+          "exists": true
+        },
+        {
+          "from": "src/app/host.js",
+          "specifier": "../features/chat/regex-processing.js",
+          "kind": "static-import",
+          "to": "src/features/chat/regex-processing.js",
+          "exists": true
+        },
+        {
+          "from": "src/app/host.js",
+          "specifier": "../features/prompts/legacy-prompt-builder.js",
+          "kind": "static-import",
+          "to": "src/features/prompts/legacy-prompt-builder.js",
+          "exists": true
+        },
+        {
+          "from": "src/app/host.js",
+          "specifier": "../features/speech/audio-conversion.js",
+          "kind": "static-import",
+          "to": "src/features/speech/audio-conversion.js",
+          "exists": true
+        },
+        {
+          "from": "src/app/host.js",
+          "specifier": "../features/speech/speech-engine.js",
+          "kind": "static-import",
+          "to": "src/features/speech/speech-engine.js",
+          "exists": true
+        },
+        {
+          "from": "src/app/host.js",
+          "specifier": "./persistence/backup-codec.js",
+          "kind": "static-import",
+          "to": "src/app/persistence/backup-codec.js",
+          "exists": true
+        },
+        {
+          "from": "src/app/host.js",
+          "specifier": "../features/world-info/keyword-matching.js",
+          "kind": "static-import",
+          "to": "src/features/world-info/keyword-matching.js",
+          "exists": true
+        },
+        {
+          "from": "src/app/host.js",
+          "specifier": "../runtime/card-runtime/host/slash-commands.js",
+          "kind": "static-import",
+          "to": "src/runtime/card-runtime/host/slash-commands.js",
+          "exists": true
+        },
+        {
+          "from": "src/app/host.js",
+          "specifier": "../runtime/card-runtime/frame-context.js",
+          "kind": "static-import",
+          "to": "src/runtime/card-runtime/frame-context.js",
+          "exists": true
+        },
+        {
+          "from": "src/app/host.js",
+          "specifier": "../vendor/markdown-runtime.js",
+          "kind": "static-import",
+          "to": "src/vendor/markdown-runtime.js",
+          "exists": true
+        },
+        {
+          "from": "src/app/host.js",
+          "specifier": "../vendor/html-sanitizer-runtime.js",
+          "kind": "static-import",
+          "to": "src/vendor/html-sanitizer-runtime.js",
+          "exists": true
+        },
+        {
+          "from": "src/app/host.js",
+          "specifier": "../core/parse-relaxed-json.js",
+          "kind": "static-import",
+          "to": "src/core/parse-relaxed-json.js",
+          "exists": true
+        },
+        {
+          "from": "src/app/host.js",
+          "specifier": "../ui/components/display-formatting.js",
+          "kind": "static-import",
+          "to": "src/ui/components/display-formatting.js",
+          "exists": true
+        },
+        {
+          "from": "src/app/host.js",
+          "specifier": "../features/rpg/table-lorebook-links.js",
+          "kind": "static-import",
+          "to": "src/features/rpg/table-lorebook-links.js",
+          "exists": true
+        },
+        {
+          "from": "src/app/host.js",
+          "specifier": "./state/session-defaults.js",
+          "kind": "static-import",
+          "to": "src/app/state/session-defaults.js",
+          "exists": true
+        },
+        {
+          "from": "src/app/host.js",
+          "specifier": "../providers/common/legacy-generation-adapters.js",
+          "kind": "static-import",
+          "to": "src/providers/common/legacy-generation-adapters.js",
+          "exists": true
+        },
+        {
+          "from": "src/app/host.js",
+          "specifier": "../features/rpg/rpg-import.js",
+          "kind": "static-import",
+          "to": "src/features/rpg/rpg-import.js",
+          "exists": true
+        },
+        {
+          "from": "src/app/host.js",
+          "specifier": "../ui/settings/gemini-catalog-hook.js",
+          "kind": "static-import",
+          "to": "src/ui/settings/gemini-catalog-hook.js",
+          "exists": true
+        },
+        {
+          "from": "src/app/host.js",
+          "specifier": "../ui/components/dialog-focus.js",
+          "kind": "static-import",
+          "to": "src/ui/components/dialog-focus.js",
+          "exists": true
+        },
+        {
+          "from": "src/app/host.js",
+          "specifier": "../features/world-info/ui/embedding-sync-hook.js",
+          "kind": "static-import",
+          "to": "src/features/world-info/ui/embedding-sync-hook.js",
+          "exists": true
+        },
+        {
+          "from": "src/app/host.js",
+          "specifier": "../features/prompts/macro-reference.js",
+          "kind": "static-import",
+          "to": "src/features/prompts/macro-reference.js",
+          "exists": true
+        },
+        {
+          "from": "src/app/host.js",
+          "specifier": "../features/presets/preset-file.js",
+          "kind": "static-import",
+          "to": "src/features/presets/preset-file.js",
+          "exists": true
+        },
+        {
+          "from": "src/app/host.js",
+          "specifier": "../ui/components/radio-navigation.js",
+          "kind": "static-import",
+          "to": "src/ui/components/radio-navigation.js",
+          "exists": true
+        },
+        {
+          "from": "src/app/host.js",
+          "specifier": "../features/chat/summary-generation.js",
+          "kind": "static-import",
+          "to": "src/features/chat/summary-generation.js",
+          "exists": true
+        },
+        {
+          "from": "src/app/host.js",
+          "specifier": "../features/chat/epub-import.js",
+          "kind": "static-import",
+          "to": "src/features/chat/epub-import.js",
+          "exists": true
+        },
+        {
+          "from": "src/app/host.js",
+          "specifier": "../runtime/card-runtime/host/compatibility-data.js",
+          "kind": "static-import",
+          "to": "src/runtime/card-runtime/host/compatibility-data.js",
+          "exists": true
+        },
+        {
+          "from": "src/app/host.js",
+          "specifier": "../diagnostics/card-runtime-diagnostics.js",
+          "kind": "static-import",
+          "to": "src/diagnostics/card-runtime-diagnostics.js",
+          "exists": true
+        },
+        {
+          "from": "src/app/host.js",
+          "specifier": "../runtime/card-runtime/host/context-adapters.js",
+          "kind": "static-import",
+          "to": "src/runtime/card-runtime/host/context-adapters.js",
+          "exists": true
+        },
+        {
+          "from": "src/app/host.js",
+          "specifier": "../runtime/card-runtime/host/slash-command-reference.js",
+          "kind": "static-import",
+          "to": "src/runtime/card-runtime/host/slash-command-reference.js",
+          "exists": true
+        },
+        {
+          "from": "src/app/host.js",
+          "specifier": "../features/rpg/action-proposal-prompt.js",
+          "kind": "static-import",
+          "to": "src/features/rpg/action-proposal-prompt.js",
+          "exists": true
+        },
+        {
+          "from": "src/app/host.js",
+          "specifier": "./lifecycle/application-lifecycle.js",
+          "kind": "static-import",
+          "to": "src/app/lifecycle/application-lifecycle.js",
+          "exists": true
+        },
+        {
+          "from": "src/app/persistence/entity-repositories.js",
+          "specifier": "./app-database.js",
+          "kind": "static-import",
+          "to": "src/app/persistence/app-database.js",
+          "exists": true
+        },
+        {
+          "from": "src/app/persistence/session-state.js",
+          "specifier": "../../features/arena/state-machine.js",
+          "kind": "static-import",
+          "to": "src/features/arena/state-machine.js",
+          "exists": true
+        },
+        {
+          "from": "src/app/state/application-stores.js",
+          "specifier": "./lorebook-store.js",
+          "kind": "re-export",
+          "to": "src/app/state/lorebook-store.js",
+          "exists": true
+        },
+        {
+          "from": "src/app/state/application-stores.js",
+          "specifier": "./session-store.js",
+          "kind": "re-export",
+          "to": "src/app/state/session-store.js",
+          "exists": true
+        },
+        {
+          "from": "src/app/state/application-stores.js",
+          "specifier": "./character-store.js",
+          "kind": "re-export",
+          "to": "src/app/state/character-store.js",
+          "exists": true
+        },
+        {
+          "from": "src/app/state/application-stores.js",
+          "specifier": "./preset-store.js",
+          "kind": "re-export",
+          "to": "src/app/state/preset-store.js",
+          "exists": true
+        },
+        {
+          "from": "src/app/state/application-stores.js",
+          "specifier": "./persona-store.js",
+          "kind": "re-export",
+          "to": "src/app/state/persona-store.js",
+          "exists": true
+        },
+        {
+          "from": "src/app/state/character-store.js",
+          "specifier": "../../core/async/serial-queue.js",
+          "kind": "static-import",
+          "to": "src/core/async/serial-queue.js",
+          "exists": true
+        },
+        {
+          "from": "src/app/state/character-store.js",
+          "specifier": "../../features/catalog/catalog-mutations.js",
+          "kind": "static-import",
+          "to": "src/features/catalog/catalog-mutations.js",
+          "exists": true
+        },
+        {
+          "from": "src/app/state/lorebook-store.js",
+          "specifier": "../../core/async/serial-queue.js",
+          "kind": "static-import",
+          "to": "src/core/async/serial-queue.js",
+          "exists": true
+        },
+        {
+          "from": "src/app/state/lorebook-store.js",
+          "specifier": "../../features/world-info/lorebook-mutations.js",
+          "kind": "static-import",
+          "to": "src/features/world-info/lorebook-mutations.js",
+          "exists": true
+        },
+        {
+          "from": "src/app/state/persona-store.js",
+          "specifier": "../../core/async/serial-queue.js",
+          "kind": "static-import",
+          "to": "src/core/async/serial-queue.js",
+          "exists": true
+        },
+        {
+          "from": "src/app/state/persona-store.js",
+          "specifier": "../../features/catalog/catalog-mutations.js",
+          "kind": "static-import",
+          "to": "src/features/catalog/catalog-mutations.js",
+          "exists": true
+        },
+        {
+          "from": "src/app/state/preset-store.js",
+          "specifier": "../../core/async/serial-queue.js",
+          "kind": "static-import",
+          "to": "src/core/async/serial-queue.js",
+          "exists": true
+        },
+        {
+          "from": "src/app/state/preset-store.js",
+          "specifier": "../../features/catalog/catalog-mutations.js",
+          "kind": "static-import",
+          "to": "src/features/catalog/catalog-mutations.js",
+          "exists": true
+        },
+        {
+          "from": "src/app/state/session-store.js",
+          "specifier": "./session-rpg-actions.js",
+          "kind": "static-import",
+          "to": "src/app/state/session-rpg-actions.js",
+          "exists": true
+        },
+        {
+          "from": "src/diagnostics/aistudio-log.js",
+          "specifier": "../platform/android/native-bridge.js",
+          "kind": "static-import",
+          "to": "src/platform/android/native-bridge.js",
+          "exists": true
+        },
+        {
+          "from": "src/diagnostics/android-export-download.js",
+          "specifier": "../platform/android/native-bridge.js",
+          "kind": "static-import",
+          "to": "src/platform/android/native-bridge.js",
+          "exists": true
+        },
+        {
+          "from": "src/features/catalog/catalog-mutations.js",
+          "specifier": "../../core/async/serial-queue.js",
+          "kind": "static-import",
+          "to": "src/core/async/serial-queue.js",
+          "exists": true
+        },
+        {
+          "from": "src/features/catalog/character-file.js",
+          "specifier": "../../../assets/jszip.min-CF4xG0Dr.js",
+          "kind": "dynamic-import",
+          "to": "assets/jszip.min-CF4xG0Dr.js",
+          "exists": true
+        },
+        {
+          "from": "src/features/chat/conversation-service.js",
+          "specifier": "../../core/async/cancellation.js",
+          "kind": "static-import",
+          "to": "src/core/async/cancellation.js",
+          "exists": true
+        },
+        {
+          "from": "src/features/chat/epub-import.js",
+          "specifier": "../../../assets/jszip.min-CF4xG0Dr.js",
+          "kind": "dynamic-import",
+          "to": "assets/jszip.min-CF4xG0Dr.js",
+          "exists": true
+        },
+        {
+          "from": "src/features/chat/hooks/session-hooks.js",
+          "specifier": "./use-diagnostics.js",
+          "kind": "re-export",
+          "to": "src/features/chat/hooks/use-diagnostics.js",
+          "exists": true
+        },
+        {
+          "from": "src/features/chat/hooks/session-hooks.js",
+          "specifier": "./use-conversation.js",
+          "kind": "re-export",
+          "to": "src/features/chat/hooks/use-conversation.js",
+          "exists": true
+        },
+        {
+          "from": "src/features/chat/hooks/session-hooks.js",
+          "specifier": "./use-chat-session.js",
+          "kind": "re-export",
+          "to": "src/features/chat/hooks/use-chat-session.js",
+          "exists": true
+        },
+        {
+          "from": "src/features/chat/hooks/use-card-runtime.js",
+          "specifier": "../../../runtime/card-runtime/host/rpc-dispatcher.js",
+          "kind": "static-import",
+          "to": "src/runtime/card-runtime/host/rpc-dispatcher.js",
+          "exists": true
+        },
+        {
+          "from": "src/features/chat/hooks/use-card-runtime.js",
+          "specifier": "../../../runtime/card-runtime/host/generation-tasks.js",
+          "kind": "static-import",
+          "to": "src/runtime/card-runtime/host/generation-tasks.js",
+          "exists": true
+        },
+        {
+          "from": "src/features/chat/hooks/use-card-runtime.js",
+          "specifier": "../../../runtime/card-runtime/host/state-rpc.js",
+          "kind": "static-import",
+          "to": "src/runtime/card-runtime/host/state-rpc.js",
+          "exists": true
+        },
+        {
+          "from": "src/features/chat/hooks/use-card-runtime.js",
+          "specifier": "../../../runtime/card-runtime/host/chat-rpc.js",
+          "kind": "static-import",
+          "to": "src/runtime/card-runtime/host/chat-rpc.js",
+          "exists": true
+        },
+        {
+          "from": "src/features/chat/hooks/use-card-runtime.js",
+          "specifier": "../../../runtime/card-runtime/host/catalog-rpc.js",
+          "kind": "static-import",
+          "to": "src/runtime/card-runtime/host/catalog-rpc.js",
+          "exists": true
+        },
+        {
+          "from": "src/features/chat/hooks/use-card-runtime.js",
+          "specifier": "../../../runtime/card-runtime/host/lorebook-rpc.js",
+          "kind": "static-import",
+          "to": "src/runtime/card-runtime/host/lorebook-rpc.js",
+          "exists": true
+        },
+        {
+          "from": "src/features/chat/hooks/use-card-runtime.js",
+          "specifier": "../../../runtime/card-runtime/host/utility-rpc.js",
+          "kind": "static-import",
+          "to": "src/runtime/card-runtime/host/utility-rpc.js",
+          "exists": true
+        },
+        {
+          "from": "src/features/chat/hooks/use-card-runtime.js",
+          "specifier": "../../../runtime/card-runtime/host/method-router.js",
+          "kind": "static-import",
+          "to": "src/runtime/card-runtime/host/method-router.js",
+          "exists": true
+        },
+        {
+          "from": "src/features/chat/hooks/use-card-runtime.js",
+          "specifier": "../../../runtime/card-runtime/host/runtime-prompt.js",
+          "kind": "static-import",
+          "to": "src/runtime/card-runtime/host/runtime-prompt.js",
+          "exists": true
+        },
+        {
+          "from": "src/features/chat/hooks/use-card-runtime.js",
+          "specifier": "../../../runtime/card-runtime/host/runtime-events.js",
+          "kind": "static-import",
+          "to": "src/runtime/card-runtime/host/runtime-events.js",
+          "exists": true
+        },
+        {
+          "from": "src/features/chat/hooks/use-chat-session.js",
+          "specifier": "./use-session-persistence.js",
+          "kind": "static-import",
+          "to": "src/features/chat/hooks/use-session-persistence.js",
+          "exists": true
+        },
+        {
+          "from": "src/features/chat/hooks/use-chat-session.js",
+          "specifier": "./use-smart-context.js",
+          "kind": "static-import",
+          "to": "src/features/chat/hooks/use-smart-context.js",
+          "exists": true
+        },
+        {
+          "from": "src/features/chat/hooks/use-chat-session.js",
+          "specifier": "./use-message-history.js",
+          "kind": "static-import",
+          "to": "src/features/chat/hooks/use-message-history.js",
+          "exists": true
+        },
+        {
+          "from": "src/features/chat/hooks/use-chat-session.js",
+          "specifier": "./use-slash-commands.js",
+          "kind": "static-import",
+          "to": "src/features/chat/hooks/use-slash-commands.js",
+          "exists": true
+        },
+        {
+          "from": "src/features/chat/hooks/use-chat-session.js",
+          "specifier": "./use-card-runtime.js",
+          "kind": "static-import",
+          "to": "src/features/chat/hooks/use-card-runtime.js",
+          "exists": true
+        },
+        {
+          "from": "src/features/chat/hooks/use-conversation.js",
+          "specifier": "./use-response-pipeline.js",
+          "kind": "static-import",
+          "to": "src/features/chat/hooks/use-response-pipeline.js",
+          "exists": true
+        },
+        {
+          "from": "src/features/chat/hooks/use-conversation.js",
+          "specifier": "./use-smart-scan.js",
+          "kind": "static-import",
+          "to": "src/features/chat/hooks/use-smart-scan.js",
+          "exists": true
+        },
+        {
+          "from": "src/features/prompts/legacy-prompt-builder.js",
+          "specifier": "../../../assets/ejs.min-Cthf3_XD.js",
+          "kind": "dynamic-import",
+          "to": "assets/ejs.min-Cthf3_XD.js",
+          "exists": true
+        },
+        {
+          "from": "src/features/prompts/prompt-service.js",
+          "specifier": "../chat/turn-policy.js",
+          "kind": "static-import",
+          "to": "src/features/chat/turn-policy.js",
+          "exists": true
+        },
+        {
+          "from": "src/features/state/script-execution.js",
+          "specifier": "../../../assets/lodash.min-xZXeUb-0.js",
+          "kind": "dynamic-import",
+          "to": "assets/lodash.min-xZXeUb-0.js",
+          "exists": true
+        },
+        {
+          "from": "src/features/world-info/embedding-service.js",
+          "specifier": "./native-embedding-bridge.js",
+          "kind": "static-import",
+          "to": "src/features/world-info/native-embedding-bridge.js",
+          "exists": true
+        },
+        {
+          "from": "src/features/world-info/embedding-service.js",
+          "specifier": "./embeddinggemma2-litert-bridge.js",
+          "kind": "static-import",
+          "to": "src/features/world-info/embeddinggemma2-litert-bridge.js",
+          "exists": true
+        },
+        {
+          "from": "src/features/world-info/embedding-service.js",
+          "specifier": "./embedding-index-repository.js",
+          "kind": "static-import",
+          "to": "src/features/world-info/embedding-index-repository.js",
+          "exists": true
+        },
+        {
+          "from": "src/features/world-info/embeddinggemma2-litert-bridge.js",
+          "specifier": "../../platform/android/native-bridge.js",
+          "kind": "static-import",
+          "to": "src/platform/android/native-bridge.js",
+          "exists": true
+        },
+        {
+          "from": "src/features/world-info/lorebook-mutations.js",
+          "specifier": "../../core/async/serial-queue.js",
+          "kind": "static-import",
+          "to": "src/core/async/serial-queue.js",
+          "exists": true
+        },
+        {
+          "from": "src/features/world-info/native-embedding-bridge.js",
+          "specifier": "../../platform/android/native-bridge.js",
+          "kind": "static-import",
+          "to": "src/platform/android/native-bridge.js",
+          "exists": true
+        },
+        {
+          "from": "src/platform/android/native-bridge.js",
+          "specifier": "../../core/async/cancellation.js",
+          "kind": "static-import",
+          "to": "src/core/async/cancellation.js",
+          "exists": true
+        },
+        {
+          "from": "src/providers/aistudio/model-catalog.js",
+          "specifier": "../../platform/android/native-bridge.js",
+          "kind": "static-import",
+          "to": "src/platform/android/native-bridge.js",
+          "exists": true
+        },
+        {
+          "from": "src/providers/aistudio/text.js",
+          "specifier": "../../platform/android/native-bridge.js",
+          "kind": "static-import",
+          "to": "src/platform/android/native-bridge.js",
+          "exists": true
+        },
+        {
+          "from": "src/providers/aistudio/text.js",
+          "specifier": "../common/connection-repository.js",
+          "kind": "static-import",
+          "to": "src/providers/common/connection-repository.js",
+          "exists": true
+        },
+        {
+          "from": "src/providers/common/connection-repository.js",
+          "specifier": "./provider-registry.js",
+          "kind": "static-import",
+          "to": "src/providers/common/provider-registry.js",
+          "exists": true
+        },
+        {
+          "from": "src/providers/common/generation-gateway.js",
+          "specifier": "../gemini/generation.js",
+          "kind": "static-import",
+          "to": "src/providers/gemini/generation.js",
+          "exists": true
+        },
+        {
+          "from": "src/providers/common/generation-gateway.js",
+          "specifier": "../aistudio/text.js",
+          "kind": "static-import",
+          "to": "src/providers/aistudio/text.js",
+          "exists": true
+        },
+        {
+          "from": "src/providers/common/generation-gateway.js",
+          "specifier": "../openrouter/generation.js",
+          "kind": "static-import",
+          "to": "src/providers/openrouter/generation.js",
+          "exists": true
+        },
+        {
+          "from": "src/providers/common/generation-gateway.js",
+          "specifier": "../proxy/generation.js",
+          "kind": "static-import",
+          "to": "src/providers/proxy/generation.js",
+          "exists": true
+        },
+        {
+          "from": "src/providers/common/generation-gateway.js",
+          "specifier": "./provider-registry.js",
+          "kind": "static-import",
+          "to": "src/providers/common/provider-registry.js",
+          "exists": true
+        },
+        {
+          "from": "src/providers/common/generation-gateway.js",
+          "specifier": "./provider-registry.js",
+          "kind": "re-export",
+          "to": "src/providers/common/provider-registry.js",
+          "exists": true
+        },
+        {
+          "from": "src/providers/common/generation-gateway.js",
+          "specifier": "../aistudio/model-catalog.js",
+          "kind": "re-export",
+          "to": "src/providers/aistudio/model-catalog.js",
+          "exists": true
+        },
+        {
+          "from": "src/providers/common/host-provider-bindings.js",
+          "specifier": "./connection-repository.js",
+          "kind": "static-import",
+          "to": "src/providers/common/connection-repository.js",
+          "exists": true
+        },
+        {
+          "from": "src/providers/common/host-provider-bindings.js",
+          "specifier": "./model-catalog.js",
+          "kind": "static-import",
+          "to": "src/providers/common/model-catalog.js",
+          "exists": true
+        },
+        {
+          "from": "src/providers/common/host-provider-bindings.js",
+          "specifier": "./generation-gateway.js?v=1.3.6-m4.1",
+          "kind": "static-import",
+          "to": "src/providers/common/generation-gateway.js",
+          "exists": true
+        },
+        {
+          "from": "src/providers/gemini/generation.js",
+          "specifier": "../common/generation-utils.js",
+          "kind": "static-import",
+          "to": "src/providers/common/generation-utils.js",
+          "exists": true
+        },
+        {
+          "from": "src/providers/openrouter/generation.js",
+          "specifier": "../common/generation-utils.js",
+          "kind": "static-import",
+          "to": "src/providers/common/generation-utils.js",
+          "exists": true
+        },
+        {
+          "from": "src/providers/proxy/generation.js",
+          "specifier": "../common/generation-utils.js",
+          "kind": "static-import",
+          "to": "src/providers/common/generation-utils.js",
+          "exists": true
+        },
+        {
+          "from": "src/runtime/card-runtime/host/generation-tasks.js",
+          "specifier": "../../../core/async/cancellation.js",
+          "kind": "static-import",
+          "to": "src/core/async/cancellation.js",
+          "exists": true
+        },
+        {
+          "from": "src/runtime/card-runtime/host/method-router.js",
+          "specifier": "./chat-rpc.js",
+          "kind": "static-import",
+          "to": "src/runtime/card-runtime/host/chat-rpc.js",
+          "exists": true
+        },
+        {
+          "from": "src/runtime/card-runtime/host/method-router.js",
+          "specifier": "./catalog-rpc.js",
+          "kind": "static-import",
+          "to": "src/runtime/card-runtime/host/catalog-rpc.js",
+          "exists": true
+        },
+        {
+          "from": "src/runtime/card-runtime/host/method-router.js",
+          "specifier": "./state-rpc.js",
+          "kind": "static-import",
+          "to": "src/runtime/card-runtime/host/state-rpc.js",
+          "exists": true
+        },
+        {
+          "from": "src/runtime/card-runtime/host/method-router.js",
+          "specifier": "./lorebook-rpc.js",
+          "kind": "static-import",
+          "to": "src/runtime/card-runtime/host/lorebook-rpc.js",
+          "exists": true
+        },
+        {
+          "from": "src/runtime/card-runtime/host/method-router.js",
+          "specifier": "./utility-rpc.js",
+          "kind": "static-import",
+          "to": "src/runtime/card-runtime/host/utility-rpc.js",
+          "exists": true
+        },
+        {
+          "from": "src/runtime/card-runtime/host/utility-rpc.js",
+          "specifier": "../../../features/chat/chat-import.js",
+          "kind": "static-import",
+          "to": "src/features/chat/chat-import.js",
+          "exists": true
+        },
+        {
+          "from": "src/ui/runtime-guard.js",
+          "specifier": "../app/state/runtime-state.js?v=1.3.6-m5.1",
+          "kind": "static-import",
+          "to": "src/app/state/runtime-state.js",
+          "exists": true
+        },
+        {
+          "from": "src/ui/settings/connection-settings-screen.js",
+          "specifier": "./model-test-button.js",
+          "kind": "static-import",
+          "to": "src/ui/settings/model-test-button.js",
+          "exists": true
+        },
+        {
+          "from": "src/ui/settings/connection-settings-screen.js",
+          "specifier": "./settings-controller.js",
+          "kind": "static-import",
+          "to": "src/ui/settings/settings-controller.js",
+          "exists": true
+        },
+        {
+          "from": "src/ui/settings/connection-settings-screen.js",
+          "specifier": "./provider-sections.js",
+          "kind": "static-import",
+          "to": "src/ui/settings/provider-sections.js",
+          "exists": true
+        },
+        {
+          "from": "src/ui/settings/model-test-button.js",
+          "specifier": "../../core/async/cancellation.js",
+          "kind": "static-import",
+          "to": "src/core/async/cancellation.js",
+          "exists": true
+        },
+        {
+          "from": "src/ui/settings/provider-sections.js",
+          "specifier": "../../providers/aistudio/text.js",
+          "kind": "static-import",
+          "to": "src/providers/aistudio/text.js",
+          "exists": true
+        },
+        {
+          "from": "src/ui/settings/settings-controller.js",
+          "specifier": "../../platform/android/native-bridge.js",
+          "kind": "static-import",
+          "to": "src/platform/android/native-bridge.js",
+          "exists": true
+        },
+        {
+          "from": "src/ui/settings/settings-controller.js",
+          "specifier": "../../core/async/cancellation.js",
+          "kind": "static-import",
+          "to": "src/core/async/cancellation.js",
+          "exists": true
+        },
+        {
+          "from": "src/ui/settings/settings-controller.js",
+          "specifier": "./model-test-button.js",
+          "kind": "static-import",
+          "to": "src/ui/settings/model-test-button.js",
+          "exists": true
+        },
+        {
+          "from": "src/vendor/google-genai-runtime.js",
+          "specifier": "./react-state-runtime.js",
+          "kind": "static-import",
+          "to": "src/vendor/react-state-runtime.js",
+          "exists": true
+        }
+      ],
+      "computed": [
+        {
+          "from": "src/app/entry.js",
+          "kind": "dynamic-import",
+          "offset": 1955
+        },
+        {
+          "from": "src/features/world-info/embedding-service.js",
+          "kind": "dynamic-import",
+          "offset": 10315
+        }
+      ],
+      "parseErrors": [],
+      "cycles": [],
+      "unresolved": []
+    },
+    {
+      "directory": "assets",
+      "nodes": [
+        "assets/app-entry-v1.3.6.js",
+        "assets/app-production-v1.3.6.js",
+        "assets/card-runtime-core-builder-v1.3.6.js",
+        "assets/card-runtime-renderer-v1.3.6.js",
+        "assets/ejs.min-Cthf3_XD.js",
+        "assets/index-yS4Vru8B.js",
+        "assets/initial-variable-service-v1.3.6.js",
+        "assets/jszip.min-CF4xG0Dr.js",
+        "assets/lodash.min-xZXeUb-0.js",
+        "assets/m4/core/async/cancellation.js",
+        "assets/m4/features/catalog/catalog-mutations.js",
+        "assets/m4/features/chat/chat-import.js",
+        "assets/m4/features/chat/conversation-service.js",
+        "assets/m4/features/chat/live-stream-store.js",
+        "assets/m4/features/chat/response-processor.js",
+        "assets/m4/features/chat/turn-policy.js",
+        "assets/m4/features/prompts/prompt-service.js",
+        "assets/m4/features/world-info/embedding-index-repository.js",
+        "assets/m4/features/world-info/embedding-service.js",
+        "assets/m4/features/world-info/embeddinggemma2-litert-bridge.js",
+        "assets/m4/features/world-info/lorebook-mutations.js",
+        "assets/m4/features/world-info/native-embedding-bridge.js",
+        "assets/m4/features/world-info/smart-scan-service.js",
+        "assets/m4/features/world-info/sticky-compat.js",
+        "assets/m4/providers/aistudio/model-catalog.js",
+        "assets/m4/providers/aistudio/text.js",
+        "assets/m4/providers/common/connection-repository.js",
+        "assets/m4/providers/common/generation-gateway.js",
+        "assets/m4/providers/common/generation-utils.js",
+        "assets/m4/providers/common/model-catalog.js",
+        "assets/m4/providers/common/provider-registry.js",
+        "assets/m4/providers/gemini/generation.js",
+        "assets/m4/providers/openrouter/generation.js",
+        "assets/m4/providers/proxy/generation.js",
+        "assets/m4/runtime/card-runtime/host/catalog-rpc.js",
+        "assets/m4/runtime/card-runtime/host/chat-rpc.js",
+        "assets/m4/runtime/card-runtime/host/generation-tasks.js",
+        "assets/m4/runtime/card-runtime/host/lorebook-rpc.js",
+        "assets/m4/runtime/card-runtime/host/rpc-dispatcher.js",
+        "assets/m4/runtime/card-runtime/host/state-rpc.js",
+        "assets/m4/runtime/card-runtime/host/utility-rpc.js",
+        "assets/m5/app/persistence/app-database.js",
+        "assets/m5/app/persistence/entity-repositories.js",
+        "assets/m5/app/persistence/session-save-coordinator.js",
+        "assets/m5/app/persistence/session-state.js",
+        "assets/m5/app/state/runtime-state.js",
+        "assets/m5/diagnostics/state.js",
+        "assets/m5/features/arena/state-machine.js",
+        "assets/m5/ui/runtime-guard.js",
+        "assets/m6/features/chat/ui/chat-route.js",
+        "assets/m6/features/world-info/ui/generate-entry-button.js",
+        "assets/m6/ui/components/form-controls.js",
+        "assets/m6/ui/components/icon.js",
+        "assets/m6/ui/components/recovered-primitives.js",
+        "assets/m6/ui/components/section-controls.js",
+        "assets/m6/ui/components/tab-controls.js",
+        "assets/m6/ui/model-connection-test.js",
+        "assets/m6/ui/settings/connection-settings-screen.js",
+        "assets/m6/ui/settings/model-test-button.js",
+        "assets/m6/ui/settings/provider-sections.js",
+        "assets/m6/ui/settings/settings-controller.js",
+        "assets/m6/ui/shell/application-shell.js",
+        "assets/m8/diagnostics/aistudio-log.js",
+        "assets/m8/diagnostics/android-export-download.js",
+        "assets/prompt-normalizer-v1.3.6.js",
+        "assets/proxy-persistence-service-v1.3.6.js",
+        "assets/recovered/app/lifecycle/application-lifecycle.js",
+        "assets/recovered/app/lifecycle/mount-application.js",
+        "assets/recovered/app/persistence/backup-codec.js",
+        "assets/recovered/app/state/application-stores.js",
+        "assets/recovered/app/state/character-store.js",
+        "assets/recovered/app/state/lorebook-store.js",
+        "assets/recovered/app/state/persona-store.js",
+        "assets/recovered/app/state/preset-store.js",
+        "assets/recovered/app/state/session-defaults.js",
+        "assets/recovered/app/state/session-rpg-actions.js",
+        "assets/recovered/app/state/session-store.js",
+        "assets/recovered/app/state/settings-keys.js",
+        "assets/recovered/core/async/optional-module.js",
+        "assets/recovered/core/async/serial-queue.js",
+        "assets/recovered/core/parse-relaxed-json.js",
+        "assets/recovered/diagnostics/card-runtime-diagnostics.js",
+        "assets/recovered/diagnostics/ui/diagnostic-panels.js",
+        "assets/recovered/features/catalog/character-export.js",
+        "assets/recovered/features/catalog/character-file.js",
+        "assets/recovered/features/catalog/default-character.js",
+        "assets/recovered/features/catalog/ui/catalog-screens.js",
+        "assets/recovered/features/catalog/ui/character-sections.js",
+        "assets/recovered/features/chat/epub-import.js",
+        "assets/recovered/features/chat/hooks/session-hooks.js",
+        "assets/recovered/features/chat/hooks/use-card-runtime.js",
+        "assets/recovered/features/chat/hooks/use-chat-session.js",
+        "assets/recovered/features/chat/hooks/use-conversation.js",
+        "assets/recovered/features/chat/hooks/use-diagnostics.js",
+        "assets/recovered/features/chat/hooks/use-message-history.js",
+        "assets/recovered/features/chat/hooks/use-response-pipeline.js",
+        "assets/recovered/features/chat/hooks/use-session-persistence.js",
+        "assets/recovered/features/chat/hooks/use-slash-commands.js",
+        "assets/recovered/features/chat/hooks/use-smart-context.js",
+        "assets/recovered/features/chat/hooks/use-smart-scan.js",
+        "assets/recovered/features/chat/regex-processing.js",
+        "assets/recovered/features/chat/summary-generation.js",
+        "assets/recovered/features/chat/ui/chat-controls.js",
+        "assets/recovered/features/chat/ui/message-rendering.js",
+        "assets/recovered/features/chat/ui/session-screens.js",
+        "assets/recovered/features/presets/default-preset.js",
+        "assets/recovered/features/presets/preset-file.js",
+        "assets/recovered/features/presets/ui/preset-sections.js",
+        "assets/recovered/features/prompts/legacy-prompt-builder.js",
+        "assets/recovered/features/prompts/macro-processing.js",
+        "assets/recovered/features/prompts/macro-reference.js",
+        "assets/recovered/features/rpg/action-proposal-prompt.js",
+        "assets/recovered/features/rpg/default-database.js",
+        "assets/recovered/features/rpg/rpg-import.js",
+        "assets/recovered/features/rpg/table-lorebook-links.js",
+        "assets/recovered/features/rpg/table-processing.js",
+        "assets/recovered/features/rpg/ui/rpg-screens.js",
+        "assets/recovered/features/speech/audio-conversion.js",
+        "assets/recovered/features/speech/speech-engine.js",
+        "assets/recovered/features/state/default-feature-settings.js",
+        "assets/recovered/features/state/feature-settings.js",
+        "assets/recovered/features/state/script-execution.js",
+        "assets/recovered/features/world-info/keyword-matching.js",
+        "assets/recovered/features/world-info/lorebook-file.js",
+        "assets/recovered/features/world-info/ui/embedding-sync-hook.js",
+        "assets/recovered/features/world-info/ui/lorebook-controls.js",
+        "assets/recovered/features/world-info/ui/world-info-screens.js",
+        "assets/recovered/platform/android/native-bridge.js",
+        "assets/recovered/providers/common/host-provider-bindings.js",
+        "assets/recovered/providers/common/legacy-generation-adapters.js",
+        "assets/recovered/providers/common/legacy-response-utils.js",
+        "assets/recovered/providers/common/legacy-transport.js",
+        "assets/recovered/runtime/card-runtime/frame-context.js",
+        "assets/recovered/runtime/card-runtime/host/compatibility-data.js",
+        "assets/recovered/runtime/card-runtime/host/context-adapters.js",
+        "assets/recovered/runtime/card-runtime/host/method-router.js",
+        "assets/recovered/runtime/card-runtime/host/runtime-events.js",
+        "assets/recovered/runtime/card-runtime/host/runtime-prompt.js",
+        "assets/recovered/runtime/card-runtime/host/slash-command-reference.js",
+        "assets/recovered/runtime/card-runtime/host/slash-commands.js",
+        "assets/recovered/ui/components/dialog-focus.js",
+        "assets/recovered/ui/components/display-formatting.js",
+        "assets/recovered/ui/components/file-name-dialog.js",
+        "assets/recovered/ui/components/input-controls.js",
+        "assets/recovered/ui/components/radio-navigation.js",
+        "assets/recovered/ui/settings/gemini-catalog-hook.js",
+        "assets/recovered/ui/settings/settings-screens.js",
+        "assets/recovered/ui/shell/providers.js",
+        "assets/recovered/vendor/google-genai-runtime.js",
+        "assets/recovered/vendor/html-sanitizer-runtime.js",
+        "assets/recovered/vendor/immer-mapset.js",
+        "assets/recovered/vendor/lodash-runtime.js",
+        "assets/recovered/vendor/markdown-runtime.js",
+        "assets/recovered/vendor/react-state-runtime.js",
+        "assets/smart-state-service-v1.3.6.js",
+        "assets/variable-scope-service-v1.3.6.js"
+      ],
+      "edges": [
+        {
+          "from": "assets/app-entry-v1.3.6.js",
+          "specifier": "./m4/providers/common/connection-repository.js",
+          "kind": "static-import",
+          "to": "assets/m4/providers/common/connection-repository.js",
+          "exists": true
+        },
+        {
+          "from": "assets/app-entry-v1.3.6.js",
+          "specifier": "./m8/diagnostics/aistudio-log.js",
+          "kind": "static-import",
+          "to": "assets/m8/diagnostics/aistudio-log.js",
+          "exists": true
+        },
+        {
+          "from": "assets/app-entry-v1.3.6.js",
+          "specifier": "./m8/diagnostics/android-export-download.js",
+          "kind": "static-import",
+          "to": "assets/m8/diagnostics/android-export-download.js",
+          "exists": true
+        },
+        {
+          "from": "assets/app-entry-v1.3.6.js",
+          "specifier": "./proxy-persistence-service-v1.3.6.js?v=1.3.6-m2-final",
+          "kind": "static-import",
+          "to": "assets/proxy-persistence-service-v1.3.6.js",
+          "exists": true
+        },
+        {
+          "from": "assets/app-entry-v1.3.6.js",
+          "specifier": "./m6/ui/model-connection-test.js?v=1.3.6-m7.1",
+          "kind": "static-import",
+          "to": "assets/m6/ui/model-connection-test.js",
+          "exists": true
+        },
+        {
+          "from": "assets/app-entry-v1.3.6.js",
+          "specifier": "./m5/ui/runtime-guard.js?v=1.3.6-m7.1",
+          "kind": "static-import",
+          "to": "assets/m5/ui/runtime-guard.js",
+          "exists": true
+        },
+        {
+          "from": "assets/app-entry-v1.3.6.js",
+          "specifier": "./app-production-v1.3.6.js?v=1.3.6-m7.5",
+          "kind": "module-relative-url",
+          "to": "assets/app-production-v1.3.6.js",
+          "exists": true
+        },
+        {
+          "from": "assets/app-production-v1.3.6.js",
+          "specifier": "./recovered/providers/common/host-provider-bindings.js",
+          "kind": "static-import",
+          "to": "assets/recovered/providers/common/host-provider-bindings.js",
+          "exists": true
+        },
+        {
+          "from": "assets/app-production-v1.3.6.js",
+          "specifier": "./recovered/core/async/optional-module.js",
+          "kind": "static-import",
+          "to": "assets/recovered/core/async/optional-module.js",
+          "exists": true
+        },
+        {
+          "from": "assets/app-production-v1.3.6.js",
+          "specifier": "./recovered/vendor/immer-mapset.js",
+          "kind": "static-import",
+          "to": "assets/recovered/vendor/immer-mapset.js",
+          "exists": true
+        },
+        {
+          "from": "assets/app-production-v1.3.6.js",
+          "specifier": "./recovered/app/lifecycle/mount-application.js",
+          "kind": "static-import",
+          "to": "assets/recovered/app/lifecycle/mount-application.js",
+          "exists": true
+        },
+        {
+          "from": "assets/app-production-v1.3.6.js",
+          "specifier": "./recovered/vendor/react-state-runtime.js",
+          "kind": "static-import",
+          "to": "assets/recovered/vendor/react-state-runtime.js",
+          "exists": true
+        },
+        {
+          "from": "assets/app-production-v1.3.6.js",
+          "specifier": "./recovered/vendor/google-genai-runtime.js",
+          "kind": "static-import",
+          "to": "assets/recovered/vendor/google-genai-runtime.js",
+          "exists": true
+        },
+        {
+          "from": "assets/app-production-v1.3.6.js",
+          "specifier": "./recovered/ui/shell/providers.js",
+          "kind": "static-import",
+          "to": "assets/recovered/ui/shell/providers.js",
+          "exists": true
+        },
+        {
+          "from": "assets/app-production-v1.3.6.js",
+          "specifier": "./recovered/features/catalog/ui/catalog-screens.js",
+          "kind": "static-import",
+          "to": "assets/recovered/features/catalog/ui/catalog-screens.js",
+          "exists": true
+        },
+        {
+          "from": "assets/app-production-v1.3.6.js",
+          "specifier": "./recovered/features/rpg/ui/rpg-screens.js",
+          "kind": "static-import",
+          "to": "assets/recovered/features/rpg/ui/rpg-screens.js",
+          "exists": true
+        },
+        {
+          "from": "assets/app-production-v1.3.6.js",
+          "specifier": "./recovered/features/world-info/ui/world-info-screens.js",
+          "kind": "static-import",
+          "to": "assets/recovered/features/world-info/ui/world-info-screens.js",
+          "exists": true
+        },
+        {
+          "from": "assets/app-production-v1.3.6.js",
+          "specifier": "./recovered/ui/settings/settings-screens.js",
+          "kind": "static-import",
+          "to": "assets/recovered/ui/settings/settings-screens.js",
+          "exists": true
+        },
+        {
+          "from": "assets/app-production-v1.3.6.js",
+          "specifier": "./recovered/features/chat/ui/session-screens.js",
+          "kind": "static-import",
+          "to": "assets/recovered/features/chat/ui/session-screens.js",
+          "exists": true
+        },
+        {
+          "from": "assets/app-production-v1.3.6.js",
+          "specifier": "./recovered/features/chat/ui/message-rendering.js",
+          "kind": "static-import",
+          "to": "assets/recovered/features/chat/ui/message-rendering.js",
+          "exists": true
+        },
+        {
+          "from": "assets/app-production-v1.3.6.js",
+          "specifier": "./recovered/diagnostics/ui/diagnostic-panels.js",
+          "kind": "static-import",
+          "to": "assets/recovered/diagnostics/ui/diagnostic-panels.js",
+          "exists": true
+        },
+        {
+          "from": "assets/app-production-v1.3.6.js",
+          "specifier": "./recovered/app/state/application-stores.js",
+          "kind": "static-import",
+          "to": "assets/recovered/app/state/application-stores.js",
+          "exists": true
+        },
+        {
+          "from": "assets/app-production-v1.3.6.js",
+          "specifier": "./recovered/features/chat/hooks/session-hooks.js",
+          "kind": "static-import",
+          "to": "assets/recovered/features/chat/hooks/session-hooks.js",
+          "exists": true
+        },
+        {
+          "from": "assets/app-production-v1.3.6.js",
+          "specifier": "./recovered/features/rpg/default-database.js",
+          "kind": "static-import",
+          "to": "assets/recovered/features/rpg/default-database.js",
+          "exists": true
+        },
+        {
+          "from": "assets/app-production-v1.3.6.js",
+          "specifier": "./recovered/features/catalog/default-character.js",
+          "kind": "static-import",
+          "to": "assets/recovered/features/catalog/default-character.js",
+          "exists": true
+        },
+        {
+          "from": "assets/app-production-v1.3.6.js",
+          "specifier": "./recovered/features/presets/default-preset.js",
+          "kind": "static-import",
+          "to": "assets/recovered/features/presets/default-preset.js",
+          "exists": true
+        },
+        {
+          "from": "assets/app-production-v1.3.6.js",
+          "specifier": "./recovered/ui/components/input-controls.js",
+          "kind": "static-import",
+          "to": "assets/recovered/ui/components/input-controls.js",
+          "exists": true
+        },
+        {
+          "from": "assets/app-production-v1.3.6.js",
+          "specifier": "./recovered/features/catalog/ui/character-sections.js",
+          "kind": "static-import",
+          "to": "assets/recovered/features/catalog/ui/character-sections.js",
+          "exists": true
+        },
+        {
+          "from": "assets/app-production-v1.3.6.js",
+          "specifier": "./recovered/features/presets/ui/preset-sections.js",
+          "kind": "static-import",
+          "to": "assets/recovered/features/presets/ui/preset-sections.js",
+          "exists": true
+        },
+        {
+          "from": "assets/app-production-v1.3.6.js",
+          "specifier": "./recovered/features/world-info/ui/lorebook-controls.js",
+          "kind": "static-import",
+          "to": "assets/recovered/features/world-info/ui/lorebook-controls.js",
+          "exists": true
+        },
+        {
+          "from": "assets/app-production-v1.3.6.js",
+          "specifier": "./recovered/features/chat/ui/chat-controls.js",
+          "kind": "static-import",
+          "to": "assets/recovered/features/chat/ui/chat-controls.js",
+          "exists": true
+        },
+        {
+          "from": "assets/app-production-v1.3.6.js",
+          "specifier": "./recovered/ui/components/file-name-dialog.js",
+          "kind": "static-import",
+          "to": "assets/recovered/ui/components/file-name-dialog.js",
+          "exists": true
+        },
+        {
+          "from": "assets/app-production-v1.3.6.js",
+          "specifier": "./m6/ui/settings/connection-settings-screen.js",
+          "kind": "static-import",
+          "to": "assets/m6/ui/settings/connection-settings-screen.js",
+          "exists": true
+        },
+        {
+          "from": "assets/app-production-v1.3.6.js",
+          "specifier": "./m6/ui/components/icon.js",
+          "kind": "static-import",
+          "to": "assets/m6/ui/components/icon.js",
+          "exists": true
+        },
+        {
+          "from": "assets/app-production-v1.3.6.js",
+          "specifier": "./m6/ui/components/form-controls.js",
+          "kind": "static-import",
+          "to": "assets/m6/ui/components/form-controls.js",
+          "exists": true
+        },
+        {
+          "from": "assets/app-production-v1.3.6.js",
+          "specifier": "./m6/ui/components/tab-controls.js",
+          "kind": "static-import",
+          "to": "assets/m6/ui/components/tab-controls.js",
+          "exists": true
+        },
+        {
+          "from": "assets/app-production-v1.3.6.js",
+          "specifier": "./m6/ui/shell/application-shell.js",
+          "kind": "static-import",
+          "to": "assets/m6/ui/shell/application-shell.js",
+          "exists": true
+        },
+        {
+          "from": "assets/app-production-v1.3.6.js",
+          "specifier": "./m6/features/chat/ui/chat-route.js",
+          "kind": "static-import",
+          "to": "assets/m6/features/chat/ui/chat-route.js",
+          "exists": true
+        },
+        {
+          "from": "assets/app-production-v1.3.6.js",
+          "specifier": "./m6/ui/components/form-controls.js",
+          "kind": "static-import",
+          "to": "assets/m6/ui/components/form-controls.js",
+          "exists": true
+        },
+        {
+          "from": "assets/app-production-v1.3.6.js",
+          "specifier": "./m6/ui/components/section-controls.js",
+          "kind": "static-import",
+          "to": "assets/m6/ui/components/section-controls.js",
+          "exists": true
+        },
+        {
+          "from": "assets/app-production-v1.3.6.js",
+          "specifier": "./m6/features/world-info/ui/generate-entry-button.js",
+          "kind": "static-import",
+          "to": "assets/m6/features/world-info/ui/generate-entry-button.js",
+          "exists": true
+        },
+        {
+          "from": "assets/app-production-v1.3.6.js",
+          "specifier": "./m6/ui/components/recovered-primitives.js",
+          "kind": "static-import",
+          "to": "assets/m6/ui/components/recovered-primitives.js",
+          "exists": true
+        },
+        {
+          "from": "assets/app-production-v1.3.6.js",
+          "specifier": "./variable-scope-service-v1.3.6.js?v=1.3.6-variable-scopes-1",
+          "kind": "static-import",
+          "to": "assets/variable-scope-service-v1.3.6.js",
+          "exists": true
+        },
+        {
+          "from": "assets/app-production-v1.3.6.js",
+          "specifier": "./initial-variable-service-v1.3.6.js?v=1.3.6-initvar-3",
+          "kind": "static-import",
+          "to": "assets/initial-variable-service-v1.3.6.js",
+          "exists": true
+        },
+        {
+          "from": "assets/app-production-v1.3.6.js",
+          "specifier": "./m5/app/state/runtime-state.js?v=1.3.6-m5.1",
+          "kind": "static-import",
+          "to": "assets/m5/app/state/runtime-state.js",
+          "exists": true
+        },
+        {
+          "from": "assets/app-production-v1.3.6.js",
+          "specifier": "./m5/diagnostics/state.js?v=1.3.6-m5.3",
+          "kind": "static-import",
+          "to": "assets/m5/diagnostics/state.js",
+          "exists": true
+        },
+        {
+          "from": "assets/app-production-v1.3.6.js",
+          "specifier": "./m5/app/persistence/session-state.js?v=1.3.6-m5.3",
+          "kind": "static-import",
+          "to": "assets/m5/app/persistence/session-state.js",
+          "exists": true
+        },
+        {
+          "from": "assets/app-production-v1.3.6.js",
+          "specifier": "./m5/features/arena/state-machine.js?v=1.3.6-m5.1",
+          "kind": "static-import",
+          "to": "assets/m5/features/arena/state-machine.js",
+          "exists": true
+        },
+        {
+          "from": "assets/app-production-v1.3.6.js",
+          "specifier": "./m5/app/persistence/session-save-coordinator.js",
+          "kind": "static-import",
+          "to": "assets/m5/app/persistence/session-save-coordinator.js",
+          "exists": true
+        },
+        {
+          "from": "assets/app-production-v1.3.6.js",
+          "specifier": "./m5/app/persistence/entity-repositories.js",
+          "kind": "static-import",
+          "to": "assets/m5/app/persistence/entity-repositories.js",
+          "exists": true
+        },
+        {
+          "from": "assets/app-production-v1.3.6.js",
+          "specifier": "./variable-scope-service-v1.3.6.js?v=1.3.6-variable-scopes-1",
+          "kind": "static-import",
+          "to": "assets/variable-scope-service-v1.3.6.js",
+          "exists": true
+        },
+        {
+          "from": "assets/app-production-v1.3.6.js",
+          "specifier": "./m4/providers/common/generation-gateway.js?v=1.3.6-m4.1",
+          "kind": "static-import",
+          "to": "assets/m4/providers/common/generation-gateway.js",
+          "exists": true
+        },
+        {
+          "from": "assets/app-production-v1.3.6.js",
+          "specifier": "./m4/features/chat/turn-policy.js?v=1.3.6-m4.5",
+          "kind": "static-import",
+          "to": "assets/m4/features/chat/turn-policy.js",
+          "exists": true
+        },
+        {
+          "from": "assets/app-production-v1.3.6.js",
+          "specifier": "./m4/features/chat/conversation-service.js?v=1.3.6-m4.8",
+          "kind": "static-import",
+          "to": "assets/m4/features/chat/conversation-service.js",
+          "exists": true
+        },
+        {
+          "from": "assets/app-production-v1.3.6.js",
+          "specifier": "./m4/features/chat/live-stream-store.js?v=1.3.6-m4.10",
+          "kind": "static-import",
+          "to": "assets/m4/features/chat/live-stream-store.js",
+          "exists": true
+        },
+        {
+          "from": "assets/app-production-v1.3.6.js",
+          "specifier": "./m4/features/world-info/embedding-service.js?v=1.3.6-m4.9",
+          "kind": "static-import",
+          "to": "assets/m4/features/world-info/embedding-service.js",
+          "exists": true
+        },
+        {
+          "from": "assets/app-production-v1.3.6.js",
+          "specifier": "./m4/features/world-info/smart-scan-service.js?v=1.3.6-m4.8",
+          "kind": "static-import",
+          "to": "assets/m4/features/world-info/smart-scan-service.js",
+          "exists": true
+        },
+        {
+          "from": "assets/app-production-v1.3.6.js",
+          "specifier": "./m4/features/world-info/sticky-compat.js?v=1.3.6-m4.1",
+          "kind": "static-import",
+          "to": "assets/m4/features/world-info/sticky-compat.js",
+          "exists": true
+        },
+        {
+          "from": "assets/app-production-v1.3.6.js",
+          "specifier": "./m4/features/prompts/prompt-service.js?v=1.3.6-m4.3",
+          "kind": "static-import",
+          "to": "assets/m4/features/prompts/prompt-service.js",
+          "exists": true
+        },
+        {
+          "from": "assets/app-production-v1.3.6.js",
+          "specifier": "./m4/features/chat/response-processor.js?v=1.3.6-m4.3",
+          "kind": "static-import",
+          "to": "assets/m4/features/chat/response-processor.js",
+          "exists": true
+        },
+        {
+          "from": "assets/app-production-v1.3.6.js",
+          "specifier": "./proxy-persistence-service-v1.3.6.js?v=1.3.6-m2-final",
+          "kind": "static-import",
+          "to": "assets/proxy-persistence-service-v1.3.6.js",
+          "exists": true
+        },
+        {
+          "from": "assets/app-production-v1.3.6.js",
+          "specifier": "./initial-variable-service-v1.3.6.js?v=1.3.6-initvar-3",
+          "kind": "static-import",
+          "to": "assets/initial-variable-service-v1.3.6.js",
+          "exists": true
+        },
+        {
+          "from": "assets/app-production-v1.3.6.js",
+          "specifier": "./smart-state-service-v1.3.6.js?v=1.3.6-smartstate-2",
+          "kind": "static-import",
+          "to": "assets/smart-state-service-v1.3.6.js",
+          "exists": true
+        },
+        {
+          "from": "assets/app-production-v1.3.6.js",
+          "specifier": "./card-runtime-core-builder-v1.3.6.js?v=1.3.6-m3.10",
+          "kind": "static-import",
+          "to": "assets/card-runtime-core-builder-v1.3.6.js",
+          "exists": true
+        },
+        {
+          "from": "assets/app-production-v1.3.6.js",
+          "specifier": "./card-runtime-renderer-v1.3.6.js?v=1.3.6-m3.10",
+          "kind": "static-import",
+          "to": "assets/card-runtime-renderer-v1.3.6.js",
+          "exists": true
+        },
+        {
+          "from": "assets/app-production-v1.3.6.js",
+          "specifier": "./prompt-normalizer-v1.3.6.js?v=1.3.6-worldinfo-1",
+          "kind": "static-import",
+          "to": "assets/prompt-normalizer-v1.3.6.js",
+          "exists": true
+        },
+        {
+          "from": "assets/app-production-v1.3.6.js",
+          "specifier": "./recovered/features/world-info/lorebook-file.js",
+          "kind": "static-import",
+          "to": "assets/recovered/features/world-info/lorebook-file.js",
+          "exists": true
+        },
+        {
+          "from": "assets/app-production-v1.3.6.js",
+          "specifier": "./recovered/app/state/settings-keys.js",
+          "kind": "static-import",
+          "to": "assets/recovered/app/state/settings-keys.js",
+          "exists": true
+        },
+        {
+          "from": "assets/app-production-v1.3.6.js",
+          "specifier": "./recovered/features/state/default-feature-settings.js",
+          "kind": "static-import",
+          "to": "assets/recovered/features/state/default-feature-settings.js",
+          "exists": true
+        },
+        {
+          "from": "assets/app-production-v1.3.6.js",
+          "specifier": "./recovered/features/state/feature-settings.js",
+          "kind": "static-import",
+          "to": "assets/recovered/features/state/feature-settings.js",
+          "exists": true
+        },
+        {
+          "from": "assets/app-production-v1.3.6.js",
+          "specifier": "./recovered/providers/common/legacy-transport.js",
+          "kind": "static-import",
+          "to": "assets/recovered/providers/common/legacy-transport.js",
+          "exists": true
+        },
+        {
+          "from": "assets/app-production-v1.3.6.js",
+          "specifier": "./recovered/providers/common/legacy-response-utils.js",
+          "kind": "static-import",
+          "to": "assets/recovered/providers/common/legacy-response-utils.js",
+          "exists": true
+        },
+        {
+          "from": "assets/app-production-v1.3.6.js",
+          "specifier": "./recovered/features/rpg/table-processing.js",
+          "kind": "static-import",
+          "to": "assets/recovered/features/rpg/table-processing.js",
+          "exists": true
+        },
+        {
+          "from": "assets/app-production-v1.3.6.js",
+          "specifier": "./recovered/features/catalog/character-export.js",
+          "kind": "static-import",
+          "to": "assets/recovered/features/catalog/character-export.js",
+          "exists": true
+        },
+        {
+          "from": "assets/app-production-v1.3.6.js",
+          "specifier": "./recovered/features/catalog/character-file.js",
+          "kind": "static-import",
+          "to": "assets/recovered/features/catalog/character-file.js",
+          "exists": true
+        },
+        {
+          "from": "assets/app-production-v1.3.6.js",
+          "specifier": "./recovered/vendor/lodash-runtime.js",
+          "kind": "static-import",
+          "to": "assets/recovered/vendor/lodash-runtime.js",
+          "exists": true
+        },
+        {
+          "from": "assets/app-production-v1.3.6.js",
+          "specifier": "./recovered/features/state/script-execution.js",
+          "kind": "static-import",
+          "to": "assets/recovered/features/state/script-execution.js",
+          "exists": true
+        },
+        {
+          "from": "assets/app-production-v1.3.6.js",
+          "specifier": "./recovered/features/prompts/macro-processing.js",
+          "kind": "static-import",
+          "to": "assets/recovered/features/prompts/macro-processing.js",
+          "exists": true
+        },
+        {
+          "from": "assets/app-production-v1.3.6.js",
+          "specifier": "./recovered/features/chat/regex-processing.js",
+          "kind": "static-import",
+          "to": "assets/recovered/features/chat/regex-processing.js",
+          "exists": true
+        },
+        {
+          "from": "assets/app-production-v1.3.6.js",
+          "specifier": "./recovered/features/prompts/legacy-prompt-builder.js",
+          "kind": "static-import",
+          "to": "assets/recovered/features/prompts/legacy-prompt-builder.js",
+          "exists": true
+        },
+        {
+          "from": "assets/app-production-v1.3.6.js",
+          "specifier": "./recovered/features/speech/audio-conversion.js",
+          "kind": "static-import",
+          "to": "assets/recovered/features/speech/audio-conversion.js",
+          "exists": true
+        },
+        {
+          "from": "assets/app-production-v1.3.6.js",
+          "specifier": "./recovered/features/speech/speech-engine.js",
+          "kind": "static-import",
+          "to": "assets/recovered/features/speech/speech-engine.js",
+          "exists": true
+        },
+        {
+          "from": "assets/app-production-v1.3.6.js",
+          "specifier": "./recovered/app/persistence/backup-codec.js",
+          "kind": "static-import",
+          "to": "assets/recovered/app/persistence/backup-codec.js",
+          "exists": true
+        },
+        {
+          "from": "assets/app-production-v1.3.6.js",
+          "specifier": "./recovered/features/world-info/keyword-matching.js",
+          "kind": "static-import",
+          "to": "assets/recovered/features/world-info/keyword-matching.js",
+          "exists": true
+        },
+        {
+          "from": "assets/app-production-v1.3.6.js",
+          "specifier": "./recovered/runtime/card-runtime/host/slash-commands.js",
+          "kind": "static-import",
+          "to": "assets/recovered/runtime/card-runtime/host/slash-commands.js",
+          "exists": true
+        },
+        {
+          "from": "assets/app-production-v1.3.6.js",
+          "specifier": "./recovered/runtime/card-runtime/frame-context.js",
+          "kind": "static-import",
+          "to": "assets/recovered/runtime/card-runtime/frame-context.js",
+          "exists": true
+        },
+        {
+          "from": "assets/app-production-v1.3.6.js",
+          "specifier": "./recovered/vendor/markdown-runtime.js",
+          "kind": "static-import",
+          "to": "assets/recovered/vendor/markdown-runtime.js",
+          "exists": true
+        },
+        {
+          "from": "assets/app-production-v1.3.6.js",
+          "specifier": "./recovered/vendor/html-sanitizer-runtime.js",
+          "kind": "static-import",
+          "to": "assets/recovered/vendor/html-sanitizer-runtime.js",
+          "exists": true
+        },
+        {
+          "from": "assets/app-production-v1.3.6.js",
+          "specifier": "./recovered/core/parse-relaxed-json.js",
+          "kind": "static-import",
+          "to": "assets/recovered/core/parse-relaxed-json.js",
+          "exists": true
+        },
+        {
+          "from": "assets/app-production-v1.3.6.js",
+          "specifier": "./recovered/ui/components/display-formatting.js",
+          "kind": "static-import",
+          "to": "assets/recovered/ui/components/display-formatting.js",
+          "exists": true
+        },
+        {
+          "from": "assets/app-production-v1.3.6.js",
+          "specifier": "./recovered/features/rpg/table-lorebook-links.js",
+          "kind": "static-import",
+          "to": "assets/recovered/features/rpg/table-lorebook-links.js",
+          "exists": true
+        },
+        {
+          "from": "assets/app-production-v1.3.6.js",
+          "specifier": "./recovered/app/state/session-defaults.js",
+          "kind": "static-import",
+          "to": "assets/recovered/app/state/session-defaults.js",
+          "exists": true
+        },
+        {
+          "from": "assets/app-production-v1.3.6.js",
+          "specifier": "./recovered/providers/common/legacy-generation-adapters.js",
+          "kind": "static-import",
+          "to": "assets/recovered/providers/common/legacy-generation-adapters.js",
+          "exists": true
+        },
+        {
+          "from": "assets/app-production-v1.3.6.js",
+          "specifier": "./recovered/features/rpg/rpg-import.js",
+          "kind": "static-import",
+          "to": "assets/recovered/features/rpg/rpg-import.js",
+          "exists": true
+        },
+        {
+          "from": "assets/app-production-v1.3.6.js",
+          "specifier": "./recovered/ui/settings/gemini-catalog-hook.js",
+          "kind": "static-import",
+          "to": "assets/recovered/ui/settings/gemini-catalog-hook.js",
+          "exists": true
+        },
+        {
+          "from": "assets/app-production-v1.3.6.js",
+          "specifier": "./recovered/ui/components/dialog-focus.js",
+          "kind": "static-import",
+          "to": "assets/recovered/ui/components/dialog-focus.js",
+          "exists": true
+        },
+        {
+          "from": "assets/app-production-v1.3.6.js",
+          "specifier": "./recovered/features/world-info/ui/embedding-sync-hook.js",
+          "kind": "static-import",
+          "to": "assets/recovered/features/world-info/ui/embedding-sync-hook.js",
+          "exists": true
+        },
+        {
+          "from": "assets/app-production-v1.3.6.js",
+          "specifier": "./recovered/features/prompts/macro-reference.js",
+          "kind": "static-import",
+          "to": "assets/recovered/features/prompts/macro-reference.js",
+          "exists": true
+        },
+        {
+          "from": "assets/app-production-v1.3.6.js",
+          "specifier": "./recovered/features/presets/preset-file.js",
+          "kind": "static-import",
+          "to": "assets/recovered/features/presets/preset-file.js",
+          "exists": true
+        },
+        {
+          "from": "assets/app-production-v1.3.6.js",
+          "specifier": "./recovered/ui/components/radio-navigation.js",
+          "kind": "static-import",
+          "to": "assets/recovered/ui/components/radio-navigation.js",
+          "exists": true
+        },
+        {
+          "from": "assets/app-production-v1.3.6.js",
+          "specifier": "./recovered/features/chat/summary-generation.js",
+          "kind": "static-import",
+          "to": "assets/recovered/features/chat/summary-generation.js",
+          "exists": true
+        },
+        {
+          "from": "assets/app-production-v1.3.6.js",
+          "specifier": "./recovered/features/chat/epub-import.js",
+          "kind": "static-import",
+          "to": "assets/recovered/features/chat/epub-import.js",
+          "exists": true
+        },
+        {
+          "from": "assets/app-production-v1.3.6.js",
+          "specifier": "./recovered/runtime/card-runtime/host/compatibility-data.js",
+          "kind": "static-import",
+          "to": "assets/recovered/runtime/card-runtime/host/compatibility-data.js",
+          "exists": true
+        },
+        {
+          "from": "assets/app-production-v1.3.6.js",
+          "specifier": "./recovered/diagnostics/card-runtime-diagnostics.js",
+          "kind": "static-import",
+          "to": "assets/recovered/diagnostics/card-runtime-diagnostics.js",
+          "exists": true
+        },
+        {
+          "from": "assets/app-production-v1.3.6.js",
+          "specifier": "./recovered/runtime/card-runtime/host/context-adapters.js",
+          "kind": "static-import",
+          "to": "assets/recovered/runtime/card-runtime/host/context-adapters.js",
+          "exists": true
+        },
+        {
+          "from": "assets/app-production-v1.3.6.js",
+          "specifier": "./recovered/runtime/card-runtime/host/slash-command-reference.js",
+          "kind": "static-import",
+          "to": "assets/recovered/runtime/card-runtime/host/slash-command-reference.js",
+          "exists": true
+        },
+        {
+          "from": "assets/app-production-v1.3.6.js",
+          "specifier": "./recovered/features/rpg/action-proposal-prompt.js",
+          "kind": "static-import",
+          "to": "assets/recovered/features/rpg/action-proposal-prompt.js",
+          "exists": true
+        },
+        {
+          "from": "assets/app-production-v1.3.6.js",
+          "specifier": "./recovered/app/lifecycle/application-lifecycle.js",
+          "kind": "static-import",
+          "to": "assets/recovered/app/lifecycle/application-lifecycle.js",
+          "exists": true
+        },
+        {
+          "from": "assets/jszip.min-CF4xG0Dr.js",
+          "specifier": "./index-yS4Vru8B.js",
+          "kind": "static-import",
+          "to": "assets/index-yS4Vru8B.js",
+          "exists": true
+        },
+        {
+          "from": "assets/m4/features/catalog/catalog-mutations.js",
+          "specifier": "../../../recovered/core/async/serial-queue.js",
+          "kind": "static-import",
+          "to": "assets/recovered/core/async/serial-queue.js",
+          "exists": true
+        },
+        {
+          "from": "assets/m4/features/chat/conversation-service.js",
+          "specifier": "../../core/async/cancellation.js",
+          "kind": "static-import",
+          "to": "assets/m4/core/async/cancellation.js",
+          "exists": true
+        },
+        {
+          "from": "assets/m4/features/prompts/prompt-service.js",
+          "specifier": "../chat/turn-policy.js",
+          "kind": "static-import",
+          "to": "assets/m4/features/chat/turn-policy.js",
+          "exists": true
+        },
+        {
+          "from": "assets/m4/features/world-info/embedding-service.js",
+          "specifier": "./native-embedding-bridge.js",
+          "kind": "static-import",
+          "to": "assets/m4/features/world-info/native-embedding-bridge.js",
+          "exists": true
+        },
+        {
+          "from": "assets/m4/features/world-info/embedding-service.js",
+          "specifier": "./embeddinggemma2-litert-bridge.js",
+          "kind": "static-import",
+          "to": "assets/m4/features/world-info/embeddinggemma2-litert-bridge.js",
+          "exists": true
+        },
+        {
+          "from": "assets/m4/features/world-info/embedding-service.js",
+          "specifier": "./embedding-index-repository.js",
+          "kind": "static-import",
+          "to": "assets/m4/features/world-info/embedding-index-repository.js",
+          "exists": true
+        },
+        {
+          "from": "assets/m4/features/world-info/embeddinggemma2-litert-bridge.js",
+          "specifier": "../../../recovered/platform/android/native-bridge.js",
+          "kind": "static-import",
+          "to": "assets/recovered/platform/android/native-bridge.js",
+          "exists": true
+        },
+        {
+          "from": "assets/m4/features/world-info/lorebook-mutations.js",
+          "specifier": "../../../recovered/core/async/serial-queue.js",
+          "kind": "static-import",
+          "to": "assets/recovered/core/async/serial-queue.js",
+          "exists": true
+        },
+        {
+          "from": "assets/m4/features/world-info/native-embedding-bridge.js",
+          "specifier": "../../../recovered/platform/android/native-bridge.js",
+          "kind": "static-import",
+          "to": "assets/recovered/platform/android/native-bridge.js",
+          "exists": true
+        },
+        {
+          "from": "assets/m4/providers/aistudio/model-catalog.js",
+          "specifier": "../../../recovered/platform/android/native-bridge.js",
+          "kind": "static-import",
+          "to": "assets/recovered/platform/android/native-bridge.js",
+          "exists": true
+        },
+        {
+          "from": "assets/m4/providers/aistudio/text.js",
+          "specifier": "../../../recovered/platform/android/native-bridge.js",
+          "kind": "static-import",
+          "to": "assets/recovered/platform/android/native-bridge.js",
+          "exists": true
+        },
+        {
+          "from": "assets/m4/providers/aistudio/text.js",
+          "specifier": "../common/connection-repository.js",
+          "kind": "static-import",
+          "to": "assets/m4/providers/common/connection-repository.js",
+          "exists": true
+        },
+        {
+          "from": "assets/m4/providers/common/connection-repository.js",
+          "specifier": "./provider-registry.js",
+          "kind": "static-import",
+          "to": "assets/m4/providers/common/provider-registry.js",
+          "exists": true
+        },
+        {
+          "from": "assets/m4/providers/common/generation-gateway.js",
+          "specifier": "../gemini/generation.js",
+          "kind": "static-import",
+          "to": "assets/m4/providers/gemini/generation.js",
+          "exists": true
+        },
+        {
+          "from": "assets/m4/providers/common/generation-gateway.js",
+          "specifier": "../aistudio/text.js",
+          "kind": "static-import",
+          "to": "assets/m4/providers/aistudio/text.js",
+          "exists": true
+        },
+        {
+          "from": "assets/m4/providers/common/generation-gateway.js",
+          "specifier": "../openrouter/generation.js",
+          "kind": "static-import",
+          "to": "assets/m4/providers/openrouter/generation.js",
+          "exists": true
+        },
+        {
+          "from": "assets/m4/providers/common/generation-gateway.js",
+          "specifier": "../proxy/generation.js",
+          "kind": "static-import",
+          "to": "assets/m4/providers/proxy/generation.js",
+          "exists": true
+        },
+        {
+          "from": "assets/m4/providers/common/generation-gateway.js",
+          "specifier": "./provider-registry.js",
+          "kind": "static-import",
+          "to": "assets/m4/providers/common/provider-registry.js",
+          "exists": true
+        },
+        {
+          "from": "assets/m4/providers/common/generation-gateway.js",
+          "specifier": "./provider-registry.js",
+          "kind": "re-export",
+          "to": "assets/m4/providers/common/provider-registry.js",
+          "exists": true
+        },
+        {
+          "from": "assets/m4/providers/common/generation-gateway.js",
+          "specifier": "../aistudio/model-catalog.js",
+          "kind": "re-export",
+          "to": "assets/m4/providers/aistudio/model-catalog.js",
+          "exists": true
+        },
+        {
+          "from": "assets/m4/providers/gemini/generation.js",
+          "specifier": "../common/generation-utils.js",
+          "kind": "static-import",
+          "to": "assets/m4/providers/common/generation-utils.js",
+          "exists": true
+        },
+        {
+          "from": "assets/m4/providers/openrouter/generation.js",
+          "specifier": "../common/generation-utils.js",
+          "kind": "static-import",
+          "to": "assets/m4/providers/common/generation-utils.js",
+          "exists": true
+        },
+        {
+          "from": "assets/m4/providers/proxy/generation.js",
+          "specifier": "../common/generation-utils.js",
+          "kind": "static-import",
+          "to": "assets/m4/providers/common/generation-utils.js",
+          "exists": true
+        },
+        {
+          "from": "assets/m4/runtime/card-runtime/host/generation-tasks.js",
+          "specifier": "../../../core/async/cancellation.js",
+          "kind": "static-import",
+          "to": "assets/m4/core/async/cancellation.js",
+          "exists": true
+        },
+        {
+          "from": "assets/m4/runtime/card-runtime/host/utility-rpc.js",
+          "specifier": "../../../features/chat/chat-import.js",
+          "kind": "static-import",
+          "to": "assets/m4/features/chat/chat-import.js",
+          "exists": true
+        },
+        {
+          "from": "assets/m5/app/persistence/entity-repositories.js",
+          "specifier": "./app-database.js",
+          "kind": "static-import",
+          "to": "assets/m5/app/persistence/app-database.js",
+          "exists": true
+        },
+        {
+          "from": "assets/m5/app/persistence/session-state.js",
+          "specifier": "../../features/arena/state-machine.js",
+          "kind": "static-import",
+          "to": "assets/m5/features/arena/state-machine.js",
+          "exists": true
+        },
+        {
+          "from": "assets/m5/ui/runtime-guard.js",
+          "specifier": "../app/state/runtime-state.js?v=1.3.6-m5.1",
+          "kind": "static-import",
+          "to": "assets/m5/app/state/runtime-state.js",
+          "exists": true
+        },
+        {
+          "from": "assets/m6/ui/settings/connection-settings-screen.js",
+          "specifier": "./model-test-button.js",
+          "kind": "static-import",
+          "to": "assets/m6/ui/settings/model-test-button.js",
+          "exists": true
+        },
+        {
+          "from": "assets/m6/ui/settings/connection-settings-screen.js",
+          "specifier": "./settings-controller.js",
+          "kind": "static-import",
+          "to": "assets/m6/ui/settings/settings-controller.js",
+          "exists": true
+        },
+        {
+          "from": "assets/m6/ui/settings/connection-settings-screen.js",
+          "specifier": "./provider-sections.js",
+          "kind": "static-import",
+          "to": "assets/m6/ui/settings/provider-sections.js",
+          "exists": true
+        },
+        {
+          "from": "assets/m6/ui/settings/model-test-button.js",
+          "specifier": "../../../m4/core/async/cancellation.js",
+          "kind": "static-import",
+          "to": "assets/m4/core/async/cancellation.js",
+          "exists": true
+        },
+        {
+          "from": "assets/m6/ui/settings/provider-sections.js",
+          "specifier": "../../../m4/providers/aistudio/text.js",
+          "kind": "static-import",
+          "to": "assets/m4/providers/aistudio/text.js",
+          "exists": true
+        },
+        {
+          "from": "assets/m6/ui/settings/settings-controller.js",
+          "specifier": "../../../recovered/platform/android/native-bridge.js",
+          "kind": "static-import",
+          "to": "assets/recovered/platform/android/native-bridge.js",
+          "exists": true
+        },
+        {
+          "from": "assets/m6/ui/settings/settings-controller.js",
+          "specifier": "../../../m4/core/async/cancellation.js",
+          "kind": "static-import",
+          "to": "assets/m4/core/async/cancellation.js",
+          "exists": true
+        },
+        {
+          "from": "assets/m6/ui/settings/settings-controller.js",
+          "specifier": "./model-test-button.js",
+          "kind": "static-import",
+          "to": "assets/m6/ui/settings/model-test-button.js",
+          "exists": true
+        },
+        {
+          "from": "assets/m8/diagnostics/aistudio-log.js",
+          "specifier": "../../recovered/platform/android/native-bridge.js",
+          "kind": "static-import",
+          "to": "assets/recovered/platform/android/native-bridge.js",
+          "exists": true
+        },
+        {
+          "from": "assets/m8/diagnostics/android-export-download.js",
+          "specifier": "../../recovered/platform/android/native-bridge.js",
+          "kind": "static-import",
+          "to": "assets/recovered/platform/android/native-bridge.js",
+          "exists": true
+        },
+        {
+          "from": "assets/recovered/app/state/application-stores.js",
+          "specifier": "./lorebook-store.js",
+          "kind": "re-export",
+          "to": "assets/recovered/app/state/lorebook-store.js",
+          "exists": true
+        },
+        {
+          "from": "assets/recovered/app/state/application-stores.js",
+          "specifier": "./session-store.js",
+          "kind": "re-export",
+          "to": "assets/recovered/app/state/session-store.js",
+          "exists": true
+        },
+        {
+          "from": "assets/recovered/app/state/application-stores.js",
+          "specifier": "./character-store.js",
+          "kind": "re-export",
+          "to": "assets/recovered/app/state/character-store.js",
+          "exists": true
+        },
+        {
+          "from": "assets/recovered/app/state/application-stores.js",
+          "specifier": "./preset-store.js",
+          "kind": "re-export",
+          "to": "assets/recovered/app/state/preset-store.js",
+          "exists": true
+        },
+        {
+          "from": "assets/recovered/app/state/application-stores.js",
+          "specifier": "./persona-store.js",
+          "kind": "re-export",
+          "to": "assets/recovered/app/state/persona-store.js",
+          "exists": true
+        },
+        {
+          "from": "assets/recovered/app/state/character-store.js",
+          "specifier": "../../core/async/serial-queue.js",
+          "kind": "static-import",
+          "to": "assets/recovered/core/async/serial-queue.js",
+          "exists": true
+        },
+        {
+          "from": "assets/recovered/app/state/character-store.js",
+          "specifier": "../../../m4/features/catalog/catalog-mutations.js",
+          "kind": "static-import",
+          "to": "assets/m4/features/catalog/catalog-mutations.js",
+          "exists": true
+        },
+        {
+          "from": "assets/recovered/app/state/lorebook-store.js",
+          "specifier": "../../core/async/serial-queue.js",
+          "kind": "static-import",
+          "to": "assets/recovered/core/async/serial-queue.js",
+          "exists": true
+        },
+        {
+          "from": "assets/recovered/app/state/lorebook-store.js",
+          "specifier": "../../../m4/features/world-info/lorebook-mutations.js",
+          "kind": "static-import",
+          "to": "assets/m4/features/world-info/lorebook-mutations.js",
+          "exists": true
+        },
+        {
+          "from": "assets/recovered/app/state/persona-store.js",
+          "specifier": "../../core/async/serial-queue.js",
+          "kind": "static-import",
+          "to": "assets/recovered/core/async/serial-queue.js",
+          "exists": true
+        },
+        {
+          "from": "assets/recovered/app/state/persona-store.js",
+          "specifier": "../../../m4/features/catalog/catalog-mutations.js",
+          "kind": "static-import",
+          "to": "assets/m4/features/catalog/catalog-mutations.js",
+          "exists": true
+        },
+        {
+          "from": "assets/recovered/app/state/preset-store.js",
+          "specifier": "../../core/async/serial-queue.js",
+          "kind": "static-import",
+          "to": "assets/recovered/core/async/serial-queue.js",
+          "exists": true
+        },
+        {
+          "from": "assets/recovered/app/state/preset-store.js",
+          "specifier": "../../../m4/features/catalog/catalog-mutations.js",
+          "kind": "static-import",
+          "to": "assets/m4/features/catalog/catalog-mutations.js",
+          "exists": true
+        },
+        {
+          "from": "assets/recovered/app/state/session-store.js",
+          "specifier": "./session-rpg-actions.js",
+          "kind": "static-import",
+          "to": "assets/recovered/app/state/session-rpg-actions.js",
+          "exists": true
+        },
+        {
+          "from": "assets/recovered/features/catalog/character-file.js",
+          "specifier": "../../../jszip.min-CF4xG0Dr.js",
+          "kind": "dynamic-import",
+          "to": "assets/jszip.min-CF4xG0Dr.js",
+          "exists": true
+        },
+        {
+          "from": "assets/recovered/features/chat/epub-import.js",
+          "specifier": "../../../jszip.min-CF4xG0Dr.js",
+          "kind": "dynamic-import",
+          "to": "assets/jszip.min-CF4xG0Dr.js",
+          "exists": true
+        },
+        {
+          "from": "assets/recovered/features/chat/hooks/session-hooks.js",
+          "specifier": "./use-diagnostics.js",
+          "kind": "re-export",
+          "to": "assets/recovered/features/chat/hooks/use-diagnostics.js",
+          "exists": true
+        },
+        {
+          "from": "assets/recovered/features/chat/hooks/session-hooks.js",
+          "specifier": "./use-conversation.js",
+          "kind": "re-export",
+          "to": "assets/recovered/features/chat/hooks/use-conversation.js",
+          "exists": true
+        },
+        {
+          "from": "assets/recovered/features/chat/hooks/session-hooks.js",
+          "specifier": "./use-chat-session.js",
+          "kind": "re-export",
+          "to": "assets/recovered/features/chat/hooks/use-chat-session.js",
+          "exists": true
+        },
+        {
+          "from": "assets/recovered/features/chat/hooks/use-card-runtime.js",
+          "specifier": "../../../../m4/runtime/card-runtime/host/rpc-dispatcher.js",
+          "kind": "static-import",
+          "to": "assets/m4/runtime/card-runtime/host/rpc-dispatcher.js",
+          "exists": true
+        },
+        {
+          "from": "assets/recovered/features/chat/hooks/use-card-runtime.js",
+          "specifier": "../../../../m4/runtime/card-runtime/host/generation-tasks.js",
+          "kind": "static-import",
+          "to": "assets/m4/runtime/card-runtime/host/generation-tasks.js",
+          "exists": true
+        },
+        {
+          "from": "assets/recovered/features/chat/hooks/use-card-runtime.js",
+          "specifier": "../../../../m4/runtime/card-runtime/host/state-rpc.js",
+          "kind": "static-import",
+          "to": "assets/m4/runtime/card-runtime/host/state-rpc.js",
+          "exists": true
+        },
+        {
+          "from": "assets/recovered/features/chat/hooks/use-card-runtime.js",
+          "specifier": "../../../../m4/runtime/card-runtime/host/chat-rpc.js",
+          "kind": "static-import",
+          "to": "assets/m4/runtime/card-runtime/host/chat-rpc.js",
+          "exists": true
+        },
+        {
+          "from": "assets/recovered/features/chat/hooks/use-card-runtime.js",
+          "specifier": "../../../../m4/runtime/card-runtime/host/catalog-rpc.js",
+          "kind": "static-import",
+          "to": "assets/m4/runtime/card-runtime/host/catalog-rpc.js",
+          "exists": true
+        },
+        {
+          "from": "assets/recovered/features/chat/hooks/use-card-runtime.js",
+          "specifier": "../../../../m4/runtime/card-runtime/host/lorebook-rpc.js",
+          "kind": "static-import",
+          "to": "assets/m4/runtime/card-runtime/host/lorebook-rpc.js",
+          "exists": true
+        },
+        {
+          "from": "assets/recovered/features/chat/hooks/use-card-runtime.js",
+          "specifier": "../../../../m4/runtime/card-runtime/host/utility-rpc.js",
+          "kind": "static-import",
+          "to": "assets/m4/runtime/card-runtime/host/utility-rpc.js",
+          "exists": true
+        },
+        {
+          "from": "assets/recovered/features/chat/hooks/use-card-runtime.js",
+          "specifier": "../../../runtime/card-runtime/host/method-router.js",
+          "kind": "static-import",
+          "to": "assets/recovered/runtime/card-runtime/host/method-router.js",
+          "exists": true
+        },
+        {
+          "from": "assets/recovered/features/chat/hooks/use-card-runtime.js",
+          "specifier": "../../../runtime/card-runtime/host/runtime-prompt.js",
+          "kind": "static-import",
+          "to": "assets/recovered/runtime/card-runtime/host/runtime-prompt.js",
+          "exists": true
+        },
+        {
+          "from": "assets/recovered/features/chat/hooks/use-card-runtime.js",
+          "specifier": "../../../runtime/card-runtime/host/runtime-events.js",
+          "kind": "static-import",
+          "to": "assets/recovered/runtime/card-runtime/host/runtime-events.js",
+          "exists": true
+        },
+        {
+          "from": "assets/recovered/features/chat/hooks/use-chat-session.js",
+          "specifier": "./use-session-persistence.js",
+          "kind": "static-import",
+          "to": "assets/recovered/features/chat/hooks/use-session-persistence.js",
+          "exists": true
+        },
+        {
+          "from": "assets/recovered/features/chat/hooks/use-chat-session.js",
+          "specifier": "./use-smart-context.js",
+          "kind": "static-import",
+          "to": "assets/recovered/features/chat/hooks/use-smart-context.js",
+          "exists": true
+        },
+        {
+          "from": "assets/recovered/features/chat/hooks/use-chat-session.js",
+          "specifier": "./use-message-history.js",
+          "kind": "static-import",
+          "to": "assets/recovered/features/chat/hooks/use-message-history.js",
+          "exists": true
+        },
+        {
+          "from": "assets/recovered/features/chat/hooks/use-chat-session.js",
+          "specifier": "./use-slash-commands.js",
+          "kind": "static-import",
+          "to": "assets/recovered/features/chat/hooks/use-slash-commands.js",
+          "exists": true
+        },
+        {
+          "from": "assets/recovered/features/chat/hooks/use-chat-session.js",
+          "specifier": "./use-card-runtime.js",
+          "kind": "static-import",
+          "to": "assets/recovered/features/chat/hooks/use-card-runtime.js",
+          "exists": true
+        },
+        {
+          "from": "assets/recovered/features/chat/hooks/use-conversation.js",
+          "specifier": "./use-response-pipeline.js",
+          "kind": "static-import",
+          "to": "assets/recovered/features/chat/hooks/use-response-pipeline.js",
+          "exists": true
+        },
+        {
+          "from": "assets/recovered/features/chat/hooks/use-conversation.js",
+          "specifier": "./use-smart-scan.js",
+          "kind": "static-import",
+          "to": "assets/recovered/features/chat/hooks/use-smart-scan.js",
+          "exists": true
+        },
+        {
+          "from": "assets/recovered/features/prompts/legacy-prompt-builder.js",
+          "specifier": "../../../ejs.min-Cthf3_XD.js",
+          "kind": "dynamic-import",
+          "to": "assets/ejs.min-Cthf3_XD.js",
+          "exists": true
+        },
+        {
+          "from": "assets/recovered/features/state/script-execution.js",
+          "specifier": "../../../lodash.min-xZXeUb-0.js",
+          "kind": "dynamic-import",
+          "to": "assets/lodash.min-xZXeUb-0.js",
+          "exists": true
+        },
+        {
+          "from": "assets/recovered/platform/android/native-bridge.js",
+          "specifier": "../../../m4/core/async/cancellation.js",
+          "kind": "static-import",
+          "to": "assets/m4/core/async/cancellation.js",
+          "exists": true
+        },
+        {
+          "from": "assets/recovered/providers/common/host-provider-bindings.js",
+          "specifier": "../../../m4/providers/common/connection-repository.js",
+          "kind": "static-import",
+          "to": "assets/m4/providers/common/connection-repository.js",
+          "exists": true
+        },
+        {
+          "from": "assets/recovered/providers/common/host-provider-bindings.js",
+          "specifier": "../../../m4/providers/common/model-catalog.js",
+          "kind": "static-import",
+          "to": "assets/m4/providers/common/model-catalog.js",
+          "exists": true
+        },
+        {
+          "from": "assets/recovered/providers/common/host-provider-bindings.js",
+          "specifier": "../../../m4/providers/common/generation-gateway.js?v=1.3.6-m4.1",
+          "kind": "static-import",
+          "to": "assets/m4/providers/common/generation-gateway.js",
+          "exists": true
+        },
+        {
+          "from": "assets/recovered/runtime/card-runtime/host/method-router.js",
+          "specifier": "../../../../m4/runtime/card-runtime/host/chat-rpc.js",
+          "kind": "static-import",
+          "to": "assets/m4/runtime/card-runtime/host/chat-rpc.js",
+          "exists": true
+        },
+        {
+          "from": "assets/recovered/runtime/card-runtime/host/method-router.js",
+          "specifier": "../../../../m4/runtime/card-runtime/host/catalog-rpc.js",
+          "kind": "static-import",
+          "to": "assets/m4/runtime/card-runtime/host/catalog-rpc.js",
+          "exists": true
+        },
+        {
+          "from": "assets/recovered/runtime/card-runtime/host/method-router.js",
+          "specifier": "../../../../m4/runtime/card-runtime/host/state-rpc.js",
+          "kind": "static-import",
+          "to": "assets/m4/runtime/card-runtime/host/state-rpc.js",
+          "exists": true
+        },
+        {
+          "from": "assets/recovered/runtime/card-runtime/host/method-router.js",
+          "specifier": "../../../../m4/runtime/card-runtime/host/lorebook-rpc.js",
+          "kind": "static-import",
+          "to": "assets/m4/runtime/card-runtime/host/lorebook-rpc.js",
+          "exists": true
+        },
+        {
+          "from": "assets/recovered/runtime/card-runtime/host/method-router.js",
+          "specifier": "../../../../m4/runtime/card-runtime/host/utility-rpc.js",
+          "kind": "static-import",
+          "to": "assets/m4/runtime/card-runtime/host/utility-rpc.js",
+          "exists": true
+        },
+        {
+          "from": "assets/recovered/vendor/google-genai-runtime.js",
+          "specifier": "./react-state-runtime.js",
+          "kind": "static-import",
+          "to": "assets/recovered/vendor/react-state-runtime.js",
+          "exists": true
+        }
+      ],
+      "computed": [
+        {
+          "from": "assets/app-entry-v1.3.6.js",
+          "kind": "dynamic-import",
+          "offset": 1958
+        },
+        {
+          "from": "assets/m4/features/world-info/embedding-service.js",
+          "kind": "dynamic-import",
+          "offset": 10315
+        }
+      ],
+      "parseErrors": [],
+      "cycles": [],
+      "unresolved": []
+    }
+  ],
+  "limitations": [
+    "Only literal ESM dependencies and import.meta.url references; no runtime execution.",
+    "Card Runtime .jsfrag assembly and implicit dependencies need separate contract review.",
+    "No claim of complete call graph or absence of runtime cycles."
+  ]
+}

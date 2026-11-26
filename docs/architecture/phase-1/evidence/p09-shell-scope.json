@@ -1,0 +1,266 @@
+{
+  "typescript": "5.8.3",
+  "syntaxDiagnostics": 0,
+  "integrations": [
+    {
+      "component": "kt",
+      "offset": 205688,
+      "dependencies": [
+        {
+          "name": "__stsCreateIcon",
+          "offsets": [
+            582
+          ],
+          "initialized": true
+        },
+        {
+          "name": "wt",
+          "offsets": [
+            205656
+          ],
+          "initialized": true
+        }
+      ]
+    },
+    {
+      "component": "Ct",
+      "offset": 205746,
+      "dependencies": [
+        {
+          "name": "__stsCreateAppHeader",
+          "offsets": [
+            935
+          ],
+          "initialized": true
+        },
+        {
+          "name": "wt",
+          "offsets": [
+            205656
+          ],
+          "initialized": true
+        },
+        {
+          "name": "kt",
+          "offsets": [
+            205688
+          ],
+          "initialized": true
+        }
+      ]
+    },
+    {
+      "component": "yl",
+      "offset": 560781,
+      "dependencies": [
+        {
+          "name": "__stsCreateToggleSwitch",
+          "offsets": [
+            658
+          ],
+          "initialized": true
+        },
+        {
+          "name": "wt",
+          "offsets": [
+            205656
+          ],
+          "initialized": true
+        },
+        {
+          "name": "b",
+          "offsets": [
+            197211
+          ],
+          "initialized": true
+        },
+        {
+          "name": "cn",
+          "offsets": [
+            241406
+          ],
+          "initialized": true
+        }
+      ]
+    },
+    {
+      "component": "_u",
+      "offset": 867273,
+      "dependencies": [
+        {
+          "name": "__stsCreatePresetTab",
+          "offsets": [
+            759
+          ],
+          "initialized": true
+        },
+        {
+          "name": "wt",
+          "offsets": [
+            205656
+          ],
+          "initialized": true
+        }
+      ]
+    },
+    {
+      "component": "eh",
+      "offset": 1060391,
+      "dependencies": [
+        {
+          "name": "__stsCreateSettingsTab",
+          "offsets": [
+            800
+          ],
+          "initialized": true
+        },
+        {
+          "name": "wt",
+          "offsets": [
+            205656
+          ],
+          "initialized": true
+        }
+      ]
+    },
+    {
+      "component": "Yf",
+      "offset": 1423250,
+      "dependencies": [
+        {
+          "name": "__stsCreateChatRoute",
+          "offsets": [
+            1084
+          ],
+          "initialized": true
+        },
+        {
+          "name": "wt",
+          "offsets": [
+            205656
+          ],
+          "initialized": true
+        },
+        {
+          "name": "Jf",
+          "offsets": [
+            1411629
+          ],
+          "initialized": true
+        },
+        {
+          "name": "ph",
+          "offsets": [
+            1080500
+          ],
+          "initialized": true
+        }
+      ]
+    },
+    {
+      "component": "ay",
+      "offset": 1430703,
+      "dependencies": [
+        {
+          "name": "__stsCreateMainTab",
+          "offsets": [
+            845
+          ],
+          "initialized": true
+        },
+        {
+          "name": "wt",
+          "offsets": [
+            205656
+          ],
+          "initialized": true
+        },
+        {
+          "name": "kt",
+          "offsets": [
+            205688
+          ],
+          "initialized": true
+        }
+      ]
+    },
+    {
+      "component": "iy",
+      "offset": 1430732,
+      "dependencies": [
+        {
+          "name": "__stsCreateApplicationShell",
+          "offsets": [
+            976
+          ],
+          "initialized": true
+        },
+        {
+          "name": "wt",
+          "offsets": [
+            205656
+          ],
+          "initialized": true
+        },
+        {
+          "name": "b",
+          "offsets": [
+            197211
+          ],
+          "initialized": true
+        },
+        {
+          "name": "Ct",
+          "offsets": [
+            205746
+          ],
+          "initialized": true
+        },
+        {
+          "name": "ay",
+          "offsets": [
+            1430703
+          ],
+          "initialized": true
+        },
+        {
+          "name": "eu",
+          "offsets": [
+            794322
+          ],
+          "initialized": true
+        },
+        {
+          "name": "ku",
+          "offsets": [
+            869712
+          ],
+          "initialized": true
+        },
+        {
+          "name": "Eu",
+          "offsets": [
+            879166
+          ],
+          "initialized": true
+        },
+        {
+          "name": "Yf",
+          "offsets": [
+            1423250
+          ],
+          "initialized": true
+        },
+        {
+          "name": "th",
+          "offsets": [
+            1060421
+          ],
+          "initialized": true
+        }
+      ]
+    }
+  ],
+  "unresolvedVuReferences": [],
+  "initializationErrors": []
+}

@@ -1,0 +1,2570 @@
+{
+  "typescript": "5.8.3",
+  "file": "assets/app-production-v1.3.6.js",
+  "syntaxDiagnostics": 0,
+  "candidateCount": 113,
+  "candidates": [
+    {
+      "name": "Cc",
+      "start": 769316,
+      "end": 769884,
+      "chars": 568,
+      "jsxCalls": 2,
+      "hooks": 0,
+      "externalBindings": [
+        "wt"
+      ],
+      "labels": []
+    },
+    {
+      "name": "Su",
+      "start": 876069,
+      "end": 878173,
+      "chars": 2104,
+      "jsxCalls": 11,
+      "hooks": 0,
+      "externalBindings": [
+        "wt"
+      ],
+      "labels": [
+        "Xóa sổ tay (có xác nhận)"
+      ]
+    },
+    {
+      "name": "tf",
+      "start": 1251660,
+      "end": 1252452,
+      "chars": 792,
+      "jsxCalls": 7,
+      "hooks": 0,
+      "externalBindings": [
+        "ef",
+        "wt"
+      ],
+      "labels": []
+    },
+    {
+      "name": "cf",
+      "start": 1277590,
+      "end": 1278477,
+      "chars": 887,
+      "jsxCalls": 4,
+      "hooks": 3,
+      "externalBindings": [
+        "b",
+        "wt"
+      ],
+      "labels": []
+    },
+    {
+      "name": "Cu",
+      "start": 878177,
+      "end": 879333,
+      "chars": 1156,
+      "jsxCalls": 7,
+      "hooks": 0,
+      "externalBindings": [
+        "mn",
+        "wt"
+      ],
+      "labels": [
+        "Tải lên Sổ tay Mới",
+        "Hỗ trợ một hoặc nhiều tệp JSON"
+      ]
+    },
+    {
+      "name": "Sc",
+      "start": 767995,
+      "end": 769315,
+      "chars": 1320,
+      "jsxCalls": 6,
+      "hooks": 0,
+      "externalBindings": [
+        "wt",
+        "xu"
+      ],
+      "labels": [
+        "Vị trí",
+        "Vị trí chèn",
+        "Mặc định",
+        "Đầu Prompt",
+        "Cuối Prompt",
+        "Cuối"
+      ]
+    },
+    {
+      "name": "dh",
+      "start": 1055204,
+      "end": 1056532,
+      "chars": 1328,
+      "jsxCalls": 8,
+      "hooks": 0,
+      "externalBindings": [
+        "kt",
+        "wt"
+      ],
+      "labels": [
+        "Nhập Tiền Truyện (Story Mode)",
+        "Nhập tiền truyện"
+      ]
+    },
+    {
+      "name": "un",
+      "start": 241603,
+      "end": 242969,
+      "chars": 1366,
+      "jsxCalls": 9,
+      "hooks": 1,
+      "externalBindings": [
+        "b",
+        "wt"
+      ],
+      "labels": [
+        "Sao chép",
+        "Đã sao chép!",
+        "Đã chép!"
+      ]
+    },
+    {
+      "name": "uu",
+      "start": 812426,
+      "end": 813794,
+      "chars": 1368,
+      "jsxCalls": 9,
+      "hooks": 1,
+      "externalBindings": [
+        "b",
+        "wt"
+      ],
+      "labels": [
+        "Đã sao chép!"
+      ]
+    },
+    {
+      "name": "Dp",
+      "start": 1179811,
+      "end": 1181437,
+      "chars": 1626,
+      "jsxCalls": 3,
+      "hooks": 1,
+      "externalBindings": [
+        "b",
+        "wt"
+      ],
+      "labels": [
+        "Đang dựng trước giao diện HTML. Script tương tác sẽ chỉ khởi chạy sau khi phản hồi hoàn tất."
+      ]
+    },
+    {
+      "name": "vl",
+      "start": 564355,
+      "end": 566931,
+      "chars": 2576,
+      "jsxCalls": 18,
+      "hooks": 0,
+      "externalBindings": [
+        "ln",
+        "wt"
+      ],
+      "labels": [
+        "Sổ tay & Thế giới (Lorebook)",
+        "Quản lý kiến thức nền, định nghĩa thế giới và các liên kết mở rộng.",
+        "Trạng thái Sổ tay",
+        "Nội bộ: ",
+        " mục (",
+        " Bật)"
+      ]
+    },
+    {
+      "name": "pu",
+      "start": 817247,
+      "end": 820652,
+      "chars": 3405,
+      "jsxCalls": 20,
+      "hooks": 0,
+      "externalBindings": [
+        "wt",
+        "yl"
+      ],
+      "labels": [
+        "Lời nhắc này chưa có nội dung.",
+        "Hủy di chuyển",
+        "Di chuyển đến vị trí này",
+        "Di chuyển đến đây",
+        "Chọn để di chuyển"
+      ]
+    },
+    {
+      "name": "Nc",
+      "start": 774323,
+      "end": 778278,
+      "chars": 3955,
+      "jsxCalls": 20,
+      "hooks": 0,
+      "externalBindings": [
+        "wt",
+        "yl"
+      ],
+      "labels": [
+        "Không có tiêu đề",
+        "Đã đồng bộ Semantic",
+        "Cần đồng bộ Semantic",
+        "(Đã đánh dấu xóa)",
+        "(Trống)",
+        "Hằng số: BẬT"
+      ]
+    },
+    {
+      "name": "__stsLiveStreamText",
+      "start": 1248012,
+      "end": 1248410,
+      "chars": 398,
+      "jsxCalls": 2,
+      "hooks": 2,
+      "externalBindings": [
+        "__stsLiveStreamStore",
+        "b",
+        "wt"
+      ],
+      "labels": []
+    },
+    {
+      "name": "fl",
+      "start": 560340,
+      "end": 560948,
+      "chars": 608,
+      "jsxCalls": 4,
+      "hooks": 0,
+      "externalBindings": [
+        "hn",
+        "ln",
+        "wt"
+      ],
+      "labels": [
+        "Kịch bản & Lời nhắc",
+        "Bối cảnh, gợi ý hệ thống và các chỉ dẫn khác.",
+        "Kịch bản",
+        "Gợi ý hệ thống",
+        "Chỉ dẫn sau lịch sử"
+      ]
+    },
+    {
+      "name": "Iu",
+      "start": 883378,
+      "end": 884007,
+      "chars": 629,
+      "jsxCalls": 5,
+      "hooks": 0,
+      "externalBindings": [
+        "dn",
+        "hn",
+        "wt"
+      ],
+      "labels": [
+        "Chỉnh sửa Hồ sơ",
+        "Tên Hồ sơ",
+        "Mô tả",
+        "Mô tả về con người, tính cách, hoặc vai trò bạn muốn nhập vai..."
+      ]
+    },
+    {
+      "name": "Qg",
+      "start": 1247250,
+      "end": 1247991,
+      "chars": 741,
+      "jsxCalls": 6,
+      "hooks": 1,
+      "externalBindings": [
+        "b",
+        "kt",
+        "wt"
+      ],
+      "labels": [
+        "Quy trình suy nghĩ"
+      ]
+    },
+    {
+      "name": "Cl",
+      "start": 575486,
+      "end": 576252,
+      "chars": 766,
+      "jsxCalls": 6,
+      "hooks": 1,
+      "externalBindings": [
+        "b",
+        "cn",
+        "wt"
+      ],
+      "labels": []
+    },
+    {
+      "name": "nu",
+      "start": 800469,
+      "end": 801386,
+      "chars": 917,
+      "jsxCalls": 6,
+      "hooks": 1,
+      "externalBindings": [
+        "b",
+        "cn",
+        "wt"
+      ],
+      "labels": []
+    },
+    {
+      "name": "hh",
+      "start": 1056536,
+      "end": 1057519,
+      "chars": 983,
+      "jsxCalls": 6,
+      "hooks": 1,
+      "externalBindings": [
+        "b",
+        "kt",
+        "wt"
+      ],
+      "labels": [
+        "Nhập bản ghi phiêu lưu JSON",
+        "Tiếp tục từ Bản Ghi Phiêu Lưu",
+        "Kéo thả file .json hoặc nhấn để tải lên (Backup/Save File)"
+      ]
+    },
+    {
+      "name": "kl",
+      "start": 572783,
+      "end": 573814,
+      "chars": 1031,
+      "jsxCalls": 6,
+      "hooks": 3,
+      "externalBindings": [
+        "b",
+        "wl",
+        "wt"
+      ],
+      "labels": [
+        "Kịch bản Mới",
+        "Thêm Kịch bản Tavern Helper"
+      ]
+    },
+    {
+      "name": "_l",
+      "start": 569369,
+      "end": 570422,
+      "chars": 1053,
+      "jsxCalls": 6,
+      "hooks": 3,
+      "externalBindings": [
+        "b",
+        "wt",
+        "xl"
+      ],
+      "labels": [
+        "Kịch bản Mới",
+        "Thêm Kịch bản"
+      ]
+    },
+    {
+      "name": "hf",
+      "start": 1278682,
+      "end": 1279792,
+      "chars": 1110,
+      "jsxCalls": 7,
+      "hooks": 2,
+      "externalBindings": [
+        "b",
+        "kt",
+        "wt"
+      ],
+      "labels": [
+        "Nhấn để thu gọn",
+        " ký tự",
+        "Kiểm tra độ dài và ước lượng token",
+        "Đếm độ dài"
+      ]
+    },
+    {
+      "name": "Xg",
+      "start": 1246049,
+      "end": 1247246,
+      "chars": 1197,
+      "jsxCalls": 5,
+      "hooks": 4,
+      "externalBindings": [
+        "b",
+        "kt",
+        "wt"
+      ],
+      "labels": [
+        "Tùy chọn tin nhắn"
+      ]
+    },
+    {
+      "name": "mu",
+      "start": 820656,
+      "end": 821903,
+      "chars": 1247,
+      "jsxCalls": 10,
+      "hooks": 2,
+      "externalBindings": [
+        "b",
+        "un",
+        "wt"
+      ],
+      "labels": [
+        "Xem trước Lời nhắc Gửi đi Cuối cùng",
+        "Bản xem trước lời nhắc"
+      ]
+    },
+    {
+      "name": "pl",
+      "start": 551443,
+      "end": 552727,
+      "chars": 1284,
+      "jsxCalls": 9,
+      "hooks": 1,
+      "externalBindings": [
+        "b",
+        "kt",
+        "wt"
+      ],
+      "labels": [
+        "Đóng thông báo"
+      ]
+    },
+    {
+      "name": "hp",
+      "start": 1145268,
+      "end": 1146618,
+      "chars": 1350,
+      "jsxCalls": 11,
+      "hooks": 0,
+      "externalBindings": [
+        "kt",
+        "qd",
+        "wt"
+      ],
+      "labels": [
+        "Tự động đọc: BẬT",
+        "Tự động đọc: TẮT",
+        "Tắt tự động đọc",
+        "Bật tự động đọc",
+        "Tiếp tục",
+        "Tạm dừng"
+      ]
+    },
+    {
+      "name": "Kf",
+      "start": 1383991,
+      "end": 1385348,
+      "chars": 1357,
+      "jsxCalls": 11,
+      "hooks": 0,
+      "externalBindings": [
+        "kt",
+        "ol",
+        "wt"
+      ],
+      "labels": [
+        "Đóng thông báo này",
+        "Đóng thông báo RPG"
+      ]
+    },
+    {
+      "name": "Lf",
+      "start": 1355250,
+      "end": 1356823,
+      "chars": 1573,
+      "jsxCalls": 13,
+      "hooks": 1,
+      "externalBindings": [
+        "Lf",
+        "b",
+        "wt"
+      ],
+      "labels": []
+    },
+    {
+      "name": "Df",
+      "start": 1328945,
+      "end": 1330575,
+      "chars": 1630,
+      "jsxCalls": 10,
+      "hooks": 4,
+      "externalBindings": [
+        "Xl",
+        "b",
+        "wt"
+      ],
+      "labels": [
+        "Ghi chú của Tác giả (Bền bỉ)",
+        "Ghi chú này sẽ được chèn vào lời nhắc cho mỗi lượt gửi cho đến khi bạn xóa nó.",
+        "Ghi chú của Tác giả",
+        "Ví dụ: [[Chỉ dẫn: Nhân vật phải luôn nói một cách trang trọng.]]"
+      ]
+    },
+    {
+      "name": "Ff",
+      "start": 1356827,
+      "end": 1358631,
+      "chars": 1804,
+      "jsxCalls": 16,
+      "hooks": 0,
+      "externalBindings": [
+        "Lf",
+        "kt",
+        "wt"
+      ],
+      "labels": [
+        " Trạng thái (Game HUD)",
+        "Đóng trạng thái",
+        "Chưa có dữ liệu biến số.",
+        "Bắt đầu trò chuyện để khởi tạo.",
+        "Dữ liệu thô từ Memory Store"
+      ]
+    },
+    {
+      "name": "au",
+      "start": 803438,
+      "end": 805460,
+      "chars": 2022,
+      "jsxCalls": 15,
+      "hooks": 0,
+      "externalBindings": [
+        "cn",
+        "un",
+        "wt"
+      ],
+      "labels": [
+        "Thêm dòng mới"
+      ]
+    },
+    {
+      "name": "Af",
+      "start": 1318434,
+      "end": 1320664,
+      "chars": 2230,
+      "jsxCalls": 17,
+      "hooks": 0,
+      "externalBindings": [
+        "Sc",
+        "wt",
+        "yl"
+      ],
+      "labels": [
+        "Đã đồng bộ Semantic",
+        "Cần đồng bộ Semantic",
+        "Mục không có tên",
+        "Đã ghim"
+      ]
+    },
+    {
+      "name": "wu",
+      "start": 867472,
+      "end": 869879,
+      "chars": 2407,
+      "jsxCalls": 13,
+      "hooks": 4,
+      "externalBindings": [
+        "Xl",
+        "b",
+        "wt"
+      ],
+      "labels": [
+        "Tạo Preset Mới",
+        "Đổi tên Preset",
+        "Nhân bản Preset",
+        "Đóng",
+        "Tên Preset",
+        "Nhập tên..."
+      ]
+    },
+    {
+      "name": "Yc",
+      "start": 784082,
+      "end": 786558,
+      "chars": 2476,
+      "jsxCalls": 17,
+      "hooks": 3,
+      "externalBindings": [
+        "Xl",
+        "b",
+        "wt"
+      ],
+      "labels": [
+        "Thêm Sổ tay vào Nhân vật",
+        "Chọn Sổ tay Thế giới",
+        "-- Chọn sổ tay --",
+        " mục)",
+        "🔗 Liên kết (Link)",
+        "Tạo một bản sao riêng của sổ tay này và gắn nhãn. Bạn có thể chỉnh sửa trực tiếp."
+      ]
+    },
+    {
+      "name": "pf",
+      "start": 1279796,
+      "end": 1282433,
+      "chars": 2637,
+      "jsxCalls": 13,
+      "hooks": 2,
+      "externalBindings": [
+        "b",
+        "un",
+        "wt"
+      ],
+      "labels": [
+        "(Nội dung trống)"
+      ]
+    },
+    {
+      "name": "Ql",
+      "start": 635935,
+      "end": 638760,
+      "chars": 2825,
+      "jsxCalls": 17,
+      "hooks": 4,
+      "externalBindings": [
+        "Xl",
+        "b",
+        "wt"
+      ],
+      "labels": [
+        "Đóng",
+        "Tên tập tin",
+        "Nhập tên file...",
+        "Nhấn Enter để tải xuống. Ký tự đặc biệt sẽ tự động bị loại bỏ.",
+        "Tải xuống"
+      ]
+    },
+    {
+      "name": "nh",
+      "start": 1039587,
+      "end": 1042442,
+      "chars": 2855,
+      "jsxCalls": 17,
+      "hooks": 6,
+      "externalBindings": [
+        "Is",
+        "b",
+        "wt"
+      ],
+      "labels": [
+        "Bắt đầu trò chuyện với ",
+        "Chọn một lời chào để bắt đầu cuộc phiêu lưu của bạn.",
+        "Đóng",
+        "Lời chào chính",
+        "Thu gọn",
+        "Xem thêm"
+      ]
+    },
+    {
+      "name": "qf",
+      "start": 1378852,
+      "end": 1381758,
+      "chars": 2906,
+      "jsxCalls": 19,
+      "hooks": 2,
+      "externalBindings": [
+        "Xl",
+        "b",
+        "wt"
+      ],
+      "labels": [
+        "Hệ thống gặp sự cố cần bạn quyết định.",
+        "Chi tiết kỹ thuật:",
+        "Bỏ qua (Tiếp tục)",
+        "Thử lại"
+      ]
+    },
+    {
+      "name": "Uf",
+      "start": 1358668,
+      "end": 1361664,
+      "chars": 2996,
+      "jsxCalls": 19,
+      "hooks": 0,
+      "externalBindings": [
+        "Bf",
+        "kt",
+        "wt"
+      ],
+      "labels": [
+        "(Dữ liệu trống)",
+        "Hoàn tác",
+        "(Chưa đặt tên)",
+        "Thu gọn",
+        "Chi tiết",
+        "Xóa dòng này"
+      ]
+    },
+    {
+      "name": "Ef",
+      "start": 1307289,
+      "end": 1310468,
+      "chars": 3179,
+      "jsxCalls": 33,
+      "hooks": 1,
+      "externalBindings": [
+        "b",
+        "kt",
+        "wt"
+      ],
+      "labels": [
+        "Chưa có dữ liệu quét World Info.",
+        "Dữ liệu sẽ xuất hiện sau khi bạn gửi tin nhắn.",
+        "Lượt quét #",
+        " mục được chọn",
+        "Lời nhắc gửi đi",
+        "Các mục đã chọn & Độ phù hợp"
+      ]
+    },
+    {
+      "name": "__stsEmbeddingProviderStatus",
+      "start": 995317,
+      "end": 998623,
+      "chars": 3306,
+      "jsxCalls": 20,
+      "hooks": 2,
+      "externalBindings": [
+        "__stsEmbeddingService",
+        "b",
+        "wt"
+      ],
+      "labels": [
+        "Mô hình ",
+        " đã sẵn sàng.",
+        "Không thể tải mô hình: ",
+        "Đã xóa ",
+        " khỏi bộ nhớ cục bộ.",
+        "Không thể xóa mô hình: "
+      ]
+    },
+    {
+      "name": "Pf",
+      "start": 1335475,
+      "end": 1340761,
+      "chars": 5286,
+      "jsxCalls": 51,
+      "hooks": 2,
+      "externalBindings": [
+        "b",
+        "kt",
+        "wt"
+      ],
+      "labels": [
+        "Đã thực thi hành động thành công.",
+        "Đề xuất: ",
+        "Thêm Lời Nhắc Mới",
+        "Di Chuyển Lời Nhắc",
+        "Bật/Tắt Lời Nhắc",
+        "Chỉnh Sửa Nội Dung"
+      ]
+    },
+    {
+      "name": "ff",
+      "start": 1289943,
+      "end": 1290366,
+      "chars": 423,
+      "jsxCalls": 4,
+      "hooks": 1,
+      "externalBindings": [
+        "b",
+        "df",
+        "gf",
+        "wt"
+      ],
+      "labels": [
+        "Chưa có nhật ký mạng nào."
+      ]
+    },
+    {
+      "name": "tu",
+      "start": 799990,
+      "end": 800465,
+      "chars": 475,
+      "jsxCalls": 4,
+      "hooks": 0,
+      "externalBindings": [
+        "dn",
+        "hn",
+        "ln",
+        "wt"
+      ],
+      "labels": [
+        "Thông tin cơ bản",
+        "Tên, nhận xét và lời nhắc hệ thống chung.",
+        "Tên Preset",
+        "Nhận xét",
+        "Lời nhắc Hệ thống"
+      ]
+    },
+    {
+      "name": "bf",
+      "start": 1292229,
+      "end": 1292712,
+      "chars": 483,
+      "jsxCalls": 5,
+      "hooks": 1,
+      "externalBindings": [
+        "b",
+        "df",
+        "wt",
+        "yf"
+      ],
+      "labels": [
+        "Chưa có dữ liệu Smart Scan."
+      ]
+    },
+    {
+      "name": "xf",
+      "start": 1296251,
+      "end": 1296772,
+      "chars": 521,
+      "jsxCalls": 5,
+      "hooks": 1,
+      "externalBindings": [
+        "b",
+        "df",
+        "vf",
+        "wt"
+      ],
+      "labels": [
+        "Chưa có dữ liệu Mythic Engine."
+      ]
+    },
+    {
+      "name": "pn",
+      "start": 244393,
+      "end": 245041,
+      "chars": 648,
+      "jsxCalls": 5,
+      "hooks": 0,
+      "externalBindings": [
+        "dn",
+        "hn",
+        "ln",
+        "wt"
+      ],
+      "labels": [
+        "Thông tin cốt lõi",
+        "Định nghĩa cơ bản về danh tính nhân vật.",
+        "Mô tả",
+        "Tính cách",
+        "Vai trò (Persona)"
+      ]
+    },
+    {
+      "name": "hn",
+      "start": 243686,
+      "end": 244389,
+      "chars": 703,
+      "jsxCalls": 6,
+      "hooks": 1,
+      "externalBindings": [
+        "b",
+        "cn",
+        "un",
+        "wt"
+      ],
+      "labels": []
+    },
+    {
+      "name": "dn",
+      "start": 242973,
+      "end": 243682,
+      "chars": 709,
+      "jsxCalls": 6,
+      "hooks": 1,
+      "externalBindings": [
+        "b",
+        "cn",
+        "un",
+        "wt"
+      ],
+      "labels": []
+    },
+    {
+      "name": "wf",
+      "start": 1303123,
+      "end": 1303903,
+      "chars": 780,
+      "jsxCalls": 8,
+      "hooks": 1,
+      "externalBindings": [
+        "b",
+        "df",
+        "un",
+        "wt"
+      ],
+      "labels": [
+        "Chưa có mục World Info nào được kích hoạt."
+      ]
+    },
+    {
+      "name": "ou",
+      "start": 806597,
+      "end": 807461,
+      "chars": 864,
+      "jsxCalls": 6,
+      "hooks": 0,
+      "externalBindings": [
+        "dn",
+        "hn",
+        "ln",
+        "wt"
+      ],
+      "labels": [
+        "Chế độ Instruct & Định dạng",
+        "Cấu hình khuôn mẫu cho lời nhắc.",
+        "Mẫu chèn World Info: {{keys}} {{content}}",
+        "Mẫu Instruct"
+      ]
+    },
+    {
+      "name": "ml",
+      "start": 552731,
+      "end": 553658,
+      "chars": 927,
+      "jsxCalls": 4,
+      "hooks": 4,
+      "externalBindings": [
+        "b",
+        "dl",
+        "pl",
+        "wt"
+      ],
+      "labels": []
+    },
+    {
+      "name": "du",
+      "start": 813798,
+      "end": 815090,
+      "chars": 1292,
+      "jsxCalls": 9,
+      "hooks": 1,
+      "externalBindings": [
+        "b",
+        "cu",
+        "uu",
+        "wt"
+      ],
+      "labels": [
+        "Tham khảo Biến giữ chỗ (Macros)"
+      ]
+    },
+    {
+      "name": "pp",
+      "start": 1146622,
+      "end": 1147942,
+      "chars": 1320,
+      "jsxCalls": 9,
+      "hooks": 0,
+      "externalBindings": [
+        "gs",
+        "kt",
+        "ns",
+        "wt"
+      ],
+      "labels": [
+        "Nhấn để cấu hình Nhanh (Model & Preset)"
+      ]
+    },
+    {
+      "name": "Cf",
+      "start": 1305740,
+      "end": 1307285,
+      "chars": 1545,
+      "jsxCalls": 14,
+      "hooks": 1,
+      "externalBindings": [
+        "b",
+        "df",
+        "un",
+        "wt"
+      ],
+      "labels": [
+        "Chưa có dữ liệu phản hồi.",
+        "Lượt #",
+        "(Chưa có phản hồi)"
+      ]
+    },
+    {
+      "name": "ru",
+      "start": 801390,
+      "end": 803434,
+      "chars": 2044,
+      "jsxCalls": 15,
+      "hooks": 0,
+      "externalBindings": [
+        "Cl",
+        "ln",
+        "nu",
+        "wt"
+      ],
+      "labels": [
+        "Sampling Cốt lõi",
+        "Kiểm soát sự sáng tạo và tính mạch lạc.",
+        "Nhiệt độ (Temperature)",
+        "Độ ngẫu nhiên. Cao = Sáng tạo, Thấp = Chính xác.",
+        "Nucleus Sampling. Giới hạn tập hợp từ vựng.",
+        "0 = Tự động (không gửi topK). Giá trị từ 1 trở lên mới được gửi cho nhà cung cấp mô hình."
+      ]
+    },
+    {
+      "name": "uh",
+      "start": 1052157,
+      "end": 1055200,
+      "chars": 3043,
+      "jsxCalls": 19,
+      "hooks": 5,
+      "externalBindings": [
+        "b",
+        "js",
+        "kt",
+        "wt"
+      ],
+      "labels": [
+        "vừa xong",
+        "Bắt đầu cuộc trò chuyện...",
+        "Tùy chọn cuộc trò chuyện",
+        "Xuất Bản Ghi Phiêu Lưu",
+        "Xóa cuộc trò chuyện"
+      ]
+    },
+    {
+      "name": "Wf",
+      "start": 1385352,
+      "end": 1388648,
+      "chars": 3296,
+      "jsxCalls": 26,
+      "hooks": 2,
+      "externalBindings": [
+        "Xl",
+        "b",
+        "mn",
+        "wt"
+      ],
+      "labels": [
+        "Cải thiện Cốt truyện",
+        "Đóng",
+        "Bản gốc",
+        "Bản cải thiện",
+        "AI đang viết lại...",
+        "Chưa có kết quả..."
+      ]
+    },
+    {
+      "name": "jf",
+      "start": 1324602,
+      "end": 1328941,
+      "chars": 4339,
+      "jsxCalls": 25,
+      "hooks": 7,
+      "externalBindings": [
+        "b",
+        "mn",
+        "sn",
+        "wt"
+      ],
+      "labels": [
+        "Tạo Mục Sổ tay AI Mới",
+        "Đóng",
+        "Từ khóa (phân tách bằng dấu phẩy)",
+        "Nội dung",
+        "Gemini đang viết mô tả...",
+        "Lưu vào Sổ tay"
+      ]
+    },
+    {
+      "name": "rf",
+      "start": 1258648,
+      "end": 1259312,
+      "chars": 664,
+      "jsxCalls": 2,
+      "hooks": 0,
+      "externalBindings": [
+        "bd",
+        "hl",
+        "kt",
+        "qd",
+        "wt"
+      ],
+      "labels": [
+        "Không có nội dung văn bản để đọc.",
+        "Đọc nội dung (TTS)"
+      ]
+    },
+    {
+      "name": "iu",
+      "start": 805464,
+      "end": 806593,
+      "chars": 1129,
+      "jsxCalls": 10,
+      "hooks": 0,
+      "externalBindings": [
+        "au",
+        "dn",
+        "ln",
+        "wt",
+        "yl"
+      ],
+      "labels": [
+        "Kiểm soát Tạo văn bản",
+        "Độ dài, token và điều kiện dừng.",
+        "Độ dài cắt bỏ (Context Limit)",
+        "Hiển thị văn bản ngay khi AI đang viết.",
+        "Dừng Chuỗi (Stopping Strings)",
+        "Các chuỗi khiến AI ngừng tạo văn bản."
+      ]
+    },
+    {
+      "name": "wl",
+      "start": 570426,
+      "end": 572779,
+      "chars": 2353,
+      "jsxCalls": 17,
+      "hooks": 1,
+      "externalBindings": [
+        "b",
+        "dn",
+        "hn",
+        "wt",
+        "yl"
+      ],
+      "labels": [
+        "Kịch bản không tên",
+        "Thu gọn",
+        "Mở rộng",
+        "Tên Kịch bản",
+        "Nội dung"
+      ]
+    },
+    {
+      "name": "xl",
+      "start": 566935,
+      "end": 569365,
+      "chars": 2430,
+      "jsxCalls": 17,
+      "hooks": 1,
+      "externalBindings": [
+        "b",
+        "dn",
+        "hn",
+        "wt",
+        "yl"
+      ],
+      "labels": [
+        "Kịch bản không tên",
+        "Thu gọn kịch bản",
+        "Mở rộng kịch bản",
+        "Tên Kịch bản",
+        "Biểu thức Regex Tìm kiếm",
+        "Chuỗi Thay thế (HTML/Văn bản)"
+      ]
+    },
+    {
+      "name": "Qf",
+      "start": 1400364,
+      "end": 1403184,
+      "chars": 2820,
+      "jsxCalls": 13,
+      "hooks": 8,
+      "externalBindings": [
+        "Xf",
+        "Xl",
+        "Yg",
+        "b",
+        "wt"
+      ],
+      "labels": [
+        "Thông báo Thẻ",
+        "Đóng popup",
+        "Đóng"
+      ]
+    },
+    {
+      "name": "Tc",
+      "start": 778282,
+      "end": 782181,
+      "chars": 3899,
+      "jsxCalls": 23,
+      "hooks": 6,
+      "externalBindings": [
+        "Cc",
+        "Ec",
+        "Nc",
+        "b",
+        "wt"
+      ],
+      "labels": [
+        "Mục mới",
+        "Tìm kiếm mục sổ tay",
+        "Tìm kiếm...",
+        "Tất cả",
+        "Đang bật",
+        "Đã tắt"
+      ]
+    },
+    {
+      "name": "$f",
+      "start": 1365437,
+      "end": 1370268,
+      "chars": 4831,
+      "jsxCalls": 27,
+      "hooks": 3,
+      "externalBindings": [
+        "As",
+        "b",
+        "hl",
+        "kt",
+        "wt"
+      ],
+      "labels": [
+        "Cấu trúc file không hợp lệ (Thiếu danh sách bảng).",
+        "Đã ghi đè dữ liệu thành công!",
+        "Đã gộp dữ liệu thành công!",
+        "Xuất Dữ Liệu",
+        "Lưu toàn bộ bảng và dữ liệu hiện tại về máy.",
+        "Đã tải xuống file dữ liệu!"
+      ]
+    },
+    {
+      "name": "up",
+      "start": 1133234,
+      "end": 1138125,
+      "chars": 4891,
+      "jsxCalls": 36,
+      "hooks": 2,
+      "externalBindings": [
+        "Xl",
+        "b",
+        "kt",
+        "wt",
+        "yl"
+      ],
+      "labels": [
+        "Cài đặt Trò chuyện",
+        "Đóng cài đặt",
+        "Công cụ hiển thị",
+        "Bảng Gỡ lỗi (Debug Panel)",
+        "Giao diện Thẻ nổi (Floating HUD)",
+        "Chế độ Văn bản thuần"
+      ]
+    },
+    {
+      "name": "Zg",
+      "start": 1248414,
+      "end": 1249809,
+      "chars": 1395,
+      "jsxCalls": 5,
+      "hooks": 1,
+      "externalBindings": [
+        "Bm",
+        "Qg",
+        "Yg",
+        "__stsLiveStreamText",
+        "b",
+        "wt"
+      ],
+      "labels": [
+        "Suy nghĩ",
+        "Yêu cầu Suy nghĩ",
+        "Dàn ý Bước đi",
+        "Kế hoạch",
+        "Suy nghĩ nội tâm",
+        "Xác nhận cơ bản"
+      ]
+    },
+    {
+      "name": "su",
+      "start": 807465,
+      "end": 809102,
+      "chars": 1637,
+      "jsxCalls": 11,
+      "hooks": 3,
+      "externalBindings": [
+        "b",
+        "hn",
+        "ln",
+        "nu",
+        "wt",
+        "yl"
+      ],
+      "labels": [
+        "Thử nghiệm & Khác",
+        "Thinking Budget và các tùy chọn khác.",
+        "Token dành cho suy nghĩ (Gemini 2.5+).",
+        "Phần mở rộng (JSON)",
+        "Dữ liệu cấu hình thô.",
+        "JSON không hợp lệ (Dữ liệu cũ sẽ được giữ nguyên cho đến khi bạn sửa lại)."
+      ]
+    },
+    {
+      "name": "Sl",
+      "start": 573818,
+      "end": 575482,
+      "chars": 1664,
+      "jsxCalls": 11,
+      "hooks": 4,
+      "externalBindings": [
+        "_l",
+        "b",
+        "hn",
+        "kl",
+        "ln",
+        "wt"
+      ],
+      "labels": [
+        "Phần mở rộng (Nâng cao)",
+        "Quản lý các kịch bản và dữ liệu JSON thô.",
+        "Trình chỉnh sửa Kịch bản Tavern Helper",
+        "Trình chỉnh sửa Kịch bản Regex",
+        "Trình chỉnh sửa JSON thô (Các trường mở rộng còn lại)",
+        "Các trường JSON chưa được xử lý trong 'extensions'"
+      ]
+    },
+    {
+      "name": "Sf",
+      "start": 1303945,
+      "end": 1305736,
+      "chars": 1791,
+      "jsxCalls": 18,
+      "hooks": 1,
+      "externalBindings": [
+        "b",
+        "df",
+        "hf",
+        "pf",
+        "un",
+        "wt"
+      ],
+      "labels": [
+        "Chưa có dữ liệu lời nhắc.",
+        "Lượt #",
+        " mục",
+        "Sao chép tất cả",
+        "Không có dữ liệu prompt."
+      ]
+    },
+    {
+      "name": "hu",
+      "start": 815094,
+      "end": 817243,
+      "chars": 2149,
+      "jsxCalls": 14,
+      "hooks": 4,
+      "externalBindings": [
+        "Xl",
+        "b",
+        "dn",
+        "hn",
+        "wt",
+        "yl"
+      ],
+      "labels": [
+        "Chỉnh sửa Lời nhắc",
+        "Đóng",
+        "Tên Lời nhắc",
+        "Nội dung",
+        "Gửi kèm Tiêu đề",
+        "Lưu Thay đổi"
+      ]
+    },
+    {
+      "name": "ju",
+      "start": 884011,
+      "end": 886619,
+      "chars": 2608,
+      "jsxCalls": 21,
+      "hooks": 1,
+      "externalBindings": [
+        "Au",
+        "Iu",
+        "b",
+        "mn",
+        "wt",
+        "yl"
+      ],
+      "labels": [
+        "Đang tải hồ sơ...",
+        "Danh sách Hồ sơ",
+        "Hồ sơ Mới",
+        "+ Mới",
+        "Chưa có hồ sơ nào.",
+        "Bạn có chắc chắn muốn xóa hồ sơ này không?"
+      ]
+    },
+    {
+      "name": "bl",
+      "start": 560988,
+      "end": 564351,
+      "chars": 3363,
+      "jsxCalls": 20,
+      "hooks": 3,
+      "externalBindings": [
+        "b",
+        "dn",
+        "hn",
+        "ln",
+        "wt",
+        "yl"
+      ],
+      "labels": [
+        "Siêu dữ liệu & Ghi chú",
+        "Thông tin bổ sung về thẻ nhân vật này.",
+        "Người tạo",
+        "Phiên bản nhân vật",
+        "Thẻ (phân tách bằng dấu phẩy)",
+        "Ghi chú của người tạo"
+      ]
+    },
+    {
+      "name": "Hf",
+      "start": 1361668,
+      "end": 1365433,
+      "chars": 3765,
+      "jsxCalls": 25,
+      "hooks": 5,
+      "externalBindings": [
+        "Uf",
+        "b",
+        "hl",
+        "kt",
+        "ol",
+        "wt"
+      ],
+      "labels": [
+        "Tổng: ",
+        " chờ xóa)",
+        "● Chưa lưu",
+        "Mở rộng tất cả",
+        "Thu gọn tất cả",
+        "Bảng trống."
+      ]
+    },
+    {
+      "name": "_f",
+      "start": 1296776,
+      "end": 1303119,
+      "chars": 6343,
+      "jsxCalls": 41,
+      "hooks": 2,
+      "externalBindings": [
+        "b",
+        "kt",
+        "os",
+        "pf",
+        "un",
+        "wt"
+      ],
+      "labels": [
+        "(Chưa có bối cảnh trước đó)",
+        "(Không tìm thấy dữ liệu tương ứng trong lịch sử hiện tại)",
+        "Số lượng Tóm tắt",
+        "Lượt Mới (Trong Bộ Nhớ)",
+        " lượt",
+        "Lỗi tóm tắt!"
+      ]
+    },
+    {
+      "name": "sf",
+      "start": 1266540,
+      "end": 1277549,
+      "chars": 11009,
+      "jsxCalls": 68,
+      "hooks": 9,
+      "externalBindings": [
+        "Is",
+        "b",
+        "kt",
+        "mn",
+        "of",
+        "wt"
+      ],
+      "labels": [
+        "Đang tóm tắt...",
+        "Đóng thông báo",
+        "Đóng thông báo lỗi",
+        "Gợi ý lệnh hệ thống",
+        "Ghi chú: ",
+        "Xóa ghi chú"
+      ]
+    },
+    {
+      "name": "lu",
+      "start": 809106,
+      "end": 809411,
+      "chars": 305,
+      "jsxCalls": 6,
+      "hooks": 1,
+      "externalBindings": [
+        "b",
+        "iu",
+        "ou",
+        "ru",
+        "su",
+        "tu",
+        "wt"
+      ],
+      "labels": []
+    },
+    {
+      "name": "Ml",
+      "start": 625801,
+      "end": 628984,
+      "chars": 3183,
+      "jsxCalls": 22,
+      "hooks": 2,
+      "externalBindings": [
+        "Nl",
+        "Pl",
+        "Tl",
+        "b",
+        "ln",
+        "wt",
+        "yl"
+      ],
+      "labels": [
+        "Hệ thống RPG (Mythic Engine)",
+        "Cấu hình cơ sở dữ liệu và luật chơi cho nhân vật này.",
+        "Kích hoạt Mythic Engine",
+        "Cấu hình nâng cao",
+        "Mở Trình Thiết Kế Cấu Trúc (Schema Builder)",
+        "Chỉnh sửa bảng, cột và luật AI"
+      ]
+    },
+    {
+      "name": "gu",
+      "start": 821907,
+      "end": 825924,
+      "chars": 4017,
+      "jsxCalls": 21,
+      "hooks": 13,
+      "externalBindings": [
+        "Cc",
+        "b",
+        "du",
+        "hu",
+        "mu",
+        "pu",
+        "wt"
+      ],
+      "labels": [
+        "Không có lời nhắc nào để xuất cho bộ lọc hiện tại.",
+        "Không có tiêu đề",
+        "Tất cả",
+        "Đã bật",
+        "Đã tắt",
+        "Xuất theo bộ lọc"
+      ]
+    },
+    {
+      "name": "Ec",
+      "start": 769891,
+      "end": 774319,
+      "chars": 4428,
+      "jsxCalls": 32,
+      "hooks": 4,
+      "externalBindings": [
+        "Sc",
+        "Xl",
+        "b",
+        "dn",
+        "hn",
+        "wt",
+        "yl"
+      ],
+      "labels": [
+        "Chỉnh sửa Mục World Info",
+        "Đóng chỉnh sửa",
+        "Tiêu đề (Bình luận)",
+        "Đặt tên cho mục này...",
+        "Từ khóa chính",
+        "Ví dụ: gươm, kiếm"
+      ]
+    },
+    {
+      "name": "mf",
+      "start": 1282437,
+      "end": 1287574,
+      "chars": 5137,
+      "jsxCalls": 19,
+      "hooks": 4,
+      "externalBindings": [
+        "Bh",
+        "Fh",
+        "Oh",
+        "b",
+        "df",
+        "uf",
+        "wt"
+      ],
+      "labels": [
+        "Tất cả",
+        "Cảnh báo",
+        "Mạng",
+        "Thẻ HTML",
+        "Chẩn đoán",
+        "Biến số"
+      ]
+    },
+    {
+      "name": "Eu",
+      "start": 879337,
+      "end": 882487,
+      "chars": 3150,
+      "jsxCalls": 19,
+      "hooks": 5,
+      "externalBindings": [
+        "Cu",
+        "Ql",
+        "Su",
+        "Xc",
+        "b",
+        "kt",
+        "sn",
+        "wt"
+      ],
+      "labels": [
+        "Thư viện Sổ tay Thế giới",
+        "Quản lý kiến thức nền và dữ liệu thế giới dùng lại.",
+        "Tìm sổ tay...",
+        "Tìm sổ tay thế giới",
+        "Nhập sổ tay JSON",
+        "Không tìm thấy sổ tay phù hợp."
+      ]
+    },
+    {
+      "name": "Zd",
+      "start": 1033304,
+      "end": 1037410,
+      "chars": 4106,
+      "jsxCalls": 27,
+      "hooks": 4,
+      "externalBindings": [
+        "Co",
+        "So",
+        "_o",
+        "b",
+        "ko",
+        "wo",
+        "wt",
+        "xo"
+      ],
+      "labels": [
+        "Chế độ cài đặt HTML",
+        "Chọn một chế độ; quyền chạy thẻ và bộ xử lý sẽ được cấu hình đồng bộ tự động.",
+        "Mức cài đặt HTML",
+        "Chế độ Nâng cao",
+        "Nâng cao",
+        "Mặc định"
+      ]
+    },
+    {
+      "name": "ah",
+      "start": 1044084,
+      "end": 1048933,
+      "chars": 4849,
+      "jsxCalls": 25,
+      "hooks": 10,
+      "externalBindings": [
+        "Au",
+        "Kt",
+        "Wt",
+        "Xl",
+        "b",
+        "mn",
+        "rh",
+        "wt"
+      ],
+      "labels": [
+        "--- Xem trước đoạn 1 (Trích đoạn) ---",
+        " Nhập Tiền Truyện (Story Mode)",
+        "Chọn file tiền truyện",
+        "File trống hoặc không trích xuất được văn bản.",
+        "Đang đọc file...",
+        "Nhấn để chọn file truyện (.txt, .epub)"
+      ]
+    },
+    {
+      "name": "Ad",
+      "start": 1003393,
+      "end": 1005201,
+      "chars": 1808,
+      "jsxCalls": 12,
+      "hooks": 2,
+      "externalBindings": [
+        "$o",
+        "Cl",
+        "Yo",
+        "b",
+        "hl",
+        "hn",
+        "nu",
+        "os",
+        "wt"
+      ],
+      "labels": [
+        "Smart Context & Memory (Toàn Cục)",
+        "Ngưỡng Kích Hoạt Tóm Tắt (Context Depth)",
+        "Kích Thước Gói Tóm Tắt (Chunk Size)",
+        "Chế độ Ghép nối Lịch sử",
+        "Tiêu chuẩn (Cả User & AI)",
+        "Chế độ Tự thuật (Chỉ AI)"
+      ]
+    },
+    {
+      "name": "Tf",
+      "start": 1315224,
+      "end": 1318430,
+      "chars": 3206,
+      "jsxCalls": 17,
+      "hooks": 6,
+      "externalBindings": [
+        "$c",
+        "Fc",
+        "Gc",
+        "Lc",
+        "Xl",
+        "__stsEmbeddingService",
+        "as",
+        "b",
+        "wt"
+      ],
+      "labels": [
+        "Lỗi khi kiểm tra độ liên quan.",
+        "Đóng",
+        "Truy vấn kiểm tra độ liên quan",
+        "Nhập câu hỏi hoặc ngữ cảnh để kiểm tra...",
+        "Đang kiểm tra...",
+        "Kiểm tra"
+      ]
+    },
+    {
+      "name": "mp",
+      "start": 1147946,
+      "end": 1151858,
+      "chars": 3912,
+      "jsxCalls": 28,
+      "hooks": 5,
+      "externalBindings": [
+        "b",
+        "cp",
+        "dp",
+        "hp",
+        "kt",
+        "ol",
+        "pp",
+        "up",
+        "wt"
+      ],
+      "labels": [
+        "Quay lại",
+        "Quay lại sảnh chờ",
+        "Tắt chế độ Đấu trường",
+        "Bật chế độ Đấu trường (So sánh Model)",
+        "Cấu hình Đấu trường",
+        "Chọn Model"
+      ]
+    },
+    {
+      "name": "zd",
+      "start": 1012625,
+      "end": 1016751,
+      "chars": 4126,
+      "jsxCalls": 1,
+      "hooks": 21,
+      "externalBindings": [
+        "Bd",
+        "Gd",
+        "Ld",
+        "Ud",
+        "b",
+        "hl",
+        "qo",
+        "ts",
+        "wt"
+      ],
+      "labels": []
+    },
+    {
+      "name": "Gf",
+      "start": 1370272,
+      "end": 1375053,
+      "chars": 4781,
+      "jsxCalls": 35,
+      "hooks": 2,
+      "externalBindings": [
+        "$f",
+        "Hf",
+        "b",
+        "hl",
+        "kc",
+        "kt",
+        "ol",
+        "rl",
+        "wt"
+      ],
+      "labels": [
+        "Đã đồng bộ cấu hình từ thẻ gốc thành công!",
+        "Không tìm thấy dữ liệu RPG gốc trong Thẻ nhân vật.",
+        "Nạp lại cấu hình (Cột, Luật, Live-Link) từ Thẻ gốc nhưng giữ nguyên Dữ liệu chơi.",
+        "Đồng bộ Cấu hình",
+        "Đóng bảng điều khiển RPG",
+        "Lỗi sao chép bảng."
+      ]
+    },
+    {
+      "name": "Xc",
+      "start": 786562,
+      "end": 794196,
+      "chars": 7634,
+      "jsxCalls": 41,
+      "hooks": 7,
+      "externalBindings": [
+        "Jc",
+        "Tc",
+        "Xl",
+        "Yc",
+        "b",
+        "hl",
+        "sn",
+        "statusMap",
+        "wt"
+      ],
+      "labels": [
+        "Đóng trình quản lý sổ tay",
+        "📖 Quản lý Sổ tay & Liên kết",
+        "Lưu & Áp dụng",
+        "Danh sách Sổ tay",
+        "Sổ tay Gốc (Nội bộ)",
+        " mục"
+      ]
+    },
+    {
+      "name": "Ll",
+      "start": 628988,
+      "end": 631069,
+      "chars": 2081,
+      "jsxCalls": 9,
+      "hooks": 5,
+      "externalBindings": [
+        "Ml",
+        "Sl",
+        "St",
+        "b",
+        "bl",
+        "fl",
+        "gl",
+        "pn",
+        "sn",
+        "vl",
+        "wt"
+      ],
+      "labels": [
+        "Sổ tay này không có mục nào để nhập.",
+        "Cốt lõi",
+        "Thông tin cốt lõi",
+        "Đối thoại",
+        "Lời nhắc",
+        "Kịch bản & Lời nhắc"
+      ]
+    },
+    {
+      "name": "eu",
+      "start": 794493,
+      "end": 799986,
+      "chars": 5493,
+      "jsxCalls": 35,
+      "hooks": 7,
+      "externalBindings": [
+        "Ll",
+        "Qc",
+        "Xc",
+        "Zc",
+        "b",
+        "ec",
+        "hl",
+        "kc",
+        "kt",
+        "mn",
+        "wt"
+      ],
+      "labels": [
+        "Đang tải nhân vật...",
+        "Nhân vật",
+        "+ Mới",
+        "Tìm tên, tệp hoặc thẻ...",
+        "Tìm nhân vật",
+        "Không tìm thấy nhân vật phù hợp."
+      ]
+    },
+    {
+      "name": "ku",
+      "start": 869883,
+      "end": 876065,
+      "chars": 6182,
+      "jsxCalls": 40,
+      "hooks": 6,
+      "externalBindings": [
+        "Ql",
+        "_u",
+        "b",
+        "bu",
+        "gu",
+        "hl",
+        "kt",
+        "lu",
+        "mn",
+        "wt",
+        "wu"
+      ],
+      "labels": [
+        "Đang tải presets...",
+        "+ Mới",
+        "Tìm preset...",
+        "Tìm preset",
+        "Không tìm thấy preset phù hợp.",
+        "Chưa có preset."
+      ]
+    },
+    {
+      "name": "Tl",
+      "start": 596433,
+      "end": 607878,
+      "chars": 11445,
+      "jsxCalls": 70,
+      "hooks": 7,
+      "externalBindings": [
+        "Cl",
+        "Nl",
+        "Xl",
+        "b",
+        "dn",
+        "hl",
+        "hn",
+        "ol",
+        "rl",
+        "wt",
+        "yl"
+      ],
+      "labels": [
+        "Hành động này sẽ xóa toàn bộ cấu trúc hiện tại và thay thế bằng mẫu mặc định. Bạn có chắc không?",
+        "Đóng trình chỉnh sửa",
+        "Danh Sách Bảng",
+        "Lỗi sao chép dữ liệu bảng.",
+        "Sao chép JSON bảng này",
+        "Đã xóa bảng."
+      ]
+    },
+    {
+      "name": "Id",
+      "start": 1005205,
+      "end": 1007194,
+      "chars": 1989,
+      "jsxCalls": 15,
+      "hooks": 4,
+      "externalBindings": [
+        "Cl",
+        "Go",
+        "b",
+        "hl",
+        "hn",
+        "isLoading",
+        "jl",
+        "models",
+        "ns",
+        "ss",
+        "wt",
+        "yl"
+      ],
+      "labels": [
+        "Cài đặt Gợi ý Hành động",
+        "Bật Gợi ý Hành động",
+        "Mô hình Google Gemini (Chuyên dụng)",
+        "Mô hình Google Gemini",
+        "Đang sử dụng ",
+        " (Được cấu hình trong Thiết lập API)"
+      ]
+    },
+    {
+      "name": "th",
+      "start": 1037444,
+      "end": 1039583,
+      "chars": 2139,
+      "jsxCalls": 28,
+      "hooks": 1,
+      "externalBindings": [
+        "Ad",
+        "Id",
+        "Nd",
+        "Qd",
+        "Td",
+        "Vd",
+        "Zd",
+        "b",
+        "eh",
+        "jd",
+        "ju",
+        "wt"
+      ],
+      "labels": [
+        "Mục cài đặt",
+        "Hồ sơ Người dùng",
+        "Thiết lập API",
+        "Sao lưu & Khôi phục",
+        "Thẻ HTML",
+        "Gợi ý Hành động"
+      ]
+    },
+    {
+      "name": "Of",
+      "start": 1330579,
+      "end": 1333449,
+      "chars": 2870,
+      "jsxCalls": 12,
+      "hooks": 8,
+      "externalBindings": [
+        "Cs",
+        "Df",
+        "If",
+        "Ks",
+        "Xl",
+        "__stsAiStudioToolText",
+        "_d",
+        "b",
+        "cl",
+        "jf",
+        "ns",
+        "wt"
+      ],
+      "labels": [
+        "Tạo Mục Sổ tay AI",
+        "Nhập từ khóa hoặc tên mục...",
+        "Nhập từ khóa",
+        "Vui lòng nhập từ khóa."
+      ]
+    },
+    {
+      "name": "Nf",
+      "start": 1310472,
+      "end": 1315220,
+      "chars": 4748,
+      "jsxCalls": 48,
+      "hooks": 1,
+      "externalBindings": [
+        "Cf",
+        "Ef",
+        "Sf",
+        "_f",
+        "b",
+        "bf",
+        "ff",
+        "kf",
+        "kt",
+        "mf",
+        "wt",
+        "xf"
+      ],
+      "labels": [
+        "Bảng Gỡ Lỗi & Dữ Liệu Hệ Thống",
+        "Lỗi Tóm Tắt",
+        "1. Bảng điều khiển Hệ thống (Console)",
+        "2. Công cụ AI",
+        "3. Nhật ký Smart Scan",
+        "4. Lời nhắc Gửi đi (Prompts)"
+      ]
+    },
+    {
+      "name": "ec",
+      "start": 638801,
+      "end": 647454,
+      "chars": 8653,
+      "jsxCalls": 45,
+      "hooks": 7,
+      "externalBindings": [
+        "$l",
+        "Hl",
+        "Jl",
+        "Kl",
+        "Ql",
+        "Wl",
+        "Zl",
+        "b",
+        "mn",
+        "ql",
+        "sn",
+        "wt"
+      ],
+      "labels": [
+        "Công cụ Thẻ",
+        "Quản lý tài nguyên, kiểm tra token và xuất bản.",
+        "Số lượng token ước tính",
+        "Mô tả:",
+        "Tính cách:",
+        "Lời chào đầu tiên:"
+      ]
+    },
+    {
+      "name": "jd",
+      "start": 1007198,
+      "end": 1009245,
+      "chars": 2047,
+      "jsxCalls": 15,
+      "hooks": 4,
+      "externalBindings": [
+        "Cl",
+        "Cs",
+        "b",
+        "hl",
+        "hn",
+        "isLoading",
+        "jl",
+        "ls",
+        "models",
+        "ns",
+        "wt",
+        "yl",
+        "zo"
+      ],
+      "labels": [
+        "Cài đặt Cải thiện Văn chương",
+        "Bật Cải thiện Văn chương",
+        "Mô hình Google Gemini (Chuyên dụng)",
+        "Mô hình Google Gemini",
+        "Đang sử dụng ",
+        " (Được cấu hình trong Thiết lập API)"
+      ]
+    },
+    {
+      "name": "Pl",
+      "start": 609680,
+      "end": 625797,
+      "chars": 16117,
+      "jsxCalls": 96,
+      "hooks": 9,
+      "externalBindings": [
+        "As",
+        "Cl",
+        "Js",
+        "Ol",
+        "Rl",
+        "Vo",
+        "Xl",
+        "b",
+        "dn",
+        "jl",
+        "models",
+        "wt",
+        "yl"
+      ],
+      "labels": [
+        " Cấu hình Mythic Engine",
+        "Đóng cấu hình",
+        "Vận hành",
+        "Lời nhắc (Prompt)",
+        "Ngữ cảnh (Context)",
+        "Dữ liệu (Data)"
+      ]
+    },
+    {
+      "name": "If",
+      "start": 1320668,
+      "end": 1324598,
+      "chars": 3930,
+      "jsxCalls": 26,
+      "hooks": 3,
+      "externalBindings": [
+        "Af",
+        "Jc",
+        "Tf",
+        "Xl",
+        "__stsEmbeddingService",
+        "as",
+        "b",
+        "handleSync",
+        "isSyncing",
+        "statusMap",
+        "syncProgress",
+        "syncedCount",
+        "totalCount",
+        "wt"
+      ],
+      "labels": [
+        "Quản lý World Info Động",
+        "Kiểm soát trạng thái, ghim và vị trí chèn của các mục World Info.",
+        "Đang chạy...",
+        "Tất cả đã được đồng bộ",
+        "Đồng bộ hóa dữ liệu tìm kiếm ngữ nghĩa",
+        "Nhân vật này không có mục World Info nào."
+      ]
+    },
+    {
+      "name": "gl",
+      "start": 553662,
+      "end": 560336,
+      "chars": 6674,
+      "jsxCalls": 38,
+      "hooks": 3,
+      "externalBindings": [
+        "Cs",
+        "Ks",
+        "__stsAiStudioToolText",
+        "b",
+        "gs",
+        "hl",
+        "hn",
+        "ln",
+        "mn",
+        "ns",
+        "sl",
+        "ul",
+        "un",
+        "wt"
+      ],
+      "labels": [
+        "Đối thoại",
+        "Lời chào đầu tiên và các ví dụ hội thoại.",
+        "Lỗi dịch thuật từ AI.",
+        "Đã dịch xong toàn bộ lời chào!",
+        "Đang dịch...",
+        " Dịch toàn bộ Lời chào (AI)"
+      ]
+    },
+    {
+      "name": "Td",
+      "start": 998627,
+      "end": 1003389,
+      "chars": 4762,
+      "jsxCalls": 35,
+      "hooks": 3,
+      "externalBindings": [
+        "Cl",
+        "Jo",
+        "Vo",
+        "__stsEmbeddingProviderStatus",
+        "__stsEmbeddingService",
+        "as",
+        "b",
+        "hl",
+        "hn",
+        "is",
+        "jl",
+        "models",
+        "nu",
+        "wt",
+        "yl"
+      ],
+      "labels": [
+        "Smart Scan Toàn Cục",
+        "Kích hoạt",
+        "Chế độ Quét",
+        "1. Truyền thống (Chỉ Từ khóa)",
+        "2. Ngữ nghĩa (Chỉ Embedding)",
+        "3. Kết hợp Nhanh (Từ khóa + Embedding) - KHUYÊN DÙNG"
+      ]
+    },
+    {
+      "name": "Mf",
+      "start": 1340765,
+      "end": 1355246,
+      "chars": 14481,
+      "jsxCalls": 90,
+      "hooks": 8,
+      "externalBindings": [
+        "Bm",
+        "Pf",
+        "Rf",
+        "Vo",
+        "Yg",
+        "b",
+        "bu",
+        "hl",
+        "jl",
+        "kc",
+        "kt",
+        "mn",
+        "models",
+        "vo",
+        "wt",
+        "ys"
+      ],
+      "labels": [
+        "Không tên",
+        "(Không có Sổ tay)",
+        "[BẬT]",
+        "[TẮT]",
+        "(Không có cấu trúc Preset)",
+        "(Chưa có lượt nào được ghi lại)"
+      ]
+    },
+    {
+      "name": "Vd",
+      "start": 1016870,
+      "end": 1022417,
+      "chars": 5547,
+      "jsxCalls": 24,
+      "hooks": 3,
+      "externalBindings": [
+        "$d",
+        "Cl",
+        "De",
+        "Hd",
+        "Md",
+        "Od",
+        "Pd",
+        "Rd",
+        "Ud",
+        "b",
+        "hl",
+        "nu",
+        "qd",
+        "vo",
+        "wt",
+        "yl",
+        "ys"
+      ],
+      "labels": [
+        "Cài đặt Giọng nói",
+        "Bật Text-to-Speech (TTS) Toàn Cục",
+        "Chế độ Đọc Streaming (Real-time)",
+        "Nguồn Giọng Đọc (Provider)",
+        "Trình duyệt (Native)",
+        "Không tìm thấy giọng đọc nào trong trình duyệt. Vui lòng kiểm tra lại thiết bị."
+      ]
+    },
+    {
+      "name": "dp",
+      "start": 1138129,
+      "end": 1145264,
+      "chars": 7135,
+      "jsxCalls": 45,
+      "hooks": 10,
+      "externalBindings": [
+        "Au",
+        "Ko",
+        "Vo",
+        "Ws",
+        "Xl",
+        "_s",
+        "b",
+        "bu",
+        "cs",
+        "ds",
+        "hs",
+        "jl",
+        "kt",
+        "models",
+        "ns",
+        "ps",
+        "rs",
+        "vs",
+        "wt",
+        "xs"
+      ],
+      "labels": [
+        "Cấu hình Nhanh",
+        "Đóng cấu hình nhanh",
+        "Nguồn & Model (Brain)",
+        "Nguồn:",
+        "Nguồn mô hình",
+        "Cấu hình proxy"
+      ]
+    },
+    {
+      "name": "cp",
+      "start": 1128673,
+      "end": 1133230,
+      "chars": 4557,
+      "jsxCalls": 25,
+      "hooks": 11,
+      "externalBindings": [
+        "Ko",
+        "Ru",
+        "Vo",
+        "Ws",
+        "Xl",
+        "_s",
+        "b",
+        "bs",
+        "cs",
+        "ds",
+        "hl",
+        "hs",
+        "jl",
+        "mn",
+        "models",
+        "ns",
+        "ol",
+        "ps",
+        "vs",
+        "wt",
+        "xs"
+      ],
+      "labels": [
+        "Chưa cấu hình API Key cho OpenRouter trong Cài đặt chính.",
+        "Chưa cấu hình Proxy URL.",
+        "Lỗi tải danh sách model.",
+        "Cài đặt Đấu trường",
+        "Đóng cài đặt Đấu trường",
+        "Nhà cung cấp (Đối thủ)"
+      ]
+    },
+    {
+      "name": "Qd",
+      "start": 1023118,
+      "end": 1033300,
+      "chars": 10182,
+      "jsxCalls": 30,
+      "hooks": 4,
+      "externalBindings": [
+        "Au",
+        "Jd",
+        "Kd",
+        "Mo",
+        "Ns",
+        "Oo",
+        "To",
+        "Ts",
+        "Vt",
+        "Wd",
+        "Wt",
+        "Xd",
+        "Yd",
+        "Yt",
+        "Zt",
+        "__stsDiagnosticsState",
+        "__stsProxyPersistence",
+        "__stsRepositories",
+        "an",
+        "b",
+        "bu",
+        "hl",
+        "kc",
+        "mn",
+        "sn",
+        "tn",
+        "wt"
+      ],
+      "labels": [
+        "Đã tải xuống file sao lưu.",
+        "Sao lưu & Khôi phục Hệ thống",
+        "Sao Lưu Toàn Bộ",
+        "Tệp sao lưu có thể chứa khóa API và mật khẩu proxy. Hãy giữ tệp ở nơi riêng tư.",
+        "Đã mở menu chia sẻ!",
+        "Đang xử lý..."
+      ]
+    },
+    {
+      "name": "Jf",
+      "start": 1388652,
+      "end": 1400269,
+      "chars": 11617,
+      "jsxCalls": 20,
+      "hooks": 27,
+      "externalBindings": [
+        "As",
+        "Cs",
+        "Gu",
+        "Kf",
+        "Ks",
+        "Nf",
+        "Qo",
+        "Vc",
+        "Vf",
+        "Wf",
+        "Xo",
+        "__stsAiStudioToolText",
+        "_d",
+        "af",
+        "as",
+        "b",
+        "bd",
+        "cf",
+        "cl",
+        "gh",
+        "hl",
+        "kc",
+        "lf",
+        "lp",
+        "ls",
+        "mn",
+        "mp",
+        "ns",
+        "os",
+        "sf",
+        "sn",
+        "ss",
+        "wt",
+        "ys"
+      ],
+      "labels": [
+        "Đang tải phiên trò chuyện...",
+        "Không tìm thấy Lorebook để đồng bộ.",
+        "Đồng bộ Lorebook Ngữ nghĩa thành công!",
+        "Vui lòng cấu hình Gemini API Key trong phần Cài đặt.",
+        "Lỗi không xác định",
+        "Smart Scan hoặc Semantic Search đang tắt."
+      ]
+    },
+    {
+      "name": "ph",
+      "start": 1057523,
+      "end": 1065691,
+      "chars": 8168,
+      "jsxCalls": 19,
+      "hooks": 9,
+      "externalBindings": [
+        "$u",
+        "Au",
+        "Is",
+        "Jt",
+        "Ju",
+        "Ql",
+        "Qt",
+        "Vt",
+        "Vu",
+        "Wd",
+        "Wt",
+        "Xu",
+        "Zu",
+        "__stsDiagnosticsState",
+        "__stsMergeInitialVariableSources",
+        "__stsRepositories",
+        "__stsSessionPersistence",
+        "ah",
+        "b",
+        "bu",
+        "ch",
+        "dh",
+        "diagnosticLog",
+        "displayContent",
+        "gd",
+        "hh",
+        "hl",
+        "interactiveHtml",
+        "jt",
+        "kc",
+        "mc",
+        "mn",
+        "nh",
+        "oc",
+        "uh",
+        "updatedRuntimeState",
+        "wt"
+      ],
+      "labels": [
+        "Không thể tải các phiên trò chuyện đã lưu.",
+        "Không thể xóa phiên trò chuyện.",
+        "Không có preset nào được chọn. Vui lòng chọn một preset trong tab Preset.",
+        "Bắt đầu cuộc trò chuyện...",
+        "Không thể tạo phiên trò chuyện mới.",
+        "Đang tải sảnh trò chuyện..."
+      ]
+    }
+  ],
+  "limitations": [
+    "Top-level functions and function-valued declarations containing JSX factory calls only. Nested components, component wrappers and dynamic references need manual review.",
+    "Bindings are lexical references in this bundle, not a complete runtime dependency graph. Labels are hints, not recovered component names.",
+    "Extraction requires explicit dependencies and behavioral parity; formatting minified code alone is not source recovery."
+  ]
+}

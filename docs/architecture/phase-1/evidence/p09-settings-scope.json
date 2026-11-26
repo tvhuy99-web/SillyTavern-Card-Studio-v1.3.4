@@ -1,0 +1,148 @@
+{
+  "typescript": "5.8.3",
+  "adapterBindings": [
+    {
+      "name": "__stsCreateConnectionSettingsScreen",
+      "resolved": true
+    },
+    {
+      "name": "wt",
+      "resolved": true
+    },
+    {
+      "name": "b",
+      "resolved": true
+    },
+    {
+      "name": "hl",
+      "resolved": true
+    },
+    {
+      "name": "ns",
+      "resolved": true
+    },
+    {
+      "name": "rs",
+      "resolved": true
+    },
+    {
+      "name": "fs",
+      "resolved": true
+    },
+    {
+      "name": "bs",
+      "resolved": true
+    },
+    {
+      "name": "ps",
+      "resolved": true
+    },
+    {
+      "name": "vs",
+      "resolved": true
+    },
+    {
+      "name": "xs",
+      "resolved": true
+    },
+    {
+      "name": "_s",
+      "resolved": true
+    },
+    {
+      "name": "Cs",
+      "resolved": true
+    },
+    {
+      "name": "ds",
+      "resolved": true
+    },
+    {
+      "name": "cs",
+      "resolved": true
+    },
+    {
+      "name": "us",
+      "resolved": true
+    },
+    {
+      "name": "Ru",
+      "resolved": true
+    },
+    {
+      "name": "ms",
+      "resolved": true
+    },
+    {
+      "name": "Ws",
+      "resolved": true
+    },
+    {
+      "name": "hs",
+      "resolved": true
+    },
+    {
+      "name": "Hs",
+      "resolved": true
+    },
+    {
+      "name": "Vo",
+      "resolved": true
+    },
+    {
+      "name": "jl",
+      "resolved": true
+    },
+    {
+      "name": "Cl",
+      "resolved": true
+    },
+    {
+      "name": "Ed",
+      "resolved": true
+    },
+    {
+      "name": "dn",
+      "resolved": true
+    },
+    {
+      "name": "mn",
+      "resolved": true
+    },
+    {
+      "name": "yl",
+      "resolved": true
+    },
+    {
+      "name": "Do",
+      "resolved": true
+    },
+    {
+      "name": "Ro",
+      "resolved": true
+    },
+    {
+      "name": "Po",
+      "resolved": true
+    },
+    {
+      "name": "__stsCatalog",
+      "resolved": true
+    },
+    {
+      "name": "__stsConnections",
+      "resolved": true
+    },
+    {
+      "name": "__stsCreateAiStudioModelCatalog",
+      "resolved": true
+    },
+    {
+      "name": "__stsProxyPersistence",
+      "resolved": true
+    }
+  ],
+  "unresolved": [],
+  "sourceUnresolvedNames": [],
+  "syntaxDiagnostics": 0
+}

@@ -41,14 +41,14 @@ function read(storage, key) {
   try { return storage.getItem(key); } catch (_) { return null; }
 }
 function write(storage, key, value) {
-  try { storage.setItem(key, String(value)); return true; } catch (_) { return false; }
+  storage.setItem(key, String(value)); return true;
 }
 function remove(storage, key) {
-  try { storage.removeItem(key); } catch (_) {}
+  storage.removeItem(key);
 }
 function readMap(storage, key) {
   const value = parseJSON(read(storage, key), {});
-  return value && typeof value === 'object' && !Array.isArray(value) ? value : {};
+  return Object.assign(Object.create(null), value && typeof value === 'object' && !Array.isArray(value) ? value : {});
 }
 function writeMap(storage, key, value) {
   write(storage, key, JSON.stringify(value && typeof value === 'object' ? value : {}));
@@ -81,10 +81,17 @@ function normalizeMetadata(raw) {
   if (!profile.id || !profile.url) return null;
   return profile;
 }
+function validateProfiles(input) {
+  if (!Array.isArray(input) || input.length > 100) throw Error('Invalid proxy profile list.');
+  const profiles = input.map(normalizeMetadata);
+  if (profiles.some(profile => !profile)) throw Error('Invalid proxy profile list.');
+  if (new Set(profiles.map(profile => profile.id)).size !== profiles.length) throw Error('Duplicate proxy profile ID.');
+  return input;
+}
 function splitProfiles(input) {
   const profiles = [];
-  const secrets = {};
-  const presentSecretFields = {};
+  const secrets = Object.create(null);
+  const presentSecretFields = Object.create(null);
   const nonEmptySecretIds = new Set();
   (Array.isArray(input) ? input : []).slice(0, 100).forEach((raw, index) => {
     if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return;
@@ -113,10 +120,10 @@ function splitProfiles(input) {
   return { profiles, secrets, presentSecretFields, nonEmptySecretIds };
 }
 function mergeSecretMaps(base, extra) {
-  const result = { ...(base || {}) };
+  const result = Object.assign(Object.create(null), base || {});
   for (const [id, secret] of Object.entries(extra || {})) {
     if (!secret || typeof secret !== 'object' || Array.isArray(secret)) continue;
-    result[id] = { ...(result[id] || {}), ...secret };
+    result[id] = { ...(result[id] || {}), ...Object.fromEntries(SECRET_FIELDS.filter(field => Object.hasOwn(secret, field)).map(field => [field, secret[field]])) };
   }
   return result;
 }
@@ -144,18 +151,44 @@ export function createProxyPersistence(options = {}) {
     const secrets = mergeSecretMaps(persistent, perSession);
     return profiles.map((profile, index) => {
       const key = profileKey(profile, index);
-      const merged = secrets[key] ? { ...profile, ...secrets[key] } : { ...profile };
+      const merged = Object.hasOwn(secrets, key) ? { ...profile, ...secrets[key] } : { ...profile };
       if (!Object.prototype.hasOwnProperty.call(merged, 'password')) merged.password = '';
       return merged;
     });
   }
 
-  function setProfiles(input) {
+  // Web Storage has no multi-key transaction. Restore owned keys on a failed
+  // synchronous write where possible; never report success on a partial write.
+  function mutate(work) {
+    options.assertWriteAllowed?.("proxy.mutate");
+    const snapshot = [local, session].map(storage => [storage, Object.values(K).map(key => [key, storage.getItem(key)])]);
+    try { return work(); }
+    catch (error) {
+      let rollbackFailed = false;
+      for (const [storage, entries] of snapshot) for (const [key, value] of entries) {
+        try { if (storage.getItem(key) !== value) { if (value === null) storage.removeItem(key); else storage.setItem(key, value); } }
+        catch { rollbackFailed = true; }
+      }
+      throw new Error(rollbackFailed ? 'Không thể lưu cấu hình Proxy; khôi phục dữ liệu chưa hoàn tất.' : 'Không thể lưu cấu hình Proxy.', { cause: error });
+    }
+  }
+  function setProfiles(input) { return mutate(() => setProfilesInternal(input)); }
+  function setProfilesInternal(input) {
     const previousRequired = readSet(local, K.profileSecretRequired);
     const previousSessionSecrets = readMap(session, K.profileSecretsSession);
     const previousPersistentSecrets = readMap(local, K.profileSecretsPersistent);
+    validateProfiles(input);
     const split = splitProfiles(input);
     const ids = new Set(split.profiles.map((profile, index) => profileKey(profile, index)));
+    const oldProfiles = new Map(canonicalProfiles().map(profile => [profile.id, profile]));
+    for (const profile of split.profiles) {
+      const old = oldProfiles.get(profile.id);
+      if (old && (old.url !== profile.url || old.protocol !== profile.protocol)) {
+        delete previousSessionSecrets[profile.id];
+        delete previousPersistentSecrets[profile.id];
+        previousRequired.delete(profile.id);
+      }
+    }
 
     const sessionSecrets = pruneSecretMap(
       mergeSecretMaps(previousSessionSecrets, split.secrets),
@@ -199,7 +232,8 @@ export function createProxyPersistence(options = {}) {
     return current || '';
   }
 
-  function setPassword(value) {
+  function setPassword(value) { return mutate(() => setPasswordInternal(value)); }
+  function setPasswordInternal(value) {
     const textValue = String(value ?? '');
     write(session, K.proxyPasswordLegacy, textValue);
     remove(local, K.proxyPasswordLegacy);
@@ -208,7 +242,8 @@ export function createProxyPersistence(options = {}) {
     return textValue;
   }
 
-  function setRememberSecrets(enabled) {
+  function setRememberSecrets(enabled) { return mutate(() => setRememberSecretsInternal(enabled)); }
+  function setRememberSecretsInternal(enabled) {
     const next = Boolean(enabled);
     write(local, K.rememberSecrets, next ? 'true' : 'false');
     if (!next) {
@@ -233,7 +268,8 @@ export function createProxyPersistence(options = {}) {
     return { profileId, requiresSecret: required, hasSecret, profile };
   }
 
-  function clearProfiles() {
+  function clearProfiles() { return mutate(clearProfilesInternal); }
+  function clearProfilesInternal() {
     remove(local, K.profilesCanonical);
     remove(local, K.profilesLegacy);
     remove(session, K.profilesLegacy);
@@ -242,7 +278,8 @@ export function createProxyPersistence(options = {}) {
     remove(local, K.profileSecretRequired);
   }
 
-  function migrateLegacyState() {
+  function migrateLegacyState() { return mutate(migrateLegacyStateInternal); }
+  function migrateLegacyStateInternal() {
     const canonicalRaw = parseJSON(read(local, K.profilesCanonical), null);
     const legacyLocalRaw = parseJSON(read(local, K.profilesLegacy), null);
     const legacySessionRaw = parseJSON(read(session, K.profilesLegacy), null);
@@ -313,10 +350,12 @@ export function createProxyPersistence(options = {}) {
     return true;
   }
 
-  migrateLegacyState();
+  try { if (options.migrateOnCreate !== false) migrateLegacyState(); } catch { console.warn('[Proxy] Legacy storage migration could not be completed.'); }
 
   return Object.freeze({
     getProfiles,
+    getOwnedStorageKeys: () => Object.values(K),
+    validateProfiles,
     setProfiles,
     clearProfiles,
     getPassword,
@@ -331,5 +370,3 @@ export function createProxyPersistence(options = {}) {
     migrateLegacyState,
   });
 }
-
-export const proxyPersistence = createProxyPersistence();

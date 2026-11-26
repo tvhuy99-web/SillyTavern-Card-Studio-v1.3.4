@@ -1,0 +1,8 @@
+
+> sillytavern-card-studio@1.3.6 test:source-bootstrap
+> node tools/test-source-bootstrap.mjs
+
+[System] Global Error Hunters (Multi-layer) initialized.
+[M7 boot] Production bundle failed to initialize. Error: root lookup reached
+    at file:///mnt/data/work-d3/STCS-Phase1-Block-D-74/tools/test-source-bootstrap.mjs:10:20
+Source-native snapshot entry and ESM graph reached React root lookup (DOM stub, no mount).

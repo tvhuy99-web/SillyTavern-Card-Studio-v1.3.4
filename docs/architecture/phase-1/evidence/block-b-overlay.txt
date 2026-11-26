@@ -1,0 +1,7 @@
+
+> sillytavern-card-studio@1.3.6 test:android-overlay
+> python3 tests/native/test-overlay.py
+
+Native overlay applied: 16 Java files, manifest, dependency configuration
+Native overlay applied: 16 Java files, manifest, dependency configuration
+Android overlay fixture: manifest, permissions, 4 plugin registrations, file parity and idempotence PASS

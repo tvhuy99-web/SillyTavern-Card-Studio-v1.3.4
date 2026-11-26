@@ -35,3 +35,20 @@ The native class also contains XNNPACK support, but **CPU is the explicit initia
 ## Verification limits
 
 GitHub CI checks JavaScript behavior and compiles a debug APK with `com.microsoft.onnxruntime:onnxruntime-android:1.29.0`, verifying `libonnxruntime.so` is packaged. GitHub Actions **does not run the 200 MB Q4 model inside an Android phone**. The user should validate the native graph and vector throughput on the target phone before treating the feature as production-ready. If native loading fails, the embedding sync must fail explicitly without switching to WASM, keyword scan, another embedding model or online service.
+
+## Block B: native worker and model files
+
+Both native engines now use `NativeSerialWorker` to reject queued/new operations
+when the plugin closes, finish the in-flight operation before cleanup, and close
+the engine/session on its owning worker. LiteRT download/hash loops also check
+for closure. An in-flight native inference may not be interruptible.
+
+The existing private model paths and marker formats are retained. The ONNX
+marker is checked for a matching file size and a syntactically valid SHA-256;
+LiteRT checks the stored marker against the pinned expected SHA-256 and still
+verifies the downloaded bytes before publishing. `NativeModelFiles` syncs the
+partial model and stages its marker before replacement. This is a per-file
+commit; graph and weights do not form one atomic transaction, and status does
+not rehash every model file. ONNX import now carries an optional `importId`
+through begin/append/finish/abort. Old APKs may ignore the new fields and lack
+`abortFile`, so the new ownership guarantees require the corresponding APK.

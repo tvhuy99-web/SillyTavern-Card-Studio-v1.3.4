@@ -1,17 +1,27 @@
 import {
   buildSamplerSettings,
+  buildGeminiSamplerSettings,
   clampNumber,
   networkLogId,
   openAiCompatibleError,
   readSseResponse,
 } from '../common/generation-utils.js';
 
+function googleText(payload) {
+  return payload?.candidates?.[0]?.content?.parts?.filter(part => !part.thought).map(part => part.text || '').join('') || payload?.text || '';
+}
+
 export function createProxyGenerationProvider(deps) {
   function config(override) {
+    // Explicit URLs (Arena profile, draft test, card custom_api) must not
+    // inherit secrets or protocol from an unrelated saved endpoint.
+    const explicitEndpoint = override != null && Object.hasOwn(override, 'url');
+    if (explicitEndpoint && !String(override.url ?? '').trim()) throw Error('Chưa cấu hình Proxy URL.');
     return {
       url: override?.url || deps.getProxyUrl(),
-      password: override?.password ?? deps.getProxyPassword(),
-      legacyMode: override?.legacyMode ?? deps.getProxyLegacyMode(),
+      password: override?.password ?? (explicitEndpoint ? '' : deps.getProxyPassword()),
+      legacyMode: override?.legacyMode ?? (explicitEndpoint ? false : deps.getProxyLegacyMode()),
+      protocol: override?.protocol ?? (explicitEndpoint ? 'openai' : deps.getProxyProtocol?.() ?? 'openai'),
     };
   }
 
@@ -30,6 +40,22 @@ export function createProxyGenerationProvider(deps) {
   function requestInfo(model, prompt, preset, stream, override) {
     const resolved = config(override);
     const base = deps.normalizeProxyUrl(resolved.url);
+    if (resolved.protocol === 'google_native') {
+      const headers = { 'Content-Type': 'application/json' };
+      if (resolved.password) headers['x-goog-api-key'] = resolved.password;
+      const body = {
+        contents: [{ role: 'user', parts: [{ text: prompt }] }],
+        generationConfig: {
+          temperature: clampNumber(preset.temp, 1, { min: 0, max: 2 }),
+          maxOutputTokens: Math.trunc(clampNumber(preset.max_tokens, 4096, { min: 1 })),
+          ...buildGeminiSamplerSettings(preset),
+          ...(preset.stopping_strings ? { stopSequences: preset.stopping_strings } : {}),
+        },
+      };
+      const id = encodeURIComponent(String(model).replace(/^models\//, ''));
+      return { url: `${base.replace(/\/v1beta(?:\/models)?$/, '')}/v1beta/models/${id}:${stream ? 'streamGenerateContent?alt=sse' : 'generateContent'}`, headers, body, protocol: resolved.protocol };
+    }
+    if (resolved.protocol !== 'openai') throw new Error(`Giao thức Proxy không được hỗ trợ: ${resolved.protocol}`);
     const body = payload(model, prompt, preset, stream);
     const headers = {};
     if (resolved.legacyMode) headers['Content-Type'] = 'text/plain';
@@ -44,9 +70,9 @@ export function createProxyGenerationProvider(deps) {
     };
   }
 
-  async function generate({ model, prompt, preset, proxyConfig, signal }) {
+  async function generate({ model, prompt, preset, proxyConfig, signal, purpose }) {
     const req = requestInfo(model, prompt, preset, false, proxyConfig);
-    deps.addNetworkLog({
+    if (purpose !== 'connection-test') deps.addNetworkLog({
       id: networkLogId('proxy'),
       timestamp: Date.now(),
       url: req.url,
@@ -63,7 +89,7 @@ export function createProxyGenerationProvider(deps) {
     });
     if (!response.ok) throw new Error(await openAiCompatibleError(response, 'Proxy Error'));
     const json = await response.json();
-    return { text: json.choices?.[0]?.message?.content || '' };
+    return { text: req.protocol === 'google_native' ? googleText(json) : json.choices?.[0]?.message?.content || '' };
   }
 
   async function* stream({ model, prompt, preset, proxyConfig, signal }) {
@@ -90,7 +116,8 @@ export function createProxyGenerationProvider(deps) {
       parseEvent(event) {
         if (!event || event.trim() === '[DONE]') return null;
         try {
-          const text = JSON.parse(event).choices?.[0]?.delta?.content || '';
+          const json = JSON.parse(event);
+          const text = req.protocol === 'google_native' ? googleText(json) : json.choices?.[0]?.delta?.content || '';
           return text ? { text } : null;
         } catch {
           return null;

@@ -1,0 +1,215 @@
+{
+  "typescript": "5.8.3",
+  "file": "assets/app-production-v1.3.6.js",
+  "syntaxDiagnostics": 0,
+  "embedding": [
+    {
+      "name": "Ac",
+      "declarationOffset": 787794,
+      "references": [
+        {
+          "offset": 788130,
+          "owner": "jc"
+        },
+        {
+          "offset": 788155,
+          "owner": "jc"
+        },
+        {
+          "offset": 788188,
+          "owner": "jc"
+        },
+        {
+          "offset": 788219,
+          "owner": "jc"
+        },
+        {
+          "offset": 788414,
+          "owner": "Dc"
+        },
+        {
+          "offset": 788443,
+          "owner": "Dc"
+        },
+        {
+          "offset": 788592,
+          "owner": "Oc"
+        },
+        {
+          "offset": 788621,
+          "owner": "Oc"
+        },
+        {
+          "offset": 788825,
+          "owner": "Rc"
+        },
+        {
+          "offset": 788853,
+          "owner": "Rc"
+        }
+      ],
+      "reachableFromOutsideCandidateGroup": false
+    },
+    {
+      "name": "Ic",
+      "declarationOffset": 787810,
+      "references": [
+        {
+          "offset": 787848,
+          "owner": "jc"
+        },
+        {
+          "offset": 787865,
+          "owner": "jc"
+        },
+        {
+          "offset": 788013,
+          "owner": "jc"
+        },
+        {
+          "offset": 788034,
+          "owner": "jc"
+        }
+      ],
+      "reachableFromOutsideCandidateGroup": false
+    },
+    {
+      "name": "jc",
+      "declarationOffset": 787818,
+      "references": [
+        {
+          "offset": 788361,
+          "owner": "Dc"
+        },
+        {
+          "offset": 788539,
+          "owner": "Oc"
+        },
+        {
+          "offset": 788772,
+          "owner": "Rc"
+        }
+      ],
+      "reachableFromOutsideCandidateGroup": false
+    },
+    {
+      "name": "Dc",
+      "declarationOffset": 788336,
+      "references": [],
+      "reachableFromOutsideCandidateGroup": false
+    },
+    {
+      "name": "Oc",
+      "declarationOffset": 788495,
+      "references": [],
+      "reachableFromOutsideCandidateGroup": false
+    },
+    {
+      "name": "Rc",
+      "declarationOffset": 788744,
+      "references": [
+        {
+          "offset": 788523,
+          "owner": "Oc"
+        }
+      ],
+      "reachableFromOutsideCandidateGroup": false
+    },
+    {
+      "name": "Pc",
+      "declarationOffset": 788976,
+      "references": [],
+      "reachableFromOutsideCandidateGroup": false
+    },
+    {
+      "name": "Mc",
+      "declarationOffset": 788987,
+      "references": [],
+      "reachableFromOutsideCandidateGroup": false
+    },
+    {
+      "name": "Bc",
+      "declarationOffset": 789365,
+      "references": [
+        {
+          "offset": 789842,
+          "owner": "Hc"
+        },
+        {
+          "offset": 789930,
+          "owner": "Hc"
+        },
+        {
+          "offset": 790044,
+          "owner": "Hc"
+        }
+      ],
+      "reachableFromOutsideCandidateGroup": false
+    },
+    {
+      "name": "Uc",
+      "declarationOffset": 789397,
+      "references": [
+        {
+          "offset": 790275,
+          "owner": "Hc"
+        }
+      ],
+      "reachableFromOutsideCandidateGroup": false
+    },
+    {
+      "name": "Hc",
+      "declarationOffset": 789435,
+      "references": [],
+      "reachableFromOutsideCandidateGroup": false
+    },
+    {
+      "name": "Gc",
+      "declarationOffset": 790335,
+      "references": [
+        {
+          "offset": 1105158,
+          "owner": null
+        },
+        {
+          "offset": 1369407,
+          "owner": null
+        }
+      ],
+      "reachableFromOutsideCandidateGroup": true
+    },
+    {
+      "name": "zc",
+      "declarationOffset": 790535,
+      "references": [
+        {
+          "offset": 791692,
+          "owner": null
+        }
+      ],
+      "reachableFromOutsideCandidateGroup": true
+    },
+    {
+      "name": "qc",
+      "declarationOffset": 790710,
+      "references": [
+        {
+          "offset": 791695,
+          "owner": null
+        }
+      ],
+      "reachableFromOutsideCandidateGroup": true
+    },
+    {
+      "name": "Wc",
+      "declarationOffset": 790952,
+      "references": [],
+      "reachableFromOutsideCandidateGroup": false
+    }
+  ],
+  "modelTestVs": [],
+  "limitations": [
+    "Lexical symbol resolution, not runtime coverage or proof of no eval/side effects.",
+    "Candidate group only; not a whole-program dead-code elimination analysis."
+  ]
+}

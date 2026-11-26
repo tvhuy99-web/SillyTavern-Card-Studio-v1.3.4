@@ -38,13 +38,15 @@ assert.doesNotMatch(service, /getString\("prompt"|getString\("text"|getString\("
 
 // Generated APK must include a declared Android 14+ dataSync service, and
 // Android 13+ optional notifications permission.
-assert.match(workflow, /cp android-native\/AiStudioGenerationService\.java/);
-assert.match(workflow, /android\.permission\.FOREGROUND_SERVICE_DATA_SYNC/);
-assert.match(workflow, /android\.permission\.FOREGROUND_SERVICE/);
-assert.match(workflow, /android\.permission\.WAKE_LOCK/);
-assert.match(workflow, /android\.permission\.POST_NOTIFICATIONS/);
-assert.match(workflow, /android:foregroundServiceType="dataSync"/);
-assert.match(workflow, /android:stopWithTask="false"/);
+assert.match(workflow, /python3 tools\/prepare-android\.py android/);
+const overlay = fs.readFileSync(new URL('../tools/prepare-android.py', import.meta.url),'utf8');
+assert.match(overlay, /glob\("\*\.java"\)/);
+assert.match(overlay, /FOREGROUND_SERVICE_DATA_SYNC/);
+assert.match(overlay, /FOREGROUND_SERVICE/);
+assert.match(overlay, /WAKE_LOCK/);
+assert.match(overlay, /POST_NOTIFICATIONS/);
+assert.match(overlay, /"foregroundServiceType":"dataSync"/);
+assert.match(overlay, /"stopWithTask":"false"/);
 
 // Preserve previous text streaming, unique Google conversation and the
 // default-hidden/optional inline debug page.

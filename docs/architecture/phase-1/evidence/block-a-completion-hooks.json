@@ -1,0 +1,61 @@
+[
+  {
+    "owner": "createConversationHook",
+    "hook": "useResponsePipeline",
+    "module": "src/features/chat/hooks/use-response-pipeline.js",
+    "bodyChars": 1320,
+    "originalParameterText": []
+  },
+  {
+    "owner": "createConversationHook",
+    "hook": "useSmartScan",
+    "module": "src/features/chat/hooks/use-smart-scan.js",
+    "bodyChars": 2221,
+    "originalParameterText": [
+      "e"
+    ]
+  },
+  {
+    "owner": "createChatSessionHook",
+    "hook": "useSessionPersistence",
+    "module": "src/features/chat/hooks/use-session-persistence.js",
+    "bodyChars": 5401,
+    "originalParameterText": [
+      "e"
+    ]
+  },
+  {
+    "owner": "createChatSessionHook",
+    "hook": "useSmartContext",
+    "module": "src/features/chat/hooks/use-smart-context.js",
+    "bodyChars": 2623,
+    "originalParameterText": []
+  },
+  {
+    "owner": "createChatSessionHook",
+    "hook": "useMessageHistory",
+    "module": "src/features/chat/hooks/use-message-history.js",
+    "bodyChars": 4340,
+    "originalParameterText": [
+      "{saveSession:e,card:t,mergedSettings:n,logSystemMessage:r,isBusy:a}"
+    ]
+  },
+  {
+    "owner": "createChatSessionHook",
+    "hook": "useSlashCommands",
+    "module": "src/features/chat/hooks/use-slash-commands.js",
+    "bodyChars": 2745,
+    "originalParameterText": [
+      "{card:e,persona:t,saveSession:n,sendMessage:r,addSystemMessage:a,logSystemMessage:i,updateVisualState:o,showToast:s,showPopup:l}"
+    ]
+  },
+  {
+    "owner": "createChatSessionHook",
+    "hook": "useCardRuntime",
+    "module": "src/features/chat/hooks/use-card-runtime.js",
+    "bodyChars": 16972,
+    "originalParameterText": [
+      "{logSystemMessage:e,executeSlashCommands:t,saveSession:n,changePreset:r}"
+    ]
+  }
+]

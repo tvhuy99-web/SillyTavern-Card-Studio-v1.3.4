@@ -1,0 +1,147 @@
+{
+  "schemaVersion": 1,
+  "notice": "Integrity inventory only, not a completed license audit. Package pins are candidate or snapshot version strings; registry availability has not been verified.",
+  "packagePins": {
+    "react": "19.2.7",
+    "react-dom": "19.2.7",
+    "zustand": "5.0.11",
+    "immer": "11.1.3",
+    "json5": "2.2.3",
+    "@google/genai": "1.52.0",
+    "lodash": "4.18.1",
+    "marked": "17.0.3",
+    "dompurify": "3.4.12",
+    "esbuild": "0.25.12"
+  },
+  "npmRuntimeAdapters": [
+    "react-state-runtime",
+    "google-genai-runtime",
+    "lodash-runtime",
+    "markdown-runtime",
+    "html-sanitizer-runtime",
+    "immer-mapset"
+  ],
+  "files": [
+    {
+      "path": "assets/ejs.min-Cthf3_XD.js",
+      "bytes": 24449,
+      "sha256": "95da310ae56596477ed96020b595d5c8995427a309aa6b2ad4558f9e6df50d3f",
+      "provenance": "Static asset retained from original repository",
+      "licenseStatus": "not independently verified"
+    },
+    {
+      "path": "assets/index-CsumjV7z.css",
+      "bytes": 58716,
+      "sha256": "0f37022b4b9a8aa873f938727f0c12675196108b7098ae0c52ca2762e9def0a7",
+      "provenance": "Static asset retained from original repository",
+      "licenseStatus": "not independently verified"
+    },
+    {
+      "path": "assets/index-yS4Vru8B.js",
+      "bytes": 452,
+      "sha256": "87aff653e30bc1551bed10c6cd4cc350adae0ded55734c650ea332f6211bf7f1",
+      "provenance": "Static asset retained from original repository",
+      "licenseStatus": "not independently verified"
+    },
+    {
+      "path": "assets/jszip.min-CF4xG0Dr.js",
+      "bytes": 95870,
+      "sha256": "44899326519d9f920ca8f02f96920a54d47a8baa63904c6fee8fcc3b5f222f10",
+      "provenance": "Static asset retained from original repository",
+      "licenseStatus": "not independently verified"
+    },
+    {
+      "path": "assets/lodash.min-xZXeUb-0.js",
+      "bytes": 73751,
+      "sha256": "b581ebd2d8c97e52f74b1dc2f71acf8be6d499ccf6fa53e867789d06b1726c95",
+      "provenance": "Static asset retained from original repository",
+      "licenseStatus": "not independently verified"
+    },
+    {
+      "path": "assets/ui-d8367f0f.css",
+      "bytes": 13722,
+      "sha256": "d8367f0f91c7c1b39660e171543e2ba405f2d8fdf81549ec3d9529ed6b79f3d4",
+      "provenance": "Static asset retained from original repository",
+      "licenseStatus": "not independently verified"
+    },
+    {
+      "path": "src/vendor/google-genai-runtime.js",
+      "bytes": 266689,
+      "sha256": "16329183535bd88254ea0fa01f06e2fcb69988a1435581c3b013c4ebb298e7cb",
+      "libraries": [
+        "Google GenAI"
+      ],
+      "detectedVersions": {
+        "@google/genai": "1.52.0"
+      },
+      "provenance": "Version string in recovered SDK; package identity not independently verified",
+      "licenseStatus": "not independently verified"
+    },
+    {
+      "path": "src/vendor/html-sanitizer-runtime.js",
+      "bytes": 26345,
+      "sha256": "a3f0414e87e45c140cfb3b3846cd0322dc3862dd8aeb6369f4729685499ee67a",
+      "libraries": [
+        "DOMPurify"
+      ],
+      "detectedVersions": {
+        "dompurify": "3.4.12"
+      },
+      "provenance": "Recovered bundle version field",
+      "licenseStatus": "not independently verified"
+    },
+    {
+      "path": "src/vendor/immer-mapset.js",
+      "bytes": 2788,
+      "sha256": "d7e3294a637bd90038834eeaed46fb82de056ce5f07ca6780edfb65ebe6a927e",
+      "libraries": [
+        "Immer Map/Set plugin"
+      ],
+      "detectedVersions": {},
+      "provenance": "Extracted internal plugin; exact version unverified",
+      "licenseStatus": "not independently verified"
+    },
+    {
+      "path": "src/vendor/lodash-runtime.js",
+      "bytes": 71054,
+      "sha256": "eee95be7a66a6e2942990f2c1fdad562551c723917bf8b418b41bec439d5dba0",
+      "libraries": [
+        "Lodash"
+      ],
+      "detectedVersions": {
+        "lodash": "4.18.1"
+      },
+      "provenance": "Recovered bundle version field",
+      "licenseStatus": "not independently verified"
+    },
+    {
+      "path": "src/vendor/markdown-runtime.js",
+      "bytes": 39198,
+      "sha256": "f2be8fec4b2c96b643936c4cd6ac61d8b33d6954ef39e7ea28111bad7fb5c9e7",
+      "libraries": [
+        "Marked"
+      ],
+      "detectedVersions": {},
+      "provenance": "Exact version unverified",
+      "licenseStatus": "not independently verified"
+    },
+    {
+      "path": "src/vendor/react-state-runtime.js",
+      "bytes": 230044,
+      "sha256": "609025056bf67fa706a4e6aa4cb9b4555f9d2ce28450ed9a680ffd9f2197c0c3",
+      "libraries": [
+        "React",
+        "ReactDOM",
+        "Zustand",
+        "Immer",
+        "JSON5"
+      ],
+      "detectedVersions": {
+        "react": "19.2.7",
+        "reactDom": "19.2.7"
+      },
+      "provenance": "Recovered bundle; exact Zustand, Immer and JSON5 versions unverified",
+      "licenseStatus": "not independently verified"
+    }
+  ]
+}

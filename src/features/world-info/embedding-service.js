@@ -1,12 +1,11 @@
+import { createSerialQueue } from '../../core/async/serial-queue.js';
 import { createNativeEmbeddingGemmaRuntime, getNativeEmbeddingPlugin } from './native-embedding-bridge.js';
 import {
   getEmbeddingGemma2Status, downloadEmbeddingGemma2,
   removeEmbeddingGemma2, createEmbeddingGemma2Runtime,
 } from './embeddinggemma2-litert-bridge.js';
 
-const DB_NAME = 'LorebookEmbeddingsDB';
-const DB_VERSION = 2;
-const STORE_NAME = 'embeddings';
+import { createEmbeddingIndexRepository } from './embedding-index-repository.js';
 const TRANSFORMERS_MODULE_URL = 'https://cdn.jsdelivr.net/npm/@huggingface/transformers@3.8.1/+esm';
 const TRANSFORMERS_CACHE_KEY = 'st-card-studio-embedding-models-v1';
 const QWEN_TASK = 'Given the current roleplay context, retrieve the most relevant World Info passages for the ongoing scene.';
@@ -237,94 +236,6 @@ function preferredDevice() {
   return !isAndroidHost() && typeof navigator !== 'undefined' && navigator.gpu ? 'webgpu' : 'wasm';
 }
 
-async function openEmbeddingDb() {
-  if (typeof indexedDB === 'undefined') throw new Error('Trình duyệt không hỗ trợ IndexedDB.');
-  return new Promise((resolve, reject) => {
-    const request = indexedDB.open(DB_NAME, DB_VERSION);
-    request.onerror = event => reject(event?.target?.error || new Error('Failed to open IndexedDB'));
-    request.onsuccess = event => resolve(event.target.result);
-    request.onupgradeneeded = event => {
-      const db = event.target.result;
-      if (event.oldVersion < 2 && db.objectStoreNames.contains(STORE_NAME)) db.deleteObjectStore(STORE_NAME);
-      if (!db.objectStoreNames.contains(STORE_NAME)) {
-        const store = db.createObjectStore(STORE_NAME, { keyPath: 'id' });
-        store.createIndex('characterId', 'characterId', { unique: false });
-        store.createIndex('uid', 'uid', { unique: false });
-      }
-    };
-  });
-}
-
-// Replace one Lorebook UID atomically in a single IndexedDB transaction.
-// Keeping all vectors together avoids an open/close for every chunk and
-// prevents losing the old index if an individual put fails.
-async function replaceRecordsAtomic(oldRecords, newRecords) {
-  if (!oldRecords.length && !newRecords.length) return;
-  const db = await openEmbeddingDb();
-  return new Promise((resolve, reject) => {
-    let tx;
-    try {
-      tx = db.transaction([STORE_NAME], 'readwrite');
-      tx.oncomplete = () => { db.close(); resolve(); };
-      tx.onabort = () => {
-        const error = tx.error || new Error('Atomic embedding update was aborted');
-        db.close();
-        reject(error);
-      };
-      const store = tx.objectStore(STORE_NAME);
-      const nextIds = new Set(newRecords.map(record => record.id));
-      for (const record of oldRecords) {
-        if (!nextIds.has(record.id)) store.delete(record.id);
-      }
-      for (const record of newRecords) store.put(record);
-    } catch (error) {
-      db.close();
-      reject(error);
-    }
-  });
-}
-
-async function getRecordsByCharacter(characterId) {
-  const db = await openEmbeddingDb();
-  return new Promise((resolve, reject) => {
-    const request = db.transaction([STORE_NAME], 'readonly')
-      .objectStore(STORE_NAME)
-      .index('characterId')
-      .getAll(characterId);
-    request.onsuccess = event => { const records = event.target.result || []; db.close(); resolve(records); };
-    request.onerror = event => { db.close(); reject(event?.target?.error || new Error('Failed to read embeddings')); };
-  });
-}
-
-async function getRecordsByUid(uid) {
-  const db = await openEmbeddingDb();
-  return new Promise((resolve, reject) => {
-    const request = db.transaction([STORE_NAME], 'readonly')
-      .objectStore(STORE_NAME)
-      .index('uid')
-      .getAll(uid);
-    request.onsuccess = event => { const records = event.target.result || []; db.close(); resolve(records); };
-    request.onerror = event => { db.close(); reject(event?.target?.error || new Error('Failed to read embedding UID')); };
-  });
-}
-
-async function deleteRecords(records) {
-  if (!records.length) return;
-  const db = await openEmbeddingDb();
-  await new Promise((resolve, reject) => {
-    const store = db.transaction([STORE_NAME], 'readwrite').objectStore(STORE_NAME);
-    let completed = 0;
-    for (const record of records) {
-      const request = store.delete(record.id);
-      request.onsuccess = () => {
-        completed += 1;
-        if (completed === records.length) { db.close(); resolve(); }
-      };
-      request.onerror = event => { db.close(); reject(event?.target?.error || new Error('Failed to delete embedding')); };
-    }
-  });
-}
-
 function recordProviderId(record) {
   return record?.provider || 'gemini';
 }
@@ -337,12 +248,6 @@ function recordIndexKey(record) {
 
 function recordMatchesProvider(record, provider) {
   return recordProviderId(record) === provider.id && recordIndexKey(record) === provider.indexKey;
-}
-
-async function deleteUidForProvider(uid, characterId, provider) {
-  const records = await getRecordsByUid(uid);
-  await deleteRecords(records.filter(record =>
-    record.characterId === characterId && recordMatchesProvider(record, provider)));
 }
 
 function recordId(characterId, uid, chunkIndex, provider) {
@@ -467,10 +372,15 @@ export function createWorldInfoSyncJournal(logger, providerId, options = {}) {
 }
 
 export function createEmbeddingService(deps) {
+  const indexRepository = deps.indexRepository || createEmbeddingIndexRepository();
   const modelRuntimes = new Map();
   const modelLoads = new Map();
   const memoryIndexes = new Map();
   const indexLoads = new Map();
+  const activeSyncs = new Set();
+  // All local entrypoints share the same runtime/disposal owner. The sync
+  // implementation calls internal inference directly to avoid nested queues.
+  const runLocal = createSerialQueue();
 
   const settings = () => deps.getSettings?.() || {};
   const activeProvider = () => resolveEmbeddingProvider(settings());
@@ -698,19 +608,19 @@ export function createEmbeddingService(deps) {
     return runtime.embed(texts, options.onMeasurement);
   }
 
-  async function embedQuery(text) {
-    const provider = activeProvider();
+  async function embedQuery(text, providerId) {
+    const provider = providerId === undefined ? activeProvider() : getEmbeddingProvider(providerId);
     const value = formatEmbeddingQuery(provider.id, text);
-    const vectors = await embedTexts(provider, [value]);
+    const vectors = await (provider.kind === 'local' ? runLocal(() => embedTexts(provider, [value])) : embedTexts(provider, [value]));
     return vectors[0] || [];
   }
 
-  async function loadIndex(characterId) {
-    const provider = activeProvider();
+  async function loadIndex(characterId, providerId) {
+    const provider = providerId === undefined ? activeProvider() : getEmbeddingProvider(providerId);
     const key = memoryKey(characterId, provider);
     if (!characterId || memoryIndexes.has(key)) return;
     if (indexLoads.has(key)) return indexLoads.get(key);
-    const loading = getRecordsByCharacter(characterId)
+    const loading = indexRepository.listByCharacter(characterId)
       .then(records => {
         const map = new Map();
         for (const record of records) {
@@ -732,8 +642,9 @@ export function createEmbeddingService(deps) {
     return loading;
   }
 
-  function getIndex(characterId) {
-    const map = memoryIndexes.get(memoryKey(characterId));
+  function getIndex(characterId, providerId) {
+    const provider = providerId === undefined ? activeProvider() : getEmbeddingProvider(providerId);
+    const map = memoryIndexes.get(memoryKey(characterId, provider));
     if (!map) return [];
     const output = [];
     for (const records of map.values()) output.push(...records);
@@ -741,8 +652,17 @@ export function createEmbeddingService(deps) {
   }
 
   async function syncIndex(characterId, entries, onProgress) {
-    const config = settings();
-    const provider = activeProvider();
+    const config = { ...settings() };
+    const provider = resolveEmbeddingProvider(config);
+    // One sync at a time per character/provider index; local engines also
+    // share a runtime and disposal lifecycle across character indexes.
+    const lock = provider.kind === 'local' ? 'local-runtime' : memoryKey(characterId, provider);
+    if (activeSyncs.has(lock)) throw Error('Đồng bộ embedding đang được thực hiện.');
+    activeSyncs.add(lock);
+    try { return await (provider.kind === 'local' ? runLocal(() => syncIndexOwned(characterId, entries, onProgress, config, provider)) : syncIndexOwned(characterId, entries, onProgress, config, provider)); }
+    finally { activeSyncs.delete(lock); }
+  }
+  async function syncIndexOwned(characterId, entries, onProgress, config, provider) {
     // The shipped app already mirrors console.warn/error into
     // "1. BẢNG ĐIỀU KHIỂN HỆ THỐNG (CONSOLE)" (category: console).
     // This path works without rebuilding the legacy minified UI bridge.
@@ -782,7 +702,7 @@ export function createEmbeddingService(deps) {
       }
       currentStep = 'đọc IndexedDB';
       journal.stage('Đọc chỉ mục embedding trong IndexedDB');
-      await loadIndex(characterId);
+      await loadIndex(characterId, provider.id);
       journal.info('Đã đọc xong chỉ mục embedding');
     const key = memoryKey(characterId, provider);
     const index = memoryIndexes.get(key) || new Map();
@@ -966,7 +886,7 @@ export function createEmbeddingService(deps) {
           vector: vectorsForUid[chunkIndex],
           updatedAt: storedAt,
         }));
-        await replaceRecordsAtomic(index.get(uid) || [], newRecords);
+        await indexRepository.replace(index.get(uid) || [], newRecords);
         index.set(uid, newRecords);
       }
 
@@ -985,7 +905,7 @@ export function createEmbeddingService(deps) {
     const validUids = new Set(searchable.map(entry => entry.uid));
     for (const [uid] of Array.from(index.entries())) {
       if (validUids.has(uid)) continue;
-      await deleteRecords(index.get(uid) || []);
+      await indexRepository.replace(index.get(uid) || [], []);
       index.delete(uid);
     }
     completed = true;
@@ -1037,6 +957,9 @@ export function createEmbeddingService(deps) {
 
   async function prepareProvider(providerId, onProgress) {
     const provider = getEmbeddingProvider(providerId);
+    return provider.kind === 'local' ? runLocal(() => prepareProviderOwned(provider, onProgress)) : prepareProviderOwned(provider, onProgress);
+  }
+  async function prepareProviderOwned(provider, onProgress) {
     if (provider.id === 'embeddinggemma2') {
       await downloadEmbeddingGemma2(onProgress);
       return getProviderStatus(provider.id);
@@ -1051,6 +974,9 @@ export function createEmbeddingService(deps) {
 
   async function deleteProvider(providerId) {
     const provider = getEmbeddingProvider(providerId);
+    return provider.kind === 'local' ? runLocal(() => deleteProviderOwned(provider)) : deleteProviderOwned(provider);
+  }
+  async function deleteProviderOwned(provider) {
     const runtime = modelRuntimes.get(provider.id);
     modelRuntimes.delete(provider.id);
     modelLoads.delete(provider.id);

@@ -1,0 +1,33 @@
+
+> sillytavern-card-studio@1.3.6 build
+> npm run build:bundle && node build/build-portable.mjs
+
+
+> sillytavern-card-studio@1.3.6 build:bundle
+> node build/build-production-bundle.mjs
+
+{
+  "output": "assets/app-production-v1.3.6.js",
+  "sourceBytes": 1458665,
+  "patches": {
+    "arenaState": 19,
+    "coreReliability": 18,
+    "arenaCancellation": 7,
+    "presetBoundaries": 3,
+    "proxyPersistence": 7,
+    "m4ChatGeneration": 32,
+    "aiStudioText": 25,
+    "runtimeSurfaceGaps": 4,
+    "m5StatePersistenceRuntime": 43,
+    "m6UiAccessibility": 21
+  },
+  "cardRuntime": {
+    "coreSourceBytes": 186626,
+    "coreTemplateBytes": 21174,
+    "coreBuilderBytes": 193094,
+    "coreModuleFragments": 17,
+    "compatibilityFragments": 6,
+    "iframeModuleImportRequired": false
+  }
+}
+Portable static app built in dist/

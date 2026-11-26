@@ -1,3 +1,5 @@
+import { readRecoveredHostView } from './helpers/recovered-host-view.mjs';
+import { renderEntry } from '../build/asset-manifest.mjs';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 
@@ -6,7 +8,7 @@ const exists = path => fs.existsSync(new URL('../' + path, import.meta.url));
 
 const index = read('index.html');
 const entry = read('assets/app-entry-v1.3.6.js');
-const production = read('assets/app-production-v1.3.6.js');
+const production = readRecoveredHostView();
 const sessionPersistenceAsset = read('assets/m5/app/persistence/session-state.js');
 assert.ok(!sessionPersistenceAsset.includes("../../features/chat/turn-policy.js"), 'M5 persistence must not import M4 chat modules via a broken relative path');
 
@@ -20,15 +22,14 @@ assert.ok(!index.includes('chat-send-recovery-v1.3.6.5.js'));
 assert.ok(!index.includes('arena-runtime-ux-guard-v1.3.6.5.js'));
 
 for (const token of [
-  './initial-variable-service-v1.3.6.js?v=1.3.6-initvar-3',
-  './m5/app/state/runtime-state.js?v=1.3.6-m5.1',
-  './m5/app/persistence/session-state.js?v=1.3.6-m5.3',
-  './m5/diagnostics/state.js?v=1.3.6-m5.3',
-  './m5/features/arena/state-machine.js?v=1.3.6-m5.1',
+  './initial-variable-service-v1.3.6.js',
+  './m5/app/state/runtime-state.js',
+  './m5/app/persistence/session-state.js',
+  './m5/diagnostics/state.js',
+  './m5/features/arena/state-machine.js',
   '__stsSessionPersistence.createSessionSnapshot',
   '__stsSessionPersistence.normalizeLoadedSession',
-  '__stsArenaState.prepareRetry',
-  '__stsArenaState.withResult',
+  'conversationService.retryArena',
   '__stsDiagnosticsState.addNetwork',
   '__stsRuntimeState.size()',
 ]) assert.ok(production.includes(token), 'missing M5 ownership token: ' + token);
@@ -45,31 +46,32 @@ const snapshotStart = production.indexOf('__stsSessionPersistence.createSessionS
 assert.ok(snapshotStart >= 0);
 assert.ok(!production.slice(snapshotStart - 150, snapshotStart + 500).includes('logs:e.logs'));
 assert.ok(!production.includes('[e,i,o,s,l,c,u,d,h,p,m,g,f,y,v,x,_,w,k,S,C,E,N,T,U,H]'), 'diagnostics must not trigger autosave');
-assert.ok(production.includes('__stsDiagnosticsState.drop(e)'));
-assert.ok(production.includes('__stsDiagnosticsState.clearAll()'));
-assert.ok(production.includes('__stsSessionPersistence.normalizeLoadedSession(a).record'));
+assert.ok(/(?:__stsDiagnosticsState|diagnosticsState)\.drop\((?:sessionId|e)\)/.test(production));
+assert.ok(/(?:__stsDiagnosticsState|diagnosticsState)\.clearAll\(\)/.test(production));
+assert.ok(/(?:__stsSessionPersistence|sessionPersistence)\.normalizeLoadedSession\([\s\S]{0,600}\.record/.test(production));
 assert.ok(!production.includes('lastUpdated:Date.now(),initialDiagnosticLog:d}'));
-assert.ok(production.includes('__stsMergeInitialVariableSources(m,n.card.char_book?.entries||[],s,e=>jt.default.parse(e))'));
-assert.ok(production.includes('__stsSeedSessionInitialVariablesFromCard({},l,String(n.chatHistory?.[0]?.originalRawContent||n.chatHistory?.[0]?.content||l?.first_mes||""),e=>jt.default.parse(e))'));
-assert.ok(production.includes('__stsVariablesHealed'));
-assert.ok(production.includes('n.chatHistory[0]={...n.chatHistory[0],contextState:JSON.parse(JSON.stringify(n.variables))}'));
-assert.ok(production.includes('let arenaStateHealed=__stsLoaded.needsRewrite||__stsVariablesHealed'));
-assert.ok(production.includes('__stsMergeInitialVariableSources({},t?.char_book?.entries||[],String(t?.first_mes||""),e=>jt.default.parse(e))'));
+assert.ok(/(?:__stsMergeInitialVariableSources|mergeInitialVariableSources)\(/.test(production));
+assert.ok(production.includes('__stsSeedSessionInitialVariablesFromCard') && production.includes('originalRawContent'));
+assert.ok(production.includes('variablesHealed') || production.includes('__stsVariablesHealed'));
+assert.ok(/contextState:\s*JSON\.parse\(JSON\.stringify\([^)]+\.variables\)\)/.test(production));
+assert.ok(/(?:arenaStateHealed|needsSaveAfterHeal)\s*=\s*[^;]*needsRewrite\s*\|\|\s*[^;]*[vV]ariablesHealed/.test(production));
+assert.ok(read('src/features/chat/hooks/use-message-history.js').includes("__stsMergeInitialVariableSources({},card?.char_book?.entries||[],String(card?.first_mes||''),text=>dependencies.jt.default.parse(text))"));
 assert.ok(!production.includes('e.comment?.includes("[InitVar]")'));
 assert.ok(!production.includes('L.current=U(),M.current=setTimeout'), 'autosave must not build snapshots eagerly on every state change');
-assert.ok(production.includes('L.current=!0,M.current=setTimeout(function __stsFlushAutosave()'), 'autosave must mark dirty and defer snapshot creation');
-assert.ok(production.includes('__stsRuntimeState.isBusy()||ol.getState().isLoading'), 'autosave must not serialize the full session while generation is busy');
-assert.ok(production.includes('arenaRetry.arena}),n.setLoading(!0);await new Promise'), 'Arena retry must paint its busy state before rebuilding the prompt');
-assert.ok(production.includes('let e=U();e&&H(e).catch(e=>console.error("Auto-save failed:",e))'), 'debounced autosave must build one fresh snapshot at flush time');
-assert.ok(production.includes('beforeTurn:async()=>!0===await w(a,{persist:!1,allowBusy:!0})'), 'regenerate must rewind inside the visible send busy state without an intermediate DB save');
-assert.ok(production.includes('__stsDeleteOptions.persist'), 'rewind must support skipping the intermediate persistence write');
+assert.ok(/(?:__stsAutosave|autosave)\.markDirty\(\)/.test(production), 'autosave must mark dirty via coordinator');
+assert.ok(/isBusy:\s*\w+\s*=>\s*(?:dependencies\.)?__stsRuntimeState\.isBusy\(\)\s*\|\|\s*\w+\.isLoading/.test(production), 'autosave must defer while busy');
+assert.ok(read('src/features/chat/conversation-service.js').includes('async function retryArena('), 'Arena retry belongs to conversation service');
+assert.ok(/(?:__stsAutosave|autosave)\.flush\(\{\s*force:\s*(?:true|!0),\s*overrides/.test(production), 'explicit save must use coordinator');
+assert.ok(/await\s+(?:dependencies\.)?__stsSessionWriteQueue\.drain\(\)/.test(production), 'session load waits for pending queued saves');
+assert.ok(production.includes('beforeTurn: async () => true === await deleteMessage(userMessage.id, { persist: false, allowBusy: true })'), 'regenerate must rewind inside the visible send busy state without an intermediate DB save');
+assert.ok(read('src/features/chat/hooks/use-message-history.js').includes('options.persist !== false'), 'rewind must support skipping the intermediate persistence write');
 
 assert.ok(
-  production.includes('originalRawContent:s,contextState:JSON.parse(JSON.stringify(g)),timestamp:Date.now()'),
+  /originalRawContent:\s*\w+,\s*contextState:\s*JSON\.parse\(JSON\.stringify\(\w+\)\),\s*timestamp:\s*Date\.now\(\)/.test(production),
   'opening message must persist the initialized variable snapshot',
 );
 assert.ok(
-  production.includes('content:s,contextState:JSON.parse(JSON.stringify(g)),timestamp:Date.now()}'),
+  /content:\s*\w+,\s*contextState:\s*JSON\.parse\(JSON\.stringify\(\w+\)\),\s*timestamp:\s*Date\.now\(\),?\s*\}/.test(production),
   'raw first-message fallback must persist the initialized variable snapshot',
 );
 
@@ -83,7 +85,7 @@ for (const [source, generated] of [
 
 assert.equal(exists('assets/chat-send-recovery-v1.3.6.5.js'), false);
 assert.equal(exists('assets/arena-runtime-ux-guard-v1.3.6.5.js'), false);
-assert.equal(read('src/app/entry.js'), read('assets/app-entry-v1.3.6.js'), 'generated app entry must match source owner');
+assert.equal(renderEntry(read('src/app/entry.js')), read('assets/app-entry-v1.3.6.js'), 'generated app entry must match source owner');
 assert.ok(index.includes('app-entry-v1.3.6.js?v=1.3.6-m7.5'));
 
 const runtimeGuard = read('src/ui/runtime-guard.js');

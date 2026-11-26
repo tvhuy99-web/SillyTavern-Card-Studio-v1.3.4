@@ -1,0 +1,34 @@
+import assert from 'node:assert/strict';
+import { createStandaloneMythic } from '../src/features/chat/standalone-mythic.js';
+import { buildRewindPatch, invalidateHistorySummaries, firstChangedHistoryIndex } from '../src/features/chat/history-policy.js';
+import { useResponsePipeline } from '../src/features/chat/hooks/use-response-pipeline.js';
+import { runtimeState } from '../src/app/state/runtime-state.js';
+const defer=()=>{let resolve,reject;const promise=new Promise((a,b)=>{resolve=a;reject=b;});return {promise,resolve,reject};};
+const db={hp:100};
+const card={fileName:'card',rpg_data:db,char_book:{entries:[{uid:'x',enabled:true},{uid:'y',enabled:false}]}};
+const messages=[{id:'a',role:'model',content:'old',contextState:{hp:70},rpgState:{hp:70},worldInfoState:{x:false},worldInfoRuntime:{cooldown:1}},{id:'b',role:'user',content:'next'},{id:'c',role:'model',content:'new',rpgState:{hp:5}}];
+const base={sessionId:'s',card,messages,longTermSummaries:['old','new'],summaryQueue:[{status:'failed'}],generatedLorebookEntries:[{uid:'stale'}],worldInfoState:{stale:true},worldInfoRuntime:{stale:true}};
+const params={initialVariables:()=>({hp:100}),initialRpg:db,buildLorebook:r=>[{hp:r.hp}],countTurns:m=>m.filter(x=>x.role==='model').length,settings:{context_depth:24,summarization_chunk_size:1}};
+const rewind=buildRewindPatch(base,2,params);
+assert.equal(rewind.card.rpg_data.hp,70);assert.deepEqual(rewind.generatedLorebookEntries,[{hp:70}]);assert.deepEqual(rewind.worldInfoState,{x:false});assert.deepEqual(rewind.worldInfoRuntime,{cooldown:1});assert.deepEqual(rewind.variables,{hp:70});assert.deepEqual(rewind.summaryQueue,[]);
+const reset=buildRewindPatch(base,0,params);assert.equal(reset.card.rpg_data.hp,100);assert.deepEqual(reset.worldInfoState,{x:true,y:false});assert.deepEqual(reset.worldInfoRuntime,{});assert.deepEqual(reset.generatedLorebookEntries,[{hp:100}]);assert.deepEqual(base.generatedLorebookEntries,[{uid:'stale'}]);
+assert.deepEqual(invalidateHistorySummaries(base,1,params.settings,params.countTurns),{longTermSummaries:['old'],summaryQueue:[]});
+assert.equal(firstChangedHistoryIndex(messages,[...messages,{id:'d'}]),-1);assert.equal(firstChangedHistoryIndex(messages,[messages[1],messages[0],messages[2]]),0);assert.equal(firstChangedHistoryIndex(messages,[...messages.slice(0,2),{...messages[2],content:'edit'}]),2);
+let state={...base,variables:{},visualState:{}};
+const patch=next=>state={...state,...next};state.setSessionData=patch;
+let gate=defer(),calls=0,signal;let generatedRequest;
+const logs=[];
+const mythic=createStandaloneMythic({readState:()=>state,runtime:runtimeState,readSettings:()=>({source:'aistudio',aistudio_tool_model:'native'}),proxyForTools:()=>false,readLorebooks:()=>[],formatTables:()=>[],buildPrompt:()=> 'prompt',tableSnapshot:()=>[],parseActions:()=>[{}],applyActions:()=>({newDb:{hp:40},notifications:['hit'],logs:['done']}),buildLorebook:r=>[{hp:r.hp}],log:(...args)=>logs.push(args),logMythic(){},playSound(){},generate:args=>{calls++;signal=args.signal;generatedRequest=args;return gate.promise;}});
+const old=mythic('old','a');await Promise.resolve();assert.equal(await mythic('duplicate','a'),false);assert.equal(calls,1);assert.equal(generatedRequest.provider,'aistudio');assert.equal(generatedRequest.model,'native');
+runtimeState.invalidateSession();state={...state,sessionId:'new',card:{...card,rpg_data:{hp:99}}};await old;assert.ok(signal.aborted);gate.resolve('late');assert.equal(state.card.rpg_data.hp,99);assert.equal(runtimeState.size(),0);
+state={...state,sessionId:'s',card,messages};gate=defer();const changed=mythic('old','a');await Promise.resolve();state={...state,card:{...card,rpg_data:{hp:33}}};gate.resolve('stale');assert.equal(await changed,false);assert.equal(state.card.rpg_data.hp,33);
+state={...state,card,messages};gate=defer();const good=mythic('old','a');await Promise.resolve();gate.resolve('good');assert.equal(await good,true);assert.equal(state.card.rpg_data.hp,40);assert.equal(state.messages[0].rpgState.hp,40);assert.deepEqual(state.generatedLorebookEntries,[{hp:40}]);assert.equal(runtimeState.size(),0);
+// Output scripts run asynchronously: neither variables nor quick replies may
+// be committed into a reopened session or overwrite newer variable changes.
+let scriptGate=defer(),writes=0;
+state={...state,sessionId:'s',variables:{hp:100},visualState:{},setVariables(){writes++;},setQuickReplies(){writes++;},updateMessage(){writes++;}};
+const ol=()=>state;ol.getState=()=>state;
+const output=useResponsePipeline({ol,b:{useCallback:fn=>fn},__stsRuntimeState:runtimeState,$u:()=>scriptGate.promise,gd:()=>({displayContent:'rendered'}),Zu:()=>({})});
+const stale=output.processAIResponse('[CHOICE:"attack"]','a');runtimeState.invalidateSession();state={...state,sessionId:'new'};scriptGate.resolve({updatedVariables:{hp:0},cleanedText:'stale'});assert.equal(await stale,false);assert.equal(writes,0);
+scriptGate=defer();const conflict=output.processAIResponse('text','a');state={...state,variables:{hp:88}};scriptGate.resolve({updatedVariables:{hp:0},cleanedText:'stale'});assert.equal(await conflict,false);assert.equal(writes,0);
+console.log('D2 conversation: rewind snapshots, summary invalidation, Mythic ownership and variable-script races PASS');

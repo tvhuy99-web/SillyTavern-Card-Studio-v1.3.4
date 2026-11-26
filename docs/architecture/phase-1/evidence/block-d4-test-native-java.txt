@@ -1,0 +1,7 @@
+
+> sillytavern-card-studio@1.3.6 test:native-java
+> node tools/test-native-java.mjs
+
+Java syntax parsed: 19 files (not Android type-checking)
+Native JDK tests: worker shutdown, export ownership, generation lease, origin, completion policy, model pair recovery, export receipt and cancellation ledger PASS
+JVM-compiled WebView expressions (including origin guard): 4/4 syntax PASS

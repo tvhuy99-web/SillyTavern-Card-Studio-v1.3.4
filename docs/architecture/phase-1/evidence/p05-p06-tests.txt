@@ -1,0 +1,117 @@
+
+> sillytavern-card-studio@1.3.6 test
+> node tools/run-tests.mjs
+
+Android background AI Studio FGS lifecycle regression: OK
+PASS tests/ai-studio-background.mjs
+AI Studio live snapshots and per-turn new conversation checks: OK
+PASS tests/ai-studio-live-turns.mjs
+AI Studio model and thinking UI integration: OK
+PASS tests/ai-studio-model-controls.mjs
+AI Studio native response selector regression: OK
+PASS tests/ai-studio-response-extractor.mjs
+AI Studio visible thinking summary snapshot test OK
+PASS tests/ai-studio-thinking-summary.mjs
+Android export download: SAF interception regression OK
+PASS tests/android-export-download.mjs
+M2/M3 architecture boundary checks: OK
+PASS tests/architecture-m2-m3.mjs
+M4 architecture boundary checks: OK
+PASS tests/architecture-m4.mjs
+M5 architecture boundary checks: OK
+PASS tests/architecture-m5.mjs
+M6 UI/accessibility architecture checks: OK
+PASS tests/architecture-m6.mjs
+M7 cleanup architecture checks: OK
+PASS tests/architecture-m7.mjs
+arena cancellation transform tests: OK (7 strict replacements)
+PASS tests/arena-cancellation-transform.mjs
+arena state bundle transform tests: OK (19 strict replacements)
+PASS tests/arena-state-transform.mjs
+card runtime bootstrap contract tests: OK
+PASS tests/card-runtime-bootstrap-contract.mjs
+card runtime extraction tests: OK
+PASS tests/card-runtime-extraction.mjs
+production bundle syntax: OK
+PASS tests/check-production-syntax.mjs
+core reliability bundle transform tests: OK (18 strict replacements; production integration + syntax verified)
+PASS tests/core-reliability-transform.mjs
+initial variable service tests: OK
+PASS tests/initial-variable-service.mjs
+M4 chat turn policy tests: OK
+PASS tests/m4-chat-turn-policy.mjs
+[World Info] Scan failed unexpectedly: Error: unexpected scan failure
+    at deps.scanWorldInfo (file:///mnt/data/work-p06/STCS-Phase1-P05/tests/m4-conversation-service.mjs:231:42)
+    at scanWorldInfo (file:///mnt/data/work-p06/STCS-Phase1-P05/src/features/chat/conversation-service.js:143:25)
+    at Object.send (file:///mnt/data/work-p06/STCS-Phase1-P05/src/features/chat/conversation-service.js:389:48)
+    at async file:///mnt/data/work-p06/STCS-Phase1-P05/tests/m4-conversation-service.mjs:232:14
+Error: Luồng gemini:main không nhận dữ liệu mới trong 0 giây.
+    at streamTimeoutError (file:///mnt/data/work-p06/STCS-Phase1-P05/src/features/chat/conversation-service.js:45:19)
+    at Timeout.<anonymous> (file:///mnt/data/work-p06/STCS-Phase1-P05/src/features/chat/conversation-service.js:77:30)
+    at listOnTimeout (node:internal/timers:588:17)
+    at process.processTimers (node:internal/timers:523:7) {
+  code: 'STREAM_IDLE_TIMEOUT'
+}
+M4 conversation service tests: OK
+PASS tests/m4-conversation-service.mjs
+M4 embedding service checks: OK
+PASS tests/m4-embedding-service.mjs
+M4 EmbeddingGemma 2 LiteRT bridge checks: OK
+PASS tests/m4-embeddinggemma2-litert-bridge.mjs
+M4 generation gateway tests: OK
+PASS tests/m4-generation-gateway.mjs
+M4 live stream store checks: OK
+PASS tests/m4-live-stream-store.mjs
+Android native EmbeddingGemma bridge checks: OK
+PASS tests/m4-native-embedding-bridge.mjs
+M4 prompt service checks: OK
+PASS tests/m4-prompt-service.mjs
+M4 response processor checks: OK
+PASS tests/m4-response-processor.mjs
+[Smart Scan] Error: Error: selection offline
+    at Object.callSelectionModel (file:///mnt/data/work-p06/STCS-Phase1-P05/tests/m4-smart-scan-service.mjs:146:45)
+    at scanWorldInfo (file:///mnt/data/work-p06/STCS-Phase1-P05/src/features/world-info/smart-scan-service.js:238:47)
+    at async file:///mnt/data/work-p06/STCS-Phase1-P05/tests/m4-smart-scan-service.mjs:140:18
+[Smart Scan] Error: Error: model no longer available
+    at Object.callSelectionModel (file:///mnt/data/work-p06/STCS-Phase1-P05/tests/m4-smart-scan-service.mjs:176:45)
+    at scanWorldInfo (file:///mnt/data/work-p06/STCS-Phase1-P05/src/features/world-info/smart-scan-service.js:238:47)
+    at file:///mnt/data/work-p06/STCS-Phase1-P05/tests/m4-smart-scan-service.mjs:174:24
+[Smart Scan] JSON Parse Failed. Trying regex fallback... SyntaxError: Unexpected token '\', "\n["a"]\n" is not valid JSON
+    at parse (<anonymous>)
+    at parseSelection (file:///mnt/data/work-p06/STCS-Phase1-P05/src/features/world-info/smart-scan-service.js:26:20)
+    at scanWorldInfo (file:///mnt/data/work-p06/STCS-Phase1-P05/src/features/world-info/smart-scan-service.js:242:28)
+    at async file:///mnt/data/work-p06/STCS-Phase1-P05/tests/m4-smart-scan-service.mjs:203:18
+M4 Smart Scan service checks: OK
+PASS tests/m4-smart-scan-service.mjs
+World Info Sticky: 3-turn default, migration, numeric UID and actual resolver tests OK
+PASS tests/m4-sticky-compat.mjs
+M5 Arena state-machine tests: OK
+PASS tests/m5-arena-state.mjs
+M5 state/persistence tests: OK
+PASS tests/m5-state-persistence.mjs
+Phase 1 build ownership and source entry: OK
+PASS tests/phase1-build-boundary.mjs
+Connection repository, legacy storage, rotation and isolated probe targets: OK
+PASS tests/phase1-connection-repository.mjs
+Phase 1 model catalog, timeout and production wiring: OK
+PASS tests/phase1-model-catalog.mjs
+P05 persistence ownership, commit/abort protocol and transaction boundaries: OK
+PASS tests/phase1-persistence-contract.mjs
+Provider catalogs: pagination, cache, stale responses, protocol, subscriptions and generated integration: OK
+PASS tests/phase1-provider-catalogs.mjs
+Phase 1 provider contracts, probes, protocols and cancellation: OK
+PASS tests/phase1-provider-contract.mjs
+P05/P06 session lifecycle, autosave queue, abort and stale response boundaries: OK
+Arena retry shared stream, original model/profile, lorebook, early cancellation, same-ID autosave: OK
+PASS tests/phase1-session-lifecycle.mjs
+prompt normalizer and preset boundary tests: OK
+PASS tests/prompt-normalizer.mjs
+proxy persistence ownership tests: OK
+PASS tests/proxy-persistence.mjs
+runtime surface gap tests: OK
+PASS tests/runtime-surface-gaps.mjs
+Smart State service checks: OK
+PASS tests/smart-state-service.mjs
+Variable scope service checks: OK
+PASS tests/variable-scope-service.mjs
+43/43 test files passed

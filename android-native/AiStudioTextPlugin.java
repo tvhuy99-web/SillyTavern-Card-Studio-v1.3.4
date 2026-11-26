@@ -1,7 +1,5 @@
 package com.tvhuy99.cardstudio;
 
-import android.annotation.SuppressLint;
-import android.graphics.Color;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.os.Build;
@@ -12,19 +10,15 @@ import android.os.Handler;
 import android.os.Looper;
 import android.os.SystemClock;
 import android.util.Log;
-import android.view.Gravity;
-import android.view.ViewGroup;
-import android.widget.FrameLayout;
-import android.widget.Button;
-import android.webkit.CookieManager;
 import android.webkit.SslErrorHandler;
 import android.webkit.WebChromeClient;
 import android.webkit.WebResourceError;
 import android.webkit.WebResourceRequest;
 import android.webkit.WebResourceResponse;
-import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
+import android.webkit.RenderProcessGoneDetail;
+import java.util.UUID;
 
 import com.getcapacitor.JSObject;
 import com.getcapacitor.Plugin;
@@ -33,7 +27,6 @@ import com.getcapacitor.PluginMethod;
 import com.getcapacitor.annotation.CapacitorPlugin;
 
 import org.json.JSONObject;
-import org.json.JSONArray;
 import org.json.JSONTokener;
 
 /**
@@ -48,7 +41,6 @@ import org.json.JSONTokener;
 public class AiStudioTextPlugin extends Plugin {
     private static final String URL = "https://aistudio.google.com/prompts/new_chat";
     private static final long TIMEOUT_MS = 300_000L;
-    private static final long CONFIRMED_IDLE_MS = 7_000L;
     private static final long POLL_MS = 600L;
     private static final String LOG_TAG = "CardStudioAIStudio";
     private final Handler handler = new Handler(Looper.getMainLooper());
@@ -56,8 +48,7 @@ public class AiStudioTextPlugin extends Plugin {
     // The reference app keeps a REAL visible WebView at its normal opacity
     // while translating its host completely off-screen. Alpha hiding allows
     // WebView compositor surfaces to bleed through above the app on devices.
-    private FrameLayout offscreenHost;
-    private Button hidePanelButton;
+    private AiStudioPanel panel;
     private PluginCall pending;
     private String requestId = "";
     private String baseline = "";
@@ -80,16 +71,25 @@ public class AiStudioTextPlugin extends Plugin {
     private boolean everSawResponse;
     private boolean everSawBusy;
     private boolean submitClicked;
+    private boolean submitDispatched;
     private int bootstrapFailures;
     private boolean foregroundRequestStarted;
     private boolean appInBackground;
+    private boolean destroyed;
+    private String foregroundToken;
+    private Runnable requestWatchdog;
+    private final Handler cancellationHandler = new Handler(Looper.getMainLooper());
+    private final NativeRequestLedger cancelledRequests = new NativeRequestLedger();
+    private PluginCall cancellationCall;
+
 
     // The foreground service is started by a user-initiated generation call
     // before the user presses Home. This avoids Android 12+ restrictions on
     // starting foreground services after the app has gone to the background.
     private void startBackgroundGeneration() {
         try {
-            Intent intent = AiStudioGenerationService.startIntent(getContext());
+            foregroundToken = UUID.randomUUID().toString();
+            Intent intent = AiStudioGenerationService.startIntent(getContext(), foregroundToken);
             if (Build.VERSION.SDK_INT >= 26) getContext().startForegroundService(intent);
             else getContext().startService(intent);
             foregroundRequestStarted = true;
@@ -110,6 +110,8 @@ public class AiStudioTextPlugin extends Plugin {
                 }
             }
         } catch (Exception e) {
+            AiStudioGenerationService.finish(getContext(), foregroundToken, false);
+            foregroundToken = null;
             foregroundRequestStarted = false;
             trace("warn","BACKGROUND_SERVICE_FAILED",
                 "Android cannot guarantee AI Studio will continue after Home",
@@ -119,7 +121,8 @@ public class AiStudioTextPlugin extends Plugin {
 
     private void stopBackgroundGeneration(boolean success) {
         if (foregroundRequestStarted) {
-            AiStudioGenerationService.finish(getContext(),success);
+            AiStudioGenerationService.finish(getContext(),foregroundToken,success);
+            foregroundToken = null;
             foregroundRequestStarted = false;
             trace("state","BACKGROUND_SERVICE_STOPPED",
                 "Foreground generation service stopped",details("success",success));
@@ -128,13 +131,16 @@ public class AiStudioTextPlugin extends Plugin {
 
     @PluginMethod
     public void getBackgroundStatus(PluginCall call) {
+        onUi(call, () -> {
         JSObject result=new JSObject();
         result.put("active",pending!=null);
+        result.put("cancelling",cancellationCall!=null);
         result.put("inBackground",appInBackground);
-        result.put("foregroundService",foregroundRequestStarted);
+        result.put("foregroundService",AiStudioGenerationService.isActive(foregroundToken));
         result.put("requestId",requestId);
         result.put("responseChars",latest.length());
         call.resolve(result);
+        });
     }
 
     @Override
@@ -189,7 +195,7 @@ public class AiStudioTextPlugin extends Plugin {
     @PluginMethod
     public void setVisibility(PluginCall call) {
         final boolean visible = Boolean.TRUE.equals(call.getBoolean("visible", false));
-        getActivity().runOnUiThread(() -> {
+        onUi(call, () -> {
             getContext().getSharedPreferences(PREFS_NAME, android.content.Context.MODE_PRIVATE)
                 .edit().putBoolean(PREFS_SHOW_PAGE, visible).apply();
             trace("state","PAGE_VISIBILITY_CHANGED",
@@ -212,234 +218,22 @@ public class AiStudioTextPlugin extends Plugin {
         });
     }
 
+    private void onUi(PluginCall call, Runnable action) {
+        android.app.Activity activity = getActivity();
+        if (activity == null) { call.reject("AI_STUDIO_SESSION_CLOSED"); return; }
+        activity.runOnUiThread(() -> {
+            if (destroyed || activity.isDestroyed()) { call.reject("AI_STUDIO_SESSION_CLOSED"); return; }
+            try { action.run(); }
+            catch (Exception error) {
+                if (pending == call) fail("AI_STUDIO_NATIVE_ERROR: " + error.getClass().getSimpleName());
+                else call.reject("AI_STUDIO_NATIVE_ERROR: " + error.getClass().getSimpleName());
+            }
+        });
+    }
+
     // Probe the UI without reading credentials. The JS returns model text
     // only to the plugin method. Log records always contain metadata only.
-    private static final String INSTALL_JS = """
-        (function() {
-          if (window.__STS_AI_TEXT_V2__?.version === 3) return "ready";
-          const S = {
-            version: 3, submitted: false, clicked: false, lastSubmitAt: 0,
-            walk() {
-              const out=[], todo=[document.documentElement], seen=new Set();
-              let shadows=0, frames=0;
-              while (todo.length && out.length < 3500) {
-                const root=todo.shift();
-                if (!root || seen.has(root)) continue;
-                seen.add(root);
-                if (root.nodeType===1) out.push(root);
-                if (root.shadowRoot) {shadows++;todo.push(root.shadowRoot);}
-                if (root.tagName==="IFRAME") {
-                  try {if(root.contentDocument?.documentElement) {frames++;todo.push(root.contentDocument.documentElement);}} catch(e) {}
-                }
-                if (root.children) for(const ch of root.children) todo.push(ch);
-              }
-              return {elements:out, shadows, frames};
-            },
-            info(e) {
-              return [
-                e.getAttribute?.("aria-label")||"",
-                e.getAttribute?.("title")||"",
-                e.getAttribute?.("data-testid")||"",
-                e.getAttribute?.("data-tooltip")||"",
-                e.getAttribute?.("name")||"",
-                e.querySelector?.("mat-icon")?.textContent||"",
-                e.querySelector?.("[class*='icon']")?.textContent||"",
-                (e.textContent||"").slice(0,55)
-              ].join(" ").toLowerCase();
-            },
-            visible(e) {
-              try {const r=e.getBoundingClientRect();return r.width>0&&r.height>0;} catch(e) {return false;}
-            },
-            editors(els) {
-              return els.filter(e=>e.matches?.("textarea,input[type='text'],[contenteditable='true'],[role='textbox'],.ProseMirror,[data-placeholder]"));
-            },
-            buttons(els) {
-              return els.filter(e=>e.matches?.("button,[role='button'],input[type='submit']"));
-            },
-            // Extract directly from AI Studio model turns, independently of
-            // walk()'s 3500-element limit. AI Studio uses Angular components
-            // ms-chat-turn / ms-cmark-node for assistant replies.
-            output(_ignored) {
-              const roots=[document], visited=new Set();
-              let seenFrames=0, seenShadows=0, crossOriginFrames=0;
-              for(let pos=0;pos<roots.length && pos<60;pos++){
-                const root=roots[pos];
-                if(!root||visited.has(root))continue;
-                visited.add(root);
-                try {
-                  for(const frame of root.querySelectorAll('iframe')) {
-                    try {
-                      if(frame.contentDocument) {roots.push(frame.contentDocument);seenFrames++;}
-                      else crossOriginFrames++;
-                    }catch(e){crossOriginFrames++;}
-                  }
-                  // Open shadow roots only; never evade closed-root boundaries.
-                  const hosts=root.querySelectorAll('*');
-                  let limit=0;
-                  for(const host of hosts){
-                    if(host.shadowRoot){seenShadows++;roots.push(host.shadowRoot);}
-                    if(++limit>=18000)break;
-                  }
-                }catch(e){}
-              }
-              const unique=roots.filter(r=>r && visited.has(r));
-              const selectors=[
-                'ms-chat-turn .chat-turn-container.model',
-                'ms-chat-turn .chat-turn-container[class*="model"]',
-                '.chat-turn-container.model',
-                'ms-chat-turn .model-response',
-                '[data-role="model"]',
-                '[data-message-role="model"]',
-                '[data-testid*="model-output"]',
-                '[data-testid*="response"]'
-              ];
-              let modelTurns=0, cmarkNodes=0, rawNodes=0, fallbackNodes=0;
-              let answer='', method='none', count=0;
-              for(const root of unique){
-                try{
-                  modelTurns+=root.querySelectorAll('ms-chat-turn').length;
-                  cmarkNodes+=root.querySelectorAll('ms-cmark-node').length;
-                  rawNodes+=root.querySelectorAll('.chat-turn-container.model').length;
-                  for(const selector of selectors){
-                    const containers=Array.from(root.querySelectorAll(selector));
-                    if(!containers.length)continue;
-                    count+=containers.length;
-                    const container=containers[containers.length-1];
-                    const textNodes=container.querySelectorAll(
-                      'ms-cmark-node.cmark-node,ms-cmark-node,[class*="cmark-node"],'+
-                      'markdown-renderer,.markdown,.response-content'
-                    );
-                    const output=Array.from(textNodes)
-                      .filter(e=>!e.parentElement?.closest('ms-cmark-node'))
-                      .map(e=>String(e.innerText||e.textContent||'').trim()).filter(Boolean);
-                    const value=(output.length?output.join('\\n'):String(container.innerText||container.textContent||'')).trim();
-                    if(value && !answer){
-                      answer=value;method=selector;
-                    }
-                  }
-                  if(!answer){
-                    // Some AI Studio versions render cmark nodes without the
-                    // .model container class. Only accept model-associated turns.
-                    const globalCmark=root.querySelectorAll('ms-cmark-node');
-                    for(const node of globalCmark){
-                      const turn=node.closest('ms-chat-turn');
-                      if(!turn)continue;
-                      const cls=String(turn.className||'')+' '+String(turn.querySelector('.chat-turn-container')?.className||'');
-                      if(!/model/i.test(cls))continue;
-                      const value=String(node.innerText||node.textContent||'').trim();
-                      if(value){answer=value;method='ms-cmark-node/model-turn';fallbackNodes++;}
-                    }
-                  }
-                }catch(e){}
-              }
-              // Only the thinking summary visibly rendered in the current
-              // model turn can be read. Hidden chain-of-thought is never read.
-              let thinkingSummary='';
-              const thinkingSelectors=[
-                'ms-thinking-content','[data-testid*="thinking-summary"]',
-                '[data-testid*="thought-summary"]','[aria-label*="Thinking summary"]',
-                '[class*="thinking-summary"]','[class*="thought-summary"]',
-                'details[open][class*="think"]','details[open][class*="thought"]'
-              ].join(',');
-              for(const root of unique) {
-                try {
-                  const nodes=root.querySelectorAll(thinkingSelectors);
-                  for(const node of nodes) {
-                    if(!node.getClientRects().length)continue;
-                    const turn=node.closest('ms-chat-turn');
-                    if(turn) {
-                      const cls=String(turn.className||'')+' '+
-                        String(turn.querySelector('.chat-turn-container')?.className||'');
-                      if(!/model/i.test(cls))continue;
-                    }
-                    const value=String(node.innerText||'').trim();
-                    if(value.length<40||value===answer||answer.includes(value))continue;
-                    thinkingSummary=value.slice(0,18000);
-                  }
-                }catch(e){}
-              }
-              return {text:answer,thinkingSummary,count:Math.max(count,fallbackNodes),
-                method,modelTurns,cmarkNodes,rawNodes,
-                shadowRoots:seenShadows,iframeRoots:seenFrames,crossOriginFrames};
-            },
-            snapshot(prefetched) {
-              const a=this.walk(), ed=this.editors(a.elements), btn=this.buttons(a.elements), out=prefetched||this.output();
-              const stop=btn.some(e=>this.visible(e)&&!e.disabled&&/(stop generating|stop response|stop|cancel)/i.test(this.info(e)));
-              const loading=a.elements.filter(e=>this.visible(e)&&e.matches?.(
-                '[role="progressbar"],[aria-busy="true"],mat-spinner,.mat-mdc-progress-spinner'
-              )).length;
-              const isGenerating=stop||loading>0;
-              const login=/(accounts.google.com|signin|login)/i.test(location.hostname+location.pathname);
-              return {
-                path:location.pathname.slice(0,150), ready:document.readyState,
-                editors:ed.length, visibleEditors:ed.filter(e=>this.visible(e)).length,
-                buttons:btn.length, responseNodes:out.count, outputChars:out.text.length,
-                modelTurns:out.modelTurns, cmarkNodes:out.cmarkNodes,
-                rawModelNodes:out.rawNodes, responseMethod:out.method,
-                responseIframes:out.iframeRoots, responseShadows:out.shadowRoots,
-                inaccessibleFrames:out.crossOriginFrames,
-                shadows:a.shadows, frames:a.frames, scanned:a.elements.length,
-                busy:isGenerating, stopVisible:stop, loadingIndicators:loading,
-                authGate:login, clicked:this.clicked,
-                elapsedSinceClickMs:this.lastSubmitAt?Date.now()-this.lastSubmitAt:-1
-              };
-            },
-            prepare(text) {
-              const a=this.walk();
-              const ed=this.editors(a.elements).filter(e=>this.visible(e)&&!e.disabled);
-              const ranked=ed.map(e=>{
-                const name=this.info(e);
-                const score=/(prompt|message|type|chat|enter|nhập)/i.test(name)?12:0;
-                return {e,score:score+(e.tagName==="TEXTAREA"?6:0)+(e.isContentEditable?4:0)};
-              }).sort((x,y)=>y.score-x.score);
-              if(!ranked.length)return {ok:false,error:"EDITOR_NOT_FOUND",snapshot:this.snapshot()};
-              const el=ranked[0].e;
-              const previous=this.output(a).text;
-              try{
-                el.focus();
-                if(el.tagName==="TEXTAREA"||el.tagName==="INPUT"){
-                  const proto=el.tagName==="TEXTAREA"?HTMLTextAreaElement.prototype:HTMLInputElement.prototype;
-                  const setter=Object.getOwnPropertyDescriptor(proto,"value")?.set;
-                  if(setter)setter.call(el,text);else el.value=text;
-                } else {
-                  if(el.isContentEditable) {el.textContent=text;}
-                  else {el.setAttribute("data-unsupported-editor","true");return {ok:false,error:"EDITOR_TYPE_UNSUPPORTED",snapshot:this.snapshot()};}
-                }
-                el.dispatchEvent(new InputEvent("input",{bubbles:true,inputType:"insertText",data:null}));
-                el.dispatchEvent(new Event("change",{bubbles:true}));
-                this.submitted=false;this.clicked=false;this.lastSubmitAt=0;
-                return {ok:true,before:previous,editorTag:el.tagName,editorEditable:el.isContentEditable,snapshot:this.snapshot()};
-              }catch(e){return{ok:false,error:"EDITOR_INPUT_ERROR",errorName:String(e.name||"Error"),snapshot:this.snapshot()};}
-            },
-            submit() {
-              const a=this.walk(), all=this.buttons(a.elements).filter(e=>this.visible(e)&&!e.disabled);
-              const scored=all.map(e=>{
-                const s=this.info(e);
-                let score=0;
-                if(/(^|[^a-z])(run|send|generate|submit|gửi|chạy)([^a-z]|$)/i.test(s))score+=20;
-                if(/play_arrow|arrow_upward|send|run_prompt|sparkle/i.test(s))score+=15;
-                if(/chat|prompt|model/i.test(s))score+=2;
-                if(/stop|cancel|share|copy|save|delete|edit|settings|history/i.test(s))score-=50;
-                return {e,score};
-              }).filter(x=>x.score>=15).sort((x,y)=>y.score-x.score);
-              if(!scored.length)return {ok:false,error:"SEND_BUTTON_NOT_FOUND",snapshot:this.snapshot()};
-              try{
-                const button=scored[0].e;
-                button.click();
-                this.submitted=true;this.clicked=true;this.lastSubmitAt=Date.now();
-                return {ok:true,score:scored[0].score,candidates:scored.length,snapshot:this.snapshot()};
-              }catch(e){return {ok:false,error:"SEND_CLICK_FAILED",snapshot:this.snapshot()};}
-            },
-            read() {
-              const output=this.output();
-              const snap=this.snapshot(output);
-              return {text:output.text,thinkingSummary:output.thinkingSummary||"",...snap};
-            }
-          };
-          window.__STS_AI_TEXT_V2__=S;
-          return "installed";
-        })()
-        """;
+
 
     private String safePath(String value) {
         try {
@@ -489,70 +283,78 @@ public class AiStudioTextPlugin extends Plugin {
         ));
     }
 
-    @SuppressLint("SetJavaScriptEnabled")
     private void createSessionIfNeeded() {
         if (sessionWebView == null) {
             sessionWebView = new WebView(getActivity());
-            WebSettings settings = sessionWebView.getSettings();
-            settings.setJavaScriptEnabled(true);
-            settings.setDomStorageEnabled(true);
-            settings.setAllowFileAccess(false);
-            settings.setAllowContentAccess(false);
-            CookieManager.getInstance().setAcceptCookie(true);
-            CookieManager.getInstance().setAcceptThirdPartyCookies(sessionWebView, true);
-            sessionWebView.setWebViewClient(new WebViewClient() {
-                @Override public void onPageStarted(WebView view, String url, Bitmap icon) {
-                    trace("state","PAGE_STARTED","AI Studio page navigation",
-                        details("hostPath",safePath(url)));
-                }
-                @Override public void onPageFinished(WebView view, String url) {
-                    trace("state","PAGE_FINISHED","AI Studio page loaded",
-                        details("hostPath",safePath(url)));
-                    if(pending!=null && url!=null &&
-                        url.startsWith("https://aistudio.google.com/prompts/")){
-                        freshChatLoaded = true;
-                        trace("state","NEW_CHAT_PAGE_LOADED","New-chat page loaded; checking for old model turns",
-                            details("attempt",freshChatAttempt,"hostPath",safePath(url)));
+            try {
+                AiStudioWebViewPolicy.configure(sessionWebView, false);
+                sessionWebView.setWebViewClient(new WebViewClient() {
+                    @Override public void onPageStarted(WebView view, String url, Bitmap icon) {
+                        if (view != sessionWebView || destroyed) return;
+                        freshChatLoaded = false;
+                        trace("state","PAGE_STARTED","AI Studio page navigation",
+                            details("hostPath",safePath(url)));
                     }
-                    inspect("PAGE_UI");
-                }
-                @Override public void onReceivedError(WebView v,WebResourceRequest r,WebResourceError e) {
-                    if (r.isForMainFrame())
-                        trace("error","MAIN_FRAME_ERROR","WebView connection failed",
-                            details("errorCode",e.getErrorCode(),"hostPath",safePath(r.getUrl().toString())));
-                }
-                @Override public void onReceivedHttpError(WebView v,WebResourceRequest r,WebResourceResponse e) {
-                    if (r.isForMainFrame())
-                        trace("warn","HTTP_ERROR","AI Studio main frame returned an HTTP error",
-                            details("status",e.getStatusCode(),"hostPath",safePath(r.getUrl().toString())));
-                }
-                @Override public void onReceivedSslError(WebView v,SslErrorHandler h,SslError e) {
-                    h.cancel();
-                    trace("error","SSL_ERROR","AI Studio SSL certificate rejected",
-                        details("sslCode",e.getPrimaryError()));
-                }
-            });
-            sessionWebView.setWebChromeClient(new WebChromeClient() {
-                @Override public boolean onConsoleMessage(android.webkit.ConsoleMessage m) {
-                    if(m.messageLevel() == android.webkit.ConsoleMessage.MessageLevel.ERROR)
-                        trace("warn","PAGE_JS_ERROR","AI Studio website reported JS error (contents hidden)",
-                            details("line",m.lineNumber(),"source",safePath(m.sourceId())));
-                    return false;
-                }
-            });
-            trace("state","SESSION_CREATE","Creating persistent WebView session",details(
-                "androidSdk",android.os.Build.VERSION.SDK_INT));
-            // Attach BELOW Capacitor's app WebView before the first load.
-            // Without a parent, Android may postpone WebView rendering/JS.
-            // This backing view does not intercept Card Studio's touch input.
-            retainWebView();
-            sessionWebView.loadUrl(URL);
+                    @Override public void onPageFinished(WebView view, String url) {
+                        if (view != sessionWebView || destroyed) return;
+                        trace("state","PAGE_FINISHED","AI Studio page loaded",
+                            details("hostPath",safePath(url)));
+                        if(pending!=null && view == sessionWebView && AiStudioOrigin.isStudioUrl(url) && url.equals(view.getUrl())){
+                            freshChatLoaded = true;
+                            trace("state","NEW_CHAT_PAGE_LOADED","New-chat page loaded; checking for old model turns",
+                                details("attempt",freshChatAttempt,"hostPath",safePath(url)));
+                        }
+                        if (view == sessionWebView && AiStudioOrigin.isStudioUrl(url)) inspect("PAGE_UI");
+                    }
+                    @Override public void onReceivedError(WebView v,WebResourceRequest r,WebResourceError e) {
+                        if (r.isForMainFrame())
+                            trace("error","MAIN_FRAME_ERROR","WebView connection failed",
+                                details("errorCode",e.getErrorCode(),"hostPath",safePath(r.getUrl().toString())));
+                    }
+                    @Override public void onReceivedHttpError(WebView v,WebResourceRequest r,WebResourceResponse e) {
+                        if (r.isForMainFrame())
+                            trace("warn","HTTP_ERROR","AI Studio main frame returned an HTTP error",
+                                details("status",e.getStatusCode(),"hostPath",safePath(r.getUrl().toString())));
+                    }
+                    @Override public boolean onRenderProcessGone(WebView view, RenderProcessGoneDetail detail) {
+                        if (view == sessionWebView) {
+                            if (pending != null) fail("AI_STUDIO_RENDERER_GONE");
+                            if (cancellationCall != null) finishCancellation(cancellationCall, false);
+                            releaseWebView();
+                        }
+                        return true;
+                    }
+                    @Override public void onReceivedSslError(WebView v,SslErrorHandler h,SslError e) {
+                        h.cancel();
+                        trace("error","SSL_ERROR","AI Studio SSL certificate rejected",
+                            details("sslCode",e.getPrimaryError()));
+                    }
+                });
+                sessionWebView.setWebChromeClient(new WebChromeClient() {
+                    @Override public boolean onConsoleMessage(android.webkit.ConsoleMessage m) {
+                        if(m.messageLevel() == android.webkit.ConsoleMessage.MessageLevel.ERROR)
+                            trace("warn","PAGE_JS_ERROR","AI Studio website reported JS error (contents hidden)",
+                                details("line",m.lineNumber(),"source",safePath(m.sourceId())));
+                        return false;
+                    }
+                });
+                trace("state","SESSION_CREATE","Creating persistent WebView session",details(
+                    "androidSdk",android.os.Build.VERSION.SDK_INT));
+                // Attach BELOW Capacitor's app WebView before the first load.
+                // Without a parent, Android may postpone WebView rendering/JS.
+                // This backing view does not intercept Card Studio's touch input.
+                retainWebView();
+                sessionWebView.loadUrl(URL);
+            } catch (RuntimeException failure) {
+                releaseWebView();
+                throw failure;
+            }
         }
     }
 
     @PluginMethod
     public void openSession(PluginCall call) {
-        getActivity().runOnUiThread(() -> {
+        onUi(call, () -> {
             try {
                 createSessionIfNeeded();
                 showInlinePanel("manual-open");
@@ -567,113 +369,28 @@ public class AiStudioTextPlugin extends Plugin {
         });
     }
 
-    // Mirrors GeminiLiveTranslate AiStudioDebugWebViewHost.applyPresentation:
-    // WebView remains VISIBLE at alpha=1 for rendering/JS, but the entire
-    // host panel is translated beyond the bottom of the physical display.
-    // This prevents Chromium's separate compositor surface leaking into
-    // Card Studio's top bar, unlike the previous alpha=0.01 workaround.
-    private void moveHostOffscreen() {
-        if (offscreenHost == null || getActivity() == null) return;
-        final int screenHeight = getActivity().getResources().getDisplayMetrics().heightPixels;
-        final int hostHeight = offscreenHost.getLayoutParams() != null
-            ? offscreenHost.getLayoutParams().height
-            : offscreenHost.getHeight();
-        final int safeHeight = Math.max(hostHeight, 1);
-        offscreenHost.setVisibility(android.view.View.VISIBLE);
-        sessionWebView.setVisibility(android.view.View.VISIBLE);
-        offscreenHost.setAlpha(1f);
-        sessionWebView.setAlpha(1f);
-        offscreenHost.setTranslationY((float)screenHeight + safeHeight);
-        offscreenHost.setImportantForAccessibility(
-            android.view.View.IMPORTANT_FOR_ACCESSIBILITY_NO_HIDE_DESCENDANTS);
-        sessionWebView.setImportantForAccessibility(
-            android.view.View.IMPORTANT_FOR_ACCESSIBILITY_NO_HIDE_DESCENDANTS);
-        offscreenHost.setFocusable(false);
-        offscreenHost.setFocusableInTouchMode(false);
-        offscreenHost.setClickable(false);
-        offscreenHost.setEnabled(false);
-        sessionWebView.setFocusable(false);
-        trace("state","WEBVIEW_HIDDEN_OFFSCREEN",
-            "AI Studio host translated below display while page stays active",
-            details("translationY",screenHeight+safeHeight,"screenHeight",screenHeight,
-                "hostHeight",safeHeight,"webVisible",sessionWebView.getVisibility()==android.view.View.VISIBLE));
-    }
-
-    // Reference repo AiStudioDebugWebViewHost: one non-modal WebView panel.
-    // Hidden: translate below display while keeping rendering alive.
-    // Visible: float in the top 42% so Card Studio input remains usable.
     private void retainWebView() {
-        if(sessionWebView==null||getActivity()==null)return;
-        FrameLayout root=getActivity().findViewById(android.R.id.content);
-        if(root==null){trace("warn","WEBVIEW_HOST_MISSING","No content root",null);return;}
-        if(offscreenHost==null){
-            offscreenHost=new FrameLayout(getActivity());
-            offscreenHost.setBackgroundColor(Color.WHITE);
-            float dp=getActivity().getResources().getDisplayMetrics().density;
-            int height=Math.max((int)(getActivity().getResources().getDisplayMetrics().heightPixels*.42f),
-                (int)(260f*dp));
-            FrameLayout.LayoutParams p=new FrameLayout.LayoutParams(
-                ViewGroup.LayoutParams.MATCH_PARENT,height,Gravity.TOP);
-            root.addView(offscreenHost,0,p);
-            hidePanelButton=new Button(getActivity());
-            hidePanelButton.setText("Ẩn AI Studio");
-            hidePanelButton.setTextSize(12f);
-            hidePanelButton.setAllCaps(false);
-            hidePanelButton.setOnClickListener(v->{
-                getContext().getSharedPreferences(PREFS_NAME,android.content.Context.MODE_PRIVATE)
-                    .edit().putBoolean(PREFS_SHOW_PAGE,false).apply();
-                applyPanelPresentation(false,"panel-hide-button");
-                JSObject event = new JSObject();
-                event.put("visible",false);
-                notifyListeners("pageVisibilityChanged",event);
-                trace("state","PAGE_VISIBILITY_CHANGED","AI Studio debug panel hidden",details("visible",false));
-            });
-            FrameLayout.LayoutParams bp=new FrameLayout.LayoutParams(
-                (int)(132f*dp),(int)(42f*dp),Gravity.TOP|Gravity.END);
-            bp.setMargins(0,(int)(4f*dp),(int)(4f*dp),0);
-            offscreenHost.addView(hidePanelButton,bp);
-        }else if(offscreenHost.getParent()==null){
-            root.addView(offscreenHost,0,offscreenHost.getLayoutParams());
-        }
-        if(sessionWebView.getParent()!=offscreenHost){
-            if(sessionWebView.getParent() instanceof ViewGroup)
-                ((ViewGroup)sessionWebView.getParent()).removeView(sessionWebView);
-            offscreenHost.addView(sessionWebView,0,new FrameLayout.LayoutParams(
-                ViewGroup.LayoutParams.MATCH_PARENT,ViewGroup.LayoutParams.MATCH_PARENT));
-        }
+        if (sessionWebView == null || getActivity() == null) return;
+        if (panel == null) panel = new AiStudioPanel(getActivity(), sessionWebView, () -> {
+            getContext().getSharedPreferences(PREFS_NAME,android.content.Context.MODE_PRIVATE)
+                .edit().putBoolean(PREFS_SHOW_PAGE,false).apply();
+            applyPanelPresentation(false,"panel-hide-button");
+            JSObject event = new JSObject();
+            event.put("visible",false);
+            notifyListeners("pageVisibilityChanged",event);
+            trace("state","PAGE_VISIBILITY_CHANGED","AI Studio debug panel hidden",details("visible",false));
+        });
+        if (!panel.attach()) { trace("warn","WEBVIEW_HOST_MISSING","No content root",null); throw new IllegalStateException("No content root"); }
         applyPanelPresentation(isPageDisplayEnabled(),"retain");
         sessionWebView.onResume();
         sessionWebView.resumeTimers();
         trace("state","WEBVIEW_RETAIN","AI Studio WebView attached without modal",details(
-            "hasParent",sessionWebView.getParent()==offscreenHost,
-            "visiblePreference",isPageDisplayEnabled()));
+            "hasParent",panel.isAttached(),"visiblePreference",isPageDisplayEnabled()));
     }
     private void applyPanelPresentation(boolean visible,String reason) {
-        if(sessionWebView==null||offscreenHost==null)return;
-        final int screenHeight=getActivity().getResources().getDisplayMetrics().heightPixels;
-        final int panelHeight=offscreenHost.getLayoutParams()==null?
-            offscreenHost.getHeight():offscreenHost.getLayoutParams().height;
-        offscreenHost.setVisibility(android.view.View.VISIBLE);
-        sessionWebView.setVisibility(android.view.View.VISIBLE);
-        offscreenHost.setAlpha(1f);
-        sessionWebView.setAlpha(1f);
-        offscreenHost.setTranslationY(visible?0f:screenHeight+Math.max(1,panelHeight));
-        offscreenHost.setEnabled(visible);
-        offscreenHost.setClickable(visible);
-        offscreenHost.setFocusable(visible);
-        offscreenHost.setFocusableInTouchMode(visible);
-        sessionWebView.setFocusable(visible);
-        int accessibility=visible?
-            android.view.View.IMPORTANT_FOR_ACCESSIBILITY_AUTO:
-            android.view.View.IMPORTANT_FOR_ACCESSIBILITY_NO_HIDE_DESCENDANTS;
-        offscreenHost.setImportantForAccessibility(accessibility);
-        sessionWebView.setImportantForAccessibility(accessibility);
-        if(hidePanelButton!=null)hidePanelButton.setVisibility(visible?
-            android.view.View.VISIBLE:android.view.View.GONE);
-        if(visible){
-            offscreenHost.bringToFront();
-            offscreenHost.requestLayout();
-        }
+        if (panel == null) return;
+        int panelHeight = panel.present(visible);
+        if (panelHeight < 0) return;
         trace("state",visible?"WEBVIEW_INLINE_VISIBLE":"WEBVIEW_HIDDEN_OFFSCREEN",
             visible?"Non-modal AI Studio monitor remains beside Card Studio chat":
                     "AI Studio WebView kept fully off-screen and running",
@@ -685,12 +402,14 @@ public class AiStudioTextPlugin extends Plugin {
     }
 
     private void inspect(String stage) {
-        if(sessionWebView==null) return;
-        sessionWebView.evaluateJavascript(INSTALL_JS, raw -> {
-            if(sessionWebView==null)return;
-            sessionWebView.evaluateJavascript(
+        final WebView inspected = sessionWebView;
+        if(inspected==null || !AiStudioOrigin.isStudioUrl(inspected.getUrl())) return;
+        AiStudioWebViewPolicy.evaluate(inspected, AiStudioPageScripts.INSTALL_JS, raw -> {
+            if(inspected!=sessionWebView || destroyed)return;
+            AiStudioWebViewPolicy.evaluate(inspected,
                 "JSON.stringify(window.__STS_AI_TEXT_V2__?.snapshot()||{error:'NO_SCRIPT'})",
                 value -> {
+                    if (inspected != sessionWebView || destroyed) return;
                     try {snapshotTrace(stage,parse(value));}
                     catch(Exception e) {trace("warn","INSPECT_FAILED","Cannot inspect AI Studio page",
                         details("error",e.getClass().getSimpleName()));}
@@ -751,14 +470,14 @@ public class AiStudioTextPlugin extends Plugin {
             return;
         }
         if(sessionWebView==null){fail("AI_STUDIO_SESSION_LOST");return;}
-        if(!freshChatLoaded) {
+        if(!freshChatLoaded || !AiStudioOrigin.isStudioUrl(sessionWebView.getUrl())) {
             if(attempt%7==0)trace("state","NEW_CHAT_WAIT","Waiting for fresh AI Studio page to finish navigation",
                 details("elapsedMs",elapsed));
             handler.postDelayed(()->waitUntilReady(call,prompt,attempt+1),750L);
             return;
         }
-        sessionWebView.evaluateJavascript(
-            "JSON.stringify((function(){try{var h=location.hostname;var p=location.pathname;var n=document.querySelectorAll('textarea,[contenteditable=\"true\"],[role=\"textbox\"]');var turns=document.querySelectorAll('ms-chat-turn .chat-turn-container.model,.chat-turn-container.model').length;return {ok:h==='aistudio.google.com'&&p.indexOf('/prompts/new_chat')===0&&n.length>0&&turns===0,host:h,path:p,editors:n.length,oldModelTurns:turns,ready:document.readyState};}catch(e){return {ok:false,errorName:String(e.name)}}})())",
+        AiStudioWebViewPolicy.evaluate(sessionWebView,
+            AiStudioPageScripts.NEW_CHAT_READINESS_JS,
             raw->{
                 if(pending!=call)return;
                 try {
@@ -770,6 +489,7 @@ public class AiStudioTextPlugin extends Plugin {
                                 "oldModelTurns",x.optInt("oldModelTurns",-1)));
                         // Reset generation timeout after login/network startup.
                         requestStart=SystemClock.elapsedRealtime();
+                        armWatchdog(call);
                         configureThinking(call,prompt);
                         return;
                     }
@@ -803,54 +523,10 @@ public class AiStudioTextPlugin extends Plugin {
     }
 
 
-    private static final String MODEL_PICKER_OPEN_JS = """
-        (function(){
-          try{
-            if(location.hostname!=='aistudio.google.com')return 'wrong-host';
-            for(var b of document.querySelectorAll('button,[role="combobox"],mat-select,[data-testid]')){
-              var label=[b.getAttribute('aria-label')||'',b.getAttribute('title')||'',b.getAttribute('data-testid')||'',
-                 (b.textContent||'').trim().slice(0,75)].join(' ').toLowerCase();
-              if((label.includes('select model')||label.includes('model selector')||
-                   label.includes('choose model')||label.includes('model picker')||
-                   label.includes('current model'))&&!label.includes('thinking')&&b.getClientRects().length){
-                b.click();return 'opened';
-              }
-            }
-            return 'not-found';
-          }catch(e){return 'error';}
-        })()
-        """;
-    private static final String MODEL_LIST_SCAN_JS = """
-        JSON.stringify((function(){
-          try{
-            if(location.hostname!=='aistudio.google.com')return {error:'wrong-host'};
-            var models=[],ids=new Set(),roots=[document],visited=new Set(),count=0;
-            while(roots.length&&visited.size<100){
-              var root=roots.shift();if(!root||visited.has(root))continue;visited.add(root);
-              for(var b of root.querySelectorAll('button,[role="option"],[role="menuitem"],mat-option,option,[data-testid*="model"],[aria-label*="Gemini"]')){
-                if(++count>7500)break;
-                var name=[b.getAttribute('aria-label')||'',b.getAttribute('title')||'',
-                  (b.textContent||'').trim().slice(0,150)].join(' ');
-                var m=name.match(/Gemini[ -]+([0-9]+(?:[.][0-9]+)?)[ -]+(Pro|Flash[ -]?Lite|Flash)(?:[ -]+(Preview))?/i);
-                if(!m)continue;
-                var attrs=[b.getAttribute('data-model-id')||'',b.getAttribute('value')||'',
-                  b.getAttribute('data-value')||'',b.getAttribute('data-testid')||''].join(' ');
-                var direct=attrs.match(/gemini-[0-9][a-z0-9.-]*/i);
-                var id=direct?direct[0].toLowerCase():
-                  'gemini-'+m[1]+'-'+m[2].toLowerCase().replace(/[ -]/g,'-')+(m[3]?'-preview':'');
-                if(ids.has(id))continue;ids.add(id);
-                models.push({id:id,name:m[0]});
-              }
-              for(var el of root.querySelectorAll('*'))if(el.shadowRoot&&!visited.has(el.shadowRoot))roots.push(el.shadowRoot);
-            }
-            return {models:models.slice(0,100)};
-          }catch(e){return {error:'scan-failed'};}
-        })())
-        """;
     @PluginMethod
     public void listModels(PluginCall call) {
-        getActivity().runOnUiThread(() -> {
-            if(pending!=null){
+        onUi(call, () -> {
+            if(pending!=null || cancellationCall!=null){
                 trace("warn","MODEL_LOAD_BUSY","Cannot list models during an active chat generation",
                     details("activeThinking",pendingThinkingLevel,"activeRequestId",requestId));
                 call.reject("AI_STUDIO_BUSY: Đang tạo câu trả lời. Hãy hủy hoặc hoàn thành lượt chat trước khi tải model.");
@@ -864,66 +540,9 @@ public class AiStudioTextPlugin extends Plugin {
             catalogReader.start();
         });
     }
-    private static final String THINKING_OPEN_JS = """
-        JSON.stringify((function(){
-          try{
-            for(var el of document.querySelectorAll('button,[role="combobox"],mat-select,[role="button"],label,[aria-label]')){
-              var name=[el.getAttribute('aria-label')||'',el.getAttribute('title')||'',
-                (el.textContent||'').trim().slice(0,85)].join(' ').toLowerCase();
-              if((name.includes('thinking level')||name.includes('thinking mode')||
-                  name.includes('thinking budget')||name.includes('reasoning effort')||
-                  name.includes('mức suy nghĩ'))
-                &&el.getClientRects().length){
-                var b=el.matches('button,[role="combobox"],mat-select,[role="button"]')?el:
-                  (el.querySelector('button,[role="combobox"],mat-select,[role="button"]')||el);
-                b.click();return {ok:true,label:name.slice(0,90)};
-              }
-            }
-            return {ok:false,reason:'thinking-control-not-visible'};
-          }catch(e){return {ok:false,reason:String(e.name||'exception')};}
-        })())
-        """;
-    private static final String THINKING_SELECT_JS = """
-        JSON.stringify((function(level){
-          try{
-            var names={minimal:['minimal','tối thiểu'],low:['low','thấp'],
-              medium:['medium','trung bình'],high:['high','cao']}[level];
-            if(!names)return {ok:false};
-            for(var el of document.querySelectorAll('[role="option"],mat-option,[role="menuitem"],[role="menuitemradio"],[role="radio"],button')){
-              if(!el.getClientRects().length)continue;
-              var text=(el.getAttribute('aria-label')||el.textContent||'').trim().toLowerCase();
-              if(names.some(n=>text===n||text.startsWith(n+' ')||text.startsWith(n+'('))){
-                el.click();return {ok:true,choice:text.slice(0,90)};
-              }
-            }
-            return {ok:false};
-          }catch(e){return {ok:false};}
-        })(__STS_LEVEL__))
-        """;
-    private static final String THINKING_VERIFY_JS = """
-        JSON.stringify((function(level){
-          try{
-            const words={minimal:['minimal','tối thiểu'],low:['low','thấp'],
-              medium:['medium','trung bình'],high:['high','cao']}[level]||[];
-            let candidates=0;
-            for(const el of document.querySelectorAll('[role="option"],[role="radio"],[role="menuitemradio"],[aria-selected],[aria-checked],button,[role="combobox"],mat-select')){
-              if(!el.getClientRects().length)continue;
-              const name=[el.getAttribute('aria-label')||'',el.getAttribute('title')||'',
-                (el.textContent||'').slice(0,120)].join(' ').trim().toLowerCase();
-              if(!words.some(w=>name===w||name.startsWith(w+' ')||name.endsWith(' '+w)||
-                  (name.includes('thinking')&&name.includes(w))))continue;
-              candidates++;
-              if(el.getAttribute('aria-selected')==='true'||el.getAttribute('aria-checked')==='true'||
-                  el.getAttribute('aria-pressed')==='true'||el.getAttribute('data-state')==='checked')
-                return {ok:true,evidence:'selected-control',candidates:candidates};
-              if((el.matches('[role="combobox"],mat-select')||name.includes('thinking level')||
-                  name.includes('thinking mode'))&&words.some(w=>name.includes(w)))
-                return {ok:true,evidence:'thinking-summary',candidates:candidates};
-            }
-            return {ok:false,reason:'no-selected-state',candidates:candidates};
-          }catch(e){return {ok:false,reason:String(e.name||'exception')};}
-        })(__STS_LEVEL__))
-        """;
+
+
+
 
     private void configureThinking(PluginCall call,String prompt) {
         if(pending!=call)return;
@@ -944,7 +563,7 @@ public class AiStudioTextPlugin extends Plugin {
 
     private void openThinkingControl(PluginCall call,String prompt,int attempt){
         if(pending!=call||sessionWebView==null)return;
-        sessionWebView.evaluateJavascript(THINKING_OPEN_JS,raw->{
+        AiStudioWebViewPolicy.evaluate(sessionWebView, AiStudioPageScripts.THINKING_OPEN_JS,raw->{
             if(pending!=call)return;
             JSONObject state;
             try{state=parse(raw);}
@@ -955,8 +574,8 @@ public class AiStudioTextPlugin extends Plugin {
             if(!state.optBoolean("ok",false)){
                 if(attempt==0){
                     // Many AI Studio layouts hide thinking under Run settings.
-                    sessionWebView.evaluateJavascript(
-                        "JSON.stringify((function(){for(const b of document.querySelectorAll('button,[role=button],[aria-expanded]')){const s=((b.getAttribute('aria-label')||'')+' '+(b.textContent||'')).toLowerCase();if(/run settings|advanced settings|generation settings/.test(s)&&b.getClientRects().length){b.click();return {ok:true}}}return {ok:false}})())",
+                    AiStudioWebViewPolicy.evaluate(sessionWebView,
+                        AiStudioPageScripts.RUN_SETTINGS_EXPAND_JS,
                         opened->{
                             if(pending!=call)return;
                             trace("state","THINKING_SETTINGS_EXPAND","Tried expanding AI Studio Run settings",
@@ -970,8 +589,8 @@ public class AiStudioTextPlugin extends Plugin {
             }
             handler.postDelayed(()->{
                 if(pending!=call||sessionWebView==null)return;
-                sessionWebView.evaluateJavascript(
-                    THINKING_SELECT_JS.replace("__STS_LEVEL__",JSONObject.quote(pendingThinkingLevel)),out->{
+                AiStudioWebViewPolicy.evaluate(sessionWebView,
+                    AiStudioPageScripts.THINKING_SELECT_JS.replace("__STS_LEVEL__",JSONObject.quote(pendingThinkingLevel)),out->{
                     if(pending!=call)return;
                     JSONObject selected;
                     try{selected=parse(out);}
@@ -991,8 +610,8 @@ public class AiStudioTextPlugin extends Plugin {
     }
     private void verifyThinkingControl(PluginCall call,String prompt,int attempt){
         if(pending!=call||sessionWebView==null)return;
-        sessionWebView.evaluateJavascript(
-            THINKING_VERIFY_JS.replace("__STS_LEVEL__",JSONObject.quote(pendingThinkingLevel)),raw->{
+        AiStudioWebViewPolicy.evaluate(sessionWebView,
+            AiStudioPageScripts.THINKING_VERIFY_JS.replace("__STS_LEVEL__",JSONObject.quote(pendingThinkingLevel)),raw->{
             if(pending!=call)return;
             JSONObject state;
             try{state=parse(raw);}
@@ -1028,8 +647,13 @@ public class AiStudioTextPlugin extends Plugin {
         if(prompt==null || prompt.isBlank()){
             call.reject("AI_STUDIO_PROMPT_EMPTY");return;
         }
-        getActivity().runOnUiThread(() -> {
-            if(pending!=null){call.reject("AI_STUDIO_BUSY");return;}
+        onUi(call, () -> {
+            if(pending!=null || cancellationCall!=null){call.reject("AI_STUDIO_BUSY");return;}
+            String requestedId = call.getString("requestId");
+            if (requestedId == null || requestedId.isEmpty()) requestedId = "chat-" + UUID.randomUUID().toString();
+            if (!NativeRequestLedger.valid(requestedId)) {call.reject("AI_STUDIO_INVALID_REQUEST_ID");return;}
+            if (cancelledRequests.isCancelled(requestedId)) {call.reject("AI_STUDIO_CANCELLED");return;}
+            if (catalogReader != null) { catalogReader.cancel(); catalogReader = null; }
             boolean coldStart=sessionWebView==null;
             try {createSessionIfNeeded();}
             catch(Exception e){
@@ -1037,8 +661,7 @@ public class AiStudioTextPlugin extends Plugin {
                     details("exception",e.getClass().getSimpleName()));
                 call.reject("AI_STUDIO_AUTO_START_FAILED");return;
             }
-            requestId=call.getString("requestId","chat").replaceAll("[^a-zA-Z0-9_-]","");
-            if(requestId.length()>35)requestId=requestId.substring(0,35);
+            requestId=requestedId;
             pending=call;
             pendingThinkingLevel=requestedThinking==null?"default":requestedThinking.trim().toLowerCase(java.util.Locale.ROOT);
             confirmedThinkingLevel="not-verified";
@@ -1050,9 +673,10 @@ public class AiStudioTextPlugin extends Plugin {
             baseline="";latest="";lastStreamSnapshot="";latestThinkingSummary="";lastStreamedThinkingSummary="";polls=0;responseNodes=0;
             observedIdleSince=0L;consecutiveIdlePolls=0;
             freshChatLoaded=false;freshChatAttempt=0;
-            everSawResponse=false;everSawBusy=false;submitClicked=false;bootstrapFailures=0;
+            everSawResponse=false;everSawBusy=false;submitClicked=false;submitDispatched=false;bootstrapFailures=0;
             requestStart=SystemClock.elapsedRealtime();lastChanged=requestStart;
             lastCheckpoint=requestStart;
+            armWatchdog(call);
             trace("state",coldStart?"SESSION_AUTO_START":"SESSION_REUSE",
                 coldStart?"Created AI Studio WebView automatically":"Using existing AI Studio WebView",
                 details("promptChars",prompt.length(),"hasWebViewParent",sessionWebView.getParent()!=null));
@@ -1075,7 +699,7 @@ public class AiStudioTextPlugin extends Plugin {
 
     private void prepareText(PluginCall call,String prompt) {
         if(pending!=call||sessionWebView==null)return;
-        sessionWebView.evaluateJavascript(INSTALL_JS,ready->{
+        AiStudioWebViewPolicy.evaluate(sessionWebView, AiStudioPageScripts.INSTALL_JS,ready->{
             if(pending!=call)return;
             if(ready==null || "null".equals(ready)){
                 bootstrapFailures++;
@@ -1117,7 +741,7 @@ public class AiStudioTextPlugin extends Plugin {
                 JSONObject.quote(prompt.substring(offset,end))+
                 ";return {ok:true,length:window.__STS_AI_TEXT_INPUT__.length};"+
                 "}catch(e){return {ok:false,errorName:String(e.name||'Error')}}})())";
-            sessionWebView.evaluateJavascript(js,raw->{
+            AiStudioWebViewPolicy.evaluate(sessionWebView, js,raw->{
                 if(pending!=call)return;
                 try{
                     JSONObject result=parse(raw);
@@ -1144,7 +768,7 @@ public class AiStudioTextPlugin extends Plugin {
         String expression="(function(){var p=window.__STS_AI_TEXT_INPUT__||'';"+
             "delete window.__STS_AI_TEXT_INPUT__;"+
             "return window.__STS_AI_TEXT_V2__?.prepare(p)})()";
-        sessionWebView.evaluateJavascript(guardJs(expression),raw->{
+        AiStudioWebViewPolicy.evaluate(sessionWebView, guardJs(expression),raw->{
                 if(pending!=call)return;
                 try {
                     JSONObject obj=unwrapJs(raw,"EDITOR");
@@ -1167,7 +791,8 @@ public class AiStudioTextPlugin extends Plugin {
 
     private void submit(PluginCall call) {
         if(pending!=call||sessionWebView==null)return;
-        sessionWebView.evaluateJavascript(
+        submitDispatched = true;
+        AiStudioWebViewPolicy.evaluate(sessionWebView,
             "JSON.stringify(window.__STS_AI_TEXT_V2__?.submit()||{ok:false,error:'SCRIPT_LOST'})",
             raw -> {
                 if(pending!=call)return;
@@ -1182,13 +807,13 @@ public class AiStudioTextPlugin extends Plugin {
                     trace("state","SUBMIT_CLICKED","AI Studio send button clicked (server ACK not verified)",
                         details("candidateButtons",obj.optInt("candidates",-1),
                             "buttonScore",obj.optInt("score",0)));
-                    handler.postDelayed(this::pollResponse,POLL_MS);
+                    handler.postDelayed(()->pollResponse(call),POLL_MS);
                 }catch(Exception e){fail("AI_STUDIO_SUBMIT_JS: "+e.getClass().getSimpleName());}
             }
         );
     }
-    private void pollResponse() {
-        if(pending==null||sessionWebView==null)return;
+    private void pollResponse(PluginCall call) {
+        if(pending!=call||sessionWebView==null)return;
         long now=SystemClock.elapsedRealtime();
         if(now-requestStart>TIMEOUT_MS) {
             inspect("TIMEOUT_SNAPSHOT");
@@ -1197,17 +822,17 @@ public class AiStudioTextPlugin extends Plugin {
             fail("AI_STUDIO_TIMEOUT_"+reason+": xem bộ lọc AI Studio trong Bảng điều khiển hệ thống.");
             return;
         }
-        sessionWebView.evaluateJavascript(
+        AiStudioWebViewPolicy.evaluate(sessionWebView,
             "JSON.stringify(window.__STS_AI_TEXT_V2__?.read()||{error:'SCRIPT_LOST'})",
             raw -> {
-                if(pending==null)return;
+                if(pending!=call)return;
                 polls++;
                 try{
                     JSONObject obj=parse(raw);
                     if(obj.has("error")) {
                         trace("warn","POLL_SCRIPT_ERROR","Page script unavailable",
                             details("error",obj.optString("error")));
-                        handler.postDelayed(this::pollResponse,POLL_MS);
+                        handler.postDelayed(()->pollResponse(call),POLL_MS);
                         return;
                     }
                     responseNodes=Math.max(responseNodes,obj.optInt("responseNodes",0));
@@ -1244,13 +869,12 @@ public class AiStudioTextPlugin extends Plugin {
                         // stop changing. This defeats one-frame idle flickers.
                         // If no busy indicator was ever detected, require a
                         // conservative 15s idle+stable fallback.
-                        long idleRequirement=everSawBusy?CONFIRMED_IDLE_MS:15_000L;
-                        boolean terminal=!busy&&confirmedIdle>=idleRequirement &&
-                            consecutiveIdlePolls>=4 &&
-                            stable>=(everSawBusy?3500L:15_000L);
+                        boolean terminal = AiStudioCompletionPolicy.isTerminal(busy, everSawBusy,
+                            confirmedIdle, stable, consecutiveIdlePolls);
                         if(terminal) {
                             PluginCall done=pending;
                             pending=null;
+                            clearWatchdog();
                             stopBackgroundGeneration(true);
                             trace("script-success","RESPONSE_COMPLETE","Received completed AI Studio text",
                                 details("responseChars",latest.length(),"polls",polls,
@@ -1286,7 +910,7 @@ public class AiStudioTextPlugin extends Plugin {
                     trace("warn","POLL_PARSE_ERROR","Cannot parse AI Studio page state",
                         details("exception",e.getClass().getSimpleName()));
                 }
-                handler.postDelayed(this::pollResponse,POLL_MS);
+                handler.postDelayed(()->pollResponse(call),POLL_MS);
             }
         );
     }
@@ -1313,10 +937,40 @@ public class AiStudioTextPlugin extends Plugin {
     }
     @PluginMethod
     public void cancel(PluginCall call){
-        getActivity().runOnUiThread(() -> {
-            if(pending!=null)fail("AI_STUDIO_CANCELLED");
-            call.resolve();
+        onUi(call, () -> {
+            String target = call.getString("requestId", "");
+            if (target != null && !target.isEmpty()) {
+                if (!NativeRequestLedger.valid(target)) { call.reject("AI_STUDIO_INVALID_REQUEST_ID"); return; }
+                cancelledRequests.cancel(target);
+            }
+            if (pending == null || (target != null && !target.isEmpty() && !requestId.equals(target))) {call.resolve(); return;}
+            cancelledRequests.cancel(requestId);
+            // Reject the generation immediately, but reserve the old WebView
+            // until the best-effort Stop click completes or times out. No new
+            // generation can start on this document during cleanup.
+            cancellationCall = call;
+            fail("AI_STUDIO_CANCELLED");
+            final WebView view = sessionWebView;
+            if (view == null) { finishCancellation(call, false); return; }
+            cancellationHandler.postDelayed(() -> finishCancellation(call, false), 1500L);
+            AiStudioWebViewPolicy.evaluate(view,
+                "JSON.stringify(window.__STS_AI_TEXT_V2__?.stopGeneration()||{ok:false})", raw -> {
+                    if (cancellationCall != call) return;
+                    boolean clicked = false;
+                    try { clicked = parse(raw).optBoolean("ok", false); } catch (Exception ignored) {}
+                    finishCancellation(call, clicked);
+                });
         });
+    }
+    private void finishCancellation(PluginCall call, boolean clicked) {
+        if (cancellationCall != call) return;
+        cancellationCall = null;
+        cancellationHandler.removeCallbacksAndMessages(null);
+        // A queued submit/evaluate callback must not survive into the next
+        // request. Cookies are retained by Android's CookieManager.
+        releaseWebView();
+        JSObject result = new JSObject(); result.put("stopClicked", clicked);
+        call.resolve(result);
     }
     private JSONObject parse(String raw)throws Exception{
         Object first=new JSONTokener(raw==null?"null":raw).nextValue();
@@ -1325,6 +979,7 @@ public class AiStudioTextPlugin extends Plugin {
     private void fail(String message){
         PluginCall p=pending;
         pending=null;
+        clearWatchdog();
         stopBackgroundGeneration(false);
         trace("error","REQUEST_FAILED",message,details(
             "requestedThinking",pendingThinkingLevel,"appliedThinking",confirmedThinkingLevel,
@@ -1333,23 +988,35 @@ public class AiStudioTextPlugin extends Plugin {
             "seenResponse",everSawResponse,"seenBusy",everSawBusy,
             "clicked",submitClicked,"responseChars",latest.length()));
         if(p!=null)p.reject(message);
+        if (submitDispatched && cancellationCall == null) releaseWebView();
     }
-    @Override
-    protected void handleOnDestroy(){
+    private void armWatchdog(PluginCall call) {
+        clearWatchdog();
+        requestWatchdog = () -> {
+            if (pending == call) fail("AI_STUDIO_TIMEOUT: Native WebView did not complete the request.");
+        };
+        handler.postDelayed(requestWatchdog, TIMEOUT_MS);
+    }
+    private void clearWatchdog() {
+        if (requestWatchdog != null) handler.removeCallbacks(requestWatchdog);
+        requestWatchdog = null;
+    }
+    private void releaseWebView() {
+        WebView old = sessionWebView;
+        sessionWebView = null;
+        AiStudioPanel oldPanel = panel; panel = null;
+        try { if (oldPanel != null) oldPanel.detach(); }
+        catch (RuntimeException failure) { Log.w(LOG_TAG, "AI Studio panel cleanup failed", failure); }
+        try { AiStudioWebViewPolicy.destroy(old); }
+        catch (RuntimeException failure) { Log.w(LOG_TAG, "AI Studio WebView cleanup failed", failure); }
+    }
+    @Override protected void handleOnDestroy(){
+        destroyed = true;
         if(catalogReader!=null){catalogReader.cancel();catalogReader=null;}
         if(pending!=null)fail("AI_STUDIO_SESSION_CLOSED");
-        if(sessionWebView!=null){
-            if(sessionWebView.getParent() instanceof ViewGroup)
-                ((ViewGroup)sessionWebView.getParent()).removeView(sessionWebView);
-            sessionWebView.destroy();
-        }
-        sessionWebView=null;
-        if(offscreenHost!=null){
-            if(offscreenHost.getParent() instanceof ViewGroup)
-                ((ViewGroup)offscreenHost.getParent()).removeView(offscreenHost);
-            offscreenHost.removeAllViews();
-            offscreenHost=null;
-        }
+        if(cancellationCall!=null)finishCancellation(cancellationCall,false);
+        clearWatchdog();
+        releaseWebView();
         super.handleOnDestroy();
     }
 }

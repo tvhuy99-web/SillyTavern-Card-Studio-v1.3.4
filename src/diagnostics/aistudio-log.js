@@ -1,3 +1,4 @@
+import { ANDROID_PLUGINS, acquireNativeListener, getAndroidPlugin } from '../platform/android/native-bridge.js';
 // Persistent Android AI Studio diagnostics. No prompts, outputs, cookies or tokens.
 const KEY = 'sts_aistudio_diagnostics_v1';
 const MAX = 250;
@@ -41,7 +42,7 @@ export function recordAiStudioDiagnostic(stage, data = {}, level = 'state') {
 export function exportAiStudioDiagnostics() {
   return JSON.stringify({format:'CardStudio AI Studio diagnostics v1',events:stored()}, null, 2);
 }
-export function installAiStudioDiagnostics() {
+export function installAiStudioDiagnostics({settingsStorage = globalThis.localStorage} = {}) {
   if (attached || typeof window === 'undefined') return;
   attached = true;
   window.__STS_AI_STUDIO_LOGS__ = Object.freeze({
@@ -51,7 +52,9 @@ export function installAiStudioDiagnostics() {
   });
   let bridgeRetryCount = 0;
   async function start() {
-    const plugin = window.Capacitor?.Plugins?.AIStudioText;
+    const cap = window.Capacitor;
+    if (typeof cap?.getPlatform === 'function' && cap.getPlatform() !== 'android') return;
+    const plugin = getAndroidPlugin(ANDROID_PLUGINS.aiStudio, window);
     if (!plugin?.addListener) {
       if (bridgeRetryCount++ < 20) setTimeout(start, 1000);
       else recordAiStudioDiagnostic('BRIDGE_UNAVAILABLE', {
@@ -59,21 +62,20 @@ export function installAiStudioDiagnostics() {
       }, 'error');
       return;
     }
-    if (handle || attaching) return;
+    if ((handle && visibilityHandle) || attaching) return;
     attaching = true;
     try {
-      handle = await plugin.addListener('diagnostic', e => {
+      if (!handle) handle = await acquireNativeListener(plugin, 'diagnostic', e => {
         recordAiStudioDiagnostic(e?.stage || 'NATIVE', {
           requestId: e?.requestId, message: e?.message,
           ...(e?.details && typeof e.details === 'object' ? e.details : {}),
         }, e?.level || 'state');
       });
       if (!visibilityHandle) {
-        visibilityHandle = await plugin.addListener('pageVisibilityChanged', e => {
+        visibilityHandle = await acquireNativeListener(plugin, 'pageVisibilityChanged', e => {
           const visible = e?.visible === true;
-          try { localStorage.setItem('sts_aistudio_show_page', visible ? 'true' : 'false'); } catch {}
-          const input = document.querySelector('input[aria-label="Hiển thị trang web AI Studio"]');
-          if (input) input.checked = visible;
+          try { settingsStorage.setItem('sts_aistudio_show_page', visible ? 'true' : 'false'); } catch {}
+          window.dispatchEvent(new CustomEvent('sts:aistudio-visibility', {detail:{visible}}));
         });
       }
       recordAiStudioDiagnostic('BRIDGE_READY', {message: 'Native log connected to System Console.'});

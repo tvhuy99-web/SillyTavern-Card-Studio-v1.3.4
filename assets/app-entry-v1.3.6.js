@@ -1,16 +1,9 @@
-import { installAiStudioDiagnostics } from './m8/diagnostics/aistudio-log.js';
-import { installAiStudioModelControls } from './m8/diagnostics/aistudio-model-controls.js';
 import { installAndroidExportInterceptor } from './m8/diagnostics/android-export-download.js';
-import { proxyPersistence as __stsProxyPersistence } from './proxy-persistence-service-v1.3.6.js?v=1.3.6-m2-final';
-import { installGeminiModelListDiagnostics } from './m7/diagnostics/gemini-model-list.js?v=1.3.6-m7.1';
-import { installModelConnectionTestEnhancer } from './m6/ui/model-connection-test.js?v=1.3.6-m7.1';
-import { installRuntimeUxGuard } from './m5/ui/runtime-guard.js?v=1.3.6-m7.1';
+import { installRuntimeUxGuard } from './m5/ui/runtime-guard.js';
 
-installAiStudioDiagnostics();
-installAiStudioModelControls();
 installAndroidExportInterceptor();
 
-const PRODUCTION_BUNDLE_URL = new URL('./app-production-v1.3.6.js?v=1.3.6-m7.5', import.meta.url).href;
+const PRODUCTION_BUNDLE_URL = new URL('./app-production-v1.3.6.js', import.meta.url).href;
 
 function publish(status, extra = {}) {
   window.__STS_BUILD_PIPELINE__ = Object.freeze({
@@ -30,18 +23,17 @@ function publish(status, extra = {}) {
     runtimeGuard: 'service-driven',
     uiSemantics: 'source-build-owned',
     accessibility: 'semantic-controls',
-    modelTestUi: 'owned-enhancer',
-    geminiModelList: 'owned-diagnostic-service',
+    modelTestUi: 'react-owned',
+    geminiModelList: 'owned-provider-catalog',
     assetPolicy: 'generated-vendor-static-only',
-    legacyBuildInput: 'outside-runtime-assets',
+    hostSource: 'source-owned-recovered-host',
+    historicalTransformsExecuted: 0,
     runtimePatchScripts: 'none',
     ...extra
   });
 }
 
 installRuntimeUxGuard();
-installModelConnectionTestEnhancer({ proxyPersistence: __stsProxyPersistence });
-installGeminiModelListDiagnostics();
 publish('loading-production');
 
 try {

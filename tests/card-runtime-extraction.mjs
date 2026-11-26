@@ -1,40 +1,6 @@
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
-import { applyCardRuntimeTransform } from '../build/transforms/card-runtime.mjs';
 import { buildCardRuntimeAssets } from '../build/build-card-runtime.mjs';
-
-const bundle = fs.readFileSync(
-  new URL('../legacy/app-bundle-input-v1.3.6.js', import.meta.url),
-  'utf8',
-);
-const transformed = applyCardRuntimeTransform(bundle);
-
-assert.ok(transformed.includes('initial-variable-service-v1.3.6.js?v=1.3.6-initvar-3'));
-assert.ok(transformed.includes('smart-state-service-v1.3.6.js?v=1.3.6-smartstate-2'));
-assert.ok(transformed.includes('card-runtime-core-builder-v1.3.6.js?v=1.3.6-m3.10'));
-assert.ok(transformed.includes('card-runtime-renderer-v1.3.6.js?v=1.3.6-m3.10'));
-assert.ok(transformed.includes('__stsBuildCardRuntimeCoreScript'));
-assert.ok(transformed.includes('__stsBuildCardRuntimeRendererScript'));
-assert.ok(transformed.includes('__stsNormalizeCardRuntimeMarkup'));
-assert.ok(transformed.includes('__stsBuildSmartStateBlock'));
-assert.ok(transformed.includes('__stsSeedInitialVariablesFromCard'));
-assert.ok(transformed.includes('__stsSelectInitialVariableOpening'));
-assert.ok(transformed.includes('__stsInspectInitialVariablePipeline'));
-assert.ok(transformed.includes('variableDiagnostics:__stsVariableDiagnostics'));
-assert.ok(transformed.includes('variableDiagnostics:a.snapshot.variableDiagnostics'));
-assert.ok(transformed.includes('let __stsScopes=Ap(r||{},v,M,t,m,n)'));
-assert.ok(transformed.includes('variableScopes:__stsScopes'));
-assert.ok(transformed.includes('e&&Object.keys(e).length?e:__stsSeedInitialVariablesFromCard'));
-assert.ok(transformed.includes('Np=(e,t,n,r)=>__stsBuildSmartStateBlock({variables:e,card:t,messages:n.slice(0,Math.max(0,r))}).smartStateBlock'));
-assert.ok(!transformed.includes('Np=(e,t,n,r)=>{let a=[]'));
-assert.ok(transformed.includes('srcDoc:__stsNormalizeCardRuntimeMarkup(U),style:'));
-assert.ok(!transformed.includes('card-runtime-core-v1.3.6.js?v='));
-assert.ok(!transformed.includes('const BOOT = ${t};'), 'inline Card Runtime core must be removed');
-assert.ok(!transformed.includes('const START_OPTIONS = ${i};'), 'inline renderer must be removed');
-assert.ok(!transformed.includes('yp=String.raw'), 'embedded compatibility API must be removed');
-assert.ok(transformed.includes('vue-router@5.1.0/dist/vue-router.global.js'));
-assert.ok(!transformed.includes('vue-router@5.2.0/dist/vue-router.global.js'));
-
 const report = await buildCardRuntimeAssets();
 assert.equal(report.coreModuleFragments, 17);
 assert.ok(report.coreTemplateBytes < 30000, 'core template should only retain bootstrap/composition glue');
@@ -42,7 +8,7 @@ assert.equal(report.compatibilityFragments, 6);
 assert.equal(report.iframeModuleImportRequired, false);
 
 const coreBuilder = fs.readFileSync(
-  new URL('../assets/card-runtime-core-builder-v1.3.6.js', import.meta.url),
+  new URL('../src/runtime/card-runtime/core-builder.js', import.meta.url),
   'utf8',
 );
 const renderer = fs.readFileSync(
@@ -60,7 +26,7 @@ assert.ok(renderer.includes('literalPathProbes'));
 assert.ok(renderer.includes('accessSnippets'));
 assert.ok(renderer.includes('readinessTextLiterals'));
 
-const runtimeModule = await import('../assets/card-runtime-core-builder-v1.3.6.js?test=' + Date.now());
+const runtimeModule = await import('../src/runtime/card-runtime/core-builder.js?test=' + Date.now());
 const injected = runtimeModule.buildCardRuntimeCoreScript({
   context: { compatibilityMode: 'safe', messageId: 1 },
   probe: '</script><script>boom()</script><!--probe',

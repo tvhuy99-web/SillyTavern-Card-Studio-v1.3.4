@@ -1,0 +1,11 @@
+{
+  "protectedTrackedChanges": [],
+  "verifiedPrefixes": [
+    "android-native/",
+    "src/runtime/card-runtime/",
+    "legacy/",
+    "build/transforms/",
+    "assets/card-runtime-"
+  ],
+  "cssChanges": 0
+}

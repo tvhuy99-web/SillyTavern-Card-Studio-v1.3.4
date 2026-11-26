@@ -1,0 +1,34 @@
+import assert from 'node:assert/strict';
+import { createHostRpcDispatcher } from '../src/runtime/card-runtime/host/rpc-dispatcher.js';
+import { createRuntimeMessageHandler } from '../src/runtime/card-runtime/host/runtime-events.js';
+import { createEmbeddingService } from '../src/features/world-info/embedding-service.js';
+import { useSmartContext } from '../src/features/chat/hooks/use-smart-context.js';
+import { runtimeState } from '../src/app/state/runtime-state.js';
+const defer=()=>{let resolve,reject;const promise=new Promise((a,b)=>{resolve=a;reject=b;});return {promise,resolve,reject};};
+const source=()=>({responses:[],postMessage(message){this.responses.push(message);}});
+const a=source(),b=source(),c=source(),frames=new Set([a,b,c]);
+let calls=0;const gate=defer();
+const validatePayload=value=>{if(JSON.stringify(value)?.length>200)throw Error('payload budget');};
+const dispatcher=createHostRpcDispatcher({isActiveSource:f=>frames.has(f),getSessionRevision:()=>1,getSessionId:()=> 'session',validatePayload,clone:structuredClone,maxPendingPerSource:1,maxPendingTotal:2});
+const send=(source,requestId,context,execute=async()=>{calls++;return gate.promise;})=>dispatcher.dispatch({source,data:{type:'CARD_RUNTIME_RPC',requestId,method:'test',args:{},context}},{execute});
+const one=send(a,'one');await send(a,'one');await send(a,'overflow');assert.equal(calls,1);assert.match(a.responses.at(-1).error,/pending/);
+const two=send(b,'one');await send(c,'total');assert.equal(calls,2);assert.match(c.responses.at(-1).error,/pending/);
+gate.resolve('ok');await Promise.all([one,two]);assert.equal(a.responses.at(-1).result,'ok');assert.equal(b.responses.at(-1).result,'ok');
+await send(c,'invalid',{value:'x'.repeat(201)});assert.match(c.responses.at(-1).error,/budget/);assert.equal(calls,2);
+await send(c,'error',{},async()=>{throw Error('failure');});await send(c,'valid',{},async()=>42);assert.equal(c.responses.at(-1).result,42);
+let visualState={};const events=[];const handler=createRuntimeMessageHandler({isActiveSource:f=>frames.has(f),readState:()=>({visualState,setSessionData:next=>{visualState=next.visualState;}}),validatePayload,window:{dispatchEvent:event=>events.push(event)}});
+await handler({source:a,data:{type:'SET_VISUAL_STATE',payload:JSON.parse('{"__proto__":{"unsafe":true},"constructor":"unsafe","bg":"off","class":"dark"}')}});
+assert.deepEqual(visualState,{backgroundImage:'',globalClass:'dark'});assert.equal(events.length,1);assert.equal({}.unsafe,undefined);
+await handler({source:a,data:{type:'SET_VISUAL_STATE',payload:{bg:'x'.repeat(201)}}});assert.equal(events.length,1);
+
+const indexRead=defer();let reads=0;
+const embedding=createEmbeddingService({getSettings:()=>({enabled:true,mode:'semantic',embedding_provider:'gemini'}),logSystemMessage(){},indexRepository:{listByCharacter:()=>{reads++;return reads===1?indexRead.promise:Promise.resolve([]);},replace:async()=>{}}});
+const first=embedding.syncIndex('card',[]);await assert.rejects(embedding.syncIndex('card',[]),/đang được thực hiện/);indexRead.reject(Error('read failed'));await assert.rejects(first,/read failed/);await embedding.syncIndex('card',[]);assert.equal(reads,2);
+
+let state={sessionId:'s',messages:[{id:'u',role:'user',content:'before'},{id:'m',role:'model',content:'reply'}],longTermSummaries:[],summaryQueue:[],isSummarizing:false,card:{name:'C'}};
+state.setSessionData=next=>{state={...state,...next};};const ol=()=>state;ol.getState=()=>state;
+let summary=defer(),count=0,signal;const deps={ol,b:{useCallback:fn=>fn},__stsRuntimeState:runtimeState,os:()=>({summarization_chunk_size:1}),qu(){},wd:(_history,_name,_prompt,s)=>{signal=s;count++;return summary.promise;}};
+const pending=useSmartContext(deps).triggerSummarization();await Promise.resolve();await useSmartContext(deps).triggerSummarization();assert.equal(count,1);assert.equal(runtimeState.size(),1);
+state={...state,messages:[{...state.messages[0],content:'edited'},state.messages[1]]};summary.resolve('obsolete');await pending;assert.deepEqual(state.longTermSummaries,[]);assert.equal(runtimeState.size(),0);
+summary=defer();const canceled=useSmartContext(deps).triggerSummarization();await Promise.resolve();runtimeState.abortAll();assert.ok(signal.aborted);await canceled;assert.equal(state.isSummarizing,false);assert.equal(state.summaryQueue[0].status,'failed');summary.resolve('late');await Promise.resolve();assert.deepEqual(state.longTermSummaries,[]);
+console.log('Block D runtime: RPC quotas, visual state, concurrent sync, summary edit and cancellation OK.');

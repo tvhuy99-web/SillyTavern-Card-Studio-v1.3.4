@@ -1,0 +1,37 @@
+{
+  "typescript": "5.8.3",
+  "refs": {
+    "__stsStateRpc": {
+      "occurrences": 6,
+      "unresolved": 0
+    },
+    "__stsCreateStateRpcHandlers": {
+      "occurrences": 2,
+      "unresolved": 0
+    },
+    "__stsNormalizeRuntimeScope": {
+      "occurrences": 2,
+      "unresolved": 0
+    },
+    "__stsRuntimeVariableStorageKey": {
+      "occurrences": 2,
+      "unresolved": 0
+    },
+    "__stsRuntimeWebStorageKey": {
+      "occurrences": 2,
+      "unresolved": 0
+    },
+    "__stsReadRuntimeRecord": {
+      "occurrences": 2,
+      "unresolved": 0
+    },
+    "__stsWriteRuntimeRecord": {
+      "occurrences": 2,
+      "unresolved": 0
+    },
+    "__stsResolveRuntimeMessageIndex": {
+      "occurrences": 2,
+      "unresolved": 0
+    }
+  }
+}

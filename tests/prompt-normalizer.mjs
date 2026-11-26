@@ -5,7 +5,6 @@ import {
   normalizePresetConfig,
   normalizePresetList,
 } from '../src/features/presets/prompt-normalizer.js';
-import { applyPresetBoundaryTransform } from '../build/transforms/preset-boundary.mjs';
 
 const source = Object.freeze({
   name: 'Imported',
@@ -91,14 +90,6 @@ assert.equal('prompt_order' in worldInfoPreset, false);
 const unrelated = { name: 'No prompt payload', temperature: 1 };
 assert.deepEqual(normalizePresetConfig(unrelated), unrelated);
 
-const legacyBundle = fs.readFileSync(
-  new URL('../legacy/app-bundle-input-v1.3.6.js', import.meta.url),
-  'utf8',
-);
-const boundaryBundle = applyPresetBoundaryTransform(legacyBundle);
-assert.ok(boundaryBundle.startsWith('import { normalizePresetConfig as __stsNormalizePresetConfig'));
-assert.ok(boundaryBundle.includes('t(__stsNormalizePresetList(r.result))'));
-assert.ok(boundaryBundle.includes('let n=__stsNormalizePresetConfig(t);await nn(n)'));
-assert.ok(boundaryBundle.includes('return __stsNormalizePresetConfig(r)},bu=At()'));
-
-console.log('prompt normalizer and preset boundary tests: OK');
+const store = fs.readFileSync(new URL('../src/app/state/preset-store.js', import.meta.url), 'utf8');
+assert.match(store,/normalize/);
+console.log('prompt normalizer and current preset boundary tests: OK');

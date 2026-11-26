@@ -281,7 +281,7 @@ export function findLatestVisualState(messages, options = {}) {
     : { value: '', source: 'none', messageIndex: -1 };
 }
 
-export function buildMythicDatabase(card) {
+function buildMythicDatabase(card) {
   const rpg = card?.rpg_data;
   if (!rpg || !Array.isArray(rpg.tables)) return '';
   let output = '';

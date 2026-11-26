@@ -15,7 +15,7 @@ export function optionalPositiveInt(value, options = {}) {
   return Math.min(options.max ?? Infinity, integer);
 }
 
-export function optionalFiniteNumber(value, options = {}) {
+function optionalFiniteNumber(value, options = {}) {
   if (value === null || value === undefined || value === '') return undefined;
   const number = typeof value === 'number' ? value : Number(value);
   if (!Number.isFinite(number)) return undefined;
@@ -24,7 +24,7 @@ export function optionalFiniteNumber(value, options = {}) {
   return number;
 }
 
-export function optionalNonNegativeInt(value, options = {}) {
+function optionalNonNegativeInt(value, options = {}) {
   if (value === null || value === undefined || value === '') return undefined;
   const number = typeof value === 'number' ? value : Number(value);
   if (!Number.isFinite(number)) return undefined;
@@ -157,6 +157,25 @@ export async function* readSseResponse(response, { signal, parseEvent }) {
 
 export function networkLogId(prefix) {
   return prefix + '-' + Date.now() + '-' + Math.random().toString(36).substring(2, 9);
+}
+
+export async function readResponseError(response, label = 'Request Error') {
+  let message = '';
+  try {
+    const text = await response.text();
+    if (text) {
+      try {
+        const payload = JSON.parse(text);
+        message = payload?.error?.message
+          || (typeof payload?.error === 'string' ? payload.error : '')
+          || payload?.message
+          || text;
+      } catch {
+        message = text;
+      }
+    }
+  } catch {}
+  return `${label}: ${message || `HTTP ${response.status}`}`;
 }
 
 export async function openAiCompatibleError(response, prefix) {

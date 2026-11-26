@@ -28,21 +28,29 @@ public class AiStudioGenerationService extends Service {
     private static final int NOTIFICATION_RUNNING = 40932;
     private static final int NOTIFICATION_FINISHED = 40933;
     private static final String TAG = "CardStudioAIStudioBg";
+    private static final NativeGenerationLease LEASE = new NativeGenerationLease();
+    private static final String EXTRA_TOKEN = "generationToken";
     private static AiStudioGenerationService instance;
+    private String activeToken;
     private PowerManager.WakeLock wakeLock;
 
-    public static Intent startIntent(Context context) {
-        return new Intent(context, AiStudioGenerationService.class).setAction(ACTION_BEGIN);
+    public static Intent startIntent(Context context, String token) {
+        LEASE.request(token);
+        return new Intent(context, AiStudioGenerationService.class).setAction(ACTION_BEGIN)
+            .putExtra(EXTRA_TOKEN, token);
     }
 
-    public static void finish(Context context, boolean successful) {
+    /** Called on the main thread. A finished request cannot stop a later one. */
+    public static void finish(Context context, String token, boolean successful) {
+        if (!LEASE.release(token)) return;
         AiStudioGenerationService current = instance;
-        if (current != null) {
-            current.finishRequest(successful);
-        } else {
-            try {context.stopService(new Intent(context, AiStudioGenerationService.class));}
-            catch (Exception ignored) {}
-        }
+        if (current != null && token.equals(current.activeToken)) current.finishRequest(successful);
+        // A queued startForegroundService still needs to acknowledge Android's
+        // start request. onStartCommand promotes then stops a stale start.
+    }
+
+    public static boolean isActive(String token) {
+        return LEASE.owns(token) && instance != null && token.equals(instance.activeToken);
     }
 
     @Override public void onCreate() {
@@ -87,6 +95,8 @@ public class AiStudioGenerationService extends Service {
             stopSelf();
             return START_NOT_STICKY;
         }
+        String token = intent.getStringExtra(EXTRA_TOKEN);
+        if (!LEASE.owns(token) && LEASE.owns(activeToken)) return START_NOT_STICKY;
         try {
             Notification notification = buildNotification(true, false);
             if (Build.VERSION.SDK_INT >= 29) {
@@ -95,20 +105,31 @@ public class AiStudioGenerationService extends Service {
             } else {
                 startForeground(NOTIFICATION_RUNNING, notification);
             }
+            if (!LEASE.owns(token)) {
+                if (Build.VERSION.SDK_INT >= 24) stopForeground(STOP_FOREGROUND_REMOVE);
+                else stopForeground(true);
+                stopSelf(startId);
+                return START_NOT_STICKY;
+            }
+            activeToken = token;
             PowerManager pm = (PowerManager)getSystemService(POWER_SERVICE);
-            if (pm != null && wakeLock == null) {
+            if (wakeLock != null && wakeLock.isHeld()) wakeLock.release();
+            if (pm != null) {
                 wakeLock = pm.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "CardStudio:AiStudioReply");
                 wakeLock.setReferenceCounted(false);
                 wakeLock.acquire(6 * 60 * 1000L);
             }
         } catch (RuntimeException e) {
             Log.w(TAG, "Unable to start background AI Studio mode: " + e.getClass().getSimpleName());
-            stopSelf();
+            LEASE.release(token);
+            activeToken = null;
+            stopSelf(startId);
         }
         return START_NOT_STICKY;
     }
 
     private void finishRequest(boolean successful) {
+        activeToken = null;
         if (wakeLock != null && wakeLock.isHeld()) wakeLock.release();
         if (Build.VERSION.SDK_INT >= 24) stopForeground(STOP_FOREGROUND_REMOVE);
         else stopForeground(true);
@@ -123,6 +144,8 @@ public class AiStudioGenerationService extends Service {
     }
 
     @Override public void onDestroy() {
+        LEASE.release(activeToken);
+        activeToken = null;
         if (wakeLock != null && wakeLock.isHeld()) wakeLock.release();
         if (instance == this) instance = null;
         super.onDestroy();
@@ -132,6 +155,9 @@ public class AiStudioGenerationService extends Service {
 
     @Override public void onTimeout(int startId, int fgsType) {
         Log.w(TAG, "Android FGS dataSync time limit reached");
+        LEASE.release(activeToken);
+        activeToken = null;
+        if (wakeLock != null && wakeLock.isHeld()) wakeLock.release();
         if (Build.VERSION.SDK_INT >= 24) stopForeground(STOP_FOREGROUND_REMOVE);
         else stopForeground(true);
         stopSelf(startId);

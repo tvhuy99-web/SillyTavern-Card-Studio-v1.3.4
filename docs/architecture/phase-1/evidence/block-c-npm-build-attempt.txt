@@ -1,0 +1,58 @@
+
+> sillytavern-card-studio@1.3.6 build:npm
+> npm run build && node build/build-npm-runtime.mjs
+
+
+> sillytavern-card-studio@1.3.6 build
+> npm run build:bundle && node build/build-portable.mjs
+
+
+> sillytavern-card-studio@1.3.6 build:bundle
+> node build/build-production-bundle.mjs
+
+{
+  "output": "assets/app-production-v1.3.6.js",
+  "source": "src/app/host.js",
+  "bytes": 45042,
+  "historicalTransformsExecuted": 0,
+  "cardRuntime": {
+    "coreSourceBytes": 188212,
+    "coreTemplateBytes": 21174,
+    "coreBuilderBytes": 194707,
+    "coreModuleFragments": 17,
+    "compatibilityFragments": 6,
+    "iframeModuleImportRequired": false
+  }
+}
+Portable static app built in dist/
+file:///mnt/data/c-work/STCS-Phase1-Block-B-87/build/build-npm-runtime.mjs:10
+try { esbuild = require('esbuild'); } catch (error) { throw new Error('Install the isolated package build first: npm install --prefix build/npm-runtime', {cause:error}); }
+                                                            ^
+
+Error: Install the isolated package build first: npm install --prefix build/npm-runtime
+    at file:///mnt/data/c-work/STCS-Phase1-Block-B-87/build/build-npm-runtime.mjs:10:61
+    at ModuleJob.run (node:internal/modules/esm/module_job:274:25)
+    at async onImport.tracePromise.__proto__ (node:internal/modules/esm/loader:644:26)
+    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:117:5) {
+  [cause]: Error: Cannot find module 'esbuild'
+  Require stack:
+  - /mnt/data/c-work/STCS-Phase1-Block-B-87/build/npm-runtime/package.json
+      at Function._resolveFilename (node:internal/modules/cjs/loader:1401:15)
+      at defaultResolveImpl (node:internal/modules/cjs/loader:1057:19)
+      at resolveForCJSWithHooks (node:internal/modules/cjs/loader:1062:22)
+      at Function._load (node:internal/modules/cjs/loader:1211:37)
+      at TracingChannel.traceSync (node:diagnostics_channel:322:14)
+      at wrapModuleLoad (node:internal/modules/cjs/loader:235:24)
+      at Module.require (node:internal/modules/cjs/loader:1487:12)
+      at require (node:internal/modules/helpers:135:16)
+      at file:///mnt/data/c-work/STCS-Phase1-Block-B-87/build/build-npm-runtime.mjs:10:17
+      at ModuleJob.run (node:internal/modules/esm/module_job:274:25) {
+    code: 'MODULE_NOT_FOUND',
+    requireStack: [
+      '/mnt/data/c-work/STCS-Phase1-Block-B-87/build/npm-runtime/package.json'
+    ]
+  }
+}
+
+Node.js v22.16.0
+exit=1

@@ -24,21 +24,19 @@ import org.json.JSONArray;
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
 import java.io.File;
+import java.io.IOException;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
-import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 
 /** EmbeddingGemma 2 Text 270M: explicit user download, offline-only inference.
  * Separate from the EmbeddingGemma 300M ONNX plugin, its model files and index.
@@ -56,7 +54,7 @@ public class EmbeddingGemma2LiteRTPlugin extends Plugin {
     private static final int MAX_INPUT_TOKENS = 2048;
     private static final int MAX_TEXT_CHARS = 20000;
     private static final long MIN_MODEL_BYTES = 120L * 1024 * 1024;
-    private final ExecutorService worker = Executors.newSingleThreadExecutor();
+    private final NativeSerialWorker worker = new NativeSerialWorker("EmbeddingGemma2LiteRTPlugin");
     private EmbeddingEngine engine;
     private String activeBackend = "CPU";
     private int activeCpuThreads = 4;
@@ -72,14 +70,14 @@ public class EmbeddingGemma2LiteRTPlugin extends Plugin {
     private interface Work { void run() throws Exception; }
 
     private void dispatch(PluginCall call, Work task) {
-        worker.execute(() -> {
+        worker.submit(() -> {
             try { task.run(); }
             catch (Throwable failure) {
                 Log.e(TAG, "LiteRT-LM embedding failed", failure);
                 String message = failure.getMessage() == null ? failure.getClass().getSimpleName() : failure.getMessage();
                 call.reject(message, new Exception(failure));
             }
-        });
+        }, () -> call.reject(worker.isClosed() ? "NATIVE_PLUGIN_CLOSED" : "NATIVE_PLUGIN_UNAVAILABLE"));
     }
 
     private File directory() {
@@ -96,7 +94,7 @@ public class EmbeddingGemma2LiteRTPlugin extends Plugin {
 
     private boolean downloaded() {
         File file = model();
-        return file.isFile() && file.length() >= MIN_MODEL_BYTES && marker().isFile();
+        return NativeModelFiles.liteRtReady(file, marker(), MIN_MODEL_BYTES, SHA256);
     }
 
     private void closeEngine() {
@@ -310,6 +308,7 @@ public class EmbeddingGemma2LiteRTPlugin extends Plugin {
                     long lastEvent = received;
                     int n;
                     while ((n = input.read(bytes)) != -1) {
+                        if (worker.isClosed()) throw new IOException("NATIVE_PLUGIN_CLOSED");
                         output.write(bytes, 0, n);
                         received += n;
                         if (received - lastEvent >= 1024L * 1024) {
@@ -324,20 +323,18 @@ public class EmbeddingGemma2LiteRTPlugin extends Plugin {
                 try (InputStream input = new BufferedInputStream(new FileInputStream(target))) {
                     byte[] bytes = new byte[131072];
                     int n;
-                    while ((n = input.read(bytes)) != -1) md.update(bytes, 0, n);
+                    while ((n = input.read(bytes)) != -1) {
+                        if (worker.isClosed()) throw new IOException("NATIVE_PLUGIN_CLOSED");
+                        md.update(bytes, 0, n);
+                    }
                 }
                 String digest = hex(md.digest());
                 if (!SHA256.equalsIgnoreCase(digest)) {
                     if (!target.delete()) Log.w(TAG, "Failed to remove invalid model download");
                     throw new IllegalStateException("LiteRT model SHA256 mismatch; refusing unverified weights");
                 }
-                File verified = model();
-                if (verified.exists() && !verified.delete()) throw new IllegalStateException("Cannot overwrite old model");
-                if (!target.renameTo(verified)) throw new IllegalStateException("Cannot commit LiteRT model download");
-                try (FileOutputStream output = new FileOutputStream(marker())) {
-                    output.write((digest + "\n").getBytes(StandardCharsets.US_ASCII));
-                    output.getFD().sync();
-                }
+                if (worker.isClosed()) throw new IOException("NATIVE_PLUGIN_CLOSED");
+                NativeModelFiles.commit(target, model(), marker(), digest + "\n", received);
                 announce(received, received);
                 JSObject result = new JSObject();
                 result.put("alreadyReady", false);
@@ -557,7 +554,7 @@ public class EmbeddingGemma2LiteRTPlugin extends Plugin {
     public void deleteModel(PluginCall call) {
         dispatch(call, () -> {
             closeEngine();
-            for (File file : Arrays.asList(model(), partial(), marker())) {
+            for (File file : Arrays.asList(model(), partial(), marker(), new File(directory(), FILE_NAME + ".ok.part"))) {
                 if (file.exists() && !file.delete()) throw new IllegalStateException("Cannot delete " + file.getName());
             }
             profilePrefs().edit().clear().commit();
@@ -567,8 +564,7 @@ public class EmbeddingGemma2LiteRTPlugin extends Plugin {
 
     @Override
     protected void handleOnDestroy() {
-        worker.execute(this::closeEngine);
-        worker.shutdown();
+        worker.close(this::closeEngine);
         super.handleOnDestroy();
     }
 }
