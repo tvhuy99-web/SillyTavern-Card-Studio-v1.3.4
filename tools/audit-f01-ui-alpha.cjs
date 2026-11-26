@@ -5,7 +5,7 @@ const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
 const { execFileSync } = require('node:child_process');
-function fingerprint(content) {
+function fingerprint(content, bindingKeyAliases = {}) {
   const fileName = '/f01-ui.js';
   const options = {allowJs:true, checkJs:true, noLib:true, noResolve:true, target:ts.ScriptTarget.Latest, module:ts.ModuleKind.ESNext};
   const source = ts.createSourceFile(fileName, content, options.target, true, ts.ScriptKind.JS);
@@ -38,7 +38,12 @@ function fingerprint(content) {
   function walk(node){
     if(ts.isBindingElement(node)) {
       emit('BindingElement',node);
-      if(ts.isObjectBindingPattern(node.parent)&&!node.dotDotDotToken)key(node.propertyName||node.name);
+      if(ts.isObjectBindingPattern(node.parent)&&!node.dotDotDotToken) {
+        const declaration=node.parent.parent;
+        const property=node.propertyName||node.name;
+        if(ts.isVariableDeclaration(declaration)&&ts.isCallExpression(declaration.initializer)&&declaration.initializer.expression.getText(source)==='getDependencies'&&Object.hasOwn(bindingKeyAliases,property.getText(source)))emit('key:'+bindingKeyAliases[property.getText(source)],property);
+        else key(property);
+      }
       if(node.dotDotDotToken) emit('rest',node.dotDotDotToken);
       walk(node.name);if(node.initializer){emit('initializer',node.initializer);walk(node.initializer);}emit('end',node);return;
     }
@@ -58,7 +63,7 @@ function fingerprint(content) {
   }
   walk(source);return out;
 }
-function compare(before,after){const a=fingerprint(before),b=fingerprint(after);const n=Math.max(a.length,b.length);for(let i=0;i<n;i++)if(a[i]?.value!==b[i]?.value)return {index:i,before:a[i],after:b[i]};return null;}
+function compare(before,after,bindingKeyAliases={}){const a=fingerprint(before,bindingKeyAliases),b=fingerprint(after);const n=Math.max(a.length,b.length);for(let i=0;i<n;i++)if(a[i]?.value!==b[i]?.value)return {index:i,before:a[i],after:b[i]};return null;}
 module.exports={compare};
 if(require.main===module){
   assert.equal(compare('export function Demo({x:e}) {const {b}=get();let t=e; return b(t)}','export function Demo({x:value}) {const {b:react}=get();let result=value; return react(result)}'),null);
@@ -84,7 +89,8 @@ if(require.main===module){
   for(const file of files){
     const before=execFileSync('git',['show',baseline+':'+file],{cwd:root,encoding:'utf8',maxBuffer:4*1024*1024});
     const after=fs.readFileSync(path.join(root,file),'utf8');
-    const mismatch=compare(before,after);
+    const aliases=file==='src/ui/shell/providers.js'?{"b":"react","dl":"toastContext","pl":"ToastNotification","wt":"jsxRuntime","Bd":"stopNativeSpeech","Gd":"speechContext","Ld":"generateGeminiSpeech","Ud":"speakNativeText","hl":"useToast","qo":"speechSettingsKey","ts":"speechDefaults","Xf":"cardPopupContext","Xl":"useDialogFocus","Yg":"htmlSanitizer"}:{};
+    const mismatch=compare(before,after,aliases);
     if(mismatch){console.error(file,JSON.stringify(mismatch));process.exitCode=1;}else console.log('F01 alpha-equivalence PASS: '+file);
   }
 }

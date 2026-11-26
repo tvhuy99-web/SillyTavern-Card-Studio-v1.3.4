@@ -6,10 +6,10 @@ export function createToastProvider(getDependencies) {
     children: children
   }) {
     const {
-      b: react,
-      dl: toastContext,
-      pl: ToastNotification,
-      wt: jsxRuntime
+      react,
+      toastContext,
+      ToastNotification,
+      jsxRuntime
     } = getDependencies();
     let [toasts, setToasts] = (0, react.useState)([]);
     let showToast = (0, react.useCallback)((message, type = "info") => {
@@ -62,15 +62,15 @@ export function createSpeechProvider(getDependencies) {
   }) {
     const {
       settingsStorage = globalThis.localStorage,
-      Bd: stopNativeSpeech,
-      Gd: speechContext,
-      Ld: generateGeminiSpeech,
-      Ud: speakNativeText,
-      b: react,
-      hl: useToast,
-      qo: speechSettingsKey,
-      ts: speechDefaults,
-      wt: jsxRuntime
+      stopNativeSpeech,
+      speechContext,
+      generateGeminiSpeech,
+      speakNativeText,
+      react,
+      useToast,
+      speechSettingsKey,
+      speechDefaults,
+      jsxRuntime
     } = getDependencies();
     let [settings, setSettings] = (0, react.useState)((() => {
       try {
@@ -290,11 +290,11 @@ export function createCardPopupProvider(getDependencies) {
     children: children
   }) {
     const {
-      Xf: cardPopupContext,
-      Xl: useDialogFocus,
-      Yg: htmlSanitizer,
-      b: react,
-      wt: jsxRuntime
+      cardPopupContext,
+      useDialogFocus,
+      htmlSanitizer,
+      react,
+      jsxRuntime
     } = getDependencies();
     let [isOpen, setIsOpen] = (0, react.useState)(false);
     let [html, setHtml] = (0, react.useState)("");

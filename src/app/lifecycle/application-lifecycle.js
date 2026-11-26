@@ -1,7 +1,7 @@
 // Application lifecycle owner: ErrorBoundary, global error hunters, and InitialLoader.
 // Dependency getters preserve late binding with the host.
 export function createApplicationLifecycle(dependencies = {}) {
-  class ErrorBoundary extends dependencies.b.Component {
+  class ErrorBoundary extends dependencies.react.Component {
     state = { hasError: false, error: null };
 
     static getDerivedStateFromError(error) {
@@ -10,7 +10,7 @@ export function createApplicationLifecycle(dependencies = {}) {
 
     componentDidCatch(error, info) {
       try {
-        (0, dependencies.qu)(
+        (0, dependencies.dispatchSystemLog)(
           'error',
           'system',
           `React Render Crash: ${error.message}`,
@@ -26,47 +26,47 @@ export function createApplicationLifecycle(dependencies = {}) {
       if (!this.state.hasError) {
         return this.props.children || null;
       }
-      return (0, dependencies.wt.jsx)('div', {
+      return (0, dependencies.jsxRuntime.jsx)('div', {
         role: 'alert',
         className: 'min-h-screen flex items-center justify-center bg-slate-900 text-slate-200 p-6',
-        children: (0, dependencies.wt.jsxs)('div', {
+        children: (0, dependencies.jsxRuntime.jsxs)('div', {
           className: 'max-w-md w-full bg-slate-800 border border-red-500/50 rounded-xl p-6 shadow-2xl',
           children: [
-            (0, dependencies.wt.jsxs)('div', {
+            (0, dependencies.jsxRuntime.jsxs)('div', {
               className: 'flex items-center gap-3 text-red-400 mb-4',
               children: [
-                (0, dependencies.wt.jsx)('svg', {
+                (0, dependencies.jsxRuntime.jsx)('svg', {
                   xmlns: 'http://www.w3.org/2000/svg',
                   className: 'h-8 w-8',
                   fill: 'none',
                   viewBox: '0 0 24 24',
                   stroke: 'currentColor',
                   'aria-hidden': 'true',
-                  children: (0, dependencies.wt.jsx)('path', {
+                  children: (0, dependencies.jsxRuntime.jsx)('path', {
                     strokeLinecap: 'round',
                     strokeLinejoin: 'round',
                     strokeWidth: '2',
                     d: 'M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z',
                   }),
                 }),
-                (0, dependencies.wt.jsx)('h2', {
+                (0, dependencies.jsxRuntime.jsx)('h2', {
                   className: 'text-xl font-bold',
                   children: 'Hệ thống đã gặp sự cố',
                 }),
               ],
             }),
-            (0, dependencies.wt.jsx)('p', {
+            (0, dependencies.jsxRuntime.jsx)('p', {
               className: 'text-slate-400 mb-4 text-sm',
               children: 'Một lỗi nghiêm trọng đã xảy ra trong quá trình hiển thị giao diện. Lỗi này đã được ghi lại vào Bảng điều khiển Hệ thống.',
             }),
-            (0, dependencies.wt.jsx)('div', {
+            (0, dependencies.jsxRuntime.jsx)('div', {
               className: 'bg-slate-950 p-3 rounded border border-slate-700 mb-6 overflow-auto max-h-32',
-              children: (0, dependencies.wt.jsx)('code', {
+              children: (0, dependencies.jsxRuntime.jsx)('code', {
                 className: 'text-xs font-mono text-red-300',
                 children: this.state.error?.message || 'Unknown Error',
               }),
             }),
-            (0, dependencies.wt.jsx)('button', {
+            (0, dependencies.jsxRuntime.jsx)('button', {
               className: 'w-full bg-sky-600 hover:bg-sky-700 text-white font-bold py-2 px-4 rounded-lg ',
               onClick: () => window.location.reload(),
               children: 'Tải lại trang',
@@ -103,7 +103,7 @@ export function createApplicationLifecycle(dependencies = {}) {
 
     window.onerror = (message, source, line, column, error) => {
       const stack = error?.stack || `${source}:${line}:${column}`;
-      (0, dependencies.qu)(
+      (0, dependencies.dispatchSystemLog)(
         'error',
         'diagnostic',
         formatSystemDiagnosticReport({
@@ -135,7 +135,7 @@ export function createApplicationLifecycle(dependencies = {}) {
           message = String(reason);
         }
       }
-      (0, dependencies.qu)(
+      (0, dependencies.dispatchSystemLog)(
         'error',
         'diagnostic',
         formatSystemDiagnosticReport({
@@ -167,7 +167,7 @@ export function createApplicationLifecycle(dependencies = {}) {
           }
         }).join(' ');
         const errorArg = args.find(arg => arg instanceof Error);
-        (0, dependencies.qu)('error', 'console', formatted, errorArg ? errorArg.stack : undefined);
+        (0, dependencies.dispatchSystemLog)('error', 'console', formatted, errorArg ? errorArg.stack : undefined);
       } catch {
         // Ignore forwarding errors.
       } finally {
@@ -181,7 +181,7 @@ export function createApplicationLifecycle(dependencies = {}) {
       try {
         isForwardingConsole = true;
         const formatted = args.map(arg => (typeof arg === 'object' ? JSON.stringify(arg) : String(arg))).join(' ');
-        (0, dependencies.qu)('warn', 'console', formatted);
+        (0, dependencies.dispatchSystemLog)('warn', 'console', formatted);
       } catch {
         // Ignore forwarding errors.
       } finally {
@@ -204,7 +204,7 @@ export function createApplicationLifecycle(dependencies = {}) {
           ) {
             const url = target.src || target.href || 'unknown source';
             const tagName = target.tagName.toLowerCase();
-            (0, dependencies.qu)(
+            (0, dependencies.dispatchSystemLog)(
               'error',
               'diagnostic',
               formatSystemDiagnosticReport({
@@ -232,32 +232,32 @@ export function createApplicationLifecycle(dependencies = {}) {
       updateActiveCharacter,
       activeCharacterFileName,
       isLoading: charactersLoading,
-    } = (0, dependencies.kc)();
+    } = (0, dependencies.characterStore)();
     const {
       reloadLorebooks,
       lorebooks,
       isLoading: lorebooksLoading,
-    } = (0, dependencies.sn)();
-    const { reloadPersonas } = (0, dependencies.Au)();
-    const { reloadPresets } = (0, dependencies.bu)();
+    } = (0, dependencies.lorebookStore)();
+    const { reloadPersonas } = (0, dependencies.personaStore)();
+    const { reloadPresets } = (0, dependencies.presetStore)();
 
     let toastApi = null;
-    if (typeof dependencies.hl === 'function') {
+    if (typeof dependencies.useToast === 'function') {
       try {
-        toastApi = dependencies.hl();
+        toastApi = dependencies.useToast();
       } catch {
         toastApi = null;
       }
     }
 
-    (0, dependencies.b.useEffect)(() => {
+    (0, dependencies.react.useEffect)(() => {
       reloadCharacters();
       reloadLorebooks();
       reloadPersonas();
       reloadPresets();
     }, [reloadCharacters, reloadLorebooks, reloadPersonas, reloadPresets]);
 
-    (0, dependencies.b.useEffect)(() => {
+    (0, dependencies.react.useEffect)(() => {
       const pending = dependencies.__stsBackupRestoreService?.getPendingRecovery?.();
       if (!pending) return;
 
@@ -267,7 +267,7 @@ export function createApplicationLifecycle(dependencies = {}) {
         'hãy mở Cài đặt → Sao lưu & Khôi phục để thử áp dụng lại cài đặt hoặc hoàn tác IndexedDB.';
 
       try {
-        dependencies.qu?.('warn', 'persistence', warningMessage, undefined, {
+        dependencies.dispatchSystemLog?.('warn', 'persistence', warningMessage, undefined, {
           journalId: pending.id || null,
           status: pending.status || null,
           idbCommitted: Boolean(pending.idbCommitted),
@@ -295,7 +295,7 @@ export function createApplicationLifecycle(dependencies = {}) {
       }
     }, []);
 
-    (0, dependencies.b.useEffect)(() => {
+    (0, dependencies.react.useEffect)(() => {
       if (charactersLoading || lorebooksLoading) return;
       const availableLorebooks = new Set(lorebooks.map(book => book.name));
       characters.forEach(character => {
