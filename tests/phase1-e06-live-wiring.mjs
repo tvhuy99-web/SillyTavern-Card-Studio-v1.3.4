@@ -281,15 +281,15 @@ import { createMemoryStorage } from '../src/providers/proxy/persistence.js';
   };
 
   const deps = {
-    b: react,
-    ol,
-    kc: () => ({ characters: [{ fileName: 'hero.png', card: { name: 'Hero' } }], isLoading: false }),
-    bu: () => ({ presets: [{ name: 'Default', prompts: [] }], isLoading: false }),
-    Au: () => ({ personas: [], isLoading: false }),
-    hl: () => ({ showToast: (msg, level) => toasts.push([msg, level]) }),
-    Is: s => String(s || '').slice(0, 50),
-    yh: () => ({}),
-    jt: { default: { parse: JSON.parse } },
+    react: react,
+    sessionStore: ol,
+    characterStore: () => ({ characters: [{ fileName: 'hero.png', card: { name: 'Hero' } }], isLoading: false }),
+    presetStore: () => ({ presets: [{ name: 'Default', prompts: [] }], isLoading: false }),
+    personaStore: () => ({ personas: [], isLoading: false }),
+    useToast: () => ({ showToast: (msg, level) => toasts.push([msg, level]) }),
+    truncateText: s => String(s || '').slice(0, 50),
+    applySamplingOverrides: () => ({}),
+    relaxedJson: { default: { parse: JSON.parse } },
     __stsRuntimeState: {
       getSessionRevision: () => 42,
       isBusy: () => false,

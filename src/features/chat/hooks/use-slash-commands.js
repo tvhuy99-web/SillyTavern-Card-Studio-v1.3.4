@@ -61,9 +61,9 @@ async function runSlashScript(scriptText, context, dependencies) {
     let resolvedCommand = rawCommand
       .replace(/%%PIPE%%/g, '|')
       .replace(/{{\s*pipe\s*}}/gi, executionState.lastResult);
-    resolvedCommand = dependencies.ip(resolvedCommand, context);
+    resolvedCommand = dependencies.expandSlashMacros(resolvedCommand, context);
 
-    const tokens = dependencies.tp(resolvedCommand);
+    const tokens = dependencies.tokenizeSlashCommand(resolvedCommand);
     if (tokens.length === 0) {
       continue;
     }
@@ -81,7 +81,7 @@ async function runSlashScript(scriptText, context, dependencies) {
       let conditionResult = false;
       if (isCurrentlyExecutable && args.length >= 3) {
         try {
-          conditionResult = dependencies.op(args[0], args[1], args[2]);
+          conditionResult = dependencies.compareSlashValues(args[0], args[1], args[2]);
         } catch {}
       }
       executionState.flowStack.push({
@@ -107,7 +107,7 @@ async function runSlashScript(scriptText, context, dependencies) {
         let conditionResult = false;
         if (args.length >= 3) {
           try {
-            conditionResult = dependencies.op(args[0], args[1], args[2]);
+            conditionResult = dependencies.compareSlashValues(args[0], args[1], args[2]);
           } catch {}
         }
         if (conditionResult) {
@@ -149,7 +149,7 @@ async function runSlashScript(scriptText, context, dependencies) {
       continue;
     }
 
-    const commandHandler = dependencies.sp[commandName];
+    const commandHandler = dependencies.slashCommandHandlers[commandName];
     if (commandHandler) {
       try {
         const result = await commandHandler(args, context, rawArgsText, executionState);
@@ -185,15 +185,15 @@ export function useSlashCommands(
     showPopup,
   },
 ) {
-  const { setVariables, setQuickReplies, setIsInputLocked } = dependencies.ol();
+  const { setVariables, setQuickReplies, setIsInputLocked } = dependencies.sessionStore();
 
-  const executeSlashCommands = dependencies.b.useCallback(async scriptInput => {
+  const executeSlashCommands = dependencies.react.useCallback(async scriptInput => {
     if (!scriptInput.trim()) {
       return '';
     }
 
     const executionContext = {
-      variables: dependencies.ol.getState().variables,
+      variables: dependencies.sessionStore.getState().variables,
       setVariables: nextVariables => {
         setVariables(nextVariables);
         saveSession({ variables: nextVariables });

@@ -27,22 +27,22 @@ export function useSessionPersistence(dependencies, sessionId) {
     arenaModelId,
     arenaProvider,
     arenaUserProfileId,
-  } = (0, dependencies.ol)();
-  const { characters, isLoading: charactersLoading } = (0, dependencies.kc)();
-  const { presets, isLoading: presetsLoading } = (0, dependencies.bu)();
-  const { personas, isLoading: personasLoading } = (0, dependencies.Au)();
-  const { showToast } = (0, dependencies.hl)();
-  const loadedRef = (0, dependencies.b.useRef)(false);
+  } = (0, dependencies.sessionStore)();
+  const { characters, isLoading: charactersLoading } = (0, dependencies.characterStore)();
+  const { presets, isLoading: presetsLoading } = (0, dependencies.presetStore)();
+  const { personas, isLoading: personasLoading } = (0, dependencies.personaStore)();
+  const { showToast } = (0, dependencies.useToast)();
+  const loadedRef = (0, dependencies.react.useRef)(false);
 
-  const autosave = (0, dependencies.b.useMemo)(
+  const autosave = (0, dependencies.react.useMemo)(
     () => (0, dependencies.__stsCreateSessionSaveCoordinator)({
       sessionId,
       initialRevision: dependencies.__stsRuntimeState.getSessionRevision(),
-      getState: () => dependencies.ol.getState(),
+      getState: () => dependencies.sessionStore.getState(),
       captureSnapshot: (state, overrides) => dependencies.__stsSessionPersistence.createSessionSnapshot(
         state,
         overrides,
-        { snippet: dependencies.Is, now: Date.now },
+        { snippet: dependencies.truncateText, now: Date.now },
       ),
       queue: dependencies.__stsSessionWriteQueue,
       getRevision: dependencies.__stsRuntimeState.getSessionRevision,
@@ -62,7 +62,7 @@ export function useSessionPersistence(dependencies, sessionId) {
     [sessionId],
   );
 
-  (0, dependencies.b.useEffect)(() => {
+  (0, dependencies.react.useEffect)(() => {
     if (!sessionId) {
       resetStore();
       setLoading(false);
@@ -70,9 +70,9 @@ export function useSessionPersistence(dependencies, sessionId) {
       return;
     }
 
-    if (sessionId !== dependencies.ol.getState().sessionId) {
+    if (sessionId !== dependencies.sessionStore.getState().sessionId) {
       loadedRef.current = false;
-      if (dependencies.ol.getState().sessionId) {
+      if (dependencies.sessionStore.getState().sessionId) {
         dependencies.__stsRuntimeState.invalidateSession('session-route-change');
       }
     }
@@ -83,7 +83,7 @@ export function useSessionPersistence(dependencies, sessionId) {
     }
 
     let cancelled = false;
-    if (!loadedRef.current || sessionId !== dependencies.ol.getState().sessionId) {
+    if (!loadedRef.current || sessionId !== dependencies.sessionStore.getState().sessionId) {
       (async () => {
         if (!loadedRef.current) setLoading(true);
         setError(null);
@@ -137,7 +137,7 @@ export function useSessionPersistence(dependencies, sessionId) {
               {},
               hydratedCard,
               String(record.chatHistory?.[0]?.originalRawContent || record.chatHistory?.[0]?.content || hydratedCard?.first_mes || ''),
-              text => dependencies.jt.default.parse(text),
+              text => dependencies.relaxedJson.default.parse(text),
             );
             if (Object.keys(seed.variables).length) {
               record.variables = seed.variables;
@@ -162,7 +162,7 @@ export function useSessionPersistence(dependencies, sessionId) {
             card: hydratedCard,
             preset: foundPreset,
             persona: foundPersona,
-            mergedSettings: (0, dependencies.yh)(hydratedCard, foundPreset),
+            mergedSettings: (0, dependencies.applySamplingOverrides)(hydratedCard, foundPreset),
             messages: record.chatHistory,
             variables: record.variables || {},
             extensionSettings: record.extensionSettings || {},
@@ -230,7 +230,7 @@ export function useSessionPersistence(dependencies, sessionId) {
     showToast,
   ]);
 
-  (0, dependencies.b.useEffect)(() => {
+  (0, dependencies.react.useEffect)(() => {
     const sync = dependencies.__stsCrossTabSync;
     if (!sessionId || !sync || typeof sync.subscribe !== 'function') return;
 
@@ -260,12 +260,12 @@ export function useSessionPersistence(dependencies, sessionId) {
     };
   }, [sessionId, autosave, showToast]);
 
-  const saveSession = (0, dependencies.b.useCallback)(
+  const saveSession = (0, dependencies.react.useCallback)(
     (overrides = {}) => autosave.flush({ force: true, overrides }),
     [autosave],
   );
 
-  (0, dependencies.b.useEffect)(() => {
+  (0, dependencies.react.useEffect)(() => {
     if (loadedRef.current && autosave.markDirty()) {
       return () => autosave.cancelTimer();
     }
@@ -296,7 +296,7 @@ export function useSessionPersistence(dependencies, sessionId) {
     autosave,
   ]);
 
-  (0, dependencies.b.useEffect)(
+  (0, dependencies.react.useEffect)(
     () => () => {
       if (!dependencies.__stsBackupRestoreService?.isRestoreInProgress?.()) {
         autosave.flush().catch(error => console.error('Final session save failed:', error));
@@ -306,15 +306,15 @@ export function useSessionPersistence(dependencies, sessionId) {
     [autosave],
   );
 
-  const changePreset = (0, dependencies.b.useCallback)(
+  const changePreset = (0, dependencies.react.useCallback)(
     async presetName => {
-      const state = dependencies.ol.getState();
+      const state = dependencies.sessionStore.getState();
       if (!state.card) return;
       const nextPreset = presets.find(item => item.name === presetName);
       if (nextPreset) {
         setSessionData({
           preset: nextPreset,
-          mergedSettings: (0, dependencies.yh)(state.card, nextPreset),
+          mergedSettings: (0, dependencies.applySamplingOverrides)(state.card, nextPreset),
         });
         await saveSession({ preset: nextPreset });
         console.log(`[Session] Live Tuned to preset: ${nextPreset.name}`);
@@ -323,7 +323,7 @@ export function useSessionPersistence(dependencies, sessionId) {
     [presets, setSessionData, saveSession],
   );
 
-  const changePersona = (0, dependencies.b.useCallback)(
+  const changePersona = (0, dependencies.react.useCallback)(
     async personaId => {
       const nextPersona = (personaId && personas.find(item => item.id === personaId)) || null;
       setSessionData({ persona: nextPersona });

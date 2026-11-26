@@ -37,7 +37,7 @@ let revision=1, pendingResolve, pendingReject, writes=[];
 let state={sessionId:'a',messages:[{role:'user',content:'u'},{role:'model',content:'m'}],longTermSummaries:[],summaryQueue:[],card:{name:'A'},isSummarizing:false};
 state.setSessionData=patch=>{writes.push(patch);Object.assign(state,patch)};
 const ol=()=>state;ol.getState=()=>state;
-const deps={ol,b:{useCallback:fn=>fn},__stsRuntimeState:{getSessionRevision:()=>revision},os:()=>({summarization_chunk_size:1}),qu:()=>{},wd:()=>new Promise((resolve,reject)=>{pendingResolve=resolve;pendingReject=reject})};
+const deps={sessionStore:ol,react:{useCallback:fn=>fn},__stsRuntimeState:{getSessionRevision:()=>revision},getSmartContextSettings:()=>({summarization_chunk_size:1}),dispatchSystemLog:()=>{},generateSummary:()=>new Promise((resolve,reject)=>{pendingResolve=resolve;pendingReject=reject})};
 let hook=useSmartContext(deps);const old=hook.triggerSummarization();await Promise.resolve();assert.equal(state.isSummarizing,true);revision++;state={...state,sessionId:'b',isSummarizing:false,summaryQueue:[],longTermSummaries:[]};const count=writes.length;pendingResolve('stale');await old;assert.equal(writes.length,count);assert.deepEqual(state.longTermSummaries,[]);
 hook=useSmartContext(deps);const current=hook.triggerSummarization();await Promise.resolve();pendingResolve('summary');await current;assert.deepEqual(state.longTermSummaries,['summary']);assert.equal(state.isSummarizing,false);
 const regenerating=useSmartContext(deps).handleRegenerateSummary(0);await Promise.resolve();revision++;state={...state,sessionId:'b',longTermSummaries:['replacement']};pendingReject(Error('old error'));await regenerating;assert.deepEqual(state.longTermSummaries,['replacement']);

@@ -10,22 +10,22 @@ import { createHostMethodRouter } from '../../../runtime/card-runtime/host/metho
 import { createRuntimePromptBuilder } from '../../../runtime/card-runtime/host/runtime-prompt.js';
 import { createRuntimeMessageHandler, subscribeRuntimeSession, subscribeRuntimeLorebooks } from '../../../runtime/card-runtime/host/runtime-events.js';
 
-/** Compatibility adapter. Only this boundary knows recovered binding names. */
+/** Composition adapter from the chat session to the runtime bridge. */
 export function useCardRuntime(dependencies, options) {
   return useRuntimeBridge({
-    react: dependencies.b, sessionStore: dependencies.ol, lorebookStore: dependencies.sn, characterStore: dependencies.kc,
-    personaStore: dependencies.Au, presetStore: dependencies.bu, runtimeState: dependencies.__stsRuntimeState,
-    frames: dependencies.Kh, validatePayload: dependencies._h, clone: dependencies.xh, turnPolicy: dependencies.__stsChatTurnPolicy,
-    countTurns: dependencies.gh, formatHistory: dependencies.Eh, resolveIndex: dependencies.wh, resolveRange: dependencies.kh, normalizeScope: dependencies.Nh,
-    variableStorageKey: dependencies.Ah, webStorageKey: dependencies.Ih, readRecord: dependencies.jh, writeRecord: dependencies.Dh,
-    readContext: dependencies.Xh, publish: dependencies.Wh, readText: dependencies.Vh, parseRegex: dependencies.As,
-    resolvePreset: dependencies.Zh, baseSections: dependencies.vd, buildPrompt: dependencies.xd, readContextSettings: dependencies.os,
-    writeGlobalVariables: dependencies.__stsWriteGlobalVariables, generateOnce: dependencies.Sd, stream: dependencies.Cd,
-    emit: dependencies.Jh, maxEntries: dependencies.Hh, parseWorldbook: dependencies.Lt, safeName: dependencies.$h,
-    toChatMessage: dependencies.Ch, normalizeRole: dependencies.Sh, isRecord: dependencies.vh, findCharacter: dependencies.zh,
-    describeCharacter: dependencies.Gh, normalizeCharacter: dependencies.qh, mergeSettings: dependencies.yh,
-    sessions: dependencies.__stsRepositories.sessions, listProxyModels: dependencies.Ws, gateway: dependencies.__stsGenerationGateway,
-    diagnostics: { create: dependencies.Lh, normalize: dependencies.Fh, format: dependencies.Bh, append: dependencies.Uh, code: dependencies.Yh },
+    react: dependencies.react, sessionStore: dependencies.sessionStore, lorebookStore: dependencies.lorebookStore, characterStore: dependencies.characterStore,
+    personaStore: dependencies.personaStore, presetStore: dependencies.presetStore, runtimeState: dependencies.__stsRuntimeState,
+    frames: dependencies.getActiveCardFrames, validatePayload: dependencies.assertPayloadSize, clone: dependencies.cloneRuntimeValue, turnPolicy: dependencies.__stsChatTurnPolicy,
+    countTurns: dependencies.countModelMessages, formatHistory: dependencies.toRuntimeMessages, resolveIndex: dependencies.resolveMessageIndex, resolveRange: dependencies.resolveMessageRange, normalizeScope: dependencies.normalizeRuntimeScope,
+    variableStorageKey: dependencies.runtimeVariableStorageKey, webStorageKey: dependencies.runtimeWebStorageKey, readRecord: dependencies.readRuntimeRecord, writeRecord: dependencies.writeRuntimeRecord,
+    readContext: dependencies.buildRuntimeScope, publish: dependencies.broadcastRuntimeMessage, readText: dependencies.readTextPayload, parseRegex: dependencies.parseRelaxedJson,
+    resolvePreset: dependencies.resolveGenerationPreset, baseSections: dependencies.buildBaseSections, buildPrompt: dependencies.assemblePrompt, readContextSettings: dependencies.getSmartContextSettings,
+    writeGlobalVariables: dependencies.__stsWriteGlobalVariables, generateOnce: dependencies.generateOnce, stream: dependencies.streamGeneration,
+    emit: dependencies.emitRuntimeEvent, maxEntries: dependencies.DEFAULT_RPC_TIMEOUT_MS, parseWorldbook: dependencies.parseLorebookFile, safeName: dependencies.normalizeImportedName,
+    toChatMessage: dependencies.toRuntimeMessage, normalizeRole: dependencies.toInternalRole, isRecord: dependencies.isRuntimeRecordObject, findCharacter: dependencies.findCharacter,
+    describeCharacter: dependencies.getCharacterSummary, normalizeCharacter: dependencies.normalizeImportedCharacter, mergeSettings: dependencies.applySamplingOverrides,
+    sessions: dependencies.__stsRepositories.sessions, listProxyModels: dependencies.fetchProxyModels, gateway: dependencies.__stsGenerationGateway,
+    diagnostics: { create: dependencies.createDiagnostic, normalize: dependencies.normalizeDiagnostic, format: dependencies.formatDiagnostic, append: dependencies.appendDiagnostic, code: dependencies.classifyRuntimeError },
   }, options);
 }
 

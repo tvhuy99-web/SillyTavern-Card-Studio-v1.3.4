@@ -27,7 +27,7 @@ const first=embedding.syncIndex('card',[]);await assert.rejects(embedding.syncIn
 
 let state={sessionId:'s',messages:[{id:'u',role:'user',content:'before'},{id:'m',role:'model',content:'reply'}],longTermSummaries:[],summaryQueue:[],isSummarizing:false,card:{name:'C'}};
 state.setSessionData=next=>{state={...state,...next};};const ol=()=>state;ol.getState=()=>state;
-let summary=defer(),count=0,signal;const deps={ol,b:{useCallback:fn=>fn},__stsRuntimeState:runtimeState,os:()=>({summarization_chunk_size:1}),qu(){},wd:(_history,_name,_prompt,s)=>{signal=s;count++;return summary.promise;}};
+let summary=defer(),count=0,signal;const deps={sessionStore:ol,react:{useCallback:fn=>fn},__stsRuntimeState:runtimeState,getSmartContextSettings:()=>({summarization_chunk_size:1}),dispatchSystemLog(){},generateSummary:(_history,_name,_prompt,s)=>{signal=s;count++;return summary.promise;}};
 const pending=useSmartContext(deps).triggerSummarization();await Promise.resolve();await useSmartContext(deps).triggerSummarization();assert.equal(count,1);assert.equal(runtimeState.size(),1);
 state={...state,messages:[{...state.messages[0],content:'edited'},state.messages[1]]};summary.resolve('obsolete');await pending;assert.deepEqual(state.longTermSummaries,[]);assert.equal(runtimeState.size(),0);
 summary=defer();const canceled=useSmartContext(deps).triggerSummarization();await Promise.resolve();runtimeState.abortAll();assert.ok(signal.aborted);await canceled;assert.equal(state.isSummarizing,false);assert.equal(state.summaryQueue[0].status,'failed');summary.resolve('late');await Promise.resolve();assert.deepEqual(state.longTermSummaries,[]);

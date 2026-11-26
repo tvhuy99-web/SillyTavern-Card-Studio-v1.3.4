@@ -31,13 +31,13 @@ export function createStoryAdvance({ readState, getRevision, sendMessage, saveSe
 }
 
 export function createChatSessionHook(dependencies) {
-  const { useCallback, useEffect } = dependencies.b;
+  const { useCallback, useEffect } = dependencies.react;
   return function useChatSession(sessionId) {
-    const state = dependencies.ol();
-    const diagnostics = dependencies.mh();
-    dependencies.sn(); // Retain the original catalog subscription.
+    const state = dependencies.sessionStore();
+    const diagnostics = dependencies.useDiagnostics();
+    dependencies.lorebookStore(); // Retain the original catalog subscription.
     const { saveSession, changePreset, changePersona } = useSessionPersistence(dependencies, sessionId);
-    const conversation = dependencies.fh();
+    const conversation = dependencies.useConversation();
     const { sendMessage, stopGeneration, interactiveError, handleUserDecision, manualMythicTrigger, handleArenaSelection, handleArenaRetry } = conversation;
     const { isSummarizing, triggerSmartContext, handleRegenerateSummary, handleRetryFailedTask, queueLength, summaryQueue } = useSmartContext(dependencies);
     const { deleteMessage, deleteOneMessage, deleteLastTurn, editMessage } = useMessageHistory(dependencies, { saveSession, card: state.card, mergedSettings: state.mergedSettings, logSystemMessage: diagnostics.logSystemMessage, isBusy: state.isLoading || isSummarizing });
@@ -51,11 +51,11 @@ export function createChatSessionHook(dependencies) {
     const { handleScriptButtonClick, isInputLocked, isAutoLooping, setIsAutoLooping, quickReplies, scriptButtons } = useCardRuntime(dependencies, { logSystemMessage: diagnostics.logSystemMessage, executeSlashCommands, saveSession, changePreset });
     const isStoryMode = state.storyQueue && state.storyQueue.length > 0;
     const sessionRevision = dependencies.__stsRuntimeState.getSessionRevision();
-    const advanceStoryChunk = useCallback(createStoryAdvance({ readState: () => dependencies.ol.getState(), getRevision: dependencies.__stsRuntimeState.getSessionRevision, sendMessage, saveSession, expectedSessionId: sessionId, expectedRevision: sessionRevision, isSummarizing: () => isSummarizing || dependencies.ol.getState().isSummarizing }), [sessionId, sessionRevision, state.storyQueue, state.isLoading, isSummarizing, sendMessage, saveSession, state.setStoryQueue]);
+    const advanceStoryChunk = useCallback(createStoryAdvance({ readState: () => dependencies.sessionStore.getState(), getRevision: dependencies.__stsRuntimeState.getSessionRevision, sendMessage, saveSession, expectedSessionId: sessionId, expectedRevision: sessionRevision, isSummarizing: () => isSummarizing || dependencies.sessionStore.getState().isSummarizing }), [sessionId, sessionRevision, state.storyQueue, state.isLoading, isSummarizing, sendMessage, saveSession, state.setStoryQueue]);
     useEffect(() => {
       if (state.isLoading || isSummarizing || !state.preset || state.visualState.disableInteractiveMode) return;
-      const settings = dependencies.os(), depth = settings.context_depth || 24, chunkSize = summaryChunkSize(settings, state);
-      const turns = dependencies.gh(state.messages), summarizedTurns = state.longTermSummaries.length * chunkSize;
+      const settings = dependencies.getSmartContextSettings(), depth = settings.context_depth || 24, chunkSize = summaryChunkSize(settings, state);
+      const turns = dependencies.countModelMessages(state.messages), summarizedTurns = state.longTermSummaries.length * chunkSize;
       if (Math.max(0, turns - summarizedTurns) >= depth) triggerSmartContext();
     }, [state.messages.length, state.isLoading, isSummarizing, state.preset, state.longTermSummaries.length, triggerSmartContext, state.visualState.disableInteractiveMode]);
     useEffect(() => {
