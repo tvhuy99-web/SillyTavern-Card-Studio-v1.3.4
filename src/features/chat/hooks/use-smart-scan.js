@@ -7,10 +7,10 @@ function dispatchToastError(message) {
 }
 
 export function useSmartScan(dependencies, fallbackCard) {
-  const [isScanning, setIsScanning] = dependencies.b.useState(false);
-  const { lorebooks } = dependencies.sn();
+  const [isScanning, setIsScanning] = dependencies.react.useState(false);
+  const { lorebooks } = dependencies.lorebookStore();
 
-  const scanInput = dependencies.b.useCallback(request => dependencies.__stsScanWorldInfo(
+  const scanInput = dependencies.react.useCallback(request => dependencies.__stsScanWorldInfo(
     {
       scanInput: request?.scanInput ?? '',
       worldInfoState: request?.state?.worldInfoState ?? {},
@@ -28,12 +28,12 @@ export function useSmartScan(dependencies, fallbackCard) {
       setScanning: setIsScanning,
     },
     {
-      getSettings: dependencies.as,
-      embed: dependencies.$c,
-      loadIndex: dependencies.Lc,
-      getIndex: dependencies.Fc,
-      cosine: dependencies.Gc,
-      logSystemMessage: dependencies.qu,
+      getSettings: dependencies.getSmartScanSettings,
+      embed: dependencies.embedQuery,
+      loadIndex: dependencies.loadEmbeddingIndex,
+      getIndex: dependencies.getEmbeddingIndex,
+      cosine: dependencies.cosineSimilarity,
+      logSystemMessage: dependencies.dispatchSystemLog,
       onSemanticError: error => {
         if (error.message?.includes('API Key')) {
           dispatchToastError('Vui lòng cấu hình Gemini API Key trong phần Cài đặt để sử dụng Semantic Search.');
@@ -44,42 +44,42 @@ export function useSmartScan(dependencies, fallbackCard) {
         }
       },
       callSelectionModel: async (promptText, defaultModel) => {
-        const connectionSettings = dependencies.ns();
+        const connectionSettings = dependencies.getConnectionSettings();
         if (connectionSettings.source === 'aistudio') {
           return dependencies.__stsAiStudioToolText(
             promptText,
             connectionSettings.aistudio_tool_model || connectionSettings.aistudio_model || defaultModel,
           );
         }
-        if (dependencies.Cs()) {
-          const proxySettings = dependencies.ns();
-          return dependencies.Ks(
+        if (dependencies.getProxyForTools()) {
+          const proxySettings = dependencies.getConnectionSettings();
+          return dependencies.generateProxyToolText(
             promptText,
             proxySettings.proxy_tool_model || proxySettings.proxy_model || defaultModel,
             proxySettings.proxy_protocol,
           );
         }
-        const response = await dependencies.cl(defaultModel, promptText, { temp: 0 }, dependencies._d);
+        const response = await dependencies.generateGeminiToolText(defaultModel, promptText, { temp: 0 }, dependencies.conversationSafetySettings);
         return response.text || '[]';
       },
-      parseJson: dependencies.As,
-      resolveWorldInfo: dependencies.__stsCreateUidSafeWorldInfoResolver(dependencies.ch),
+      parseJson: dependencies.parseRelaxedJson,
+      resolveWorldInfo: dependencies.__stsCreateUidSafeWorldInfoResolver(dependencies.resolveWorldInfo),
     },
   ), [fallbackCard, lorebooks]);
 
-  const processOutput = dependencies.b.useCallback(async (rawOutput, variables) => {
+  const processOutput = dependencies.react.useCallback(async (rawOutput, variables) => {
     const {
       updatedVariables,
       cleanedText,
       variableLog,
-    } = await dependencies.$u(rawOutput, variables);
+    } = await dependencies.executeUpdateVariableBlock(rawOutput, variables);
 
     const {
       displayContent,
       interactiveHtml,
       interactiveHtmlBlocks,
       diagnosticLog,
-    } = dependencies.gd(
+    } = dependencies.processRegex(
       cleanedText,
       fallbackCard?.extensions?.regex_scripts || [],
       [2],

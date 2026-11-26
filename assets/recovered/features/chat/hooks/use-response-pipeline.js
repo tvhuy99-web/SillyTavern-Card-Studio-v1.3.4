@@ -25,14 +25,14 @@ export function useResponsePipeline(dependencies) {
     card,
     setQuickReplies,
     visualState,
-  } = dependencies.ol();
+  } = dependencies.sessionStore();
 
-  const processAIResponse = dependencies.b.useCallback(async (rawContent, messageId) => {
-    const initialState = dependencies.ol.getState();
+  const processAIResponse = dependencies.react.useCallback(async (rawContent, messageId) => {
+    const initialState = dependencies.sessionStore.getState();
     const initialRevision = dependencies.__stsRuntimeState.getSessionRevision();
 
     const ownsCurrentMessage = () => {
-      const currentState = dependencies.ol.getState();
+      const currentState = dependencies.sessionStore.getState();
       return (
         currentState.sessionId === initialState.sessionId
         && dependencies.__stsRuntimeState.getSessionRevision() === initialRevision
@@ -51,11 +51,11 @@ export function useResponsePipeline(dependencies) {
     let displayContent = rawContent;
     let interactiveHtml = null;
     let interactiveHtmlBlocks = [];
-    const currentVariables = dependencies.ol.getState().variables;
+    const currentVariables = dependencies.sessionStore.getState().variables;
     let updatedVariables = currentVariables;
 
     if (!initialState.visualState.disableInteractiveMode) {
-      const scriptResult = await dependencies.$u(rawContent, currentVariables);
+      const scriptResult = await dependencies.executeUpdateVariableBlock(rawContent, currentVariables);
       if (!ownsCurrentMessage()) {
         return false;
       }
@@ -64,12 +64,12 @@ export function useResponsePipeline(dependencies) {
       displayContent = scriptResult.cleanedText;
 
       const cardRegexScripts = initialState.card?.extensions?.regex_scripts || [];
-      const latestState = dependencies.ol.getState();
-      const regexResult = dependencies.gd(displayContent, cardRegexScripts, [2], {
+      const latestState = dependencies.sessionStore.getState();
+      const regexResult = dependencies.processRegex(displayContent, cardRegexScripts, [2], {
         isMarkdown: true,
         isPrompt: false,
         depth: 0,
-        ...dependencies.Zu(latestState.extensionSettings, latestState.preset),
+        ...dependencies.extractRegexScripts(latestState.extensionSettings, latestState.preset),
         macros: {
           char: latestState.card?.name || 'Character',
           bot: latestState.card?.name || 'Character',
@@ -109,7 +109,7 @@ export function useResponsePipeline(dependencies) {
     };
   }, [card, setVariables, updateMessage, setQuickReplies, visualState.disableInteractiveMode]);
 
-  const createPlaceholderMessage = dependencies.b.useCallback(role => ({
+  const createPlaceholderMessage = dependencies.react.useCallback(role => ({
     id: `msg-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`,
     role,
     content: '...',

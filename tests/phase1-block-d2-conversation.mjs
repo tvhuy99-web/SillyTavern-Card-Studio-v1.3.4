@@ -28,7 +28,7 @@ state={...state,card,messages};gate=defer();const good=mythic('old','a');await P
 let scriptGate=defer(),writes=0;
 state={...state,sessionId:'s',variables:{hp:100},visualState:{},setVariables(){writes++;},setQuickReplies(){writes++;},updateMessage(){writes++;}};
 const ol=()=>state;ol.getState=()=>state;
-const output=useResponsePipeline({ol,b:{useCallback:fn=>fn},__stsRuntimeState:runtimeState,$u:()=>scriptGate.promise,gd:()=>({displayContent:'rendered'}),Zu:()=>({})});
+const output=useResponsePipeline({sessionStore:ol,react:{useCallback:fn=>fn},__stsRuntimeState:runtimeState,executeUpdateVariableBlock:()=>scriptGate.promise,processRegex:()=>({displayContent:'rendered'}),extractRegexScripts:()=>({})});
 const stale=output.processAIResponse('[CHOICE:"attack"]','a');runtimeState.invalidateSession();state={...state,sessionId:'new'};scriptGate.resolve({updatedVariables:{hp:0},cleanedText:'stale'});assert.equal(await stale,false);assert.equal(writes,0);
 scriptGate=defer();const conflict=output.processAIResponse('text','a');state={...state,variables:{hp:88}};scriptGate.resolve({updatedVariables:{hp:0},cleanedText:'stale'});assert.equal(await conflict,false);assert.equal(writes,0);
 console.log('D2 conversation: rewind snapshots, summary invalidation, Mythic ownership and variable-script races PASS');

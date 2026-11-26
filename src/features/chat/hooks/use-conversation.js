@@ -5,26 +5,26 @@ import { useSmartScan } from './use-smart-scan.js';
 // Custom hook composition. Dependencies are supplied by the application host.
 export function createConversationHook(dependencies) {
   return () => {
-    const chatStore = dependencies.ol();
+    const chatStore = dependencies.sessionStore();
     const {
       processAIResponse: runOutputPipeline,
       createPlaceholderMessage,
     } = useResponsePipeline(dependencies);
-    const { lorebooks } = dependencies.sn();
-    const diagnostics = dependencies.mh();
+    const { lorebooks } = dependencies.lorebookStore();
+    const diagnostics = dependencies.useDiagnostics();
     const { scanInput } = useSmartScan(dependencies, chatStore.card);
-    const { showToast } = dependencies.hl();
+    const { showToast } = dependencies.useToast();
 
-    const [interactiveError, setInteractiveError] = dependencies.b.useState({
+    const [interactiveError, setInteractiveError] = dependencies.react.useState({
       hasError: false,
       title: '',
       message: '',
       canIgnore: true,
     });
-    const decisionResolverRef = dependencies.b.useRef(null);
+    const decisionResolverRef = dependencies.react.useRef(null);
 
-    const playSound = dependencies.b.useCallback(soundType => {
-      const { visualState } = dependencies.ol.getState();
+    const playSound = dependencies.react.useCallback(soundType => {
+      const { visualState } = dependencies.sessionStore.getState();
       if (visualState.systemSoundEnabled === false) {
         return;
       }
@@ -43,7 +43,7 @@ export function createConversationHook(dependencies) {
     }, []);
 
     // Preserve unconditional hook order for interactive error decision prompt.
-    dependencies.b.useCallback((title, message, error, canIgnore = true) => new Promise(resolve => {
+    dependencies.react.useCallback((title, message, error, canIgnore = true) => new Promise(resolve => {
       const errorDetails = error instanceof Error ? error.message : String(error);
       setInteractiveError({
         hasError: true,
@@ -55,7 +55,7 @@ export function createConversationHook(dependencies) {
       decisionResolverRef.current = resolve;
     }), []);
 
-    const handleUserDecision = dependencies.b.useCallback(decision => {
+    const handleUserDecision = dependencies.react.useCallback(decision => {
       setInteractiveError(previous => ({ ...previous, hasError: false }));
       if (decisionResolverRef.current) {
         decisionResolverRef.current(decision);
@@ -63,8 +63,8 @@ export function createConversationHook(dependencies) {
       }
     }, []);
 
-    const stopGeneration = dependencies.b.useCallback(() => {
-      const currentState = dependencies.ol.getState();
+    const stopGeneration = dependencies.react.useCallback(() => {
+      const currentState = dependencies.sessionStore.getState();
       if (dependencies.__stsRuntimeState.size() > 0) {
         currentState.abortAll();
         chatStore.setLoading(false);
@@ -76,19 +76,19 @@ export function createConversationHook(dependencies) {
       }
     }, [chatStore, diagnostics]);
 
-    const runStandaloneMythic = dependencies.b.useMemo(() => createStandaloneMythic({
-      readState: () => dependencies.ol.getState(),
+    const runStandaloneMythic = dependencies.react.useMemo(() => createStandaloneMythic({
+      readState: () => dependencies.sessionStore.getState(),
       runtime: dependencies.__stsRuntimeState,
-      readSettings: dependencies.ns,
-      proxyForTools: dependencies.Cs,
-      readLorebooks: () => dependencies.sn.getState().lorebooks,
-      formatTables: dependencies.el,
-      buildPrompt: dependencies.Zs,
-      defaultPrompt: dependencies.Js,
-      tableSnapshot: dependencies.Qs,
-      parseActions: dependencies.tl,
-      applyActions: dependencies.nl,
-      buildLorebook: dependencies.rl,
+      readSettings: dependencies.getConnectionSettings,
+      proxyForTools: dependencies.getProxyForTools,
+      readLorebooks: () => dependencies.lorebookStore.getState().lorebooks,
+      formatTables: dependencies.filterRpgDatabaseByActiveEntries,
+      buildPrompt: dependencies.buildMythicPrompt,
+      defaultPrompt: dependencies.defaultMythicSystemPrompt,
+      tableSnapshot: dependencies.createRpgRowSnapshot,
+      parseActions: dependencies.parseRpgActions,
+      applyActions: dependencies.applyRpgActions,
+      buildLorebook: dependencies.buildLinkedLorebookEntries,
       log: diagnostics.logSystemMessage,
       logMythic: diagnostics.logMythic,
       playSound,
@@ -97,25 +97,25 @@ export function createConversationHook(dependencies) {
           return dependencies.__stsAiStudioToolText(prompt, model, signal);
         }
         if (provider === 'proxy') {
-          return dependencies.Ks(
+          return dependencies.generateProxyToolText(
             prompt,
             model,
-            dependencies.ns().proxy_protocol,
+            dependencies.getConnectionSettings().proxy_protocol,
             0,
             maxTokens,
             signal,
           );
         }
-        const apiKey = dependencies.ys();
+        const apiKey = dependencies.nextGeminiKey();
         if (!apiKey) {
           throw new Error('Không tìm thấy API Key Gemini.');
         }
-        const response = await new dependencies.vo({ apiKey }).models.generateContent({
+        const response = await new dependencies.GoogleGenAI({ apiKey }).models.generateContent({
           model,
           contents: prompt,
           config: {
             temperature: 0.1,
-            safetySettings: dependencies.Ys,
+            safetySettings: dependencies.defaultMythicSafetySettings,
             maxOutputTokens: maxTokens,
             abortSignal: signal,
           },
@@ -124,20 +124,20 @@ export function createConversationHook(dependencies) {
       },
     }), []);
 
-    const handleProcessedResponse = dependencies.b.useCallback(
+    const handleProcessedResponse = dependencies.react.useCallback(
       (content, messageId, forced = false) => dependencies.__stsProcessAIResponse(
         { content, messageId, forced },
         {
-          getState: () => dependencies.ol.getState(),
+          getState: () => dependencies.sessionStore.getState(),
           getSessionRevision: dependencies.__stsRuntimeState.getSessionRevision,
           processOutput: runOutputPipeline,
           logResponse: diagnostics.logResponse,
           playSound,
           logSystemMessage: diagnostics.logSystemMessage,
-          parseRpgActions: dependencies.tl,
-          applyRpgActions: dependencies.nl,
-          buildGeneratedLorebookEntries: dependencies.rl,
-          nextSequence: dependencies.gh,
+          parseRpgActions: dependencies.parseRpgActions,
+          applyRpgActions: dependencies.applyRpgActions,
+          buildGeneratedLorebookEntries: dependencies.buildLinkedLorebookEntries,
+          nextSequence: dependencies.countModelMessages,
           setSessionData: chatStore.setSessionData,
           updateMessage: chatStore.updateMessage,
           setRpgNotification: chatStore.setRpgNotification,
@@ -148,8 +148,8 @@ export function createConversationHook(dependencies) {
       [chatStore, lorebooks, diagnostics, runOutputPipeline, playSound, runStandaloneMythic],
     );
 
-    const handleArenaSelection = dependencies.b.useCallback(async (messageId, selectedSide) => {
-      const currentState = dependencies.ol.getState();
+    const handleArenaSelection = dependencies.react.useCallback(async (messageId, selectedSide) => {
+      const currentState = dependencies.sessionStore.getState();
       const targetMessage = currentState.messages.find(message => message.id === messageId);
       if (!targetMessage || !targetMessage.arena) {
         return;
@@ -197,8 +197,8 @@ export function createConversationHook(dependencies) {
 
     const handleArenaRetry = (messageId, side) => conversationService.retryArena(messageId, side);
 
-    const manualMythicTrigger = dependencies.b.useCallback(async () => {
-      const currentState = dependencies.ol.getState();
+    const manualMythicTrigger = dependencies.react.useCallback(async () => {
+      const currentState = dependencies.sessionStore.getState();
       if (!currentState.card?.rpg_data) {
         showToast('Không tìm thấy dữ liệu RPG.', 'warning');
         return;
@@ -224,7 +224,7 @@ export function createConversationHook(dependencies) {
     }, [chatStore, showToast, runStandaloneMythic]);
 
     const conversationService = dependencies.__stsCreateConversationService({
-      getState: () => dependencies.ol.getState(),
+      getState: () => dependencies.sessionStore.getState(),
       getSessionRevision: dependencies.__stsRuntimeState.getSessionRevision,
       setError: chatStore.setError,
       setLoading: chatStore.setLoading,
@@ -238,7 +238,7 @@ export function createConversationHook(dependencies) {
       replaceGlobalVariables: nextGlobalVariables => {
         const persisted = dependencies.__stsWriteGlobalVariables(nextGlobalVariables);
         try {
-          dependencies.Wh({
+          dependencies.broadcastRuntimeMessage({
             type: 'CARD_RUNTIME_STATE_UPDATE',
             payload: { variableScopes: { global: persisted } },
           });
@@ -246,11 +246,11 @@ export function createConversationHook(dependencies) {
         return persisted;
       },
       turnPolicy: dependencies.__stsChatTurnPolicy,
-      nextSequence: dependencies.gh,
+      nextSequence: dependencies.countModelMessages,
       preprocessInput: (rawText, state) => (
         state.visualState.disableInteractiveMode
           ? rawText
-          : dependencies.gd(
+          : dependencies.processRegex(
               rawText,
               state.card.extensions?.regex_scripts || [],
               [1],
@@ -258,7 +258,7 @@ export function createConversationHook(dependencies) {
                 isMarkdown: false,
                 isPrompt: true,
                 depth: 0,
-                ...dependencies.Zu(state.extensionSettings, state.preset),
+                ...dependencies.extractRegexScripts(state.extensionSettings, state.preset),
                 macros: {
                   char: state.card.name,
                   bot: state.card.name,
@@ -272,9 +272,9 @@ export function createConversationHook(dependencies) {
       logSelection: diagnostics.logSelection,
       buildPrompt: promptInput => dependencies.__stsBuildConversationPrompt(promptInput, {
         lorebooks,
-        buildBaseSections: dependencies.vd,
-        getSummaryChunkSize: () => dependencies.os().summarization_chunk_size || 12,
-        buildPromptCore: dependencies.xd,
+        buildBaseSections: dependencies.buildBaseSections,
+        getSummaryChunkSize: () => dependencies.getSmartContextSettings().summarization_chunk_size || 12,
+        buildPromptCore: dependencies.assemblePrompt,
         onTiming: timing => {
           if (timing.totalMs >= 500) {
             diagnostics.logSystemMessage(
@@ -287,8 +287,8 @@ export function createConversationHook(dependencies) {
       }),
       logPrompt: diagnostics.logPrompt,
       createPlaceholderMessage,
-      getConnectionSettings: dependencies.ns,
-      getProxyProfiles: dependencies.cs,
+      getConnectionSettings: dependencies.getConnectionSettings,
+      getProxyProfiles: dependencies.getProxyProfiles,
       getLorebooks: () => lorebooks,
       notify: showToast,
       arenaState: dependencies.__stsArenaState,
@@ -300,7 +300,7 @@ export function createConversationHook(dependencies) {
       runtimeSize: () => dependencies.__stsRuntimeState.size(),
     });
 
-    const sendMessage = dependencies.b.useCallback(
+    const sendMessage = dependencies.react.useCallback(
       (content, options) => conversationService.send(content, options),
       [conversationService],
     );
