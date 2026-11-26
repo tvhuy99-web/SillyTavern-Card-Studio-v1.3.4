@@ -932,7 +932,7 @@ export function createPromptManager(getDependencies) {
       let downloadUrl = URL.createObjectURL(blob);
       let anchor = document.createElement("a");
       anchor.href = downloadUrl;
-      anchor.download = `${preset.name.replace(/\.json$/anchor, "")}_prompts_${filterMode}.txt`;
+      anchor.download = `${preset.name.replace(/\.json$/i, "")}_prompts_${filterMode}.txt`;
       document.body.appendChild(anchor);
       anchor.click();
       document.body.removeChild(anchor);
