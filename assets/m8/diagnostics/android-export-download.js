@@ -39,8 +39,8 @@ export function normalizeExportName(name) {
 
 function encodeBase64(bytes) {
   let result = '';
-  for (let i = 0; i < bytes.length; i += 8192) {
-    result += String.fromCharCode(...bytes.subarray(i, i + 8192));
+  for (let offset = 0; offset < bytes.length; offset += 8192) {
+    result += String.fromCharCode(...bytes.subarray(offset, offset + 8192));
   }
   return btoa(result);
 }
@@ -86,8 +86,8 @@ export async function streamExportUrlToAndroid({ url, filename, plugin, fetcher 
         const { value, done } = await reader.read();
         if (done) { consumed = true; break; }
         const bytes = value instanceof Uint8Array ? value : new Uint8Array(value);
-        for (let i = 0; i < bytes.length; i += MAX_CHUNK_SIZE) {
-          const chunk = bytes.subarray(i, i + MAX_CHUNK_SIZE);
+        for (let offset = 0; offset < bytes.length; offset += MAX_CHUNK_SIZE) {
+          const chunk = bytes.subarray(offset, offset + MAX_CHUNK_SIZE);
           if (!chunk.length) continue;
           await plugin.appendChunk({ ...saveArgs, base64: encodeBase64(chunk) });
           written += chunk.length;

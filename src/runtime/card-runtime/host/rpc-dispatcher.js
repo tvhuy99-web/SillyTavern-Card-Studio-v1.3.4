@@ -5,7 +5,7 @@ export function createHostRpcDispatcher({ isActiveSource, getSessionRevision, ge
   validatePayload, clone, getFrameIdentity = source => source, authorize = () => {}, targetOriginForSource = () => '*',
   deadlineForMethod = method => method === 'generation.generate' ? 360000 : 30000, onTransportError = () => {}, recentLimit = 256, maxPendingPerSource = 32, maxPendingTotal = 128 }) {
   if (!Number.isSafeInteger(recentLimit) || recentLimit < 0) throw new TypeError('Invalid RPC replay window.');
-  if (![maxPendingPerSource, maxPendingTotal].every(n => Number.isSafeInteger(n) && n > 0)) throw new TypeError('Invalid RPC concurrency limit.');
+  if (![maxPendingPerSource, maxPendingTotal].every(limit => Number.isSafeInteger(limit) && limit > 0)) throw new TypeError('Invalid RPC concurrency limit.');
   const sources = new WeakMap();
   const active = new Set();
   let pendingTotal = 0;

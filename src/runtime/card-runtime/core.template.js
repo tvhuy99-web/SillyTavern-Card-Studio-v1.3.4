@@ -60,9 +60,9 @@
 
     function uuid() {
         if (root.crypto && typeof root.crypto.randomUUID === 'function') return root.crypto.randomUUID();
-        return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
-            const r = Math.random() * 16 | 0;
-            return (c === 'x' ? r : (r & 3 | 8)).toString(16);
+        return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (placeholder) {
+            const randomNibble = Math.random() * 16 | 0;
+            return (placeholder === 'x' ? randomNibble : (randomNibble & 3 | 8)).toString(16);
         });
     }
 

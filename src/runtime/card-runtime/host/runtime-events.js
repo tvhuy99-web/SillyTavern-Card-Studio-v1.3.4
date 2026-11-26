@@ -91,7 +91,7 @@ export function subscribeRuntimeSession({ store, publish, clone, formatHistory }
           event(user ? 'user_message_rendered' : 'character_message_rendered', [index, 'extension']);
         }
       } else if (state.messages.length < previous.messages.length) {
-        const index = previous.messages.findIndex((message, i) => state.messages[i]?.id !== message.id);
+        const index = previous.messages.findIndex((message, messageIndex) => state.messages[messageIndex]?.id !== message.id);
         event('message_deleted', [index < 0 ? state.messages.length : index]);
       } else {
         state.messages.forEach((message, index) => {
