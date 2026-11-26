@@ -3,54 +3,54 @@
 
 export function createToastProvider(getDependencies) {
   return function ToastProvider({
-    children: e
+    children: children
   }) {
     const {
-      b,
-      dl,
-      pl,
-      wt
+      b: react,
+      dl: toastContext,
+      pl: ToastNotification,
+      wt: jsxRuntime
     } = getDependencies();
-    let [t, n] = (0, b.useState)([]);
-    let r = (0, b.useCallback)((e, t = "info") => {
-      let r = Math.random().toString(36).substr(2, 9);
-      n(n => [...n, {
-        id: r,
-        type: t,
-        message: e
+    let [toasts, setToasts] = (0, react.useState)([]);
+    let showToast = (0, react.useCallback)((message, type = "info") => {
+      let toastId = Math.random().toString(36).substr(2, 9);
+      setToasts(previous => [...previous, {
+        id: toastId,
+        type: type,
+        message: message
       }]);
     }, []);
-    let a = (0, b.useCallback)(e => {
-      n(t => t.filter(t => t.id !== e));
+    let dismissToast = (0, react.useCallback)(toastId => {
+      setToasts(previous => previous.filter(toast => toast.id !== toastId));
     }, []);
-    (0, b.useEffect)(() => {
-      let e = e => {
-        let t = e.detail;
-        if (!t) return;
-        let n = String(t.message ?? "").slice(0, 2e4);
-        if (!n.trim()) return;
-        let a = String(t.type ?? "info");
-        r(n, ["info", "success", "warning", "error"].includes(a) ? a : "info");
+    (0, react.useEffect)(() => {
+      let handleToastEvent = event => {
+        let detail = event.detail;
+        if (!detail) return;
+        let message = String(detail.message ?? "").slice(0, 2e4);
+        if (!message.trim()) return;
+        let type = String(detail.type ?? "info");
+        showToast(message, ["info", "success", "warning", "error"].includes(type) ? type : "info");
       };
-      window.addEventListener("toast", e);
-      window.addEventListener("sillytavern:show-toast", e);
+      window.addEventListener("toast", handleToastEvent);
+      window.addEventListener("sillytavern:show-toast", handleToastEvent);
       return () => {
-        window.removeEventListener("toast", e);
-        window.removeEventListener("sillytavern:show-toast", e);
+        window.removeEventListener("toast", handleToastEvent);
+        window.removeEventListener("sillytavern:show-toast", handleToastEvent);
       };
-    }, [r]);
-    return (0, wt.jsxs)(dl.Provider, {
+    }, [showToast]);
+    return (0, jsxRuntime.jsxs)(toastContext.Provider, {
       value: {
-        showToast: r
+        showToast: showToast
       },
-      children: [e, (0, wt.jsx)("div", {
+      children: [children, (0, jsxRuntime.jsx)("div", {
         className: "fixed top-20 right-4 z-[100] flex flex-col items-end pointer-events-none",
-        children: (0, wt.jsx)("div", {
+        children: (0, jsxRuntime.jsx)("div", {
           className: "pointer-events-auto",
-          children: t.map(e => (0, wt.jsx)(pl, {
-            toast: e,
-            onClose: a
-          }, e.id))
+          children: toasts.map(toast => (0, jsxRuntime.jsx)(ToastNotification, {
+            toast: toast,
+            onClose: dismissToast
+          }, toast.id))
         })
       })]
     });
@@ -58,311 +58,311 @@ export function createToastProvider(getDependencies) {
 }
 export function createSpeechProvider(getDependencies) {
   return function SpeechProvider({
-    children: e
+    children: children
   }) {
     const {
       settingsStorage = globalThis.localStorage,
-      Bd,
-      Gd,
-      Ld,
-      Ud,
-      b,
-      hl,
-      qo,
-      ts,
-      wt
+      Bd: stopNativeSpeech,
+      Gd: speechContext,
+      Ld: generateGeminiSpeech,
+      Ud: speakNativeText,
+      b: react,
+      hl: useToast,
+      qo: speechSettingsKey,
+      ts: speechDefaults,
+      wt: jsxRuntime
     } = getDependencies();
-    let [t, n] = (0, b.useState)((() => {
+    let [settings, setSettings] = (0, react.useState)((() => {
       try {
-        let e = localStorage.getItem(qo);
-        if (e) {
-          let t = JSON.parse(e);
+        let serialized = localStorage.getItem(speechSettingsKey);
+        if (serialized) {
+          let savedSettings = JSON.parse(serialized);
           return {
-            ...ts,
-            ...t
+            ...speechDefaults,
+            ...savedSettings
           };
         }
-      } catch (e) {
-        console.error("Failed to load global TTS settings", e);
+      } catch (error) {
+        console.error("Failed to load global TTS settings", error);
       }
-      return ts;
+      return speechDefaults;
     })());
-    let r = (0, b.useCallback)(e => {
-      settingsStorage.setItem(qo, JSON.stringify(e));
-      n(e);
+    let updateSettings = (0, react.useCallback)(nextSettings => {
+      settingsStorage.setItem(speechSettingsKey, JSON.stringify(nextSettings));
+      setSettings(nextSettings);
     }, []);
-    let [a, i] = (0, b.useState)([]);
-    let [o, s] = (0, b.useState)(false);
-    let [l, c] = (0, b.useState)(false);
-    let [u, d] = (0, b.useState)(false);
-    let [h, p] = (0, b.useState)(null);
-    let [m, g] = (0, b.useState)(false);
-    let f = (0, b.useRef)(null);
-    let y = (0, b.useRef)(null);
-    let v = (0, b.useRef)(0);
+    let [queue, setQueue] = (0, react.useState)([]);
+    let [isPlaying, setIsPlaying] = (0, react.useState)(false);
+    let [isPaused, setIsPaused] = (0, react.useState)(false);
+    let [autoPlayEnabled, setAutoPlayEnabled] = (0, react.useState)(false);
+    let [currentPlayingId, setCurrentPlayingId] = (0, react.useState)(null);
+    let [isLoading, setIsLoading] = (0, react.useState)(false);
+    let audioContextRef = (0, react.useRef)(null);
+    let audioSourceRef = (0, react.useRef)(null);
+    let generationRef = (0, react.useRef)(0);
     let {
-      showToast: x
-    } = hl();
-    (0, b.useEffect)(() => {
-      let e = async () => {
+      showToast: showToast
+    } = useToast();
+    (0, react.useEffect)(() => {
+      let unlockAudio = async () => {
         if (typeof window.SpeechSynthesisUtterance !== "function" || !window.speechSynthesis) {
-          document.removeEventListener("click", e);
-          document.removeEventListener("touchstart", e);
+          document.removeEventListener("click", unlockAudio);
+          document.removeEventListener("touchstart", unlockAudio);
           return;
         }
-        let t = new SpeechSynthesisUtterance("");
-        t.volume = 0;
-        window.speechSynthesis.speak(t);
-        f.current ||= new (window.AudioContext || window.webkitAudioContext)({
+        let silentUtterance = new SpeechSynthesisUtterance("");
+        silentUtterance.volume = 0;
+        window.speechSynthesis.speak(silentUtterance);
+        audioContextRef.current ||= new (window.AudioContext || window.webkitAudioContext)({
           sampleRate: 24e3
         });
-        "suspended" === f.current.state && (await f.current.resume());
-        document.removeEventListener("click", e);
-        document.removeEventListener("touchstart", e);
+        "suspended" === audioContextRef.current.state && (await audioContextRef.current.resume());
+        document.removeEventListener("click", unlockAudio);
+        document.removeEventListener("touchstart", unlockAudio);
       };
-      document.addEventListener("click", e);
-      document.addEventListener("touchstart", e);
+      document.addEventListener("click", unlockAudio);
+      document.addEventListener("touchstart", unlockAudio);
       return () => {
-        document.removeEventListener("click", e);
-        document.removeEventListener("touchstart", e);
-        v.current++;
-        Bd();
+        document.removeEventListener("click", unlockAudio);
+        document.removeEventListener("touchstart", unlockAudio);
+        generationRef.current++;
+        stopNativeSpeech();
         try {
-          y.current?.stop();
+          audioSourceRef.current?.stop();
         } catch {}
-        f.current?.close().catch(() => {});
+        audioContextRef.current?.close().catch(() => {});
       };
     }, []);
-    let _ = (0, b.useCallback)(async () => {
-      f.current ||= new (window.AudioContext || window.webkitAudioContext)({
+    let ensureAudioContext = (0, react.useCallback)(async () => {
+      audioContextRef.current ||= new (window.AudioContext || window.webkitAudioContext)({
         sampleRate: 24e3
       });
-      "suspended" === f.current.state && (await f.current.resume());
-      return f.current;
+      "suspended" === audioContextRef.current.state && (await audioContextRef.current.resume());
+      return audioContextRef.current;
     }, []);
-    let w = (0, b.useCallback)(async (e, t) => {
-      let n = await _();
-      if (y.current) try {
-        y.current.stop();
+    let playBuffer = (0, react.useCallback)(async (buffer, messageId) => {
+      let context = await ensureAudioContext();
+      if (audioSourceRef.current) try {
+        audioSourceRef.current.stop();
       } catch {}
-      let r = n.createBufferSource();
-      r.buffer = e;
-      r.connect(n.destination);
-      r.onended = () => {
-        y.current === r && (s(false), p(null), y.current = null);
+      let source = context.createBufferSource();
+      source.buffer = buffer;
+      source.connect(context.destination);
+      source.onended = () => {
+        audioSourceRef.current === source && (setIsPlaying(false), setCurrentPlayingId(null), audioSourceRef.current = null);
       };
-      y.current = r;
-      r.start();
-      s(true);
-      p(t);
-    }, [_]);
-    (0, b.useEffect)(() => {
+      audioSourceRef.current = source;
+      source.start();
+      setIsPlaying(true);
+      setCurrentPlayingId(messageId);
+    }, [ensureAudioContext]);
+    (0, react.useEffect)(() => {
       (async () => {
-        if (o || l || m || 0 === a.length) return;
-        let e = a[0];
-        let t = v.current;
-        g(true);
+        if (isPlaying || isPaused || isLoading || 0 === queue.length) return;
+        let item = queue[0];
+        let generation = generationRef.current;
+        setIsLoading(true);
         try {
-          if ("native" === e.provider) return s(true), p(e.id), g(false), void Ud(e.text, e.voice, e.rate, e.pitch, () => {}, () => {
-            t === v.current && (s(false), p(null), i(e => e.slice(1)));
+          if ("native" === item.provider) return setIsPlaying(true), setCurrentPlayingId(item.id), setIsLoading(false), void speakNativeText(item.text, item.voice, item.rate, item.pitch, () => {}, () => {
+            generation === generationRef.current && (setIsPlaying(false), setCurrentPlayingId(null), setQueue(previous => previous.slice(1)));
           });
-          if (e.audioPromise) {
-            let n = await e.audioPromise;
-            if (t !== v.current) return;
-            i(e => e.slice(1));
-            await w(n, e.id);
+          if (item.audioPromise) {
+            let buffer = await item.audioPromise;
+            if (generation !== generationRef.current) return;
+            setQueue(previous => previous.slice(1));
+            await playBuffer(buffer, item.id);
           }
-        } catch (e) {
-          console.error("TTS Queue Error:", e);
-          x(`Lỗi đọc: ${e instanceof Error ? e.message : String(e)}`, "error");
-          i(e => e.slice(1));
+        } catch (error) {
+          console.error("TTS Queue Error:", error);
+          showToast(`Lỗi đọc: ${error instanceof Error ? error.message : String(error)}`, "error");
+          setQueue(previous => previous.slice(1));
         } finally {
-          "native" !== e.provider && g(false);
+          "native" !== item.provider && setIsLoading(false);
         }
       })();
-    }, [a, o, l, m, w, x]);
-    let k = (0, b.useCallback)((e, n, r = `msg-${Date.now()}`, a = {}) => {
-      let o;
-      let s = a.provider || t.tts_provider;
-      let l = n || ("native" === s ? t.tts_native_voice : t.tts_voice);
-      let c = undefined === a.rate ? t.tts_rate : a.rate;
-      let u = undefined === a.pitch ? t.tts_pitch : a.pitch;
-      "gemini" === s && (o = Ld(e, l));
-      let d = {
-        id: r,
-        text: e,
-        voice: l,
-        audioPromise: o,
-        provider: s,
-        rate: c,
-        pitch: u
+    }, [queue, isPlaying, isPaused, isLoading, playBuffer, showToast]);
+    let addToQueue = (0, react.useCallback)((text, voice, messageId = `msg-${Date.now()}`, options = {}) => {
+      let audioPromise;
+      let provider = options.provider || settings.tts_provider;
+      let selectedVoice = voice || ("native" === provider ? settings.tts_native_voice : settings.tts_voice);
+      let rate = undefined === options.rate ? settings.tts_rate : options.rate;
+      let pitch = undefined === options.pitch ? settings.tts_pitch : options.pitch;
+      "gemini" === provider && (audioPromise = generateGeminiSpeech(text, selectedVoice));
+      let item = {
+        id: messageId,
+        text: text,
+        voice: selectedVoice,
+        audioPromise: audioPromise,
+        provider: provider,
+        rate: rate,
+        pitch: pitch
       };
-      i(e => [...e, d]);
-    }, [t]);
-    let S = (0, b.useCallback)(async (e, n, r = `now-${Date.now()}`, a = {}) => {
-      let o = ++v.current;
-      let l = a.provider || t.tts_provider;
-      let u = n || ("native" === l ? t.tts_native_voice : t.tts_voice);
-      let d = undefined === a.rate ? t.tts_rate : a.rate;
-      let h = undefined === a.pitch ? t.tts_pitch : a.pitch;
-      if (i([]), y.current) try {
-        y.current.stop();
+      setQueue(previous => [...previous, item]);
+    }, [settings]);
+    let playImmediately = (0, react.useCallback)(async (text, voice, messageId = `now-${Date.now()}`, options = {}) => {
+      let generation = ++generationRef.current;
+      let provider = options.provider || settings.tts_provider;
+      let selectedVoice = voice || ("native" === provider ? settings.tts_native_voice : settings.tts_voice);
+      let rate = undefined === options.rate ? settings.tts_rate : options.rate;
+      let pitch = undefined === options.pitch ? settings.tts_pitch : options.pitch;
+      if (setQueue([]), audioSourceRef.current) try {
+        audioSourceRef.current.stop();
       } catch {}
-      if (Bd(), c(false), "native" === l) {
-        s(true);
-        p(r);
-        g(false);
-        Ud(e, u, d, h, () => {}, () => {
-          o === v.current && (s(false), p(null));
+      if (stopNativeSpeech(), setIsPaused(false), "native" === provider) {
+        setIsPlaying(true);
+        setCurrentPlayingId(messageId);
+        setIsLoading(false);
+        speakNativeText(text, selectedVoice, rate, pitch, () => {}, () => {
+          generation === generationRef.current && (setIsPlaying(false), setCurrentPlayingId(null));
         });
       } else {
-        g(true);
-        p(r);
-        s(false);
+        setIsLoading(true);
+        setCurrentPlayingId(messageId);
+        setIsPlaying(false);
         try {
-          let t = await _();
-          "suspended" === t.state && (await t.resume());
-          let n = await Ld(e, u);
-          if (o !== v.current) return;
-          g(false);
-          await w(n, r);
-        } catch (e) {
-          if (o !== v.current) return;
-          console.error("TTS Immediate Error:", e);
-          x(`Lỗi đọc: ${e instanceof Error ? e.message : String(e)}`, "error");
-          g(false);
-          p(null);
-          s(false);
+          let context = await ensureAudioContext();
+          "suspended" === context.state && (await context.resume());
+          let buffer = await generateGeminiSpeech(text, selectedVoice);
+          if (generation !== generationRef.current) return;
+          setIsLoading(false);
+          await playBuffer(buffer, messageId);
+        } catch (error) {
+          if (generation !== generationRef.current) return;
+          console.error("TTS Immediate Error:", error);
+          showToast(`Lỗi đọc: ${error instanceof Error ? error.message : String(error)}`, "error");
+          setIsLoading(false);
+          setCurrentPlayingId(null);
+          setIsPlaying(false);
         }
       }
-    }, [t, _, w, x]);
-    let C = (0, b.useCallback)(async () => {
-      let e = await _();
-      if (l) {
-        "suspended" === e.state && (await e.resume());
+    }, [settings, ensureAudioContext, playBuffer, showToast]);
+    let togglePause = (0, react.useCallback)(async () => {
+      let context = await ensureAudioContext();
+      if (isPaused) {
+        "suspended" === context.state && (await context.resume());
         window.speechSynthesis.paused && window.speechSynthesis.resume();
-        c(false);
+        setIsPaused(false);
       } else {
-        "running" === e.state && (await e.suspend());
+        "running" === context.state && (await context.suspend());
         window.speechSynthesis.speaking && window.speechSynthesis.pause();
-        c(true);
+        setIsPaused(true);
       }
-    }, [_, l]);
-    let E = (0, b.useCallback)(() => {
-      if (v.current++, Bd(), y.current) try {
-        y.current.stop();
-      } catch {} else m && a.length > 0 && (i(e => e.slice(1)), g(false));
-    }, [m, a.length]);
-    let N = (0, b.useCallback)(() => {
-      if (v.current++, i([]), Bd(), y.current) try {
-        y.current.stop();
+    }, [ensureAudioContext, isPaused]);
+    let skip = (0, react.useCallback)(() => {
+      if (generationRef.current++, stopNativeSpeech(), audioSourceRef.current) try {
+        audioSourceRef.current.stop();
+      } catch {} else isLoading && queue.length > 0 && (setQueue(previous => previous.slice(1)), setIsLoading(false));
+    }, [isLoading, queue.length]);
+    let stopAll = (0, react.useCallback)(() => {
+      if (generationRef.current++, setQueue([]), stopNativeSpeech(), audioSourceRef.current) try {
+        audioSourceRef.current.stop();
       } catch {}
-      s(false);
-      c(false);
-      g(false);
+      setIsPlaying(false);
+      setIsPaused(false);
+      setIsLoading(false);
     }, []);
-    let T = (0, b.useCallback)(() => {
-      d(e => !e);
+    let toggleAutoPlay = (0, react.useCallback)(() => {
+      setAutoPlayEnabled(previous => !previous);
     }, []);
-    return (0, wt.jsx)(Gd.Provider, {
+    return (0, jsxRuntime.jsx)(speechContext.Provider, {
       value: {
-        isPlaying: o,
-        isPaused: l,
-        autoPlayEnabled: u,
-        queue: a,
-        currentPlayingId: h,
-        isLoading: m,
-        settings: t,
-        updateSettings: r,
-        addToQueue: k,
-        playImmediately: S,
-        toggleAutoPlay: T,
-        togglePause: C,
-        skip: E,
-        stopAll: N
+        isPlaying: isPlaying,
+        isPaused: isPaused,
+        autoPlayEnabled: autoPlayEnabled,
+        queue: queue,
+        currentPlayingId: currentPlayingId,
+        isLoading: isLoading,
+        settings: settings,
+        updateSettings: updateSettings,
+        addToQueue: addToQueue,
+        playImmediately: playImmediately,
+        toggleAutoPlay: toggleAutoPlay,
+        togglePause: togglePause,
+        skip: skip,
+        stopAll: stopAll
       },
-      children: e
+      children: children
     });
   };
 }
 export function createCardPopupProvider(getDependencies) {
   return function CardPopupProvider({
-    children: e
+    children: children
   }) {
     const {
-      Xf,
-      Xl,
-      Yg,
-      b,
-      wt
+      Xf: cardPopupContext,
+      Xl: useDialogFocus,
+      Yg: htmlSanitizer,
+      b: react,
+      wt: jsxRuntime
     } = getDependencies();
-    let [t, n] = (0, b.useState)(false);
-    let [r, a] = (0, b.useState)("");
-    let [i, o] = (0, b.useState)("");
-    let s = (0, b.useRef)(null);
-    let l = (0, b.useRef)(null);
-    let c = (0, b.useCallback)((e, t = "Thông báo Thẻ") => {
-      let r = Yg.sanitize(e, {
+    let [isOpen, setIsOpen] = (0, react.useState)(false);
+    let [html, setHtml] = (0, react.useState)("");
+    let [title, setTitle] = (0, react.useState)("");
+    let dialogRef = (0, react.useRef)(null);
+    let closeButtonRef = (0, react.useRef)(null);
+    let showPopup = (0, react.useCallback)((content, popupTitle = "Thông báo Thẻ") => {
+      let sanitizedHtml = htmlSanitizer.sanitize(content, {
         ADD_TAGS: ["img", "div", "span", "p", "br", "b", "i", "strong", "em", "table", "tr", "td", "th", "tbody", "thead", "ul", "ol", "li", "h1", "h2", "h3", "h4", "hr"],
         ADD_ATTR: ["class", "src", "width", "height", "align", "border", "cellpadding", "cellspacing"],
         FORBID_TAGS: ["style", "script", "iframe", "object", "embed"],
         FORBID_ATTR: ["style", "srcdoc"]
       });
-      a(r);
-      o(t);
-      n(true);
+      setHtml(sanitizedHtml);
+      setTitle(popupTitle);
+      setIsOpen(true);
     }, []);
-    let u = (0, b.useCallback)(() => {
-      n(false);
-      a("");
+    let closePopup = (0, react.useCallback)(() => {
+      setIsOpen(false);
+      setHtml("");
     }, []);
-    Xl(t, u, s, l);
-    (0, b.useEffect)(() => {
-      let e = e => {
-        let t = e.detail;
-        if (!t) return;
-        let n = String(t.content ?? "").slice(0, 5e5);
-        if (!n.trim()) return;
-        let r = String(t.title ?? "Thông báo Thẻ").slice(0, 120);
-        c(n, r);
+    useDialogFocus(isOpen, closePopup, dialogRef, closeButtonRef);
+    (0, react.useEffect)(() => {
+      let handlePopupEvent = event => {
+        let detail = event.detail;
+        if (!detail) return;
+        let content = String(detail.content ?? "").slice(0, 5e5);
+        if (!content.trim()) return;
+        let popupTitle = String(detail.title ?? "Thông báo Thẻ").slice(0, 120);
+        showPopup(content, popupTitle);
       };
-      window.addEventListener("sillytavern:show-popup", e);
-      return () => window.removeEventListener("sillytavern:show-popup", e);
-    }, [c]);
-    return (0, wt.jsxs)(Xf.Provider, {
+      window.addEventListener("sillytavern:show-popup", handlePopupEvent);
+      return () => window.removeEventListener("sillytavern:show-popup", handlePopupEvent);
+    }, [showPopup]);
+    return (0, jsxRuntime.jsxs)(cardPopupContext.Provider, {
       value: {
-        showPopup: c,
-        closePopup: u
+        showPopup: showPopup,
+        closePopup: closePopup
       },
-      children: [e, t && (0, wt.jsx)("div", {
+      children: [children, isOpen && (0, jsxRuntime.jsx)("div", {
         className: "fixed inset-0 bg-black/70  flex items-center justify-center z-[100] p-4",
-        onClick: u,
+        onClick: closePopup,
         role: "dialog",
         "aria-modal": "true",
         "aria-labelledby": "card-popup-title",
-        children: (0, wt.jsxs)("div", {
-          ref: s,
+        children: (0, jsxRuntime.jsxs)("div", {
+          ref: dialogRef,
           className: "bg-slate-800 border border-slate-600 rounded-xl shadow-2xl w-full max-w-3xl max-h-[90vh] flex flex-col overflow-hidden ",
-          onClick: e => e.stopPropagation(),
-          children: [(0, wt.jsxs)("div", {
+          onClick: event => event.stopPropagation(),
+          children: [(0, jsxRuntime.jsxs)("div", {
             className: "flex justify-between items-center p-4 border-b border-slate-700 bg-slate-900/50",
-            children: [(0, wt.jsx)("h3", {
+            children: [(0, jsxRuntime.jsx)("h3", {
               id: "card-popup-title",
               className: "text-lg font-bold text-sky-400",
-              children: i
-            }), (0, wt.jsx)("button", {
-              ref: l,
-              onClick: u,
+              children: title
+            }), (0, jsxRuntime.jsx)("button", {
+              ref: closeButtonRef,
+              onClick: closePopup,
               className: "text-slate-400 hover:text-white p-1 rounded hover:bg-slate-700 ",
               "aria-label": "Đóng popup",
-              children: (0, wt.jsx)("svg", {
+              children: (0, jsxRuntime.jsx)("svg", {
                 "aria-hidden": "true",
                 xmlns: "http://www.w3.org/2000/svg",
                 className: "h-6 w-6",
                 fill: "none",
                 viewBox: "0 0 24 24",
                 stroke: "currentColor",
-                children: (0, wt.jsx)("path", {
+                children: (0, jsxRuntime.jsx)("path", {
                   strokeLinecap: "round",
                   strokeLinejoin: "round",
                   strokeWidth: "2",
@@ -370,23 +370,23 @@ export function createCardPopupProvider(getDependencies) {
                 })
               })
             })]
-          }), (0, wt.jsx)("div", {
+          }), (0, jsxRuntime.jsx)("div", {
             className: "p-6 overflow-y-auto custom-scrollbar bg-slate-800 text-slate-200 popup-content",
-            children: (0, wt.jsx)("div", {
+            children: (0, jsxRuntime.jsx)("div", {
               dangerouslySetInnerHTML: {
-                __html: r
+                __html: html
               }
             })
-          }), (0, wt.jsx)("div", {
+          }), (0, jsxRuntime.jsx)("div", {
             className: "p-3 border-t border-slate-700 bg-slate-900/30 flex justify-end",
-            children: (0, wt.jsx)("button", {
-              onClick: u,
+            children: (0, jsxRuntime.jsx)("button", {
+              onClick: closePopup,
               className: "px-4 py-2 bg-slate-700 hover:bg-slate-600 text-white rounded-lg text-sm font-medium ",
               children: "Đóng"
             })
           })]
         })
-      }), (0, wt.jsx)("style", {
+      }), (0, jsxRuntime.jsx)("style", {
         children: "\n        .popup-content table { width: 100%; border-collapse: collapse; margin-bottom: 1em; }\n        .popup-content th, .popup-content td { border: 1px solid #475569; padding: 8px; }\n        .popup-content th { background-color: #1e293b; color: #e2e8f0; }\n        .popup-content img { max-width: 100%; height: auto; border-radius: 4px; }\n      "
       })]
     });
