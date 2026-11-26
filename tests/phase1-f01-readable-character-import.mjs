@@ -14,11 +14,11 @@ const png=new File([new Uint8Array([137,80,78,71,13,10,26,10]),metadata,new Uint
 const parsed=await codec.parseCharacterFile(png);
 assert.equal(parsed.card.name,'PNG Hero');assert.equal(parsed.format,'png');assert.equal(parsed.avatarFile,png);URL.revokeObjectURL(parsed.avatarUrl);
 await assert.rejects(codec.parseCharacterFile(new File([new Uint8Array([137,80,78,71,13,10,26,10])],'bad.png')),/IEND/);
-const item={name:'card.json',dir:false,asyloadLibraryModule:async()=>JSON.stringify({name:'Archive Hero',assets:[{type:'icon',name:'main',uri:'embedded://assets/icon/avatar.png'}]})};
-const asset={name:'assets/icon/avatar.png',dir:false,asyloadLibraryModule:async()=>new Uint8Array([1,2,3])};
+const item={name:'card.json',dir:false,async:async()=>JSON.stringify({name:'Archive Hero',assets:[{type:'icon',name:'main',uri:'embedded://assets/icon/avatar.png'}]})};
+const asset={name:'assets/icon/avatar.png',dir:false,async:async()=>new Uint8Array([1,2,3])};
 let files={'card.json':item,'assets/icon/avatar.png':asset};
 const archive={get files(){return files;},file:name=>files[name]};
-const charxCodec=createCharacterFileCodec({relaxedJson:{default:{parse:JSON.parse}},normalizeLorebook:book=>book,loadLibraryModule:async()=>({default:{loadAsyloadLibraryModule:async()=>archive}})});
+const charxCodec=createCharacterFileCodec({relaxedJson:{default:{parse:JSON.parse}},normalizeLorebook:book=>book,loadLibraryModule:async()=>({default:{loadAsync:async()=>archive}})});
 const charx=await charxCodec.parseCharacterFile(new File(['stub'],'hero.charx'));
 assert.equal(charx.format,'charx');assert.equal(charx.card.name,'Archive Hero');assert.equal(charx.avatarFile.name,'avatar.png');assert.equal(charx.card.__embedded_assets['__asset:assets/icon/avatar.png'],'data:image/png;base64,AQID');URL.revokeObjectURL(charx.avatarUrl);
 files={...files,'../escape':{name:'../escape',dir:false}};
