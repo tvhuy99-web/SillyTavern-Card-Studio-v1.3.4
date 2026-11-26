@@ -67,47 +67,47 @@ export function createCharacterTools(getDependencies) {
     let avatarInputRef = (0, react.useRef)(null);
     let [isFileNameDialogOpen, setIsFileNameDialogOpen] = (0, react.useState)(false);
     let [exportFormat, setExportFormat] = (0, react.useState)("json");
-    let prepareCardForExport = (0, react.useCallback)(e => {
-      let t = JSON.parse(JSON.stringify(e));
-      if (t.attached_lorebooks && t.attached_lorebooks.length > 0) {
-        let e = t.attached_lorebooks;
-        let n = [...(t.char_book?.entries || [])];
-        e.forEach(e => {
-          let t = lorebooks.find(t => t.name === e);
-          let r = n.some(t => t.source_lorebook === e);
-          if (t && t.book.entries && !r) {
-            let r = JSON.parse(JSON.stringify(t.book.entries));
-            r.forEach(t => {
-              t.source_lorebook = e;
-              t.uid ||= `embed_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`;
+    let prepareCardForExport = (0, react.useCallback)(sourceCard => {
+      let exportCard = JSON.parse(JSON.stringify(sourceCard));
+      if (exportCard.attached_lorebooks && exportCard.attached_lorebooks.length > 0) {
+        let attachedNames = exportCard.attached_lorebooks;
+        let mergedEntries = [...(exportCard.char_book?.entries || [])];
+        attachedNames.forEach(lorebookName => {
+          let lorebook = lorebooks.find(item => item.name === lorebookName);
+          let alreadyIncluded = mergedEntries.some(entry => entry.source_lorebook === lorebookName);
+          if (lorebook && lorebook.book.entries && !alreadyIncluded) {
+            let clonedEntries = JSON.parse(JSON.stringify(lorebook.book.entries));
+            clonedEntries.forEach(entry => {
+              entry.source_lorebook = lorebookName;
+              entry.uid ||= `embed_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`;
             });
-            n.push(...r);
+            mergedEntries.push(...clonedEntries);
           }
         });
-        t.char_book ||= {
+        exportCard.char_book ||= {
           entries: []
         };
-        t.char_book.entries = n;
-        delete t.attached_lorebooks;
+        exportCard.char_book.entries = mergedEntries;
+        delete exportCard.attached_lorebooks;
       }
-      t.char_book && 0 === t.char_book.entries.length && delete t.char_book;
-      return t;
+      exportCard.char_book && 0 === exportCard.char_book.entries.length && delete exportCard.char_book;
+      return exportCard;
     }, [lorebooks]);
     let tokenStats = (0, react.useMemo)(() => {
-      let t = estimateTokens(card.description);
-      let n = estimateTokens(card.personality);
-      let r = estimateTokens(card.first_mes);
-      let a = estimateTokens(card.mes_example);
+      let descriptionTokens = estimateTokens(card.description);
+      let personalityTokens = estimateTokens(card.personality);
+      let greetingTokens = estimateTokens(card.first_mes);
+      let exampleTokens = estimateTokens(card.mes_example);
       return {
-        description: t,
-        personality: n,
-        first_mes: r,
-        mes_example: a,
-        total: t + n + r + a
+        description: descriptionTokens,
+        personality: personalityTokens,
+        first_mes: greetingTokens,
+        mes_example: exampleTokens,
+        total: descriptionTokens + personalityTokens + greetingTokens + exampleTokens
       };
     }, [card]);
-    let openExportDialog = e => {
-      setExportFormat(e);
+    let openExportDialog = format => {
+      setExportFormat(format);
       setIsFileNameDialogOpen(true);
     };
     return (0, jsxRuntime.jsxs)("div", {
@@ -210,9 +210,9 @@ export function createCharacterTools(getDependencies) {
               type: "file",
               "aria-label": "Chọn ảnh đại diện",
               accept: "image/png,image/jpeg,image/webp,image/gif,image/avif",
-              onChange: e => {
-                let t = e.target.files?.[0];
-                t && (setAvatar(URL.createObjectURL(t), t), e.target.value = "");
+              onChange: event => {
+                let file = event.target.files?.[0];
+                file && (setAvatar(URL.createObjectURL(file), file), event.target.value = "");
               },
               className: "sr-only",
               ref: avatarInputRef
@@ -261,108 +261,108 @@ export function createCharacterTools(getDependencies) {
       }), (0, jsxRuntime.jsx)(FileNameDialog, {
         isOpen: isFileNameDialogOpen,
         onClose: () => setIsFileNameDialogOpen(false),
-        onConfirm: async t => {
-          let n = prepareCardForExport(card);
-          if ("json" === exportFormat) ((e, t) => {
-            let n = JSON.stringify(buildExportCard(e), null, 2);
-            downloadBlob(new Blob([n], {
+        onConfirm: async fileName => {
+          let exportCard = prepareCardForExport(card);
+          if ("json" === exportFormat) ((cardData, downloadName) => {
+            let json = JSON.stringify(buildExportCard(cardData), null, 2);
+            downloadBlob(new Blob([json], {
               type: "application/json;charset=utf-8"
-            }), t);
-          })(n, t);else {
+            }), downloadName);
+          })(exportCard, fileName);else {
             if (!card || !avatarFile) return;
             setIsExporting(true);
             setExportError("");
             try {
-              await (async (e, t, n) => {
-                let r = ((e, t) => {
-                  let n = new Uint8Array(e);
-                  if (!isPngBytes(n)) throw Error("Avatar không phải PNG hợp lệ sau khi chuyển đổi.");
-                  let r = new DataView(e);
-                  let a = [];
-                  let i = null;
-                  let o = 8;
-                  let s = 0;
-                  for (; o < n.byteLength;) {
-                    if (++s > 1e5 || o + 12 > n.byteLength) throw Error("Cấu trúc chunk PNG không hợp lệ.");
-                    let e = r.getUint32(o);
-                    let t = o + 12 + e;
-                    if (t > n.byteLength || t <= o) throw Error("PNG có chunk vượt quá giới hạn tệp.");
-                    let l = new TextDecoder("latin1").decode(n.subarray(o + 4, o + 8));
-                    let c = n.slice(o, t);
-                    if ("IEND" === l) {
-                      i = c;
+              await (async (cardData, sourceFile, downloadName) => {
+                let pngWithMetadata = ((arrayBuffer, cardData) => {
+                  let bytes = new Uint8Array(arrayBuffer);
+                  if (!isPngBytes(bytes)) throw Error("Avatar không phải PNG hợp lệ sau khi chuyển đổi.");
+                  let view = new DataView(arrayBuffer);
+                  let chunks = [];
+                  let endChunk = null;
+                  let offset = 8;
+                  let chunkCount = 0;
+                  for (; offset < bytes.byteLength;) {
+                    if (++chunkCount > 1e5 || offset + 12 > bytes.byteLength) throw Error("Cấu trúc chunk PNG không hợp lệ.");
+                    let chunkLength = view.getUint32(offset);
+                    let nextOffset = offset + 12 + chunkLength;
+                    if (nextOffset > bytes.byteLength || nextOffset <= offset) throw Error("PNG có chunk vượt quá giới hạn tệp.");
+                    let chunkType = new TextDecoder("latin1").decode(bytes.subarray(offset + 4, offset + 8));
+                    let chunk = bytes.slice(offset, nextOffset);
+                    if ("IEND" === chunkType) {
+                      endChunk = chunk;
                       break;
                     }
-                    let u = false;
-                    if ("tEXt" === l) {
-                      let t = n.subarray(o + 8, o + 8 + e);
-                      let r = t.indexOf(0);
-                      if (r > 0) {
-                        let e = new TextDecoder("latin1").decode(t.subarray(0, r)).toLowerCase();
-                        u = "chara" === e || "ccv3" === e;
+                    let isCardMetadata = false;
+                    if ("tEXt" === chunkType) {
+                      let chunkData = bytes.subarray(offset + 8, offset + 8 + chunkLength);
+                      let separator = chunkData.indexOf(0);
+                      if (separator > 0) {
+                        let keyword = new TextDecoder("latin1").decode(chunkData.subarray(0, separator)).toLowerCase();
+                        isCardMetadata = "chara" === keyword || "ccv3" === keyword;
                       }
                     }
-                    u || a.push(c);
-                    o = t;
+                    isCardMetadata || chunks.push(chunk);
+                    offset = nextOffset;
                   }
-                  if (!i) throw Error("PNG bị hỏng hoặc thiếu chunk IEND.");
-                  let l = [createPngTextChunk("chara", encodeBase64Utf8(JSON.stringify(buildExportCard(t, "v2"))))];
-                  "v3" === resolveExportSpec(t, "auto") && l.push(createPngTextChunk("ccv3", encodeBase64Utf8(JSON.stringify(buildExportCard(t, "v3")))));
-                  let c = 8 + [...a, ...l, i].reduce((e, t) => e + t.length, 0);
-                  let u = new Uint8Array(c);
-                  u.set(n.subarray(0, 8));
-                  let d = 8;
-                  for (let e of [...a, ...l, i]) u.set(e, d), d += e.length;
-                  return u;
-                })(await (async e => {
-                  let t = new Uint8Array(await e.arrayBuffer());
-                  if (isPngBytes(t)) return t.buffer.slice(t.byteOffset, t.byteOffset + t.byteLength);
-                  let n;
-                  let r = document.createElement("canvas");
-                  let a = 0;
-                  let i = 0;
-                  let o = () => {};
+                  if (!endChunk) throw Error("PNG bị hỏng hoặc thiếu chunk IEND.");
+                  let metadataChunks = [createPngTextChunk("chara", encodeBase64Utf8(JSON.stringify(buildExportCard(cardData, "v2"))))];
+                  "v3" === resolveExportSpec(cardData, "auto") && metadataChunks.push(createPngTextChunk("ccv3", encodeBase64Utf8(JSON.stringify(buildExportCard(cardData, "v3")))));
+                  let totalBytes = 8 + [...chunks, ...metadataChunks, endChunk].reduce((total, chunk) => total + chunk.length, 0);
+                  let output = new Uint8Array(totalBytes);
+                  output.set(bytes.subarray(0, 8));
+                  let writeOffset = 8;
+                  for (let chunk of [...chunks, ...metadataChunks, endChunk]) output.set(chunk, writeOffset), writeOffset += chunk.length;
+                  return output;
+                })(await (async file => {
+                  let bytes = new Uint8Array(await file.arrayBuffer());
+                  if (isPngBytes(bytes)) return bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength);
+                  let imageSource;
+                  let canvas = document.createElement("canvas");
+                  let width = 0;
+                  let height = 0;
+                  let cleanup = () => {};
                   if ("function" == typeof createImageBitmap) {
-                    let t = await createImageBitmap(e);
-                    a = t.width;
-                    i = t.height;
-                    n = t;
-                    o = () => t.close();
+                    let bitmap = await createImageBitmap(file);
+                    width = bitmap.width;
+                    height = bitmap.height;
+                    imageSource = bitmap;
+                    cleanup = () => bitmap.close();
                   } else {
-                    let t = URL.createObjectURL(e);
-                    let r = new Image();
+                    let url = URL.createObjectURL(file);
+                    let image = new Image();
                     try {
-                      await new Promise((e, n) => {
-                        r.onload = () => e();
-                        r.onerror = () => n(Error("Trình duyệt không thể giải mã ảnh avatar này."));
-                        r.src = t;
+                      await new Promise((resolve, reject) => {
+                        image.onload = () => resolve();
+                        image.onerror = () => reject(Error("Trình duyệt không thể giải mã ảnh avatar này."));
+                        image.src = url;
                       });
-                    } catch (e) {
-                      throw URL.revokeObjectURL(t), e;
+                    } catch (error) {
+                      throw URL.revokeObjectURL(url), error;
                     }
-                    a = r.naturalWidth;
-                    i = r.naturalHeight;
-                    n = r;
-                    o = () => URL.revokeObjectURL(t);
+                    width = image.naturalWidth;
+                    height = image.naturalHeight;
+                    imageSource = image;
+                    cleanup = () => URL.revokeObjectURL(url);
                   }
                   try {
-                    if (!a || !i || a * i > 1e8) throw Error("Kích thước avatar không hợp lệ hoặc quá lớn.");
-                    r.width = a;
-                    r.height = i;
-                    let e = r.getContext("2d");
-                    if (!e) throw Error("Trình duyệt không hỗ trợ chuyển avatar sang PNG.");
-                    e.drawImage(n, 0, 0);
+                    if (!width || !height || width * height > 1e8) throw Error("Kích thước avatar không hợp lệ hoặc quá lớn.");
+                    canvas.width = width;
+                    canvas.height = height;
+                    let context = canvas.getContext("2d");
+                    if (!context) throw Error("Trình duyệt không hỗ trợ chuyển avatar sang PNG.");
+                    context.drawImage(imageSource, 0, 0);
                   } finally {
-                    o();
+                    cleanup();
                   }
-                  return (await new Promise((e, t) => r.toBlob(n => n ? e(n) : t(Error("Không thể chuyển avatar sang PNG.")), "image/png"))).arrayBuffer();
-                })(t), e);
-                downloadBlob(new Blob([Uint8Array.from(r).buffer], {
+                  return (await new Promise((resolve, reject) => canvas.toBlob(blob => blob ? resolve(blob) : reject(Error("Không thể chuyển avatar sang PNG.")), "image/png"))).arrayBuffer();
+                })(sourceFile), cardData);
+                downloadBlob(new Blob([Uint8Array.from(pngWithMetadata).buffer], {
                   type: "image/png"
-                }), n);
-              })(n, avatarFile, t);
-            } catch (e) {
-              setExportError(e instanceof Error ? `Lỗi xuất PNG: ${e.message}` : "Đã xảy ra lỗi không xác định khi xuất tệp PNG.");
+                }), downloadName);
+              })(exportCard, avatarFile, fileName);
+            } catch (error) {
+              setExportError(error instanceof Error ? `Lỗi xuất PNG: ${error.message}` : "Đã xảy ra lỗi không xác định khi xuất tệp PNG.");
             } finally {
               setIsExporting(false);
             }
@@ -412,15 +412,15 @@ export function createCharacterScreen(getDependencies) {
     let [draftAvatarFile, setDraftAvatarFile] = (0, react.useState)(null);
     let [searchQuery, setSearchQuery] = (0, react.useState)("");
     let filteredCharacters = (0, react.useMemo)(() => {
-      let t = searchQuery.trim().toLocaleLowerCase("vi");
-      return t ? characters.filter(e => `${e.card.name || ""} ${e.fileName || ""} ${(e.card.tags || []).join(" ")}`.toLocaleLowerCase("vi").includes(t)) : characters;
+      let query = searchQuery.trim().toLocaleLowerCase("vi");
+      return query ? characters.filter(character => `${character.card.name || ""} ${character.fileName || ""} ${(character.card.tags || []).join(" ")}`.toLocaleLowerCase("vi").includes(query)) : characters;
     }, [characters, searchQuery]);
     let activeEntry = activeCharacterFileName === NEW_CHARACTER_ID ? {
       card: draftCard,
       fileName: "New Character",
       avatarUrl: draftAvatarUrl,
       avatarFile: draftAvatarFile
-    } : activeCharacterFileName ? characters.find(e => e.fileName === activeCharacterFileName) : null;
+    } : activeCharacterFileName ? characters.find(character => character.fileName === activeCharacterFileName) : null;
     return isLoading && 0 === characters.length ? (0, jsxRuntime.jsx)("div", {
       className: "flex justify-center items-center h-64",
       children: (0, jsxRuntime.jsx)(LoadingIndicator, {
@@ -429,18 +429,18 @@ export function createCharacterScreen(getDependencies) {
     }) : isLorebookManagerOpen && activeEntry ? (0, jsxRuntime.jsx)(LorebookManager, {
       initialEntries: activeEntry.card.char_book?.entries || [],
       initialAttached: activeEntry.card.attached_lorebooks || [],
-      onSave: (e, n) => {
+      onSave: (entries, attachedLorebooks) => {
         if (!activeEntry) return;
-        let r = JSON.parse(JSON.stringify(activeEntry.card));
-        r.char_book ||= {
+        let updatedCard = JSON.parse(JSON.stringify(activeEntry.card));
+        updatedCard.char_book ||= {
           entries: []
         };
-        r.char_book.entries = e;
-        r.attached_lorebooks = n;
+        updatedCard.char_book.entries = entries;
+        updatedCard.attached_lorebooks = attachedLorebooks;
         if (activeCharacterFileName === NEW_CHARACTER_ID) {
-          setDraftCard(r);
+          setDraftCard(updatedCard);
         } else {
-          updateActiveCharacter(r);
+          updateActiveCharacter(updatedCard);
         }
         setIsLorebookManagerOpen(false);
       },
@@ -477,7 +477,7 @@ export function createCharacterScreen(getDependencies) {
           }), (0, jsxRuntime.jsx)("input", {
             type: "search",
             value: searchQuery,
-            onChange: e => setSearchQuery(e.target.value),
+            onChange: event => setSearchQuery(event.target.value),
             placeholder: "Tìm tên, tệp hoặc thẻ...",
             "aria-label": "Tìm nhân vật"
           })]
@@ -488,13 +488,13 @@ export function createCharacterScreen(getDependencies) {
             children: 0 === filteredCharacters.length ? (0, jsxRuntime.jsx)("p", {
               className: "text-slate-500 text-sm italic text-center py-4",
               children: searchQuery ? "Không tìm thấy nhân vật phù hợp." : "Chưa có nhân vật. Hãy tải lên hoặc tạo mới."
-            }) : filteredCharacters.map(e => (0, jsxRuntime.jsxs)("button", {
-              onClick: () => setActiveCharacterFileName(e.fileName),
-              className: "w-full text-left px-3 py-2 rounded-lg  text-sm font-medium flex items-center gap-3 " + (activeCharacterFileName === e.fileName ? "bg-sky-600/30 text-white ring-1 ring-sky-500/50" : "hover:bg-slate-700/50 text-slate-400 hover:text-slate-200"),
+            }) : filteredCharacters.map(character => (0, jsxRuntime.jsxs)("button", {
+              onClick: () => setActiveCharacterFileName(character.fileName),
+              className: "w-full text-left px-3 py-2 rounded-lg  text-sm font-medium flex items-center gap-3 " + (activeCharacterFileName === character.fileName ? "bg-sky-600/30 text-white ring-1 ring-sky-500/50" : "hover:bg-slate-700/50 text-slate-400 hover:text-slate-200"),
               children: [(0, jsxRuntime.jsx)("div", {
                 className: "w-6 h-6 rounded-full bg-slate-700 flex-shrink-0 overflow-hidden border border-slate-600/50",
-                children: e.avatarUrl ? (0, jsxRuntime.jsx)("img", {
-                  src: e.avatarUrl,
+                children: character.avatarUrl ? (0, jsxRuntime.jsx)("img", {
+                  src: character.avatarUrl,
                   alt: "",
                   className: "w-full h-full object-cover"
                 }) : (0, jsxRuntime.jsx)("div", {
@@ -504,9 +504,9 @@ export function createCharacterScreen(getDependencies) {
                 })
               }), (0, jsxRuntime.jsx)("span", {
                 className: "truncate",
-                children: e.card.name || e.fileName
+                children: character.card.name || character.fileName
               })]
-            }, e.fileName))
+            }, character.fileName))
           })
         }), (0, jsxRuntime.jsxs)("div", {
           className: "mt-auto space-y-2 flex-shrink-0 pt-3 border-t border-slate-700/50",
@@ -519,8 +519,8 @@ export function createCharacterScreen(getDependencies) {
             "aria-label": "Tệp nhân vật để nhập",
             className: "sr-only",
             accept: ".png,.apng,.json,.charx,application/json,application/zip,image/png",
-            onChange: e => {
-              e.target.files && e.target.files.length > 0 && (loadCharacter(e.target.files[0]), e.target.value = "");
+            onChange: event => {
+              event.target.files && event.target.files.length > 0 && (loadCharacter(event.target.files[0]), event.target.value = "");
             },
             "aria-hidden": "true",
             tabIndex: -1
@@ -559,13 +559,13 @@ export function createCharacterScreen(getDependencies) {
               fileName: activeEntry.fileName,
               avatarUrl: activeEntry.avatarUrl,
               avatarFile: activeEntry.avatarFile,
-              setAvatar: (e, n) => {
+              setAvatar: (url, file) => {
                 if (activeCharacterFileName === NEW_CHARACTER_ID) {
-                  draftAvatarUrl && draftAvatarUrl !== e && URL.revokeObjectURL(draftAvatarUrl);
-                  setDraftAvatarUrl(e);
-                  setDraftAvatarFile(n);
+                  draftAvatarUrl && draftAvatarUrl !== url && URL.revokeObjectURL(draftAvatarUrl);
+                  setDraftAvatarUrl(url);
+                  setDraftAvatarFile(file);
                 } else {
-                  activeCharacterFileName && setAvatarForActiveCharacter(activeCharacterFileName, e, n);
+                  activeCharacterFileName && setAvatarForActiveCharacter(activeCharacterFileName, url, file);
                 }
               },
               isNewCharacter: activeCharacterFileName === NEW_CHARACTER_ID,
@@ -573,8 +573,8 @@ export function createCharacterScreen(getDependencies) {
                 if (draftCard.name.trim()) try {
                   await createNewCharacter(draftCard, draftAvatarFile);
                   showToast("Đã tạo nhân vật thành công!", "success");
-                } catch (e) {
-                  showToast(`Lỗi tạo nhân vật: ${e instanceof Error ? e.message : String(e)}`, "error");
+                } catch (error) {
+                  showToast(`Lỗi tạo nhân vật: ${error instanceof Error ? error.message : String(error)}`, "error");
                 } else showToast("Tên nhân vật không được để trống!", "error");
               }
             })
@@ -631,10 +631,10 @@ export function createPresetScreen(getDependencies) {
     } = useToast();
     let [searchQuery, setSearchQuery] = (0, react.useState)("");
     let filteredPresets = (0, react.useMemo)(() => {
-      let t = searchQuery.trim().toLocaleLowerCase("vi");
-      return t ? presets.filter(e => e.name.toLocaleLowerCase("vi").includes(t)) : presets;
+      let query = searchQuery.trim().toLocaleLowerCase("vi");
+      return query ? presets.filter(preset => preset.name.toLocaleLowerCase("vi").includes(query)) : presets;
     }, [presets, searchQuery]);
-    let activePreset = presets.find(e => e.name === activePresetName) || null;
+    let activePreset = presets.find(preset => preset.name === activePresetName) || null;
     return isLoading && 0 === presets.length ? (0, jsxRuntime.jsx)("div", {
       className: "flex justify-center items-center h-64",
       children: (0, jsxRuntime.jsx)(LoadingIndicator, {
@@ -665,7 +665,7 @@ export function createPresetScreen(getDependencies) {
           }), (0, jsxRuntime.jsx)("input", {
             type: "search",
             value: searchQuery,
-            onChange: e => setSearchQuery(e.target.value),
+            onChange: event => setSearchQuery(event.target.value),
             placeholder: "Tìm preset...",
             "aria-label": "Tìm preset"
           })]
@@ -674,11 +674,11 @@ export function createPresetScreen(getDependencies) {
           children: 0 === filteredPresets.length ? (0, jsxRuntime.jsx)("p", {
             className: "text-slate-500 text-sm italic text-center py-4",
             children: searchQuery ? "Không tìm thấy preset phù hợp." : "Chưa có preset."
-          }) : filteredPresets.map(e => (0, jsxRuntime.jsx)("button", {
-            onClick: () => setActivePresetName(e.name),
-            className: "w-full text-left px-3 py-2 rounded-lg text-sm font-medium truncate " + (activePresetName === e.name ? "bg-sky-600/30 text-white ring-1 ring-sky-500/50" : "hover:bg-slate-700/50 text-slate-400 hover:text-slate-200"),
-            children: e.name
-          }, e.name))
+          }) : filteredPresets.map(preset => (0, jsxRuntime.jsx)("button", {
+            onClick: () => setActivePresetName(preset.name),
+            className: "w-full text-left px-3 py-2 rounded-lg text-sm font-medium truncate " + (activePresetName === preset.name ? "bg-sky-600/30 text-white ring-1 ring-sky-500/50" : "hover:bg-slate-700/50 text-slate-400 hover:text-slate-200"),
+            children: preset.name
+          }, preset.name))
         }), (0, jsxRuntime.jsxs)("div", {
           className: "mt-auto space-y-2 pt-3 border-t border-slate-700/50",
           children: [error && (0, jsxRuntime.jsx)("p", {
@@ -690,8 +690,8 @@ export function createPresetScreen(getDependencies) {
             "aria-label": "Nhập preset JSON",
             className: "sr-only",
             accept: ".json",
-            onChange: e => {
-              e.target.files && e.target.files.length > 0 && (addPreset(e.target.files[0]), e.target.value = "");
+            onChange: event => {
+              event.target.files && event.target.files.length > 0 && (addPreset(event.target.files[0]), event.target.value = "");
             }
           }), (0, jsxRuntime.jsxs)("div", {
             className: "grid grid-cols-2 gap-2",
@@ -785,27 +785,27 @@ export function createPresetScreen(getDependencies) {
       }), (0, jsxRuntime.jsx)(FileNameDialog, {
         isOpen: isExportDialogOpen,
         onClose: () => setIsExportDialogOpen(false),
-        onConfirm: e => {
-          activePreset && ((e, t) => {
+        onConfirm: fileName => {
+          activePreset && ((preset, downloadName) => {
             try {
-              let n = JSON.parse(JSON.stringify(e));
-              delete n.prompt_order;
-              Object.keys(n).forEach(e => {
-                (null === n[e] || undefined === n[e]) && delete n[e];
-                Array.isArray(n[e]) && 0 === n[e].length && ("stopping_strings" === e || "custom_stopping_strings" === e) && delete n[e];
+              let exportPreset = JSON.parse(JSON.stringify(preset));
+              delete exportPreset.prompt_order;
+              Object.keys(exportPreset).forEach(key => {
+                (null === exportPreset[key] || undefined === exportPreset[key]) && delete exportPreset[key];
+                Array.isArray(exportPreset[key]) && 0 === exportPreset[key].length && ("stopping_strings" === key || "custom_stopping_strings" === key) && delete exportPreset[key];
               });
-              let r = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(n, null, 2));
-              let a = document.createElement("a");
-              a.setAttribute("href", r);
-              a.setAttribute("download", t);
-              document.body.appendChild(a);
-              a.click();
-              a.remove();
-            } catch (e) {
-              console.error("Failed to export preset:", e);
+              let downloadUrl = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(exportPreset, null, 2));
+              let anchor = document.createElement("a");
+              anchor.setAttribute("href", downloadUrl);
+              anchor.setAttribute("download", downloadName);
+              document.body.appendChild(anchor);
+              anchor.click();
+              anchor.remove();
+            } catch (error) {
+              console.error("Failed to export preset:", error);
               alert("An error occurred while trying to export the preset file.");
             }
-          })(activePreset, e);
+          })(activePreset, fileName);
         },
         initialFileName: activePreset?.name || "Preset",
         title: "Xuất Preset",
@@ -815,21 +815,21 @@ export function createPresetScreen(getDependencies) {
         mode: nameDialogState,
         onClose: () => setNameDialogState(null),
         originalName: activePreset?.name || "",
-        onConfirm: async e => {
+        onConfirm: async name => {
           try {
             if ("create" === nameDialogState) {
-              await createPreset(e);
-              showToast(`Đã tạo preset mới: "${e}"`, "success");
+              await createPreset(name);
+              showToast(`Đã tạo preset mới: "${name}"`, "success");
             } else {
               if ("clone" === nameDialogState && activePreset) {
-                await duplicatePreset(activePreset.name, e);
-                showToast(`Đã nhân bản thành: "${e}"`, "success");
+                await duplicatePreset(activePreset.name, name);
+                showToast(`Đã nhân bản thành: "${name}"`, "success");
               } else {
-                "rename" === nameDialogState && activePreset && (await renamePreset(activePreset.name, e), showToast(`Đã đổi tên thành: "${e}"`, "success"));
+                "rename" === nameDialogState && activePreset && (await renamePreset(activePreset.name, name), showToast(`Đã đổi tên thành: "${name}"`, "success"));
               }
             }
-          } catch (e) {
-            showToast(`Lỗi: ${e instanceof Error ? e.message : String(e)}`, "error");
+          } catch (error) {
+            showToast(`Lỗi: ${error instanceof Error ? error.message : String(error)}`, "error");
           } finally {
             setNameDialogState(null);
           }
@@ -856,18 +856,18 @@ export function createPersonaEditor(getDependencies) {
       }), (0, jsxRuntime.jsx)(TextInput, {
         label: "Tên Hồ sơ",
         value: persona.name,
-        onChange: n => onUpdate({
+        onChange: event => onUpdate({
           ...persona,
-          name: n.target.value
+          name: event.target.value
         })
       }), (0, jsxRuntime.jsx)("div", {
         className: "flex-grow flex flex-col",
         children: (0, jsxRuntime.jsx)(TextArea, {
           label: "Mô tả",
           value: persona.description,
-          onChange: n => onUpdate({
+          onChange: event => onUpdate({
             ...persona,
-            description: n.target.value
+            description: event.target.value
           }),
           rows: 10,
           containerClassName: "flex-grow flex flex-col",
@@ -898,7 +898,7 @@ export function createPersonaScreen(getDependencies) {
       setActivePersonaId: setActivePersonaId
     } = personaStore();
     let [selectedPersonaId, setSelectedPersonaId] = (0, react.useState)(null);
-    let selectedPersona = personas.find(e => e.id === selectedPersonaId) || null;
+    let selectedPersona = personas.find(persona => persona.id === selectedPersonaId) || null;
     return isLoading ? (0, jsxRuntime.jsx)(LoadingIndicator, {
       message: "Đang tải hồ sơ..."
     }) : (0, jsxRuntime.jsxs)("div", {
@@ -912,13 +912,13 @@ export function createPersonaScreen(getDependencies) {
             children: "Danh sách Hồ sơ"
           }), (0, jsxRuntime.jsx)("button", {
             onClick: () => {
-              let e = {
+              let newPersona = {
                 id: `persona_${Date.now()}`,
                 name: "Hồ sơ Mới",
                 description: ""
               };
-              addOrUpdatePersona(e);
-              setSelectedPersonaId(e.id);
+              addOrUpdatePersona(newPersona);
+              setSelectedPersonaId(newPersona.id);
             },
             className: "text-xs bg-emerald-600 hover:bg-emerald-500 text-white px-2 py-1 rounded font-bold ",
             children: "+ Mới"
@@ -928,28 +928,28 @@ export function createPersonaScreen(getDependencies) {
           children: 0 === personas.length ? (0, jsxRuntime.jsx)("p", {
             className: "text-slate-500 text-sm italic text-center py-4",
             children: "Chưa có hồ sơ nào."
-          }) : personas.map(e => (0, jsxRuntime.jsx)("div", {
-            className: "px-3 py-2 rounded-lg  text-sm font-medium " + (selectedPersonaId === e.id ? "bg-sky-600/30 ring-1 ring-sky-500/50" : "hover:bg-slate-700/50"),
+          }) : personas.map(persona => (0, jsxRuntime.jsx)("div", {
+            className: "px-3 py-2 rounded-lg  text-sm font-medium " + (selectedPersonaId === persona.id ? "bg-sky-600/30 ring-1 ring-sky-500/50" : "hover:bg-slate-700/50"),
             children: (0, jsxRuntime.jsxs)("div", {
               className: "flex items-center justify-between",
               children: [(0, jsxRuntime.jsx)("button", {
                 type: "button",
-                className: "truncate flex-grow mr-4 cursor-pointer " + (selectedPersonaId === e.id ? "text-white" : "text-slate-400 hover:text-slate-200"),
-                onClick: () => setSelectedPersonaId(e.id),
-                children: e.name
+                className: "truncate flex-grow mr-4 cursor-pointer " + (selectedPersonaId === persona.id ? "text-white" : "text-slate-400 hover:text-slate-200"),
+                onClick: () => setSelectedPersonaId(persona.id),
+                children: persona.name
               }), (0, jsxRuntime.jsx)("div", {
                 className: "flex items-center gap-3 flex-shrink-0",
                 children: (0, jsxRuntime.jsx)(ToggleSwitch, {
-                  ariaLabel: `Đặt ${e.name} làm hồ sơ mặc định`,
-                  checked: activePersonaId === e.id,
-                  onChange: () => (e => {
-                    setActivePersonaId(activePersonaId === e ? null : e);
-                  })(e.id),
+                  ariaLabel: `Đặt ${persona.name} làm hồ sơ mặc định`,
+                  checked: activePersonaId === persona.id,
+                  onChange: () => (personaId => {
+                    setActivePersonaId(activePersonaId === personaId ? null : personaId);
+                  })(persona.id),
                   clean: true
                 })
               })]
             })
-          }, e.id))
+          }, persona.id))
         }), (0, jsxRuntime.jsxs)("div", {
           className: "mt-auto pt-3 border-t border-slate-700/50",
           children: [error && (0, jsxRuntime.jsx)("p", {
