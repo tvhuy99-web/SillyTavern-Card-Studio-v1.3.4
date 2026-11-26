@@ -95,13 +95,13 @@ export function createFrameContext(dependencies = {}) {
   }).smartStateBlock;
   var readVariableScope = (scope, context) => {
     if (typeof window > "u") return {};
-    let storageKey = (0, dependencies.Ah)(scope, context);
-    return storageKey ? (0, dependencies.jh)(window.localStorage, storageKey) : {};
+    let storageKey = (0, dependencies.runtimeVariableStorageKey)(scope, context);
+    return storageKey ? (0, dependencies.readRuntimeRecord)(window.localStorage, storageKey) : {};
   };
   var buildVariableScopes = (variables, messages, context, scripts, card, openingIndex) => {
     let openingText = (0, dependencies.__stsSelectInitialVariableOpening)(card, messages, openingIndex).text;
     let chatVariables = variables && Object.keys(variables).length ? variables
-      : (0, dependencies.__stsSeedInitialVariablesFromCard)({}, card, openingText, text => dependencies.jt.default.parse(text)).variables;
+      : (0, dependencies.__stsSeedInitialVariablesFromCard)({}, card, openingText, text => dependencies.relaxedJson.default.parse(text)).variables;
     let messageIndex = Math.max(0, Math.min(messages.length - 1, context.messageId || 0));
     let messageVariables = messages[messageIndex]?.contextState || readVariableScope({
       type: "message",
@@ -137,20 +137,20 @@ export function createFrameContext(dependencies = {}) {
   };
   var readScopedFrameStorage = (storageType, context) => {
     if (typeof window > "u") return {};
-    let record = (0, dependencies.jh)("local" === storageType ? window.localStorage : window.sessionStorage, (0, dependencies.Ih)(storageType, context));
+    let record = (0, dependencies.readRuntimeRecord)("local" === storageType ? window.localStorage : window.sessionStorage, (0, dependencies.runtimeWebStorageKey)(storageType, context));
     return Object.fromEntries(Object.entries(record).map(([key, value]) => [key, String(value)]));
   };
   return {
-    bp: baseFrameImportMap,
-    vp: updatedFrameImportMap,
-    _p: baseFrameLibrariesHtml,
-    wp: updatedFrameLibrariesHtml,
-    kp: serializeInlineJson,
-    Sp: serializeElementAttributes,
-    Cp: escapeHtmlAttribute,
-    Ep: replaceFrameTemplates,
-    Np: buildFrameSmartStateBlock,
-    Ap: buildVariableScopes,
-    Ip: readScopedFrameStorage
+    baseFrameImportMap,
+    updatedFrameImportMap,
+    baseFrameLibrariesHtml,
+    updatedFrameLibrariesHtml,
+    serializeInlineJson,
+    serializeElementAttributes,
+    escapeHtmlAttribute,
+    replaceFrameTemplates,
+    buildFrameSmartStateBlock,
+    buildVariableScopes,
+    readScopedFrameStorage
   };
 }

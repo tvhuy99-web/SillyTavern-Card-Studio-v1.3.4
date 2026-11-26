@@ -143,5 +143,5 @@ export function createCharacterExport(dependencies = {}) {
     anchor.remove();
     setTimeout(() => URL.revokeObjectURL(url), 3e4);
   };
-  return { Hl: encodeBase64Utf8, $l: createPngTextChunk, ql: resolveExportSpec, Kl: buildExportCard, Wl: isPngBytes, Jl: downloadBlob };
+  return { encodeBase64Utf8, createPngTextChunk, resolveExportSpec, buildExportCard, isPngBytes, downloadBlob };
 }

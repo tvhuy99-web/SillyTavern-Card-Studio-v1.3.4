@@ -6,7 +6,7 @@ export function createCharacterFileCodec(dependencies = {}) {
   var isRecordObject = value => "object" == typeof value && !!value && !Array.isArray(value);
   var isPngBytes = bytes => bytes.length >= PNG_SIGNATURE.length && PNG_SIGNATURE.every((signatureByte,index) => bytes[index] === signatureByte);
   var parseCardJson = (text, fileName) => {
-    try { return dependencies.jt.default.parse(text.replace(/^\uFEFF/,"")); }
+    try { return dependencies.relaxedJson.default.parse(text.replace(/^\uFEFF/,"")); }
     catch (error) { throw Error(`Dữ liệu nhân vật trong "${fileName}" không phải JSON hợp lệ.`,{cause:error}); }
   };
   var decodePngBase64Metadata = encoded => {
@@ -91,7 +91,7 @@ export function createCharacterFileCodec(dependencies = {}) {
       target.extensions = extensions;
     })(card);
     let lorebook = card.character_book ?? card.char_book;
-    if (void 0 !== lorebook) card.char_book = (0, dependencies.Mt)(lorebook);
+    if (void 0 !== lorebook) card.char_book = (0, dependencies.normalizeLorebook)(lorebook);
     delete card.character_book;
     card.spec ||= sourceSpec;
     if (!card.spec_version && "chara_card_v3" === card.spec) card.spec_version = "3.0";
@@ -175,8 +175,8 @@ export function createCharacterFileCodec(dependencies = {}) {
       let charx = await (async (archiveFile, archiveBuffer) => {
         let archive;
         try {
-          archive = await (await (0, dependencies.nc)(async () => {
-            let {default: zipLibrary} = await import("../../../jszip.min-CF4xG0Dr.js").then(module => (0, dependencies.l)(module.default,1));
+          archive = await (await (0, dependencies.loadLibraryModule)(async () => {
+            let {default: zipLibrary} = await import("../../../jszip.min-CF4xG0Dr.js").then(module => (0, dependencies.wrapModule)(module.default,1));
             return {default:zipLibrary};
           })).default.loadAsync(archiveBuffer || await archiveFile.arrayBuffer());
         } catch (error) { throw Error("Tệp CHARX/ZIP bị hỏng hoặc không thể giải nén.",{cause:error}); }
@@ -258,5 +258,5 @@ export function createCharacterFileCodec(dependencies = {}) {
     }
     return {card:card,avatarUrl:avatarFile?URL.createObjectURL(avatarFile):null,avatarFile:avatarFile,format:format};
   };
-  return { oc: isRecordObject, mc: mergeCardObjects, gc: normalizeCharacterCard, _c: parseCharacterFile };
+  return { isRecordObject, mergeCardObjects, normalizeCharacterCard, parseCharacterFile };
 }
