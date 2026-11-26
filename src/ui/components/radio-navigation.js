@@ -1,5 +1,17 @@
 // Recovered from the application host. One owner; dependency getters preserve late binding.
 export function createRadioNavigation(dependencies = {}) {
-function xu(e){if(!["ArrowLeft","ArrowRight","ArrowUp","ArrowDown"].includes(e.key))return;let t=e.currentTarget.closest('[role="radiogroup"]'),n=t?[...t.querySelectorAll('[role="radio"]:not([disabled])')]:[],r=n.indexOf(e.currentTarget);if(r<0||0===n.length)return;let a="ArrowRight"===e.key||"ArrowDown"===e.key?(r+1)%n.length:(r-1+n.length)%n.length;e.preventDefault(),n[a].focus(),n[a].click()}
-return { handleRadioKeyDown: xu };
+function handleRadioKeyDown(event) {
+  if (!["ArrowLeft","ArrowRight","ArrowUp","ArrowDown"].includes(event.key)) return;
+  let group = event.currentTarget.closest('[role="radiogroup"]');
+  let enabledRadios = group ? [...group.querySelectorAll('[role="radio"]:not([disabled])')] : [];
+  let currentIndex = enabledRadios.indexOf(event.currentTarget);
+  if (currentIndex < 0 || enabledRadios.length === 0) return;
+  let nextIndex = event.key === "ArrowRight" || event.key === "ArrowDown"
+    ? (currentIndex + 1) % enabledRadios.length
+    : (currentIndex - 1 + enabledRadios.length) % enabledRadios.length;
+  event.preventDefault();
+  enabledRadios[nextIndex].focus();
+  enabledRadios[nextIndex].click();
+}
+return { handleRadioKeyDown };
 }
