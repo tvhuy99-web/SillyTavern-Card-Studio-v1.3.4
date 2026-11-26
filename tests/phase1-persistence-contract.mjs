@@ -79,7 +79,7 @@ assert.deepEqual(transactions.at(-1).writes, [['chatSessions','delete',0],['chat
 await repos.sessions.remove('s'); assert.deepEqual(transactions.at(-1).writes, [['chatSessions','delete','s']]);
 const prod = readRecoveredHostView();
 assert.ok(!prod.includes('indexedDB.open("SillyTavernCardStudioDB",6)'));
-assert.ok(prod.includes('Wt=__stsRepositories.sessions.put'));
+assert.ok(prod.includes('saveSessionRecord=__stsRepositories.sessions.put'));
 assert.ok(prod.includes('createCharacterMutations({ get, set, repositories'));
 assert.ok(readFileSync(new URL('../src/features/catalog/catalog-mutations.js',import.meta.url),'utf8').includes('await repositories.removeCharacterAndSessions(id)'));
 assert.ok(readFileSync(new URL('../src/app/persistence/backup-restore-service.js',import.meta.url),'utf8').includes('await (repositories.restoreRecords ?? repositories.mergeRecords)(staged.records,'));
