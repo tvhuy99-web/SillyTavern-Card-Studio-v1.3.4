@@ -42,17 +42,17 @@ export function createPromptSectionView(getDependencies) {
     } = resolveDiagnosticDeps(getDependencies);
     let hasSubSections = section.subSections && section.subSections.length > 0;
     let contentLines = (0, react.useMemo)(() => section.content.split("\n"), [section.content]);
-    let isHighlightSection = (0, react.useMemo)(() => ["Replacement", "Stop Strings"].some(t => section.name.toLowerCase().includes(t.toLowerCase())), [section.name]);
-    let handleKeyDown = e => {
-      let t = e.currentTarget;
-      if ("ArrowDown" === e.key) {
-        e.preventDefault();
-        let n = t.nextElementSibling;
-        n && n.tabIndex >= 0 && n.focus();
-      } else if ("ArrowUp" === e.key) {
-        e.preventDefault();
-        let n = t.previousElementSibling;
-        n && n.tabIndex >= 0 && n.focus();
+    let isHighlightSection = (0, react.useMemo)(() => ["Replacement", "Stop Strings"].some(keyword => section.name.toLowerCase().includes(keyword.toLowerCase())), [section.name]);
+    let handleKeyDown = event => {
+      let element = event.currentTarget;
+      if ("ArrowDown" === event.key) {
+        event.preventDefault();
+        let sibling = element.nextElementSibling;
+        sibling && sibling.tabIndex >= 0 && sibling.focus();
+      } else if ("ArrowUp" === event.key) {
+        event.preventDefault();
+        let sibling = element.previousElementSibling;
+        sibling && sibling.tabIndex >= 0 && sibling.focus();
       }
     };
     return (0, jsxRuntime.jsxs)("div", {
@@ -78,20 +78,20 @@ export function createPromptSectionView(getDependencies) {
         })]
       }), (0, jsxRuntime.jsx)("div", {
         className: "p-2 flex flex-col gap-1 bg-slate-900/30 max-h-[400px] overflow-y-auto custom-scrollbar group",
-        children: hasSubSections ? section.subSections.map((e, t) => (0, jsxRuntime.jsxs)("div", {
+        children: hasSubSections ? section.subSections.map((subSection, index) => (0, jsxRuntime.jsxs)("div", {
           tabIndex: 0,
           onKeyDown: handleKeyDown,
           className: "bg-slate-900/80 border border-slate-700/50 hover:border-violet-500/30 focus:border-sky-500/50 focus:ring-1 focus:ring-sky-500/30 focus:bg-slate-800 focus:outline-none rounded px-2 py-2 text-[10px] font-mono text-slate-300 break-words whitespace-pre-wrap  cursor-text mb-1",
           children: [(0, jsxRuntime.jsxs)("span", {
             className: "text-slate-600 select-none mr-2",
-            children: ["#", t + 1]
-          }), e]
-        }, t)) : isHighlightSection ? contentLines.map((e, t) => e.trim() ? (0, jsxRuntime.jsx)("div", {
+            children: ["#", index + 1]
+          }), subSection]
+        }, index)) : isHighlightSection ? contentLines.map((line, index) => line.trim() ? (0, jsxRuntime.jsx)("div", {
           tabIndex: 0,
           onKeyDown: handleKeyDown,
           className: "bg-slate-950/80 border border-slate-800 hover:border-violet-500/30 focus:border-sky-500/50 focus:ring-1 focus:ring-sky-500/30 focus:bg-slate-800 focus:outline-none rounded px-2 py-1.5 text-[10px] font-mono text-slate-300 break-words whitespace-pre-wrap  cursor-text",
-          children: e
-        }, t) : null) : (0, jsxRuntime.jsx)("div", {
+          children: line
+        }, index) : null) : (0, jsxRuntime.jsx)("div", {
           tabIndex: 0,
           className: "bg-slate-950/80 border border-slate-800 focus:border-sky-500/50 focus:ring-1 focus:ring-sky-500/30 focus:outline-none rounded px-2 py-2 text-[10px] font-mono text-slate-300 break-words whitespace-pre-wrap ",
           children: section.content || (0, jsxRuntime.jsx)("span", {
@@ -121,14 +121,14 @@ export function createSystemLogPanel(getDependencies) {
     let [activeFilter, setActiveFilter] = (0, react.useState)("all");
     let [searchQuery, setSearchQuery] = (0, react.useState)("");
     let [visibleCount, setVisibleCount] = (0, react.useState)(50);
-    let getLogColorClass = e => {
+    let getLogColorClass = log => {
       let {
-        level: t,
-        source: n
-      } = e;
-      if ("console" === n && "error" === t) return "text-orange-400 bg-orange-900/10 border-orange-900/30";
-      if ("network" === n) return "text-pink-400 bg-pink-900/10 border-pink-900/30";
-      switch (t) {
+        level: level,
+        source: source
+      } = log;
+      if ("console" === source && "error" === level) return "text-orange-400 bg-orange-900/10 border-orange-900/30";
+      if ("network" === source) return "text-pink-400 bg-pink-900/10 border-pink-900/30";
+      switch (level) {
         case "error":
         case "script-error":
         case "api-error":
@@ -148,35 +148,35 @@ export function createSystemLogPanel(getDependencies) {
       }
     };
     let filteredLogs = (0, react.useMemo)(() => {
-      let t = logs;
+      let matches = logs;
       if ("errors" === activeFilter) {
-        t = t.filter(e => e.level.includes("error"));
+        matches = matches.filter(log => log.level.includes("error"));
       } else if ("warn" === activeFilter) {
-        t = t.filter(e => "warn" === e.level);
+        matches = matches.filter(log => "warn" === log.level);
       } else if ("iframe" === activeFilter) {
-        t = t.filter(e => "iframe" === e.source);
+        matches = matches.filter(log => "iframe" === log.source);
       } else if ("card-runtime" === activeFilter) {
-        t = t.filter(e => "card-runtime" === e.source);
+        matches = matches.filter(log => "card-runtime" === log.source);
       } else if ("diagnostic" === activeFilter) {
-        t = t.filter(e => "diagnostic" === e.source);
+        matches = matches.filter(log => "diagnostic" === log.source);
       } else if ("aistudio" === activeFilter) {
-        t = t.filter(e => "aistudio" === e.source);
+        matches = matches.filter(log => "aistudio" === log.source);
       } else if ("regex" === activeFilter) {
-        t = t.filter(e => "regex" === e.source);
+        matches = matches.filter(log => "regex" === log.source);
       } else if ("variable" === activeFilter) {
-        t = t.filter(e => "variable" === e.source);
+        matches = matches.filter(log => "variable" === log.source);
       } else if ("state" === activeFilter) {
-        t = t.filter(e => "state" === e.level);
+        matches = matches.filter(log => "state" === log.level);
       } else if ("console" === activeFilter) {
-        t = t.filter(e => "console" === e.source);
+        matches = matches.filter(log => "console" === log.source);
       } else if ("network" === activeFilter) {
-        t = t.filter(e => "network" === e.source);
+        matches = matches.filter(log => "network" === log.source);
       }
       if (searchQuery.trim()) {
-        let e = searchQuery.toLowerCase();
-        t = t.filter(t => t.message.toLowerCase().includes(e));
+        let query = searchQuery.toLowerCase();
+        matches = matches.filter(log => log.message.toLowerCase().includes(query));
       }
-      return t;
+      return matches;
     }, [logs, activeFilter, searchQuery]);
     let visibleLogs = filteredLogs.slice(0, visibleCount);
     return (0, jsxRuntime.jsxs)("div", {
@@ -221,14 +221,14 @@ export function createSystemLogPanel(getDependencies) {
           }, {
             id: "state",
             label: "Trạng thái"
-          }].map(e => (0, jsxRuntime.jsx)("button", {
+          }].map(filter => (0, jsxRuntime.jsx)("button", {
             onClick: () => {
-              setActiveFilter(e.id);
+              setActiveFilter(filter.id);
               setVisibleCount(50);
             },
-            className: "px-2 py-0.5 text-[9px] uppercase font-bold rounded " + (activeFilter === e.id ? "bg-sky-600 text-white" : "bg-slate-800 text-slate-400 hover:bg-slate-700"),
-            children: e.label
-          }, e.id))
+            className: "px-2 py-0.5 text-[9px] uppercase font-bold rounded " + (activeFilter === filter.id ? "bg-sky-600 text-white" : "bg-slate-800 text-slate-400 hover:bg-slate-700"),
+            children: filter.label
+          }, filter.id))
         }), (0, jsxRuntime.jsxs)("div", {
           className: "flex items-center justify-between gap-2 bg-slate-800/30 p-2 rounded-lg border border-slate-700/50",
           children: [(0, jsxRuntime.jsx)("input", {
@@ -236,7 +236,7 @@ export function createSystemLogPanel(getDependencies) {
             "aria-label": "Tìm kiếm nhật ký",
             placeholder: "Tìm kiếm log...",
             value: searchQuery,
-            onChange: e => setSearchQuery(e.target.value),
+            onChange: event => setSearchQuery(event.target.value),
             className: "bg-slate-800 border border-slate-600 rounded px-2 py-1 text-[10px] flex-grow min-w-[100px]"
           }), (0, jsxRuntime.jsxs)("div", {
             className: "flex items-center gap-1",
@@ -247,27 +247,27 @@ export function createSystemLogPanel(getDependencies) {
               children: "🔍 State"
             }), (0, jsxRuntime.jsx)("button", {
               onClick: () => {
-                let e = filteredLogs.map(e => `[${formatTimestamp(e.timestamp)}] [${e.source.toUpperCase()}] [${e.level.toUpperCase()}] ${e.message}`).join("\n");
-                navigator.clipboard.writeText(e);
+                let text = filteredLogs.map(log => `[${formatTimestamp(log.timestamp)}] [${log.source.toUpperCase()}] [${log.level.toUpperCase()}] ${log.message}`).join("\n");
+                navigator.clipboard.writeText(text);
               },
               className: "px-2 py-1 bg-slate-700 text-slate-300 rounded hover:bg-slate-600 border border-slate-600",
               title: "Sao chép log đang hiển thị",
               children: "Sao chép log"
             }), (0, jsxRuntime.jsx)("button", {
               onClick: () => {
-                let t = logs.filter(e => "diagnostic" === e.source || "aistudio" === e.source).map(e => e.message.trim()).filter(Boolean);
-                let n = (() => {
+                let liveReports = logs.filter(log => "diagnostic" === log.source || "aistudio" === log.source).map(log => log.message.trim()).filter(Boolean);
+                let storedReports = (() => {
                   if (typeof window > "u") return [];
                   try {
-                    let e = JSON.parse(window.localStorage.getItem(diagnosticStorageKey) || "[]");
-                    return Array.isArray(e) ? e.map(e => normalizeDiagnostic(e)) : [];
+                    let storedLogs = JSON.parse(window.localStorage.getItem(diagnosticStorageKey) || "[]");
+                    return Array.isArray(storedLogs) ? storedLogs.map(log => normalizeDiagnostic(log)) : [];
                   } catch {
                     return [];
                   }
                 })().map(formatDiagnostic);
-                let r = Array.from(new Set([...t, ...n]));
-                let a = ["GÓI BÁO CÁO CHẨN ĐOÁN", `Thời gian xuất: ${new Date().toLocaleString()}`, `Số báo cáo: ${r.length}`, "", r.length ? r.join("\n\n==============================\n\n") : "Chưa có lỗi chẩn đoán nào được ghi nhận."].join("\n");
-                navigator.clipboard.writeText(a);
+                let reports = Array.from(new Set([...liveReports, ...storedReports]));
+                let reportText = ["GÓI BÁO CÁO CHẨN ĐOÁN", `Thời gian xuất: ${new Date().toLocaleString()}`, `Số báo cáo: ${reports.length}`, "", reports.length ? reports.join("\n\n==============================\n\n") : "Chưa có lỗi chẩn đoán nào được ghi nhận."].join("\n");
+                navigator.clipboard.writeText(reportText);
               },
               className: "px-2 py-1 bg-sky-700/30 text-sky-300 rounded hover:bg-sky-700/50 border border-sky-600/40",
               title: "Sao chép toàn bộ báo cáo chẩn đoán để gửi cho người sửa lỗi",
@@ -293,22 +293,22 @@ export function createSystemLogPanel(getDependencies) {
           className: "p-4 text-center text-slate-600 italic",
           children: "Không có log hệ thống nào khớp với bộ lọc."
         }) : (0, jsxRuntime.jsxs)(jsxRuntime.Fragment, {
-          children: [visibleLogs.map((e, t) => (0, jsxRuntime.jsxs)("div", {
-            className: `p-1.5 border-b border-slate-800/50 flex gap-2 ${getLogColorClass(e)}`,
+          children: [visibleLogs.map((log, index) => (0, jsxRuntime.jsxs)("div", {
+            className: `p-1.5 border-b border-slate-800/50 flex gap-2 ${getLogColorClass(log)}`,
             children: [(0, jsxRuntime.jsx)("span", {
               className: "opacity-50 flex-shrink-0",
-              children: formatTimestamp(e.timestamp)
+              children: formatTimestamp(log.timestamp)
             }), (0, jsxRuntime.jsx)("span", {
               className: "font-bold uppercase opacity-70 w-14 flex-shrink-0 truncate text-center border border-white/10 rounded bg-black/20 text-[9px] px-1",
-              children: e.source
+              children: log.source
             }), (0, jsxRuntime.jsx)("span", {
               className: "break-words flex-grow",
-              children: e.message
+              children: log.message
             })]
-          }, t)), (0, jsxRuntime.jsx)(LoadOlderButton, {
+          }, index)), (0, jsxRuntime.jsx)(LoadOlderButton, {
             visibleCount: visibleCount,
             totalCount: filteredLogs.length,
-            onLoadMore: () => setVisibleCount(e => e + 50),
+            onLoadMore: () => setVisibleCount(count => count + 50),
             step: 50
           })]
         })
@@ -329,12 +329,12 @@ export function createNetworkLogPanel(getDependencies) {
     let [visibleCount, setVisibleCount] = (0, react.useState)(3);
     return logs && 0 !== logs.length ? (0, jsxRuntime.jsxs)("div", {
       className: "space-y-1",
-      children: [logs.slice(0, visibleCount).map((e, t) => (0, jsxRuntime.jsx)(NetworkLogItem, {
-        log: e
-      }, e.id || t)), (0, jsxRuntime.jsx)(LoadOlderButton, {
+      children: [logs.slice(0, visibleCount).map((log, index) => (0, jsxRuntime.jsx)(NetworkLogItem, {
+        log: log
+      }, log.id || index)), (0, jsxRuntime.jsx)(LoadOlderButton, {
         visibleCount: visibleCount,
         totalCount: logs.length,
-        onLoadMore: () => setVisibleCount(e => e + 3),
+        onLoadMore: () => setVisibleCount(count => count + 3),
         step: 3
       })]
     }) : (0, jsxRuntime.jsx)("div", {
@@ -361,14 +361,14 @@ export function createSmartScanLogPanel(getDependencies) {
         className: "p-4 text-center text-slate-600 italic text-xs bg-slate-900/30 rounded-lg border border-slate-800",
         children: "Chưa có dữ liệu Smart Scan."
       }) : (0, jsxRuntime.jsxs)(jsxRuntime.Fragment, {
-        children: [visibleLogs.map((t, n) => (0, jsxRuntime.jsx)(SmartScanLogItem, {
-          logString: t,
-          index: n,
+        children: [visibleLogs.map((logString, index) => (0, jsxRuntime.jsx)(SmartScanLogItem, {
+          logString: logString,
+          index: index,
           total: logs.length
-        }, n)), (0, jsxRuntime.jsx)(LoadOlderButton, {
+        }, index)), (0, jsxRuntime.jsx)(LoadOlderButton, {
           visibleCount: visibleCount,
           totalCount: logs.length,
-          onLoadMore: () => setVisibleCount(e => e + 3),
+          onLoadMore: () => setVisibleCount(count => count + 3),
           step: 3
         })]
       })
@@ -394,16 +394,16 @@ export function createMythicLogPanel(getDependencies) {
         className: "p-4 text-center text-slate-600 italic text-xs bg-slate-900/30 rounded-lg border border-slate-800",
         children: "Chưa có dữ liệu Mythic Engine."
       }) : (0, jsxRuntime.jsxs)(jsxRuntime.Fragment, {
-        children: [visibleLogs.map((n, r) => (0, jsxRuntime.jsx)(MythicLogItem, {
-          logString: n,
-          index: r,
+        children: [visibleLogs.map((logString, index) => (0, jsxRuntime.jsx)(MythicLogItem, {
+          logString: logString,
+          index: index,
           total: logs.length,
           onRetry: onRetry,
-          isLatest: 0 === r
-        }, r)), (0, jsxRuntime.jsx)(LoadOlderButton, {
+          isLatest: 0 === index
+        }, index)), (0, jsxRuntime.jsx)(LoadOlderButton, {
           visibleCount: visibleCount,
           totalCount: logs.length,
-          onLoadMore: () => setVisibleCount(e => e + 3),
+          onLoadMore: () => setVisibleCount(count => count + 3),
           step: 3
         })]
       })
@@ -440,42 +440,42 @@ export function createSummaryLogPanel(getDependencies) {
     let isThresholdReached = currentCount >= contextDepth;
     let hasQueuedTasks = queueLength > 0;
     let hasFailedTask = "failed" === (summaryQueue.length > 0 ? summaryQueue[0] : null)?.status;
-    let buildSummaryPreview = e => {
-      let n = getSmartContextSettings();
-      let r = summarySize || n.summarization_chunk_size || 10;
-      let i = n.summarization_prompt || "";
-      let o = longTermSummaries.slice(0, e).slice(-5);
-      o.map((e, t) => `[Tóm tắt cũ #${t + 1}]: ${e.substring(0, 100)}...`);
-      let s = o.length > 0 ? `Bao gồm ${o.length} gói tóm tắt liền trước.` : "(Chưa có bối cảnh trước đó)";
-      let l = 0;
-      let c = messages.length;
-      let u = 0;
-      let d = e * r;
-      let h = (e + 1) * r;
-      for (let e = 0; e < messages.length; e++) if ("model" === messages[e].role && (u++, u === d && (l = e + 1), u === h)) {
-        c = e + 1;
+    let buildSummaryPreview = summaryIndex => {
+      let settings = getSmartContextSettings();
+      let chunkSize = summarySize || settings.summarization_chunk_size || 10;
+      let systemPrompt = settings.summarization_prompt || "";
+      let previousSummaries = longTermSummaries.slice(0, summaryIndex).slice(-5);
+      previousSummaries.map((summary, index) => `[Tóm tắt cũ #${index + 1}]: ${summary.substring(0, 100)}...`);
+      let contextDescription = previousSummaries.length > 0 ? `Bao gồm ${previousSummaries.length} gói tóm tắt liền trước.` : "(Chưa có bối cảnh trước đó)";
+      let startIndex = 0;
+      let endIndex = messages.length;
+      let modelCount = 0;
+      let startTurn = summaryIndex * chunkSize;
+      let endTurn = (summaryIndex + 1) * chunkSize;
+      for (let index = 0; index < messages.length; index++) if ("model" === messages[index].role && (modelCount++, modelCount === startTurn && (startIndex = index + 1), modelCount === endTurn)) {
+        endIndex = index + 1;
         break;
       }
-      0 === e && (l = 0);
-      let p = messages.slice(l, c).map(e => `[${"user" === e.role ? "User" : "model" === e.role ? "Char" : "System"}] ${e.content.replace(/<[^>]*>/g, "").trim()}`);
-      let m = p.length > 0 ? `Bao gồm ${p.length} tin nhắn (từ lượt ${d + 1} đến ${u}).` : "(Không tìm thấy dữ liệu tương ứng trong lịch sử hiện tại)";
+      0 === summaryIndex && (startIndex = 0);
+      let chatLines = messages.slice(startIndex, endIndex).map(message => `[${"user" === message.role ? "User" : "model" === message.role ? "Char" : "System"}] ${message.content.replace(/<[^>]*>/g, "").trim()}`);
+      let dataDescription = chatLines.length > 0 ? `Bao gồm ${chatLines.length} tin nhắn (từ lượt ${startTurn + 1} đến ${modelCount}).` : "(Không tìm thấy dữ liệu tương ứng trong lịch sử hiện tại)";
       return [{
         id: "sys",
         name: "⚙️ System Instruction (Template)",
-        content: i,
+        content: systemPrompt,
         role: "system"
       }, {
         id: "ctx",
         name: "📚 Previous Context (Rolling Window)",
-        content: s,
+        content: contextDescription,
         role: "system",
-        subSections: o.length > 0 ? o : undefined
+        subSections: previousSummaries.length > 0 ? previousSummaries : undefined
       }, {
         id: "dat",
         name: "💬 Target Data (Chat Slice)",
-        content: m,
+        content: dataDescription,
         role: "user",
-        subSections: p.length > 0 ? p : undefined
+        subSections: chatLines.length > 0 ? chatLines : undefined
       }];
     };
     return (0, jsxRuntime.jsxs)("div", {
@@ -532,8 +532,8 @@ export function createSummaryLogPanel(getDependencies) {
                 setShowPromptModal(true);
                 try {
                   await onRetry();
-                } catch (e) {
-                  console.error("Retry failed", e);
+                } catch (error) {
+                  console.error("Retry failed", error);
                 } finally {
                   setShowPromptModal(false);
                 }
@@ -554,8 +554,8 @@ export function createSummaryLogPanel(getDependencies) {
         children: "Chưa có tóm tắt nào được tạo (Dữ liệu trống)."
       }) : (0, jsxRuntime.jsx)("div", {
         className: "flex flex-col gap-2",
-        children: longTermSummaries.map((e, t) => {
-          let n = buildSummaryPreview(t);
+        children: longTermSummaries.map((summary, index) => {
+          let preview = buildSummaryPreview(index);
           return (0, jsxRuntime.jsxs)("details", {
             className: "group bg-slate-900/30 border border-slate-700/50 rounded-lg",
             children: [(0, jsxRuntime.jsxs)("summary", {
@@ -564,7 +564,7 @@ export function createSummaryLogPanel(getDependencies) {
                 className: "flex items-center gap-2",
                 children: [(0, jsxRuntime.jsxs)("span", {
                   className: "text-xs font-semibold text-amber-400",
-                  children: ["Tóm tắt #", t + 1]
+                  children: ["Tóm tắt #", index + 1]
                 }), (0, jsxRuntime.jsx)("span", {
                   className: "text-[10px] text-slate-500 italic",
                   children: "(Dữ liệu Bền vững)"
@@ -589,14 +589,14 @@ export function createSummaryLogPanel(getDependencies) {
                   })]
                 }), (0, jsxRuntime.jsx)("div", {
                   className: "space-y-2 mt-2",
-                  children: n.map(e => (0, jsxRuntime.jsx)(PromptSectionView, {
-                    section: e
-                  }, e.id))
+                  children: preview.map(section => (0, jsxRuntime.jsx)(PromptSectionView, {
+                    section: section
+                  }, section.id))
                 })]
               }), (0, jsxRuntime.jsx)("div", {
                 className: "absolute top-3 right-3 z-10 flex gap-1",
                 children: (0, jsxRuntime.jsx)(CopyButton, {
-                  textToCopy: e || "",
+                  textToCopy: summary || "",
                   absolute: true
                 })
               }), (0, jsxRuntime.jsx)("div", {
@@ -606,35 +606,35 @@ export function createSummaryLogPanel(getDependencies) {
                 className: "bg-amber-900/10 border border-amber-900/30 p-3 rounded mb-2",
                 children: (0, jsxRuntime.jsx)("p", {
                   className: "text-[10px] text-slate-300 leading-relaxed whitespace-pre-wrap",
-                  children: e
+                  children: summary
                 })
               }), onRegenerate && (0, jsxRuntime.jsx)("div", {
                 className: "flex justify-end pt-2 border-t border-slate-700/30",
                 children: (0, jsxRuntime.jsx)("button", {
-                  onClick: () => (async e => {
-                    if (onRegenerate && !expandedIndices.has(e)) {
-                      setExpandedIndices(t => new Set(t).add(e));
+                  onClick: () => (async summaryIndex => {
+                    if (onRegenerate && !expandedIndices.has(summaryIndex)) {
+                      setExpandedIndices(previous => new Set(previous).add(summaryIndex));
                       try {
-                        await onRegenerate(e);
-                      } catch (e) {
-                        console.error("Regenerate failed", e);
-                        alert(`Lỗi khi tạo lại tóm tắt: ${e instanceof Error ? e.message : String(e)}`);
+                        await onRegenerate(summaryIndex);
+                      } catch (error) {
+                        console.error("Regenerate failed", error);
+                        alert(`Lỗi khi tạo lại tóm tắt: ${error instanceof Error ? error.message : String(error)}`);
                       } finally {
-                        setExpandedIndices(t => {
-                          let n = new Set(t);
-                          n.delete(e);
-                          return n;
+                        setExpandedIndices(previous => {
+                          let next = new Set(previous);
+                          next.delete(summaryIndex);
+                          return next;
                         });
                       }
                     }
-                  })(t),
-                  disabled: expandedIndices.has(t),
+                  })(index),
+                  disabled: expandedIndices.has(index),
                   className: "text-[10px] flex items-center gap-1 px-2 py-1 rounded bg-slate-800 hover:bg-sky-700 text-slate-400 hover:text-white  border border-slate-600 hover:border-sky-500 disabled:opacity-50 disabled:cursor-not-allowed",
-                  children: expandedIndices.has(t) ? "Đang tạo lại..." : "Thử lại (Regenerate)"
+                  children: expandedIndices.has(index) ? "Đang tạo lại..." : "Thử lại (Regenerate)"
                 })
               })]
             })]
-          }, t);
+          }, index);
         })
       })]
     });
@@ -658,23 +658,23 @@ export function createWorldInfoLogPanel(getDependencies) {
         className: "p-4 text-center text-slate-600 italic text-xs bg-slate-900/30 rounded-lg border border-slate-800",
         children: "Chưa có mục World Info nào được kích hoạt."
       }) : (0, jsxRuntime.jsxs)(jsxRuntime.Fragment, {
-        children: [visibleLogs.map((e, t) => (0, jsxRuntime.jsxs)("div", {
+        children: [visibleLogs.map((log, index) => (0, jsxRuntime.jsxs)("div", {
           className: "bg-slate-900/30 border border-slate-700/50 rounded-lg p-3",
           children: [(0, jsxRuntime.jsx)("div", {
             className: "flex justify-end mb-1",
             children: (0, jsxRuntime.jsx)(CopyButton, {
-              textToCopy: e,
+              textToCopy: log,
               label: "Copy",
               absolute: false
             })
           }), (0, jsxRuntime.jsx)("pre", {
             className: "text-[10px] text-emerald-300 font-mono whitespace-pre-wrap break-words",
-            children: e
+            children: log
           })]
-        }, t)), (0, jsxRuntime.jsx)(LoadOlderButton, {
+        }, index)), (0, jsxRuntime.jsx)(LoadOlderButton, {
           visibleCount: visibleCount,
           totalCount: logs.length,
-          onLoadMore: () => setVisibleCount(e => e + 3),
+          onLoadMore: () => setVisibleCount(count => count + 3),
           step: 3
         })]
       })
@@ -702,7 +702,7 @@ export function createPromptLogPanel(getDependencies) {
         className: "p-8 text-center text-slate-600 italic text-xs bg-slate-900/30 rounded-lg border border-slate-800",
         children: "Chưa có dữ liệu lời nhắc."
       }) : (0, jsxRuntime.jsxs)(jsxRuntime.Fragment, {
-        children: [visibleTurns.map((e, t) => (0, jsxRuntime.jsxs)("details", {
+        children: [visibleTurns.map((turn, index) => (0, jsxRuntime.jsxs)("details", {
           className: "group bg-slate-900/30 border border-slate-700/50 rounded-lg",
           children: [(0, jsxRuntime.jsxs)("summary", {
             className: "px-3 py-2 cursor-pointer hover:bg-slate-800/50  select-none list-none flex items-center justify-between rounded-lg outline-none focus:ring-2 focus:ring-sky-500/50",
@@ -710,18 +710,18 @@ export function createPromptLogPanel(getDependencies) {
               className: "flex items-center gap-2",
               children: [(0, jsxRuntime.jsxs)("span", {
                 className: "text-xs font-semibold text-violet-400",
-                children: ["Lượt #", totalTurns - t]
+                children: ["Lượt #", totalTurns - index]
               }), (0, jsxRuntime.jsx)("span", {
                 className: "text-[10px] text-slate-500",
-                children: new Date(e.timestamp).toLocaleTimeString()
+                children: new Date(turn.timestamp).toLocaleTimeString()
               })]
             }), (0, jsxRuntime.jsxs)("div", {
               className: "flex items-center gap-2",
               children: [(0, jsxRuntime.jsx)(TokenCountControl, {
-                sections: e.prompt
+                sections: turn.prompt
               }), (0, jsxRuntime.jsxs)("span", {
                 className: "text-[10px] bg-slate-800 text-slate-400 px-1.5 rounded",
-                children: [e.prompt.length, " mục"]
+                children: [turn.prompt.length, " mục"]
               }), (0, jsxRuntime.jsx)("span", {
                 className: " group-open:rotate-90  text-slate-500 text-[10px]",
                 "aria-hidden": "true",
@@ -733,21 +733,21 @@ export function createPromptLogPanel(getDependencies) {
             children: [(0, jsxRuntime.jsx)("div", {
               className: "flex justify-end mb-2",
               children: (0, jsxRuntime.jsx)(CopyButton, {
-                textToCopy: e.prompt.map(e => e.content).join("\n\n"),
+                textToCopy: turn.prompt.map(section => section.content).join("\n\n"),
                 label: "Sao chép tất cả",
                 absolute: false
               })
-            }), 0 === e.prompt.length ? (0, jsxRuntime.jsx)("p", {
+            }), 0 === turn.prompt.length ? (0, jsxRuntime.jsx)("p", {
               className: "text-xs text-slate-600 italic",
               children: "Không có dữ liệu prompt."
-            }) : e.prompt.map(e => (0, jsxRuntime.jsx)(PromptSectionView, {
-              section: e
-            }, e.id))]
+            }) : turn.prompt.map(section => (0, jsxRuntime.jsx)(PromptSectionView, {
+              section: section
+            }, section.id))]
           })]
-        }, t)), (0, jsxRuntime.jsx)(LoadOlderButton, {
+        }, index)), (0, jsxRuntime.jsx)(LoadOlderButton, {
           visibleCount: visibleCount,
           totalCount: totalTurns,
-          onLoadMore: () => setVisibleCount(e => e + 3),
+          onLoadMore: () => setVisibleCount(count => count + 3),
           step: 3
         })]
       })
@@ -773,7 +773,7 @@ export function createResponseLogPanel(getDependencies) {
         className: "p-8 text-center text-slate-600 italic text-xs bg-slate-900/30 rounded-lg border border-slate-800",
         children: "Chưa có dữ liệu phản hồi."
       }) : (0, jsxRuntime.jsxs)(jsxRuntime.Fragment, {
-        children: [visibleTurns.map((e, t) => (0, jsxRuntime.jsxs)("details", {
+        children: [visibleTurns.map((turn, index) => (0, jsxRuntime.jsxs)("details", {
           className: "group bg-slate-900/30 border border-slate-700/50 rounded-lg",
           children: [(0, jsxRuntime.jsxs)("summary", {
             className: "px-3 py-2 cursor-pointer hover:bg-slate-800/50  select-none list-none flex items-center justify-between rounded-lg outline-none focus:ring-2 focus:ring-sky-500/50",
@@ -781,10 +781,10 @@ export function createResponseLogPanel(getDependencies) {
               className: "flex items-center gap-2",
               children: [(0, jsxRuntime.jsxs)("span", {
                 className: "text-xs font-semibold text-emerald-400",
-                children: ["Lượt #", totalTurns - t]
+                children: ["Lượt #", totalTurns - index]
               }), (0, jsxRuntime.jsx)("span", {
                 className: "text-[10px] text-slate-500",
-                children: new Date(e.timestamp).toLocaleTimeString()
+                children: new Date(turn.timestamp).toLocaleTimeString()
               })]
             }), (0, jsxRuntime.jsx)("span", {
               className: " group-open:rotate-90  text-slate-500 text-[10px]",
@@ -796,18 +796,18 @@ export function createResponseLogPanel(getDependencies) {
             children: [(0, jsxRuntime.jsx)("div", {
               className: "absolute top-3 right-3 z-10",
               children: (0, jsxRuntime.jsx)(CopyButton, {
-                textToCopy: e.response,
+                textToCopy: turn.response,
                 absolute: true
               })
             }), (0, jsxRuntime.jsx)("pre", {
               className: "bg-slate-950 p-3 rounded border border-slate-800 text-[10px] font-mono text-slate-300 whitespace-pre-wrap break-words",
-              children: e.response || "(Chưa có phản hồi)"
+              children: turn.response || "(Chưa có phản hồi)"
             })]
           })]
-        }, t)), (0, jsxRuntime.jsx)(LoadOlderButton, {
+        }, index)), (0, jsxRuntime.jsx)(LoadOlderButton, {
           visibleCount: visibleCount,
           totalCount: totalTurns,
-          onLoadMore: () => setVisibleCount(e => e + 3),
+          onLoadMore: () => setVisibleCount(count => count + 3),
           step: 3
         })]
       })
@@ -838,18 +838,18 @@ export function createWorldInfoScanPanel(getDependencies) {
       })]
     }) : (0, jsxRuntime.jsx)("div", {
       className: "space-y-3 p-1",
-      children: logs.map((r, a) => {
-        let i;
+      children: logs.map((logString, index) => {
+        let scan;
         try {
-          i = JSON.parse(r);
+          scan = JSON.parse(logString);
         } catch {
           return null;
         }
-        let o = selectedIndex === a;
+        let isSelected = selectedIndex === index;
         return (0, jsxRuntime.jsxs)("div", {
           className: "border border-zinc-800 rounded-lg bg-zinc-900/50 overflow-hidden",
           children: [(0, jsxRuntime.jsxs)("button", {
-            onClick: () => setSelectedIndex(o ? null : a),
+            onClick: () => setSelectedIndex(isSelected ? null : index),
             className: "w-full flex items-center justify-between p-3 hover:bg-zinc-800/50  text-left",
             children: [(0, jsxRuntime.jsxs)("div", {
               className: "flex items-center gap-3",
@@ -862,20 +862,20 @@ export function createWorldInfoScanPanel(getDependencies) {
               }), (0, jsxRuntime.jsxs)("div", {
                 children: [(0, jsxRuntime.jsxs)("div", {
                   className: "text-sm font-medium text-zinc-200",
-                  children: ["Lượt quét #", logs.length - a]
+                  children: ["Lượt quét #", logs.length - index]
                 }), (0, jsxRuntime.jsxs)("div", {
                   className: "text-[10px] text-zinc-500 font-mono",
-                  children: [new Date(i.timestamp).toLocaleTimeString(), " • ", i.selectedItems.length, " mục được chọn"]
+                  children: [new Date(scan.timestamp).toLocaleTimeString(), " • ", scan.selectedItems.length, " mục được chọn"]
                 })]
               })]
-            }), o ? (0, jsxRuntime.jsx)(Icon, {
+            }), isSelected ? (0, jsxRuntime.jsx)(Icon, {
               name: "chevronDown",
               className: "h-4 w-4"
             }) : (0, jsxRuntime.jsx)(Icon, {
               name: "chevronRight",
               className: "h-4 w-4"
             })]
-          }), o && (0, jsxRuntime.jsxs)("div", {
+          }), isSelected && (0, jsxRuntime.jsxs)("div", {
             className: "border-t border-zinc-800 p-4 space-y-4",
             children: [(0, jsxRuntime.jsxs)("div", {
               children: [(0, jsxRuntime.jsxs)("div", {
@@ -886,7 +886,7 @@ export function createWorldInfoScanPanel(getDependencies) {
                 }), "Lời nhắc gửi đi"]
               }), (0, jsxRuntime.jsx)("div", {
                 className: "bg-black/40 rounded p-3 text-xs text-zinc-400 font-mono whitespace-pre-wrap max-h-48 overflow-y-auto border border-zinc-800/50 leading-relaxed",
-                children: i.prompt
+                children: scan.prompt
               })]
             }), (0, jsxRuntime.jsxs)("div", {
               children: [(0, jsxRuntime.jsxs)("div", {
@@ -897,16 +897,16 @@ export function createWorldInfoScanPanel(getDependencies) {
                 }), "Các mục đã chọn & Độ phù hợp"]
               }), (0, jsxRuntime.jsx)("div", {
                 className: "space-y-2",
-                children: i.selectedItems.length > 0 ? i.selectedItems.map((e, t) => (0, jsxRuntime.jsxs)("div", {
+                children: scan.selectedItems.length > 0 ? scan.selectedItems.map((item, itemIndex) => (0, jsxRuntime.jsxs)("div", {
                   className: "flex items-center justify-between p-2 rounded bg-zinc-800/30 border border-zinc-800/50",
                   children: [(0, jsxRuntime.jsxs)("div", {
                     className: "flex flex-col",
                     children: [(0, jsxRuntime.jsx)("span", {
                       className: "text-xs font-medium text-zinc-300",
-                      children: e.name
+                      children: item.name
                     }), (0, jsxRuntime.jsxs)("span", {
                       className: "text-[10px] text-zinc-500 font-mono",
-                      children: ["ID: ", e.id]
+                      children: ["ID: ", item.id]
                     })]
                   }), (0, jsxRuntime.jsxs)("div", {
                     className: "flex items-center gap-2",
@@ -915,22 +915,22 @@ export function createWorldInfoScanPanel(getDependencies) {
                       children: (0, jsxRuntime.jsx)("div", {
                         className: "h-full bg-amber-500",
                         style: {
-                          width: `${Math.min(100, 100 * e.score)}%`
+                          width: `${Math.min(100, 100 * item.score)}%`
                         }
                       })
                     }), (0, jsxRuntime.jsxs)("span", {
                       className: "text-[10px] font-mono font-bold text-amber-500 w-8 text-right",
-                      children: [(100 * e.score).toFixed(0), "%"]
+                      children: [(100 * item.score).toFixed(0), "%"]
                     })]
                   })]
-                }, t)) : (0, jsxRuntime.jsx)("div", {
+                }, itemIndex)) : (0, jsxRuntime.jsx)("div", {
                   className: "text-xs text-zinc-600 italic p-2",
                   children: "Không có mục nào được chọn trong lượt này."
                 })
               })]
             })]
           })]
-        }, a);
+        }, index);
       })
     });
   };
@@ -967,8 +967,8 @@ export function createDiagnosticsDialog(getDependencies) {
     } = resolveDiagnosticDeps(getDependencies);
     let [isMaximized, setIsMaximized] = (0, react.useState)(false);
     if (isImmersive) return null;
-    let errorCount = logs.systemLog.filter(e => e.level.includes("error")).length;
-    let hasFailedSummary = summaryQueue?.some(e => "failed" === e.status);
+    let errorCount = logs.systemLog.filter(log => log.level.includes("error")).length;
+    let hasFailedSummary = summaryQueue?.some(task => "failed" === task.status);
     return (0, jsxRuntime.jsxs)("div", {
       className: "mt-4 border-t border-slate-700/50",
       children: [(0, jsxRuntime.jsxs)("button", {
@@ -1074,8 +1074,8 @@ export function createDiagnosticsDialog(getDependencies) {
                 children: "7. Nhật ký Mythic Engine (RPG)"
               })
             }), onRetryMythic && (0, jsxRuntime.jsxs)("button", {
-              onClick: e => {
-                e.stopPropagation();
+              onClick: event => {
+                event.stopPropagation();
                 onRetryMythic();
               },
               className: "px-2 py-0.5 text-[10px] bg-rose-600 hover:bg-rose-500 text-white rounded shadow-sm border border-rose-400/50 flex items-center gap-1 ",
@@ -1127,22 +1127,22 @@ export function createNetworkLogItem(react, getDependencies) {
     } = resolveDiagnosticDeps(getDependencies);
     let [isExpanded, setIsExpanded] = (0, reactRuntime.useState)(false);
     let formattedTime = new Date(log.timestamp).toLocaleTimeString();
-    let curlCommand = (0, reactRuntime.useMemo)(() => isExpanded ? ((e, t = false) => {
-      t && (e = redactNetworkLog(e));
-      let n = `curl -X ${e.method} "${e.url}" \\\n`;
-      if (e.headers && Object.entries(e.headers).forEach(([e, t]) => {
-        n += `  -H "${e}: ${t}" \\\n`;
-      }), e.body) {
-        let t = "";
-        if ("string" == typeof e.body) t = e.body;else try {
-          t = JSON.stringify(e.body, null, 2);
+    let curlCommand = (0, reactRuntime.useMemo)(() => isExpanded ? ((entry, shouldRedact = false) => {
+      shouldRedact && (entry = redactNetworkLog(entry));
+      let command = `curl -X ${entry.method} "${entry.url}" \\\n`;
+      if (entry.headers && Object.entries(entry.headers).forEach(([header, value]) => {
+        command += `  -H "${header}: ${value}" \\\n`;
+      }), entry.body) {
+        let bodyText = "";
+        if ("string" == typeof entry.body) bodyText = entry.body;else try {
+          bodyText = JSON.stringify(entry.body, null, 2);
         } catch {
-          t = String(e.body);
+          bodyText = String(entry.body);
         }
-        let r = t.replace(/'/g, "'\\''");
-        n += `  -d '${r}'`;
-      } else n = n.slice(0, -3);
-      return n;
+        let escapedBody = bodyText.replace(/'/g, "'\\''");
+        command += `  -d '${escapedBody}'`;
+      } else command = command.slice(0, -3);
+      return command;
     })(log, true) : "", [log, isExpanded]);
     return (0, jsxRuntime.jsxs)("div", {
       className: "mb-2 border border-slate-800 rounded-lg overflow-hidden bg-slate-900/30  ",
@@ -1152,8 +1152,8 @@ export function createNetworkLogItem(react, getDependencies) {
         children: [(0, jsxRuntime.jsxs)("div", {
           className: "flex items-center gap-3 overflow-hidden",
           children: [(0, jsxRuntime.jsx)("span", {
-            className: `text-[9px] uppercase font-bold px-1.5 py-0.5 rounded border ${(e => {
-              switch (e) {
+            className: `text-[9px] uppercase font-bold px-1.5 py-0.5 rounded border ${(provider => {
+              switch (provider) {
                 case "gemini":
                   return "bg-teal-900/40 text-teal-400 border-teal-800";
                 case "openrouter":
@@ -1166,7 +1166,7 @@ export function createNetworkLogItem(react, getDependencies) {
             })(log.source)}`,
             children: log.source
           }), (0, jsxRuntime.jsx)("span", {
-            className: `text-[10px] w-8 ${(e => "POST" === e ? "text-blue-400 font-bold" : "GET" === e ? "text-yellow-400 font-bold" : "text-slate-400")(log.method)}`,
+            className: `text-[10px] w-8 ${(method => "POST" === method ? "text-blue-400 font-bold" : "GET" === method ? "text-yellow-400 font-bold" : "text-slate-400")(log.method)}`,
             children: log.method
           }), (0, jsxRuntime.jsx)("span", {
             className: "text-[10px] text-slate-400 truncate font-mono opacity-80",
@@ -1301,77 +1301,77 @@ export function createMythicLogItem(react, getDependencies) {
       parsedLog: parsedLog,
       structuredPrompt: structuredPrompt
     } = (0, reactRuntime.useMemo)(() => {
-      let t = {
+      let parsed = {
         latency: 0,
         fullPrompt: "",
         rawResponse: ""
       };
       try {
-        t = JSON.parse(logString);
+        parsed = JSON.parse(logString);
       } catch {
-        t.fullPrompt = logString;
+        parsed.fullPrompt = logString;
       }
-      let n = (e => {
-        let t = [];
-        let n = e.indexOf("<Cấu trúc bảng & Luật lệ>");
-        if (-1 === n) return [{
+      let structured = (prompt => {
+        let sections = [];
+        let schemaIndex = prompt.indexOf("<Cấu trúc bảng & Luật lệ>");
+        if (-1 === schemaIndex) return [{
           id: "mythic_raw",
           name: "Raw Prompt (Unstructured)",
-          content: e,
+          content: prompt,
           role: "system"
         }];
-        let r = e.substring(0, n).trim();
-        r && t.push({
+        let systemText = prompt.substring(0, schemaIndex).trim();
+        systemText && sections.push({
           id: "mythic_system",
           name: "🎛️ System Instructions (Chỉ dẫn)",
-          content: r,
+          content: systemText,
           role: "system"
         });
-        let a = e.match(/<Cấu trúc bảng & Luật lệ>([\s\S]*?)<\/Cấu trúc bảng & Luật lệ>/);
-        a && t.push({
+        let schemaMatch = prompt.match(/<Cấu trúc bảng & Luật lệ>([\s\S]*?)<\/Cấu trúc bảng & Luật lệ>/);
+        schemaMatch && sections.push({
           id: "mythic_schema",
           name: "📐 Schema & Rules (Cấu trúc bảng)",
-          content: a[1].trim(),
+          content: schemaMatch[1].trim(),
           role: "system"
         });
-        let i = e.match(/<Dữ liệu tham khảo \(Lorebook\)>([\s\S]*?)<\/Dữ liệu tham khảo \(Lorebook\)>/);
-        if (i) {
-          let e = i[1].trim();
-          let n = e.split("### [Lore:").filter(Boolean).map(e => "### [Lore:" + e);
-          t.push({
+        let lorebookMatch = prompt.match(/<Dữ liệu tham khảo \(Lorebook\)>([\s\S]*?)<\/Dữ liệu tham khảo \(Lorebook\)>/);
+        if (lorebookMatch) {
+          let lorebookText = lorebookMatch[1].trim();
+          let lorebookSections = lorebookText.split("### [Lore:").filter(Boolean).map(section => "### [Lore:" + section);
+          sections.push({
             id: "mythic_lore",
             name: "📚 Lorebook Reference (Dữ liệu tham khảo)",
-            content: e,
+            content: lorebookText,
             role: "system",
-            subSections: n.length > 0 ? n : undefined
+            subSections: lorebookSections.length > 0 ? lorebookSections : undefined
           });
         }
-        let o = e.match(/<Dữ liệu bảng hiện tại>([\s\S]*?)<\/Dữ liệu bảng hiện tại>/);
-        o && t.push({
+        let databaseMatch = prompt.match(/<Dữ liệu bảng hiện tại>([\s\S]*?)<\/Dữ liệu bảng hiện tại>/);
+        databaseMatch && sections.push({
           id: "mythic_data",
           name: "💾 Current Database (Dữ liệu hiện tại)",
-          content: o[1].trim(),
+          content: databaseMatch[1].trim(),
           role: "system"
         });
-        let s = e.match(/<Dữ liệu chính văn>([\s\S]*?)<\/Dữ liệu chính văn>/);
-        s && t.push({
+        let chatMatch = prompt.match(/<Dữ liệu chính văn>([\s\S]*?)<\/Dữ liệu chính văn>/);
+        chatMatch && sections.push({
           id: "mythic_chat",
           name: "💬 Chat Context (Chính văn)",
-          content: s[1].trim(),
+          content: chatMatch[1].trim(),
           role: "system"
         });
-        let l = e.match(/LUẬT CHUNG:([\s\S]*)$/);
-        l && t.push({
+        let rulesMatch = prompt.match(/LUẬT CHUNG:([\s\S]*)$/);
+        rulesMatch && sections.push({
           id: "mythic_global",
           name: "⚖️ Global Rules (Luật chung)",
-          content: l[1].trim(),
+          content: rulesMatch[1].trim(),
           role: "system"
         });
-        return t;
-      })(t.fullPrompt);
+        return sections;
+      })(parsed.fullPrompt);
       return {
-        parsedLog: t,
-        structuredPrompt: n
+        parsedLog: parsed,
+        structuredPrompt: structured
       };
     }, [logString]);
     return (0, jsxRuntime.jsxs)("div", {
@@ -1406,7 +1406,7 @@ export function createMythicLogItem(react, getDependencies) {
               children: "▶"
             })]
           }), (0, jsxRuntime.jsx)("div", {
-            onClick: e => e.stopPropagation(),
+            onClick: event => event.stopPropagation(),
             children: (0, jsxRuntime.jsx)(CopyButton, {
               textToCopy: parsedLog.fullPrompt,
               label: "Sao chép tất cả",
@@ -1415,9 +1415,9 @@ export function createMythicLogItem(react, getDependencies) {
           })]
         }), (0, jsxRuntime.jsx)("div", {
           className: "mt-2 space-y-2 pl-2 border-l border-slate-800",
-          children: structuredPrompt.map(e => (0, jsxRuntime.jsx)(PromptSectionView, {
-            section: e
-          }, e.id))
+          children: structuredPrompt.map(section => (0, jsxRuntime.jsx)(PromptSectionView, {
+            section: section
+          }, section.id))
         })]
       }), (0, jsxRuntime.jsxs)("div", {
         className: "relative",
