@@ -124,11 +124,8 @@ jobs:
 
       - name: Install locked npm runtime dependencies
         run: |
-          if test -f build/npm-runtime/package-lock.json; then
-            npm ci --prefix build/npm-runtime --no-audit --no-fund
-          else
-            npm install --prefix build/npm-runtime --no-audit --no-fund
-          fi
+          npm ci --prefix build/npm-runtime --no-audit --no-fund
+          git diff --exit-code -- build/npm-runtime/package-lock.json
 
       - name: Audit npm dependency lockfile and licenses
         run: npm run audit:npm-dependencies
@@ -143,6 +140,17 @@ jobs:
         env:
           APP_DIST: dist-npm
         run: npm run test:source-bootstrap
+
+      - name: Verify Chromium/Chrome binary for npm runtime
+        run: google-chrome --version
+
+      - name: Run browser application & IndexedDB acceptance (package-backed dist-npm)
+        env:
+          APP_DIST: dist-npm
+          CHROME_BIN: google-chrome
+        run: |
+          npm run test:app-browser
+          npm run test:storage-browser
 
       - name: Publish genuine lockfile and dependency evidence
         uses: actions/upload-artifact@v4

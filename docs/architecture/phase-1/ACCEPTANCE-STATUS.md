@@ -29,3 +29,12 @@ Remaining limits: synchronous Web Storage uses a checked advisory lease, not an 
 
 ## Phase 1 Release Decision
 **NOT READY FOR PHASE 2 PROMOTION (`7 PASS / 0 FAIL / 7 BLOCKED`).** U01–U04 implementation and supported regression checks have advanced, but external acceptance and vendor cutover remain open. Do not interpret the local/mock tests as real-browser, Android APK, or provider acceptance.
+
+## Connected CI evidence (2026-11-26)
+
+Active review branch: `phase1-latest-2026-11-26` (PR #59). The original gate table above records the offline audit baseline, not the current connected-run status.
+
+- [Phase 1 Quality Gates, commit 08ae0e6](https://github.com/tvhuy99-web/SillyTavern-Card-Studio-v1.3.4/actions/runs/45796737590): core regression, portable/source Chromium and IndexedDB acceptance, package-backed dependency installation, dependency inventory, ABI parity and bootstrap all succeeded.
+- [Android APK debug build](https://github.com/tvhuy99-web/SillyTavern-Card-Studio-v1.3.4/actions/runs/45796737289): SDK/Gradle compilation succeeded. User reports a good initial APK trial; comprehensive device/upgrade and provider acceptance are not established.
+- [Original npm evidence artifact](https://github.com/tvhuy99-web/SillyTavern-Card-Studio-v1.3.4/actions/runs/45796737590/artifacts/15105790629): genuine package-lock.json, SHA-256 `98f46d155bf0075a895a647a45d635a5f89824985584fbd2e13ea3dcb43804e2`. The identical lockfile is now tracked at `build/npm-runtime/package-lock.json` (Git blob `1e077ff74158efeea030c33af65ee4aed49755d6`). CI now requires npm ci and adds browser acceptance for dist-npm.
+- Locked installation, mounted npm runtime, npm Android/deployment cutover and full device/live provider acceptance remain pending verification. The successful prior npm build did not establish mounted browser behavior. Retain portable vendor snapshots until cutover is independently accepted. Inventory of licenses is not legal clearance.
