@@ -104,8 +104,8 @@ assert.equal(cooling.activeEntries.length, 0);
 // The generated production bundle must have the actual 3-turn default,
 // migrating getter, original semantic provider and the always-visible slider.
 assert.ok(production.includes('aiStickyDuration:3,system_prompt:'));
-assert.ok(production.includes('__stsMigrateSmartScanStickySettings(t)'));
-assert.ok(production.includes('__stsMarkSmartScanStickySettingsSaved(e)'));
+assert.match(production, /__stsMigrateSmartScanStickySettings\)?\(savedSettings\)/);
+assert.match(production, /__stsMarkSmartScanStickySettingsSaved\)?\(settings\)/);
 assert.ok(/resolveWorldInfo:\s*(?:dependencies\.)?__stsCreateUidSafeWorldInfoResolver\((?:dependencies\.)?ch\)/.test(readRecoveredHostView()));
 assert.ok(/label:\s*"AI Sticky Duration \(lượt AI phản hồi\)"/.test(readFileSync(new URL('../src/ui/settings/settings-screens.js', import.meta.url), 'utf8')));
 assert.equal((readRecoveredHostView().match(/label:\s*"AI Sticky Duration \(lượt AI phản hồi\)"/g) || []).length, 1);

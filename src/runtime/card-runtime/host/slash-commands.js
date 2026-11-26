@@ -1,406 +1,406 @@
 // Recovered from the application host. One owner; dependency getters preserve late binding.
 export function createSlashCommands(dependencies = {}) {
-  var tp = e => {
-    let t = [];
-    let n = "";
-    let r = false;
-    let a = "";
-    for (let i = 0; i < e.length; i++) {
-      let o = e[i];
-      if ('"' !== o && "'" !== o || r) {
-        if (o === a && r) {
-          r = false;
-          a = "";
+  var tokenizeSlashCommand = text => {
+    let tokens = [];
+    let currentToken = "";
+    let insideQuote = false;
+    let quoteCharacter = "";
+    for (let index = 0; index < text.length; index++) {
+      let character = text[index];
+      if ('"' !== character && "'" !== character || insideQuote) {
+        if (character === quoteCharacter && insideQuote) {
+          insideQuote = false;
+          quoteCharacter = "";
         } else {
-          if (" " !== o || r) {
-            n += o;
+          if (" " !== character || insideQuote) {
+            currentToken += character;
           } else {
-            n.length > 0 && (t.push(n), n = "");
+            currentToken.length > 0 && (tokens.push(currentToken), currentToken = "");
           }
         }
       } else {
-        r = true;
-        a = o;
+        insideQuote = true;
+        quoteCharacter = character;
       }
     }
-    n.length > 0 && t.push(n);
-    return t;
+    currentToken.length > 0 && tokens.push(currentToken);
+    return tokens;
   };
-  var np = e => {
-    let t = {};
-    let n = [];
-    e.forEach(e => {
-      let r = e.match(/^([a-zA-Z_][\w-]*)=(.*)$/s);
-      if (r) {
-        t[r[1].toLowerCase()] = r[2];
+  var parseSlashArguments = tokens => {
+    let namedArgs = {};
+    let positionalArgs = [];
+    tokens.forEach(token => {
+      let match = token.match(/^([a-zA-Z_][\w-]*)=(.*)$/s);
+      if (match) {
+        namedArgs[match[1].toLowerCase()] = match[2];
       } else {
-        n.push(e);
+        positionalArgs.push(token);
       }
     });
     return {
-      named: t,
-      positional: n
+      named: namedArgs,
+      positional: positionalArgs
     };
   };
-  var rp = e => {
-    let t = String(e ?? "").trim();
-    if ("true" === t) return true;
-    if ("false" === t) return false;
-    if ("null" === t) return null;
-    if ("" !== t && Number.isFinite(Number(t))) return Number(t);
-    if (t.startsWith("{") && t.endsWith("}") || t.startsWith("[") && t.endsWith("]")) try {
-      return JSON.parse(t);
+  var parseSlashValue = value => {
+    let text = String(value ?? "").trim();
+    if ("true" === text) return true;
+    if ("false" === text) return false;
+    if ("null" === text) return null;
+    if ("" !== text && Number.isFinite(Number(text))) return Number(text);
+    if (text.startsWith("{") && text.endsWith("}") || text.startsWith("[") && text.endsWith("]")) try {
+      return JSON.parse(text);
     } catch {}
-    return e;
+    return value;
   };
-  var ap = e => {
+  var parseVariableAssignment = tokens => {
     let {
-      named: t,
-      positional: n
-    } = np(e);
+      named: namedArgs,
+      positional: positionalArgs
+    } = parseSlashArguments(tokens);
     return {
-      key: t.key ?? t.name ?? n.shift() ?? "",
-      value: rp(t.value ?? n.join(" "))
+      key: namedArgs.key ?? namedArgs.name ?? positionalArgs.shift() ?? "",
+      value: parseSlashValue(namedArgs.value ?? positionalArgs.join(" "))
     };
   };
-  var ip = (e, t) => {
-    let n = (0, dependencies.Xu)(e);
-    n = n.replace(/{{random:(.*?)}}/gi, (e, t) => {
-      let n = t.split(",");
-      if (2 === n.length && !isNaN(Number(n[0])) && !isNaN(Number(n[1]))) {
-        let e = Number(n[0]);
-        let t = Number(n[1]);
-        return String(Math.floor(Math.random() * (t - e + 1)) + e);
+  var expandSlashMacros = (text, context) => {
+    let expanded = (0, dependencies.Xu)(text);
+    expanded = expanded.replace(/{{random:(.*?)}}/gi, (match, optionsText) => {
+      let options = optionsText.split(",");
+      if (2 === options.length && !isNaN(Number(options[0])) && !isNaN(Number(options[1]))) {
+        let minimum = Number(options[0]);
+        let maximum = Number(options[1]);
+        return String(Math.floor(Math.random() * (maximum - minimum + 1)) + minimum);
       }
-      return n.length >= 1 ? n[Math.floor(Math.random() * n.length)].trim() : "";
+      return options.length >= 1 ? options[Math.floor(Math.random() * options.length)].trim() : "";
     });
-    n = n.replace(/{{pick:(.*?)}}/gi, (e, t) => {
-      let n = t.split(",").map(e => e.trim());
-      return n.length > 0 ? n[Math.floor(Math.random() * n.length)] : "";
+    expanded = expanded.replace(/{{pick:(.*?)}}/gi, (match, optionsText) => {
+      let options = optionsText.split(",").map(option => option.trim());
+      return options.length > 0 ? options[Math.floor(Math.random() * options.length)] : "";
     });
-    let r = (e, t, n, r) => {
-      let a = Math.max(1, Math.min(100, t ? parseInt(t, 10) : 1));
-      let i = Math.max(1, Math.min(1e6, parseInt(n, 10)));
-      let o = 0;
-      for (let e = 0; e < a; e++) o += Math.floor(Math.random() * i) + 1;
-      if (r) {
-        let e = r.replace(/\s/g, "");
-        o += parseInt(e, 10);
+    let rollDice = (match, countText, sidesText, modifierText) => {
+      let diceCount = Math.max(1, Math.min(100, countText ? parseInt(countText, 10) : 1));
+      let sides = Math.max(1, Math.min(1e6, parseInt(sidesText, 10)));
+      let total = 0;
+      for (let index = 0; index < diceCount; index++) total += Math.floor(Math.random() * sides) + 1;
+      if (modifierText) {
+        let modifier = modifierText.replace(/\s/g, "");
+        total += parseInt(modifier, 10);
       }
-      return String(o);
+      return String(total);
     };
-    n = n.replace(/{{dice:(\s*\d*)d(\d+)\s*([+-]\s*\d+)?\s*}}/gi, r);
-    n = n.replace(/{{roll:(\s*\d*)d(\d+)\s*([+-]\s*\d+)?\s*}}/gi, r);
-    n = n.replace(/{{char}}/gi, t.characterName);
-    n = n.replace(/{{user}}/gi, t.userPersonaName);
-    let a = new Date();
-    n = n.replace(/{{time}}/gi, a.toLocaleTimeString([], {
+    expanded = expanded.replace(/{{dice:(\s*\d*)d(\d+)\s*([+-]\s*\d+)?\s*}}/gi, rollDice);
+    expanded = expanded.replace(/{{roll:(\s*\d*)d(\d+)\s*([+-]\s*\d+)?\s*}}/gi, rollDice);
+    expanded = expanded.replace(/{{char}}/gi, context.characterName);
+    expanded = expanded.replace(/{{user}}/gi, context.userPersonaName);
+    let now = new Date();
+    expanded = expanded.replace(/{{time}}/gi, now.toLocaleTimeString([], {
       hour: "2-digit",
       minute: "2-digit"
     }));
-    n = n.replace(/{{date}}/gi, a.toLocaleDateString());
-    n = n.replace(/{{getvar::([^}]+)}}/gi, (e, n) => {
-      let r = (0, dependencies.Uu)(t.variables, n);
-      return undefined === r ? "" : String(r);
+    expanded = expanded.replace(/{{date}}/gi, now.toLocaleDateString());
+    expanded = expanded.replace(/{{getvar::([^}]+)}}/gi, (match, variablePath) => {
+      let value = (0, dependencies.Uu)(context.variables, variablePath);
+      return undefined === value ? "" : String(value);
     });
-    n = n.replace(/{{getglobalvar::([^}]+)}}/gi, (e, n) => {
-      let r = (0, dependencies.Uu)(t.variables, "globals." + n);
-      return undefined === r ? "" : String(r);
+    expanded = expanded.replace(/{{getglobalvar::([^}]+)}}/gi, (match, variablePath) => {
+      let value = (0, dependencies.Uu)(context.variables, "globals." + variablePath);
+      return undefined === value ? "" : String(value);
     });
-    n = n.replace(/{{setglobalvar::([^:]+)::(.*?)}}/gi, (e, n, r) => {
-      let a = (0, dependencies.Gu)(t.variables, "set", "globals." + n, r);
-      t.variables = a;
-      t.setVariables(a);
+    expanded = expanded.replace(/{{setglobalvar::([^:]+)::(.*?)}}/gi, (match, variablePath, value) => {
+      let updatedVariables = (0, dependencies.Gu)(context.variables, "set", "globals." + variablePath, value);
+      context.variables = updatedVariables;
+      context.setVariables(updatedVariables);
       return "";
     });
-    n = n.replace(/{{setvar::([^:]+)::(.*?)}}/gi, (e, n, r) => {
-      let a = (0, dependencies.Gu)(t.variables, "set", n, r);
-      t.variables = a;
-      t.setVariables(a);
+    expanded = expanded.replace(/{{setvar::([^:]+)::(.*?)}}/gi, (match, variablePath, value) => {
+      let updatedVariables = (0, dependencies.Gu)(context.variables, "set", variablePath, value);
+      context.variables = updatedVariables;
+      context.setVariables(updatedVariables);
       return "";
     });
-    n = n.replace(/{{\s*([a-zA-Z0-9_.[\]]+)\s*}}/g, (e, n) => {
-      if (n.includes(":")) return e;
-      let r = (0, dependencies.Uu)(t.variables, n);
-      return undefined === r ? e : String(r);
+    expanded = expanded.replace(/{{\s*([a-zA-Z0-9_.[\]]+)\s*}}/g, (match, variablePath) => {
+      if (variablePath.includes(":")) return match;
+      let value = (0, dependencies.Uu)(context.variables, variablePath);
+      return undefined === value ? match : String(value);
     });
-    return n;
+    return expanded;
   };
-  var op = (e, t, n) => {
-    let r = Number(e);
-    let a = Number(n);
-    let i = !isNaN(r) && !isNaN(a);
-    let o = i ? r : e;
-    let s = i ? a : n;
-    switch (t) {
+  var compareSlashValues = (left, operator, right) => {
+    let leftNumber = Number(left);
+    let rightNumber = Number(right);
+    let bothNumeric = !isNaN(leftNumber) && !isNaN(rightNumber);
+    let leftValue = bothNumeric ? leftNumber : left;
+    let rightValue = bothNumeric ? rightNumber : right;
+    switch (operator) {
       case "==":
       case "eq":
-        return o == s;
+        return leftValue == rightValue;
       case "===":
-        return o === s;
+        return leftValue === rightValue;
       case "!=":
       case "neq":
-        return o != s;
+        return leftValue != rightValue;
       case "!==":
-        return o !== s;
+        return leftValue !== rightValue;
       case ">":
       case "gt":
-        return o > s;
+        return leftValue > rightValue;
       case ">=":
       case "gte":
-        return o >= s;
+        return leftValue >= rightValue;
       case "<":
       case "lt":
-        return o < s;
+        return leftValue < rightValue;
       case "<=":
       case "lte":
-        return o <= s;
+        return leftValue <= rightValue;
       case "includes":
-        return String(e).includes(String(n));
+        return String(left).includes(String(right));
       case "!includes":
-        return !String(e).includes(String(n));
+        return !String(left).includes(String(right));
       default:
         return false;
     }
   };
-  var sp = {
-    echo: async (e, t, n) => t.sendMessage(n, "system"),
-    send: async (e, t, n) => t.sendMessage(n, "user"),
-    sys: async (e, t, n) => t.sendMessage(n, "system"),
-    as: async (e, t, n) => {
-      if (e.length >= 2) {
-        let r = e[0];
-        let a = n.indexOf(r) + r.length;
-        let i = n.substring(a).trim();
-        i.startsWith('"') && i.endsWith('"') && (i = i.slice(1, -1));
-        t.sendMessage(`${r}: ${i}`, "system");
+  var slashCommandHandlers = {
+    echo: async (args, context, rawText) => context.sendMessage(rawText, "system"),
+    send: async (args, context, rawText) => context.sendMessage(rawText, "user"),
+    sys: async (args, context, rawText) => context.sendMessage(rawText, "system"),
+    as: async (args, context, rawText) => {
+      if (args.length >= 2) {
+        let speakerName = args[0];
+        let messageOffset = rawText.indexOf(speakerName) + speakerName.length;
+        let message = rawText.substring(messageOffset).trim();
+        message.startsWith('"') && message.endsWith('"') && (message = message.slice(1, -1));
+        context.sendMessage(`${speakerName}: ${message}`, "system");
       }
     },
-    set: async (e, t) => {
-      let n = e[0];
-      let r = e[1];
-      if (n && n.includes("=") && !r) {
-        let e = n.split("=");
-        n = e[0];
-        r = e.slice(1).join("=");
+    set: async (args, context) => {
+      let variablePath = args[0];
+      let value = args[1];
+      if (variablePath && variablePath.includes("=") && !value) {
+        let assignmentParts = variablePath.split("=");
+        variablePath = assignmentParts[0];
+        value = assignmentParts.slice(1).join("=");
       }
-      if (n && undefined !== r) {
-        let e = (0, dependencies.Gu)(t.variables, "set", n, r);
-        t.variables = e;
-        t.setVariables(e);
+      if (variablePath && undefined !== value) {
+        let updatedVariables = (0, dependencies.Gu)(context.variables, "set", variablePath, value);
+        context.variables = updatedVariables;
+        context.setVariables(updatedVariables);
       }
     },
-    var: async (e, t, n, r) => sp.set(e, t, n, r),
-    setvar: async (e, t) => {
+    var: async (args, context, rawText, execution) => slashCommandHandlers.set(args, context, rawText, execution),
+    setvar: async (args, context) => {
       let {
-        key: n,
-        value: r
-      } = ap(e);
-      if (!n) return "";
-      let a = (0, dependencies.Gu)(t.variables, "set", n, r);
-      t.variables = a;
-      t.setVariables(a);
-      return String(r ?? "");
+        key: variablePath,
+        value: value
+      } = parseVariableAssignment(args);
+      if (!variablePath) return "";
+      let updatedVariables = (0, dependencies.Gu)(context.variables, "set", variablePath, value);
+      context.variables = updatedVariables;
+      context.setVariables(updatedVariables);
+      return String(value ?? "");
     },
-    get: async (e, t) => {
-      let n = (0, dependencies.Uu)(t.variables, e[0]);
-      t.sendMessage(`[System] ${e[0]} = ${n}`, "system");
-      return null == n ? "" : String(n);
+    get: async (args, context) => {
+      let value = (0, dependencies.Uu)(context.variables, args[0]);
+      context.sendMessage(`[System] ${args[0]} = ${value}`, "system");
+      return null == value ? "" : String(value);
     },
-    getvar: async (e, t) => {
+    getvar: async (args, context) => {
       let {
-        named: n,
-        positional: r
-      } = np(e);
-      let a = (0, dependencies.Uu)(t.variables, n.key ?? r[0]);
-      return null == a ? "" : "object" == typeof a ? JSON.stringify(a) : String(a);
+        named: namedArgs,
+        positional: positionalArgs
+      } = parseSlashArguments(args);
+      let value = (0, dependencies.Uu)(context.variables, namedArgs.key ?? positionalArgs[0]);
+      return null == value ? "" : "object" == typeof value ? JSON.stringify(value) : String(value);
     },
-    add: async (e, t) => {
-      let n = (0, dependencies.Gu)(t.variables, "add", e[0], e[1]);
-      t.variables = n;
-      t.setVariables(n);
+    add: async (args, context) => {
+      let updatedVariables = (0, dependencies.Gu)(context.variables, "add", args[0], args[1]);
+      context.variables = updatedVariables;
+      context.setVariables(updatedVariables);
     },
-    sub: async (e, t) => {
-      let n = (0, dependencies.Gu)(t.variables, "sub", e[0], e[1]);
-      t.variables = n;
-      t.setVariables(n);
+    sub: async (args, context) => {
+      let updatedVariables = (0, dependencies.Gu)(context.variables, "sub", args[0], args[1]);
+      context.variables = updatedVariables;
+      context.setVariables(updatedVariables);
     },
-    mul: async (e, t) => {
-      let n = (0, dependencies.Gu)(t.variables, "mul", e[0], e[1]);
-      t.variables = n;
-      t.setVariables(n);
+    mul: async (args, context) => {
+      let updatedVariables = (0, dependencies.Gu)(context.variables, "mul", args[0], args[1]);
+      context.variables = updatedVariables;
+      context.setVariables(updatedVariables);
     },
-    div: async (e, t) => {
-      let n = (0, dependencies.Gu)(t.variables, "div", e[0], e[1]);
-      t.variables = n;
-      t.setVariables(n);
+    div: async (args, context) => {
+      let updatedVariables = (0, dependencies.Gu)(context.variables, "div", args[0], args[1]);
+      context.variables = updatedVariables;
+      context.setVariables(updatedVariables);
     },
-    setglobalvar: async (e, t) => {
-      let n = ap(e);
-      let r = "globals." + n.key;
-      let a = n.value;
-      if (n.key && undefined !== a) {
-        let e = (0, dependencies.Gu)(t.variables, "set", r, a);
-        t.variables = e;
-        t.setVariables(e);
+    setglobalvar: async (args, context) => {
+      let assignment = parseVariableAssignment(args);
+      let variablePath = "globals." + assignment.key;
+      let value = assignment.value;
+      if (assignment.key && undefined !== value) {
+        let updatedVariables = (0, dependencies.Gu)(context.variables, "set", variablePath, value);
+        context.variables = updatedVariables;
+        context.setVariables(updatedVariables);
       }
-      return String(a ?? "");
+      return String(value ?? "");
     },
-    getglobalvar: async (e, t) => {
+    getglobalvar: async (args, context) => {
       let {
-        named: n,
-        positional: r
-      } = np(e);
-      let a = (0, dependencies.Uu)(t.variables, "globals." + (n.key ?? r[0] ?? ""));
-      return null == a ? "" : "object" == typeof a ? JSON.stringify(a) : String(a);
+        named: namedArgs,
+        positional: positionalArgs
+      } = parseSlashArguments(args);
+      let value = (0, dependencies.Uu)(context.variables, "globals." + (namedArgs.key ?? positionalArgs[0] ?? ""));
+      return null == value ? "" : "object" == typeof value ? JSON.stringify(value) : String(value);
     },
-    addvar: async (e, t) => {
+    addvar: async (args, context) => {
       let {
-        key: n,
-        value: r
-      } = ap(e);
-      let a = (0, dependencies.Gu)(t.variables, "add", n, r);
-      t.variables = a;
-      t.setVariables(a);
-      let i = (0, dependencies.Uu)(a, n);
-      return null == i ? "" : String(i);
+        key: variablePath,
+        value: value
+      } = parseVariableAssignment(args);
+      let updatedVariables = (0, dependencies.Gu)(context.variables, "add", variablePath, value);
+      context.variables = updatedVariables;
+      context.setVariables(updatedVariables);
+      let result = (0, dependencies.Uu)(updatedVariables, variablePath);
+      return null == result ? "" : String(result);
     },
-    incvar: async (e, t) => {
+    incvar: async (args, context) => {
       let {
-        named: n,
-        positional: r
-      } = np(e);
-      let a = n.key ?? r[0] ?? "";
-      let i = rp(n.value ?? r[1] ?? "1");
-      let o = (0, dependencies.Gu)(t.variables, "add", a, i);
-      t.variables = o;
-      t.setVariables(o);
-      return String((0, dependencies.Uu)(o, a) ?? "");
+        named: namedArgs,
+        positional: positionalArgs
+      } = parseSlashArguments(args);
+      let variablePath = namedArgs.key ?? positionalArgs[0] ?? "";
+      let amount = parseSlashValue(namedArgs.value ?? positionalArgs[1] ?? "1");
+      let updatedVariables = (0, dependencies.Gu)(context.variables, "add", variablePath, amount);
+      context.variables = updatedVariables;
+      context.setVariables(updatedVariables);
+      return String((0, dependencies.Uu)(updatedVariables, variablePath) ?? "");
     },
-    decvar: async (e, t) => {
+    decvar: async (args, context) => {
       let {
-        named: n,
-        positional: r
-      } = np(e);
-      let a = n.key ?? r[0] ?? "";
-      let i = rp(n.value ?? r[1] ?? "1");
-      let o = (0, dependencies.Gu)(t.variables, "sub", a, i);
-      t.variables = o;
-      t.setVariables(o);
-      return String((0, dependencies.Uu)(o, a) ?? "");
+        named: namedArgs,
+        positional: positionalArgs
+      } = parseSlashArguments(args);
+      let variablePath = namedArgs.key ?? positionalArgs[0] ?? "";
+      let amount = parseSlashValue(namedArgs.value ?? positionalArgs[1] ?? "1");
+      let updatedVariables = (0, dependencies.Gu)(context.variables, "sub", variablePath, amount);
+      context.variables = updatedVariables;
+      context.setVariables(updatedVariables);
+      return String((0, dependencies.Uu)(updatedVariables, variablePath) ?? "");
     },
-    delvar: async (e, t) => {
+    delvar: async (args, context) => {
       let {
-        named: n,
-        positional: r
-      } = np(e);
-      let a = n.key ?? r[0] ?? "";
-      let i = (0, dependencies.Gu)(t.variables, "delete", a, undefined);
-      t.variables = i;
-      t.setVariables(i);
+        named: namedArgs,
+        positional: positionalArgs
+      } = parseSlashArguments(args);
+      let variablePath = namedArgs.key ?? positionalArgs[0] ?? "";
+      let updatedVariables = (0, dependencies.Gu)(context.variables, "delete", variablePath, undefined);
+      context.variables = updatedVariables;
+      context.setVariables(updatedVariables);
       return "";
     },
-    flushvar: async (e, t, n, r) => sp.delvar(e, t, n, r),
-    length: async (e, t) => {
-      let n = e[0];
-      let r = (0, dependencies.Uu)(t.variables, e[1]);
-      let a = 0;
-      (Array.isArray(r) || "string" == typeof r) && (a = r.length);
-      let i = (0, dependencies.Gu)(t.variables, "set", n, a);
-      t.variables = i;
-      t.setVariables(i);
+    flushvar: async (args, context, rawText, execution) => slashCommandHandlers.delvar(args, context, rawText, execution),
+    length: async (args, context) => {
+      let targetPath = args[0];
+      let value = (0, dependencies.Uu)(context.variables, args[1]);
+      let length = 0;
+      (Array.isArray(value) || "string" == typeof value) && (length = value.length);
+      let updatedVariables = (0, dependencies.Gu)(context.variables, "set", targetPath, length);
+      context.variables = updatedVariables;
+      context.setVariables(updatedVariables);
     },
-    concat: async (e, t) => {
-      let n = e[0];
-      let r = "";
-      for (let t = 1; t < e.length; t++) r += String(e[t]);
-      let a = (0, dependencies.Gu)(t.variables, "set", n, r);
-      t.variables = a;
-      t.setVariables(a);
+    concat: async (args, context) => {
+      let targetPath = args[0];
+      let combined = "";
+      for (let index = 1; index < args.length; index++) combined += String(args[index]);
+      let updatedVariables = (0, dependencies.Gu)(context.variables, "set", targetPath, combined);
+      context.variables = updatedVariables;
+      context.setVariables(updatedVariables);
     },
-    jump: async (e, t, n, r) => {
-      let a = e[0];
-      if (undefined === r.labels[a]) {
-        t.log("warn", `Label not found: ${a}`);
+    jump: async (args, context, rawText, execution) => {
+      let labelName = args[0];
+      if (undefined === execution.labels[labelName]) {
+        context.log("warn", `Label not found: ${labelName}`);
       } else {
-        r.pc = r.labels[a];
+        execution.pc = execution.labels[labelName];
       }
     },
-    goto: async (e, t, n, r) => sp.jump(e, t, n, r),
-    go: async (e, t, n, r) => sp.jump(e, t, n, r),
-    wait: async (e, t) => {
-      let n = Math.min(6e4, Math.max(0, parseInt(e[0], 10)));
-      isNaN(n) || (await new Promise(e => setTimeout(e, n)));
+    goto: async (args, context, rawText, execution) => slashCommandHandlers.jump(args, context, rawText, execution),
+    go: async (args, context, rawText, execution) => slashCommandHandlers.jump(args, context, rawText, execution),
+    wait: async (args, context) => {
+      let delayMs = Math.min(6e4, Math.max(0, parseInt(args[0], 10)));
+      isNaN(delayMs) || (await new Promise(resolve => setTimeout(resolve, delayMs)));
     },
-    delay: async (e, t, n, r) => sp.wait(e, t, n, r),
-    lock: async (e, t) => {
-      t.setIsInputLocked && t.setIsInputLocked(true);
+    delay: async (args, context, rawText, execution) => slashCommandHandlers.wait(args, context, rawText, execution),
+    lock: async (args, context) => {
+      context.setIsInputLocked && context.setIsInputLocked(true);
     },
-    unlock: async (e, t) => {
-      t.setIsInputLocked && t.setIsInputLocked(false);
+    unlock: async (args, context) => {
+      context.setIsInputLocked && context.setIsInputLocked(false);
     },
-    input: async (e, t, n) => {
-      let r = e[0] || n;
+    input: async (args, context, rawText) => {
+      let inputText = args[0] || rawText;
       window.dispatchEvent(new CustomEvent("sillytavern:set-input", {
-        detail: r
+        detail: inputText
       }));
     },
-    qr: async (e, t, n) => {
-      if (t.setQuickReplies) {
-        let e = n.split("|").map(e => e.trim()).filter(Boolean).map(e => ({
-          label: e,
-          message: e
+    qr: async (args, context, rawText) => {
+      if (context.setQuickReplies) {
+        let replies = rawText.split("|").map(reply => reply.trim()).filter(Boolean).map(reply => ({
+          label: reply,
+          message: reply
         }));
-        t.setQuickReplies(e);
+        context.setQuickReplies(replies);
       }
     },
-    buttons: async (e, t, n) => {
-      if (t.setQuickReplies) {
-        let e = n.split("|").map(e => {
-          let t = e.trim().match(/^"([^"]+)"\s*(.*)$/);
-          if (t) return {
-            label: t[1],
-            action: t[2] || t[1]
+    buttons: async (args, context, rawText) => {
+      if (context.setQuickReplies) {
+        let replies = rawText.split("|").map(reply => {
+          let quotedMatch = reply.trim().match(/^"([^"]+)"\s*(.*)$/);
+          if (quotedMatch) return {
+            label: quotedMatch[1],
+            action: quotedMatch[2] || quotedMatch[1]
           };
-          let n = e.trim().split(/\s+(.+)/);
+          let parts = reply.trim().split(/\s+(.+)/);
           return {
-            label: n[0],
-            action: n[1] || n[0]
+            label: parts[0],
+            action: parts[1] || parts[0]
           };
         });
-        t.setQuickReplies(e);
+        context.setQuickReplies(replies);
       }
     },
-    toast: async (e, t, n) => {
-      let r = e[0] || n;
-      let a = e[1] || "info";
-      t.showToast && t.showToast(r, a);
+    toast: async (args, context, rawText) => {
+      let message = args[0] || rawText;
+      let severity = args[1] || "info";
+      context.showToast && context.showToast(message, severity);
     },
-    popup: async (e, t, n) => {
-      let r = e[0] || n;
-      t.showPopup && t.showPopup(r);
+    popup: async (args, context, rawText) => {
+      let message = args[0] || rawText;
+      context.showPopup && context.showPopup(message);
     },
-    bg: async (e, t, n) => {
-      let r = e[0] || n;
-      t.setVisualState && t.setVisualState("bg", r);
+    bg: async (args, context, rawText) => {
+      let background = args[0] || rawText;
+      context.setVisualState && context.setVisualState("bg", background);
     },
-    music: async (e, t, n) => {
-      let r = e[0] || n;
-      t.setVisualState && t.setVisualState("music", r);
+    music: async (args, context, rawText) => {
+      let music = args[0] || rawText;
+      context.setVisualState && context.setVisualState("music", music);
     },
-    sound: async (e, t, n) => {
-      let r = e[0] || n;
-      t.setVisualState && t.setVisualState("sound", r);
+    sound: async (args, context, rawText) => {
+      let sound = args[0] || rawText;
+      context.setVisualState && context.setVisualState("sound", sound);
     },
     label: async () => {},
     comment: async () => "",
-    pass: async (e, t, n) => n,
+    pass: async (args, context, rawText) => rawText,
     stop: async () => false
   };
   return {
-    tp,
-    ip,
-    op,
-    sp
+    tp: tokenizeSlashCommand,
+    ip: expandSlashMacros,
+    op: compareSlashValues,
+    sp: slashCommandHandlers
   };
 }
