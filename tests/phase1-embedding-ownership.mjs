@@ -106,5 +106,5 @@ assert.deepEqual(failing.getIndex('card','gemini'),[records[0]]);
 const production=readFileSync(new URL('../assets/app-production-v1.3.6.js',import.meta.url),'utf8');
 assert.ok(!production.includes('Pc=new Map,Mc=new Map'));
 assert.ok(!production.includes('indexedDB.open("LorebookEmbeddingsDB",2)'));
-for (const alias of ['Gc=__stsEmbeddingService.cosine','zc=__stsEmbeddingService.hashText','qc=__stsEmbeddingService.entryText']) assert.ok(production.includes(alias));
+for (const alias of ['cosineSimilarity=__stsEmbeddingService.cosine','hashEmbeddingText=__stsEmbeddingService.hashText','getEmbeddingEntryText=__stsEmbeddingService.entryText']) assert.ok(production.includes(alias));
 console.log('P07 embedding ownership, provider snapshots, hash parity and transaction protocol: OK');

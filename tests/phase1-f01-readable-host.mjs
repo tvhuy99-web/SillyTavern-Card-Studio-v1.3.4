@@ -17,4 +17,6 @@ for (const [name, factory] of [
 for (const marker of ['pl: ToastItem', 'mh: useDiagnostics', 'fh: useConversation']) assert.ok(source.includes(marker), marker);
 assert.ok(source.includes('CardFrame.displayName="InteractiveHtmlMessage"'));
 assert.ok(source.includes('CardPreviewDialog.displayName="FloatingStatusHUD"'));
-console.log('F01 readable composition-root factory bindings: OK');
+assert.doesNotMatch(source, /^(?:var|let|const|function)\s+[$A-Za-z_][\w$]?\s*(?:=|\()/m, 'no opaque direct top-level declarations in host');
+for (const marker of ['Eo: arenaSettingsKey', 'Co: readCardRuntimeEngineMode', 'Cs: getProxyForTools', 'get Wh(){return Wh}']) assert.ok(source.includes(marker), marker);
+console.log('F01 readable composition-root direct bindings and settings aliases: OK');

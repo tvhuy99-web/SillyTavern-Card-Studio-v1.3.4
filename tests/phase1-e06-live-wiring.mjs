@@ -454,7 +454,7 @@ import { createMemoryStorage } from '../src/providers/proxy/persistence.js';
   assert.ok(hostSrc.includes('__stsCrossTabSync=__stsCreateCrossTabSync()'));
   assert.ok(hostSrc.includes('__stsSettingsRepository=__stsCreateSettingsRepository('));
   assert.ok(hostSrc.includes('__stsBackupRestoreService=__stsCreateBackupRestoreService('));
-  assert.ok(hostSrc.includes('Es=e=>{__stsSettingsRepository.setJson(Eo,e)}'));
+  assert.ok(hostSrc.includes('saveArenaSettings=e=>{__stsSettingsRepository.setJson(arenaSettingsKey,e)}'));
   assert.ok(hostSrc.includes('"sillyTavernStudio_proxyRememberSecrets"'));
   assert.ok(hostSrc.includes('"sts_aistudio_show_page"'));
   assert.ok(hostSrc.includes('"sts_ai_studio_model_list"'));

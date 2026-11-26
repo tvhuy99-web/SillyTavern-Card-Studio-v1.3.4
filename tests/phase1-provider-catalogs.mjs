@@ -26,6 +26,6 @@ catalog.mergeProxyTarget(target,[{id:'a',name:'A'}]);assert.equal(catalog.readPr
 catalog.clearProxyTarget(target);assert.deepEqual(catalog.readProxyTarget(target),[]);
 assert.equal(catalog.readProxy,undefined);assert.equal(catalog.mergeProxy,undefined);
 const p=(await readFile(new URL('../assets/app-production-v1.3.6.js',import.meta.url),'utf8'))+'\n'+(await readFile(new URL('../assets/recovered/ui/settings/gemini-catalog-hook.js',import.meta.url),'utf8'));
-for(const marker of ['ns=__stsConnections.getSettings','fs=__stsConnections.getGemini','ys=__stsConnections.nextGeminiKey','__stsCatalog.subscribeGemini','__stsCatalog.loadGemini','Ws=__stsHostConnections.loadProxyModels','Ru=__stsHostConnections.loadOpenRouterModels'])assert.ok(p.includes(marker),marker);
+for(const marker of ['getConnectionSettings=__stsConnections.getSettings','getGeminiSettings=__stsConnections.getGemini','nextGeminiKey=__stsConnections.nextGeminiKey','__stsCatalog.subscribeGemini','__stsCatalog.loadGemini','fetchProxyModels=__stsHostConnections.loadProxyModels','fetchOpenRouterModels=__stsHostConnections.loadOpenRouterModels'])assert.ok(p.includes(marker),marker);
 assert.ok(!p.includes('Dl=async()=>[]'));assert.ok(!p.includes('sessionStorage.setItem(Ao,JSON.stringify(e))'));
 console.log('Provider catalogs: pagination, cache, stale responses, protocol, subscriptions and generated integration: OK');
