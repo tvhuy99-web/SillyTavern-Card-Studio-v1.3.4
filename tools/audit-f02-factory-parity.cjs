@@ -27,17 +27,63 @@ function parse(name, content) {
   if (source.parseDiagnostics.length) throw Error(name + ': ' + source.parseDiagnostics.map(d => ts.flattenDiagnosticMessageText(d.messageText, ' ')).join('; '));
   return source;
 }
-function fingerprint(node, source) {
+// Recognize only a pure identity projection: const deps = getDependencies();
+// return { key: deps.key, ... }. No arbitrary wrapper or renamed key is allowed.
+function identityProjections(source) {
+  const projections = new Map();
+  for (const fn of source.statements) {
+    if (!ts.isFunctionDeclaration(fn) || !fn.name || fn.parameters.length !== 1 ||
+        !ts.isIdentifier(fn.parameters[0].name) || fn.parameters[0].name.text !== 'getDependencies' ||
+        fn.parameters[0].initializer || fn.parameters[0].dotDotDotToken ||
+        fn.body?.statements.length !== 2 || fn.modifiers?.length || fn.asteriskToken) continue;
+    const [declaration, result] = fn.body.statements;
+    if (!ts.isVariableStatement(declaration) || declaration.declarationList.declarations.length !== 1 ||
+        !(declaration.declarationList.flags & ts.NodeFlags.Const) ||
+        !ts.isReturnStatement(result) || !result.expression || !ts.isObjectLiteralExpression(result.expression)) continue;
+    const binding = declaration.declarationList.declarations[0];
+    const call = binding.initializer;
+    if (!ts.isIdentifier(binding.name) || !call || !ts.isCallExpression(call) || call.questionDotToken ||
+        !ts.isIdentifier(call.expression) || call.expression.text !== 'getDependencies' || call.arguments.length) continue;
+    const keys = new Set();
+    let valid = true;
+    for (const prop of result.expression.properties) {
+      if (!ts.isPropertyAssignment(prop) || !ts.isIdentifier(prop.name) || !ts.isPropertyAccessExpression(prop.initializer) ||
+          prop.initializer.questionDotToken || !ts.isIdentifier(prop.initializer.expression) ||
+          prop.initializer.expression.text !== binding.name.text || prop.initializer.name.text !== prop.name.text ||
+          keys.has(prop.name.text)) { valid = false; break; }
+      keys.add(prop.name.text);
+    }
+    if (valid) projections.set(fn.name.text, keys);
+  }
+  return projections;
+}
+function projectionRead(node, projections) {
+  if (!ts.isCallExpression(node) || node.questionDotToken || !ts.isIdentifier(node.expression)) return false;
+  const declaration = node.parent;
+  if (!ts.isVariableDeclaration(declaration) || declaration.initializer !== node ||
+      !ts.isObjectBindingPattern(declaration.name)) return false;
+  const keys = declaration.name.elements.map(element => {
+    const property = element.propertyName || element.name;
+    return !element.dotDotDotToken && ts.isIdentifier(property) ? property.text : null;
+  });
+  if (keys.includes(null)) return false;
+  if (node.expression.text === 'getDependencies' && node.arguments.length === 0) return true;
+  const allowed = projections.get(node.expression.text);
+  return Boolean(allowed && node.arguments.length === 1 && ts.isIdentifier(node.arguments[0]) &&
+    node.arguments[0].text === 'getDependencies' && keys.every(key => allowed.has(key)));
+}
+function fingerprint(node, source, projections = null) {
   // Preserve every syntax kind, identifier, literal (including template chunks,
   // regex flags), operator, property, parameter and callback. Ignore only trivia.
   function visit(part) {
+    if (projections && projectionRead(part, projections)) return ['identity-projection-read'];
     const children = part.getChildren(source);
     return children.length ? [part.kind, ...children.map(visit)] : [part.kind, part.getText(source)];
   }
   const syntax = JSON.stringify(visit(node));
   return createHash('sha256').update(syntax).digest('hex');
 }
-function extractFactories(content, name = 'module.js') {
+function extractFactories(content, name = 'module.js', normalizeProjection = false) {
   const source = parse(name, content);
   const factories = new Map();
   for (const node of source.statements) {
@@ -46,7 +92,7 @@ function extractFactories(content, name = 'module.js') {
         !/^(create[A-Z]|__stsCreate)/.test(node.name.text)) continue;
     const key = node.name.text;
     if (factories.has(key)) throw Error('Duplicate factory in ' + name + ': ' + key);
-    factories.set(key, { file: name, hash: fingerprint(node, source), line: source.getLineAndCharacterOfPosition(node.getStart(source)).line + 1 });
+    factories.set(key, { file: name, hash: fingerprint(node, source, normalizeProjection ? identityProjections(source) : null), line: source.getLineAndCharacterOfPosition(node.getStart(source)).line + 1 });
   }
   return factories;
 }
@@ -62,9 +108,9 @@ function gitSources(ref, owners) {
   const names = git(['ls-tree', '-r', '--name-only', ref, 'src']).trim().split('\n').filter(isSource).filter(name => !owners || owners.has(name));
   return names.map(name => [name, git(['show', ref + ':' + name])]);
 }
-function inventory(sources) {
+function inventory(sources, normalizeProjection = false) {
   const map = new Map();
-  for (const [file, content] of sources) for (const [name, record] of extractFactories(content, file)) {
+  for (const [file, content] of sources) for (const [name, record] of extractFactories(content, file, normalizeProjection)) {
     if (map.has(name)) throw Error('Ambiguous factory ' + name + ': ' + map.get(name).file + ', ' + file);
     map.set(name, record);
   }
@@ -94,6 +140,14 @@ function selfTest() {
   for (const changed of [original.replace('x + 1', 'x - 1'), original.replace('value:', 'other:'), original.replace('/i', '/g'), original.replace('a${x}', 'b${x}'), original.replace('x = 1', 'x = 2'), original.replace('() =>', 'async () =>')]) {
     assert.equal(compareInventories(base, factory(changed)).ok, false);
   }
+  const projection = 'function resolveDeps(getDependencies) { const deps = getDependencies(); return {x: deps.x}; }';
+  const wrapped = 'export function createDemo(getDependencies) { const {x} = resolveDeps(getDependencies); return x; }';
+  const direct = wrapped.replace('resolveDeps(getDependencies)', 'getDependencies()');
+  const normalized = text => inventory([['src/example.js', text]], true);
+  assert.equal(compareInventories(normalized(projection + wrapped), normalized(direct)).ok, true);
+  assert.equal(compareInventories(normalized(projection.replace('deps.x', 'deps.y') + wrapped), normalized(direct)).ok, false);
+  assert.equal(compareInventories(normalized(projection + wrapped.replace('{x}', '{y}')), normalized(direct.replace('{x}', '{y}'))).ok, false);
+  assert.equal(compareInventories(normalized(projection + wrapped), normalized(direct.replace('return x', 'return x + 1'))).ok, false);
   assert.equal(compareInventories(base, new Map()).ok, false);
   assert.throws(() => inventory([['src/a.js', original], ['src/b.js', original]]), /Ambiguous factory/);
 }
@@ -104,7 +158,7 @@ if (require.main === module) {
   if (args.includes('--self-test')) { console.log('F02 AST factory parity fixtures PASS'); }
   else {
     const after = inventory(directorySources(root));
-    const oldUi = compareInventories(inventory(gitSources(F01, UI_OWNERS)), after);
+    const oldUi = compareInventories(inventory(gitSources(F01, UI_OWNERS), true), inventory(directorySources(root), true));
     const imported = compareInventories(inventory(gitSources(IMPORTED_F02)), after);
     // Historical UI scope and imported full-factory scope are independent.
     console.log(JSON.stringify({ historicalUi: { ...oldUi, added: undefined }, imported }, null, 2));
