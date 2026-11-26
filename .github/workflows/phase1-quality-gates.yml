@@ -122,6 +122,13 @@ jobs:
         with:
           node-version: '22'
 
+      - name: Inventory F01 lexical bindings against the pre-F01 baseline (AST)
+        run: |
+          git fetch --no-tags --depth=1 origin ab71bcd1c877807b631c6900c7d2312787733b9c
+          npm install --prefix "$RUNNER_TEMP/f01-audit" --no-save --package-lock=false --ignore-scripts --no-audit --no-fund typescript@5.8.3
+          TYPESCRIPT_PATH="$RUNNER_TEMP/f01-audit/node_modules/typescript" node tools/audit-f01-names.cjs --baseline ab71bcd1c877807b631c6900c7d2312787733b9c --check-host > "$RUNNER_TEMP/f01-inventory.json"
+          cat "$RUNNER_TEMP/f01-inventory.json"
+
       - name: Run canonical locked npm release build
         run: |
           npm run build
