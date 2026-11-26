@@ -12,9 +12,9 @@ for (const [name, factory] of [
   ['useDiagnostics', 'DiagnosticsHook'], ['useConversation', 'ConversationHook'],
   ['useChatSession', 'ChatSessionHook'], ['ApplicationShell', 'ApplicationShell'],
 ]) assert.ok(source.includes(name + '=__stsCreate' + factory + '('), 'missing descriptive host binding: ' + name);
-// The existing dependency contracts still use these keys; renaming a lexical
+// The remaining dependency contracts use these keys; renaming a lexical
 // binding must not implicitly rename an object property read by another module.
-for (const marker of ['pl: ToastItem', 'mh: useDiagnostics', 'fh: useConversation']) assert.ok(source.includes(marker), marker);
+for (const marker of ['ToastNotification: ToastItem', 'mh: useDiagnostics', 'fh: useConversation']) assert.ok(source.includes(marker), marker);
 assert.ok(source.includes('CardFrame.displayName="InteractiveHtmlMessage"'));
 assert.ok(source.includes('CardPreviewDialog.displayName="FloatingStatusHUD"'));
 assert.doesNotMatch(source, /^(?:var|let|const|function)\s+[$A-Za-z_][\w$]?\s*(?:=|\()/m, 'no opaque direct top-level declarations in host');

@@ -696,13 +696,13 @@ function createServiceInstance(idbBacking, persistentLocal, persistentSession, e
   const diagnosticLogs = [];
   const effects = [];
   const { InitialLoader } = createApplicationLifecycle({
-    b: { Component: class FakeComponent {}, useEffect: fn => effects.push(fn) },
-    wt,
-    kc: () => ({ reloadCharacters() {}, characters: [], updateActiveCharacter() {}, activeCharacterFileName: null, isLoading: false }),
-    sn: () => ({ reloadLorebooks() {}, lorebooks: [], isLoading: false }),
-    Au: () => ({ reloadPersonas() {} }),
-    bu: () => ({ reloadPresets() {} }),
-    qu: (level, source, message, stack, payload) => diagnosticLogs.push({ level, source, message, stack, payload }),
+    react: { Component: class FakeComponent {}, useEffect: fn => effects.push(fn) },
+    jsxRuntime: wt,
+    characterStore: () => ({ reloadCharacters() {}, characters: [], updateActiveCharacter() {}, activeCharacterFileName: null, isLoading: false }),
+    lorebookStore: () => ({ reloadLorebooks() {}, lorebooks: [], isLoading: false }),
+    personaStore: () => ({ reloadPersonas() {} }),
+    presetStore: () => ({ reloadPresets() {} }),
+    dispatchSystemLog: (level, source, message, stack, payload) => diagnosticLogs.push({ level, source, message, stack, payload }),
     __stsBackupRestoreService: {
       getPendingRecovery: () => ({
         id: 'boot-j-1',
