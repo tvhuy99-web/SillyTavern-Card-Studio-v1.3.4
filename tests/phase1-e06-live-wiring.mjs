@@ -1,3 +1,4 @@
+import { sourceCompositionPaths } from './helpers/composition-paths.mjs';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { createSessionStore } from '../src/app/state/session-store.js';
@@ -447,7 +448,7 @@ import { createMemoryStorage } from '../src/providers/proxy/persistence.js';
 
 // 5. host.js: initializes and injects all 3 E06 services + 3 missing backup keys in Ns.
 {
-  const hostSrc = ['src/app/host.js','src/app/composition/persistence-composition.js','src/app/composition/provider-composition.js','src/app/composition/store-composition.js','src/app/composition/conversation-composition.js','src/app/composition/runtime-composition.js','src/app/composition/ui-composition.js'].map(f => readFileSync(new URL('../' + f, import.meta.url), 'utf8')).join('\n');
+  const hostSrc = sourceCompositionPaths.map(f => readFileSync(new URL('../' + f, import.meta.url), 'utf8')).join('\n');
   assert.ok(hostSrc.includes("createCrossTabSync as __stsCreateCrossTabSync } from '../persistence/cross-tab-sync.js'"));
   assert.ok(hostSrc.includes("createBackupRestoreService as __stsCreateBackupRestoreService } from '../persistence/backup-restore-service.js'"));
   assert.ok(hostSrc.includes("createSettingsRepository as __stsCreateSettingsRepository } from '../state/settings-repository.js'"));

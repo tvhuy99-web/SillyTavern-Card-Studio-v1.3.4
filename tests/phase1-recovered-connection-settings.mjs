@@ -1,3 +1,4 @@
+import { portableCompositionPaths } from './helpers/composition-paths.mjs';
 import assert from 'node:assert/strict';
 import { readFile, writeFile } from 'node:fs/promises';
 import vm from 'node:vm';
@@ -132,7 +133,7 @@ try{
  byText(h.render(),'Áp Dụng').props.onClick();assert.equal(h.getSaved().proxy_profile_id,'p1');assert.equal(storage.getItem('proxyUrl'),null);assert.ok(byText(h.render(),'Đã lưu!'));assert.ok(h.calls.some(x=>x[0]==='save-gemini'));assert.ok(h.calls.some(x=>x[0]==='save-profiles'));
  h.deps.saveSettings=()=>{throw Error('storage unavailable');};byText(h.render(),'Áp Dụng').props.onClick();assert.ok(byText(h.render(),'Lỗi khi lưu!'));
 }finally{globalThis.setTimeout=oldTimer;}
-const bundle=(await Promise.all(['../assets/app-production-v1.3.6.js','../assets/recovered/app/composition/persistence-composition.js','../assets/recovered/app/composition/provider-composition.js','../assets/recovered/app/composition/store-composition.js','../assets/recovered/app/composition/conversation-composition.js','../assets/recovered/app/composition/runtime-composition.js','../assets/recovered/app/composition/ui-composition.js'].map(p=>readFile(new URL(p,import.meta.url),'utf8')))).join('\n');assert.ok(bundle.includes('ConnectionSettingsScreen=__stsCreateConnectionSettingsScreen(jsxRuntime,React,()=>'));assert.ok(!bundle.includes(',ConnectionSettingsScreen=()=>'));
+const bundle=(await Promise.all(portableCompositionPaths.map(p=>readFile(new URL(p,import.meta.url),'utf8')))).join('\n');assert.ok(bundle.includes('ConnectionSettingsScreen=__stsCreateConnectionSettingsScreen(jsxRuntime,React,()=>'));assert.ok(!bundle.includes(',ConnectionSettingsScreen=()=>'));
 let accessed=false;createConnectionSettingsScreen(jsxRuntime,{},()=>{accessed=true;throw Error('too early');});assert.equal(accessed,false,'legacy bindings must be resolved lazily');
 console.log('P09 connection settings: 6 unchanged baseline trees and corrected profile initialization, all providers, draft inputs, Proxy protocol, profile selection, Apply, lazy binding: OK');
 // Settings owns its controls rather than the DOM enhancer. Probe unsaved draft values.

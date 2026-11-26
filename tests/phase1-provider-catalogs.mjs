@@ -1,3 +1,4 @@
+import { portableCompositionPaths } from './helpers/composition-paths.mjs';
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import { createModelCatalog } from '../src/providers/common/model-catalog.js';
@@ -25,7 +26,7 @@ assert.deepEqual(catalog.readProxyTarget(target),[]); // stale URL-only cache mu
 catalog.mergeProxyTarget(target,[{id:'a',name:'A'}]);assert.equal(catalog.readProxyTarget(target)[0].id,'a');
 catalog.clearProxyTarget(target);assert.deepEqual(catalog.readProxyTarget(target),[]);
 assert.equal(catalog.readProxy,undefined);assert.equal(catalog.mergeProxy,undefined);
-const p=((await Promise.all(['../assets/app-production-v1.3.6.js','../assets/recovered/app/composition/persistence-composition.js','../assets/recovered/app/composition/provider-composition.js','../assets/recovered/app/composition/store-composition.js','../assets/recovered/app/composition/conversation-composition.js','../assets/recovered/app/composition/runtime-composition.js','../assets/recovered/app/composition/ui-composition.js'].map(p=>readFile(new URL(p,import.meta.url),'utf8')))).join('\n'))+'\n'+(await readFile(new URL('../assets/recovered/ui/settings/gemini-catalog-hook.js',import.meta.url),'utf8'));
+const p=((await Promise.all(portableCompositionPaths.map(p=>readFile(new URL(p,import.meta.url),'utf8')))).join('\n'))+'\n'+(await readFile(new URL('../assets/recovered/ui/settings/gemini-catalog-hook.js',import.meta.url),'utf8'));
 for(const marker of ['getConnectionSettings=__stsConnections.getSettings','getGeminiSettings=__stsConnections.getGemini','nextGeminiKey=__stsConnections.nextGeminiKey','__stsCatalog.subscribeGemini','__stsCatalog.loadGemini','fetchProxyModels=__stsHostConnections.loadProxyModels','fetchOpenRouterModels=__stsHostConnections.loadOpenRouterModels'])assert.ok(p.includes(marker),marker);
 assert.ok(!p.includes('Dl=async()=>[]'));assert.ok(!p.includes('sessionStorage.setItem(Ao,JSON.stringify(e))'));
 console.log('Provider catalogs: pagination, cache, stale responses, protocol, subscriptions and generated integration: OK');

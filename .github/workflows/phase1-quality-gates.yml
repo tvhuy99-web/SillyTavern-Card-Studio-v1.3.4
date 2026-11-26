@@ -53,6 +53,7 @@ jobs:
           export TYPESCRIPT_PATH="$RUNNER_TEMP/f02-audit/node_modules/typescript"
           node tools/audit-f02-modules.cjs --strict
           node tools/audit-f02-factory-parity.cjs
+          node tools/audit-f02-ui-composition.cjs
 
       - name: Run unit & contract regression suite
         run: npm test

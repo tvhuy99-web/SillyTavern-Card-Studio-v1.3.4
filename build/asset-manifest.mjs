@@ -267,6 +267,16 @@ export const copiedAssets = Object.freeze([
   Object.freeze(['src/app/composition/runtime-composition.js', 'assets/recovered/app/composition/runtime-composition.js']),
   Object.freeze(['src/app/composition/store-composition.js', 'assets/recovered/app/composition/store-composition.js']),
   Object.freeze(['src/app/composition/ui-composition.js', 'assets/recovered/app/composition/ui-composition.js']),
+  Object.freeze(['src/app/composition/ui/editor-foundations.js', 'assets/recovered/app/composition/ui/editor-foundations.js']),
+  Object.freeze(['src/app/composition/ui/catalog-editor.js', 'assets/recovered/app/composition/ui/catalog-editor.js']),
+  Object.freeze(['src/app/composition/ui/preset-catalog.js', 'assets/recovered/app/composition/ui/preset-catalog.js']),
+  Object.freeze(['src/app/composition/ui/settings.js', 'assets/recovered/app/composition/ui/settings.js']),
+  Object.freeze(['src/app/composition/ui/session-navigation.js', 'assets/recovered/app/composition/ui/session-navigation.js']),
+  Object.freeze(['src/app/composition/ui/message-view.js', 'assets/recovered/app/composition/ui/message-view.js']),
+  Object.freeze(['src/app/composition/ui/diagnostics.js', 'assets/recovered/app/composition/ui/diagnostics.js']),
+  Object.freeze(['src/app/composition/ui/world-info-dialogs.js', 'assets/recovered/app/composition/ui/world-info-dialogs.js']),
+  Object.freeze(['src/app/composition/ui/rpg-actions.js', 'assets/recovered/app/composition/ui/rpg-actions.js']),
+  Object.freeze(['src/app/composition/ui/application-shell.js', 'assets/recovered/app/composition/ui/application-shell.js']),
 ]);
 export const vendorAssets = Object.freeze([
   'assets/ejs.min-Cthf3_XD.js',

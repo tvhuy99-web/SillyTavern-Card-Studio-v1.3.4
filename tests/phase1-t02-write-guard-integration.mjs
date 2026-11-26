@@ -1,3 +1,4 @@
+import { sourceCompositionPaths } from './helpers/composition-paths.mjs';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { createGuardedStorage } from '../src/app/persistence/guarded-storage.js';
@@ -35,7 +36,7 @@ import {
 // 1. Static + structural production wiring assertions on host.js & use-session-persistence.js
 // ============================================================================
 {
-  const hostSrc = ['src/app/host.js','src/app/composition/persistence-composition.js','src/app/composition/provider-composition.js','src/app/composition/store-composition.js','src/app/composition/conversation-composition.js','src/app/composition/runtime-composition.js','src/app/composition/ui-composition.js'].map(f => readFileSync(new URL('../' + f, import.meta.url), 'utf8')).join('\n');
+  const hostSrc = sourceCompositionPaths.map(f => readFileSync(new URL('../' + f, import.meta.url), 'utf8')).join('\n');
   assert.ok(
     hostSrc.includes('__stsRepositories.setWriteGuard?.(operation=>__stsBackupRestoreService.assertNotRestoring(operation))'),
     'host.js must wire writeGuard onto __stsRepositories',

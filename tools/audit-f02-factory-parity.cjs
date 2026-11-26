@@ -151,7 +151,7 @@ function selfTest() {
   assert.equal(compareInventories(base, new Map()).ok, false);
   assert.throws(() => inventory([['src/a.js', original], ['src/b.js', original]]), /Ambiguous factory/);
 }
-module.exports = { extractFactories, checkFactoryParity, compareInventories, inventory };
+module.exports = { extractFactories, checkFactoryParity, compareInventories, inventory, fingerprint };
 if (require.main === module) {
   selfTest();
   const args = process.argv.slice(2);

@@ -1,3 +1,4 @@
+import { portableCompositionPaths } from './helpers/composition-paths.mjs';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { createHash } from 'node:crypto';
@@ -103,7 +104,7 @@ const failing = createEmbeddingService({
 await assert.rejects(failing.syncIndex('card',[entry]),/commit failure/);
 assert.deepEqual(failing.getIndex('card','gemini'),[records[0]]);
 
-const production=['../assets/app-production-v1.3.6.js','../assets/recovered/app/composition/persistence-composition.js','../assets/recovered/app/composition/provider-composition.js','../assets/recovered/app/composition/store-composition.js','../assets/recovered/app/composition/conversation-composition.js','../assets/recovered/app/composition/runtime-composition.js','../assets/recovered/app/composition/ui-composition.js'].map(p=>readFileSync(new URL(p,import.meta.url),'utf8')).join('\n');
+const production=portableCompositionPaths.map(p=>readFileSync(new URL(p,import.meta.url),'utf8')).join('\n');
 assert.ok(!production.includes('Pc=new Map,Mc=new Map'));
 assert.ok(!production.includes('indexedDB.open("LorebookEmbeddingsDB",2)'));
 for (const alias of ['cosineSimilarity=__stsEmbeddingService.cosine','hashEmbeddingText=__stsEmbeddingService.hashText','getEmbeddingEntryText=__stsEmbeddingService.entryText']) assert.ok(production.includes(alias));
