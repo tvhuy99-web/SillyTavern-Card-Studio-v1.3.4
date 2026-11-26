@@ -129,6 +129,11 @@ jobs:
           TYPESCRIPT_PATH="$RUNNER_TEMP/f01-audit/node_modules/typescript" node tools/audit-f01-names.cjs --baseline ab71bcd1c877807b631c6900c7d2312787733b9c --check-host > "$RUNNER_TEMP/f01-inventory.json"
           cat "$RUNNER_TEMP/f01-inventory.json"
 
+      - name: Verify F01 UI renames preserve AST binding and literal structure
+        run: |
+          git fetch --no-tags --depth=1 origin decccad6022412ea4b1457c229ed6dcf95e804ea
+          TYPESCRIPT_PATH="$RUNNER_TEMP/f01-audit/node_modules/typescript" node tools/audit-f01-ui-alpha.cjs decccad6022412ea4b1457c229ed6dcf95e804ea
+
       - name: Run canonical locked npm release build
         run: |
           npm run build
