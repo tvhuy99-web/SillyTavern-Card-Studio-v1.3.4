@@ -133,7 +133,7 @@ assert.ok(
 assert.ok(production.includes('normalizePromptVariableScopes('), 'canonical prompt assembler must normalize variable scopes');
 assert.ok(production.includes('buildSmartStateBlock({'), 'canonical prompt assembler must delegate Smart State assembly');
 assert.ok(production.includes('.replace(/{{last_state}}/g, visualState)'), 'last_state macro must use Smart State visualState');
-assert.ok(/Np\s*=\s*\(e,\s*t,\s*n,\s*r\)\s*=>\s*__stsBuildSmartStateBlock\(\{\s*variables:\s*e,\s*card:\s*t,\s*messages:\s*n\.slice\(0,\s*Math\.max\(0,\s*r\)\)\s*\}\)\.smartStateBlock/.test(production));
+assert.ok(/buildFrameSmartStateBlock\s*=\s*\(variables,\s*card,\s*messages,\s*messageIndex\)\s*=>\s*__stsBuildSmartStateBlock\(\{\s*variables:\s*variables,\s*card:\s*card,\s*messages:\s*messages\.slice\(0,\s*Math\.max\(0,\s*messageIndex\)\)\s*\}\)\.smartStateBlock/.test(production));
 assert.ok(production.includes('mutateVariable(globalVariables'), 'setglobalvar must mutate canonical global scope');
 assert.ok(production.includes('getVariable(globalVariables'), 'getglobalvar must read canonical global scope');
 assert.ok(!production.includes('o=Gu(o,"set","globals."+r,s)'), 'legacy chat.globals mutation must be removed');

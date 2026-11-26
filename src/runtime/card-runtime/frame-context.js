@@ -1,6 +1,6 @@
 // Recovered from the application host. One owner; dependency getters preserve late binding.
 export function createFrameContext(dependencies = {}) {
-  var bp = Object.freeze({
+  var baseFrameImportMap = Object.freeze({
     vue: "https://esm.sh/vue@3.5.40",
     pinia: "https://esm.sh/pinia@3.0.4?external=vue",
     "vue-router": "https://esm.sh/vue-router@5.2.0?external=vue",
@@ -29,13 +29,13 @@ export function createFrameContext(dependencies = {}) {
     "js-sha256": "https://esm.sh/js-sha256@0.11.1",
     slidetoggle: "https://esm.sh/slidetoggle@4.0.0"
   });
-  var vp = Object.freeze({
-    ...bp,
+  var updatedFrameImportMap = Object.freeze({
+    ...baseFrameImportMap,
     lodash: "https://esm.sh/lodash@4.18.1",
     "lodash-es": "https://esm.sh/lodash-es@4.18.1",
     yaml: "https://esm.sh/yaml@2.8.3"
   });
-  var _p = [
+  var baseFrameLibrariesHtml = [
     '<script async src="https://ga.jspm.io/npm:es-module-shims@1.10.0/dist/es-module-shims.js"><\/script>',
     '<script src="https://cdn.jsdelivr.net/npm/lodash@4.17.21/lodash.min.js" crossorigin="anonymous" data-runtime-dependency="lodash"><\/script>',
     '<script src="https://unpkg.com/vue@3.5.40/dist/vue.global.prod.js" crossorigin="anonymous" data-runtime-dependency="Vue"><\/script>',
@@ -79,87 +79,78 @@ export function createFrameContext(dependencies = {}) {
     '<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/styles/github-dark.min.css" crossorigin="anonymous">',
     '<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/highlight.min.js" crossorigin="anonymous"><\/script>'
   ].join("");
-  var wp = _p.replaceAll("lodash@4.17.21", "lodash@4.18.1").replaceAll("yaml@2.9.0", "yaml@2.8.3").replace('<script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4.3.3/dist/index.global.js" crossorigin="anonymous" data-runtime-dependency="TailwindCSS"><\/script>', '<script src="/scripts/extensions/third-party/JS-Slash-Runner/lib/tailwindcss.min.js" data-runtime-dependency="TailwindCSS"><\/script>');
-  var kp = e => JSON.stringify(e).replace(/<\/script/gi, "<\\/script");
-  var Sp = e => Array.from(e.attributes).filter(e => !/^on/i.test(e.name)).map(e => ` ${e.name}="${Cp(e.value)}"`).join("");
-  var Cp = e => e.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#39;");
-  var Ep = (e, t) => Object.entries(t).sort(([e], [t]) => t.length - e.length).reduce((e, [t, n]) => e.split(t).join(n), e);
-  var Np = (e, t, n, r) => (0, dependencies.__stsBuildSmartStateBlock)({
-    variables: e,
-    card: t,
-    messages: n.slice(0, Math.max(0, r))
+  var updatedFrameLibrariesHtml = baseFrameLibrariesHtml.replaceAll("lodash@4.17.21", "lodash@4.18.1").replaceAll("yaml@2.9.0", "yaml@2.8.3").replace('<script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4.3.3/dist/index.global.js" crossorigin="anonymous" data-runtime-dependency="TailwindCSS"><\/script>', '<script src="/scripts/extensions/third-party/JS-Slash-Runner/lib/tailwindcss.min.js" data-runtime-dependency="TailwindCSS"><\/script>');
+  var serializeInlineJson = value => JSON.stringify(value).replace(/<\/script/gi, "<\\/script");
+  var serializeElementAttributes = element => Array.from(element.attributes)
+    .filter(attribute => !/^on/i.test(attribute.name))
+    .map(attribute => ` ${attribute.name}="${escapeHtmlAttribute(attribute.value)}"`).join("");
+  var escapeHtmlAttribute = value => value.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#39;");
+  var replaceFrameTemplates = (html, replacements) => Object.entries(replacements)
+    .sort(([firstKey], [secondKey]) => secondKey.length - firstKey.length)
+    .reduce((output, [key, value]) => output.split(key).join(value), html);
+  var buildFrameSmartStateBlock = (variables, card, messages, messageIndex) => (0, dependencies.__stsBuildSmartStateBlock)({
+    variables: variables,
+    card: card,
+    messages: messages.slice(0, Math.max(0, messageIndex))
   }).smartStateBlock;
-  var Tp = (e, t) => {
+  var readVariableScope = (scope, context) => {
     if (typeof window > "u") return {};
-    let n = (0, dependencies.Ah)(e, t);
-    return n ? (0, dependencies.jh)(window.localStorage, n) : {};
+    let storageKey = (0, dependencies.Ah)(scope, context);
+    return storageKey ? (0, dependencies.jh)(window.localStorage, storageKey) : {};
   };
-  var Ap = (e, t, n, r, a, h) => {
-    let u = (0, dependencies.__stsSelectInitialVariableOpening)(a, t, h).text;
-    let i = e && Object.keys(e).length ? e : (0, dependencies.__stsSeedInitialVariablesFromCard)({}, a, u, e => dependencies.jt.default.parse(e)).variables;
-    let o = Math.max(0, Math.min(t.length - 1, n.messageId || 0));
-    let l = t[o]?.contextState || Tp({
+  var buildVariableScopes = (variables, messages, context, scripts, card, openingIndex) => {
+    let openingText = (0, dependencies.__stsSelectInitialVariableOpening)(card, messages, openingIndex).text;
+    let chatVariables = variables && Object.keys(variables).length ? variables
+      : (0, dependencies.__stsSeedInitialVariablesFromCard)({}, card, openingText, text => dependencies.jt.default.parse(text)).variables;
+    let messageIndex = Math.max(0, Math.min(messages.length - 1, context.messageId || 0));
+    let messageVariables = messages[messageIndex]?.contextState || readVariableScope({
       type: "message",
-      message_id: o
-    }, n);
-    let c = l && Object.keys(l).length ? l : e && Object.keys(e).length ? l : i;
-    let s = {
-      chat: i,
-      global: Tp({
-        type: "global"
-      }, n),
-      preset: Tp({
-        type: "preset"
-      }, n),
-      character: Tp({
-        type: "character"
-      }, n),
-      [`message:${o}`]: c,
-      "script:default": Tp({
-        type: "script",
-        script_id: "default"
-      }, n),
-      "extension:third-party/JS-Slash-Runner": Tp({
+      message_id: messageIndex
+    }, context);
+    let selectedMessageVariables = messageVariables && Object.keys(messageVariables).length ? messageVariables
+      : variables && Object.keys(variables).length ? messageVariables : chatVariables;
+    let scopes = {
+      chat: chatVariables,
+      global: readVariableScope({type: "global"}, context),
+      preset: readVariableScope({type: "preset"}, context),
+      character: readVariableScope({type: "character"}, context),
+      [`message:${messageIndex}`]: selectedMessageVariables,
+      "script:default": readVariableScope({type: "script", script_id: "default"}, context),
+      "extension:third-party/JS-Slash-Runner": readVariableScope({
         type: "extension",
         extension_id: "third-party/JS-Slash-Runner"
-      }, n)
+      }, context)
     };
-    t.forEach((e, t) => {
-      let n = e.contextState;
-      if (n && Object.keys(n).length) {
-        s[`message:${t}`] = n;
+    messages.forEach((message, index) => {
+      let messageState = message.contextState;
+      if (messageState && Object.keys(messageState).length) {
+        scopes[`message:${index}`] = messageState;
       } else {
-        `message:${t}` in s || (s[`message:${t}`] = {});
+        `message:${index}` in scopes || (scopes[`message:${index}`] = {});
       }
     });
-    r.forEach(e => {
-      let t = e.value?.id || "default";
-      s[`script:${t}`] = Tp({
-        type: "script",
-        script_id: t
-      }, {
-        ...n,
-        scriptId: t
-      });
+    scripts.forEach(script => {
+      let scriptId = script.value?.id || "default";
+      scopes[`script:${scriptId}`] = readVariableScope({type: "script", script_id: scriptId}, {...context, scriptId: scriptId});
     });
-    return s;
+    return scopes;
   };
-  var Ip = (e, t) => {
+  var readScopedFrameStorage = (storageType, context) => {
     if (typeof window > "u") return {};
-    let n = (0, dependencies.jh)("local" === e ? window.localStorage : window.sessionStorage, (0, dependencies.Ih)(e, t));
-    return Object.fromEntries(Object.entries(n).map(([e, t]) => [e, String(t)]));
+    let record = (0, dependencies.jh)("local" === storageType ? window.localStorage : window.sessionStorage, (0, dependencies.Ih)(storageType, context));
+    return Object.fromEntries(Object.entries(record).map(([key, value]) => [key, String(value)]));
   };
   return {
-    bp,
-    vp,
-    _p,
-    wp,
-    kp,
-    Sp,
-    Cp,
-    Ep,
-    Np,
-    Ap,
-    Ip
+    bp: baseFrameImportMap,
+    vp: updatedFrameImportMap,
+    _p: baseFrameLibrariesHtml,
+    wp: updatedFrameLibrariesHtml,
+    kp: serializeInlineJson,
+    Sp: serializeElementAttributes,
+    Cp: escapeHtmlAttribute,
+    Ep: replaceFrameTemplates,
+    Np: buildFrameSmartStateBlock,
+    Ap: buildVariableScopes,
+    Ip: readScopedFrameStorage
   };
 }
