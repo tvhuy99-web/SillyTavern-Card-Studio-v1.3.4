@@ -47,3 +47,30 @@ The metrics below describe the imported F02 snapshot, not the later hardening co
 ## R04/R05 follow-up
 
 The previously open composition, renderer and repository work is implemented and verified at [`7e05572`](https://github.com/tvhuy99-web/SillyTavern-Card-Studio-v1.3.4/commit/7e05572f3b9527c2131a545844022dd95c59137c), [Quality Gates 45917732574](https://github.com/tvhuy99-web/SillyTavern-Card-Studio-v1.3.4/actions/runs/45917732574). Current audit: 296 first-party JS/Java files, 251 below 300 lines, 91/91 regression files, no unresolved F01 lexical/embedded or composition alias candidates. R09 remains open pending final acceptance; the most recent proven APK remains the imported F02 snapshot, not this commit.
+
+## Final F02 acceptance — supersedes historical open items above
+
+Accepted implementation snapshot: [`8f4e688`](https://github.com/tvhuy99-web/SillyTavern-Card-Studio-v1.3.4/commit/8f4e6889e9730711d423a1f62e1942d623777490). [Quality Gates 45919483706](https://github.com/tvhuy99-web/SillyTavern-Card-Studio-v1.3.4/actions/runs/45919483706) and [Android APK 45919483769](https://github.com/tvhuy99-web/SillyTavern-Card-Studio-v1.3.4/actions/runs/45919483769) both completed successfully at this exact commit. [Installable debug APK artifact 15163726713](https://github.com/tvhuy99-web/SillyTavern-Card-Studio-v1.3.4/actions/runs/45919483769/artifacts/15163726713), ARM64, stable signing certificate verified, exact locked npm runtime checks passed, ZIP artifact SHA-256 `9ca54407102946351c99450f0a1fe7f784f9f570bc609bbd049d1c5f84af84f1`; artifact expires 2026-12-27.
+
+| Final metric | Accepted result |
+|---|---:|
+| Audited first-party JS/Java files | 296 |
+| Under 300 lines | 251 |
+| 300–500 lines | 35 |
+| 501–800 lines | 10 |
+| Above 800 lines | 0 |
+| Unexplained large modules | 0 |
+| Budget violations / missing exception owners | 0 / 0 |
+| Regression files | 91/91 |
+| Historical UI / imported factory parity | 103/103 / 247/247 |
+| Renderer byte parity | 45 cases per layout |
+| Composition stages / explicit late reads / published UI bindings | 8 / 10 / 7 |
+| Cycles, boundary violations, unresolved imports, unjustified unused exports | 0 |
+| F01 unresolved lexical, embedded, composition aliases | 0 |
+| Canonical renderer / entity repository facade lines | 50 / 160 |
+| host / UI orchestrator lines (explicit projections) | 338 / 387 |
+| host imports | 9 |
+
+The final host and UI orchestrator have more lines than R03 because each dependency projection is written explicitly, not because business logic returned to the root. G01–G16 automated evidence is green for this snapshot; visual/device/live-provider scenarios remain limited as described. The final documentation commit is an evidence-only follow-up and does not change application or build inputs.
+
+F02 source implementation and automated acceptance are CLOSED (100% of the F02 task weights). This does not establish real Android install/upgrade/device behavior, live Gemini/OpenRouter/Proxy/AI Studio calls, every third-party card, or full Phase 1 release acceptance. Those manual/external checks remain unverified and must not be represented as PASS. F03 may proceed within the source refactoring scope; no Phase 2 promotion is claimed.

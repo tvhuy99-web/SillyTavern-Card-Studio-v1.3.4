@@ -17,7 +17,7 @@ The original 14 batches below record implementation of the imported F02 snapshot
 | 11 | F02.11 – Persistence & Backup Restore | 10% | DONE | Split `backup-restore-service.js` (1,807 -> 496 lines) into 8 dedicated modules under `backup/`; 100% recovery/rollback/write-guard tests PASS |
 | 12 | F02.12 – Android Native | 5% | DONE | Split `AiStudioTextPlugin.java` (1,023 -> 192 lines) into 6 flat controllers; overlay & contract tests PASS |
 | 13 | F02.13 – Composition Root | 5% | DONE | Split `src/app/host.js` (460 lines / 74.7 KB / 165 imports -> 26 lines / 1.9 KB / 9 imports) into 6 ordered composition modules under `src/app/composition/`; 91/91 PASS |
-| 14 | F02.14 – Final Audit & Acceptance | 2% | OPEN | Full architecture audit, 91/91 tests PASS, 0 >800-line modules, 0 unexplained >500-line modules |
+| 14 | F02.14 – Final Audit & Acceptance | 2% | DONE | Accepted snapshot 8f4e688: mandatory Quality Gates, all three browser layouts and Android APK PASS; manual release checks remain separate |
 
 ## Final hardening tracker
 
@@ -28,12 +28,19 @@ The original 14 batches below record implementation of the imported F02 snapshot
 | F02-R03 UI composition | Verified | Ten stages, 28-line orchestrator; ordered AST parity for 152 initialization statements and 151 bindings; 91/91 regression files |
 | F02-R04 shared context and initialization | Verified | Eight explicit domain input contracts, ten late reads, ordered initialization VM witness, ten scoped UI stages and seven published UI bindings |
 | F02-R05 renderer and entity repositories | Verified | Seven renderer fragments; 45 byte-identical cases per layout; three repository operation owners; exact transaction-body extraction witness |
-| F02-R06/R07 npm and browser/storage | Verified through R04/R05 | Package-backed, portable and source browser/IndexedDB acceptance in run 45917732574 |
-| F02-R08 Android APK | Verified for imported F02 only | Run 45911595964; fresh APK/device acceptance after hardening not established |
-| F02-R09 final acceptance | Open | This tracker distinguishes verified implementation from release acceptance |
+| F02-R05C module budgets | Verified | Ten bounded exceptions, zero size violations or unexplained large modules in run 45919483706 |
+| F02-R06/R07 npm and browser/storage | Verified | Package-backed, portable and source browser/IndexedDB acceptance in run 45919483706 |
+| F02-R08 Android APK | Verified | Fresh build at 8f4e688, run 45919483769; ARM64, npm payload, stable signing and upload PASS; physical device not tested |
+| F02-R09 final acceptance | Closed (automated F02 scope) | Same-commit Quality Gates and APK successful; manual release/device/provider evidence remains separate |
 
 See [F02-HARDENING.md](F02-HARDENING.md) for immutable baseline commits and scope.
 
 ### R04/R05 acceptance evidence
 
 [`7e05572`](https://github.com/tvhuy99-web/SillyTavern-Card-Studio-v1.3.4/commit/7e05572f3b9527c2131a545844022dd95c59137c), [Quality Gates 45917732574](https://github.com/tvhuy99-web/SillyTavern-Card-Studio-v1.3.4/actions/runs/45917732574) passed all three jobs, including mandatory AST gates, 91/91 regression files, renderer byte parity, domain initialization witness, native Java contract/overlay, npm build and browser/IndexedDB acceptance. Android APK and final F02 acceptance remain open; live providers and real Android device checks are not established. Feature-level DI simplification remains F04 scope.
+
+## Final acceptance (2026-11-27)
+
+Accepted implementation snapshot: [`8f4e688`](https://github.com/tvhuy99-web/SillyTavern-Card-Studio-v1.3.4/commit/8f4e6889e9730711d423a1f62e1942d623777490). [Quality Gates 45919483706](https://github.com/tvhuy99-web/SillyTavern-Card-Studio-v1.3.4/actions/runs/45919483706) and [Android APK 45919483769](https://github.com/tvhuy99-web/SillyTavern-Card-Studio-v1.3.4/actions/runs/45919483769) both completed successfully at this exact commit. [Installable debug APK artifact 15163726713](https://github.com/tvhuy99-web/SillyTavern-Card-Studio-v1.3.4/actions/runs/45919483769/artifacts/15163726713), ARM64, stable signing certificate verified, exact locked npm runtime checks passed, ZIP artifact SHA-256 `9ca54407102946351c99450f0a1fe7f784f9f570bc609bbd049d1c5f84af84f1`; artifact expires 2026-12-27.
+
+F02 source implementation and automated acceptance are CLOSED (100% of the F02 task weights). This does not establish real Android install/upgrade/device behavior, live Gemini/OpenRouter/Proxy/AI Studio calls, every third-party card, or full Phase 1 release acceptance. Those manual/external checks remain unverified and must not be represented as PASS. F03 may proceed within the source refactoring scope; no Phase 2 promotion is claimed.
