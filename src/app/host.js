@@ -10,7 +10,7 @@ import { composeCardRuntime } from './composition/runtime-composition.js';
 import { composeApplicationUi } from './composition/ui-composition.js';
 
 // Domain results stay separate. Only explicitly declared late dependencies are read lazily.
-let publishedBackupService, stores, generation, runtime, ui;
+let publishedBackupService, stores, generation, runtime, applicationUi;
 const persistence = composePersistence({
   relaxedJson,
   get __stsBackupRestoreService() { return publishedBackupService; }
@@ -83,7 +83,7 @@ stores = composeStores({
   syncLorebookEmbeddings: connections.syncLorebookEmbeddings,
   withImmer,
   wrapModule,
-  get useToast() { return ui?.useToast; }
+  get useToast() { return applicationUi?.useToast; }
 });
 const conversation = composeConversation({
   GoogleGenAI,
@@ -125,7 +125,7 @@ const conversation = composeConversation({
   sessionStore: stores.sessionStore,
   wrapModule,
   get broadcastRuntimeMessage() { return runtime?.broadcastRuntimeMessage; },
-  get useToast() { return ui?.useToast; },
+  get useToast() { return applicationUi?.useToast; },
   get __stsGenerationGateway() { return generation?.__stsGenerationGateway; }
 });
 generation = composeGeneration({
@@ -176,9 +176,9 @@ runtime = composeCardRuntime({
   truncateText: stores.truncateText,
   useConversation: conversation.useConversation,
   useDiagnostics: conversation.useDiagnostics,
-  get useToast() { return ui?.useToast; }
+  get useToast() { return applicationUi?.useToast; }
 });
-ui = composeApplicationUi({
+applicationUi = composeApplicationUi({
   GoogleGenAI,
   Modality,
   NEW_CHARACTER_ID: stores.NEW_CHARACTER_ID,
@@ -333,5 +333,5 @@ ui = composeApplicationUi({
 
 // Package build uses Immer's public API; the offline snapshot retains its original plugin.
 initializeMapSet();
-mountApplication({ react: React, jsxRuntime: jsxRuntime, reactDom: ReactDOM, ErrorBoundary: ui.ErrorBoundary, InitialLoader: ui.InitialLoader, ToastProvider: ui.ToastProvider, SpeechProvider: ui.SpeechProvider, CardPopupProvider: ui.CardPopupProvider, Shell: ui.ApplicationShell });
+mountApplication({ react: React, jsxRuntime: jsxRuntime, reactDom: ReactDOM, ErrorBoundary: applicationUi.ErrorBoundary, InitialLoader: applicationUi.InitialLoader, ToastProvider: applicationUi.ToastProvider, SpeechProvider: applicationUi.SpeechProvider, CardPopupProvider: applicationUi.CardPopupProvider, Shell: applicationUi.ApplicationShell });
 export{unsupportedRequire as n,commonJsFactory as t};
