@@ -70,7 +70,7 @@ export function createLorebookEntryCard(getDependencies) {
           className: "flex-shrink-0 self-start mt-1",
           children: (0, jsxRuntime.jsx)(ToggleSwitch, {
             label: "",
-            ariaLabel: `Bật quy tắc ${entryTitle}`,
+            ariaLabel: propEntry.enabled !== false ? "Đã chọn" : "Chưa chọn",
             checked: propEntry.enabled !== false,
             onChange: enabled => onUpdate(index, {
               ...propEntry,

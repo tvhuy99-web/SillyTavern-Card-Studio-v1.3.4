@@ -107,7 +107,17 @@ function createFakeReact(initialStates = []) {
   const nodes = flatten(tree);
   const toggle = nodes.find(n => n.type === 'ToggleSwitch');
   assert.equal(toggle.props.label, '');
-  assert.equal(toggle.props.ariaLabel, "Bật quy tắc Không có");
+  assert.equal(toggle.props.ariaLabel, "Chưa chọn");
+  assert.equal(toggle.props.checked, false);
+  for (const enabled of [true, false, undefined]) {
+    const updates = [];
+    const item = { uid: "u2", comment: "Mô phỏng thế giới", enabled };
+    const stateToggle = flatten(LorebookEntryCard({ entry: item, index: 1, onUpdate: (...args) => updates.push(args) })).find(n => n.type === "ToggleSwitch");
+    assert.equal(stateToggle.props.ariaLabel, enabled !== false ? "Đã chọn" : "Chưa chọn");
+    assert.equal(stateToggle.props.checked, enabled !== false);
+    stateToggle.props.onChange(!stateToggle.props.checked);
+    assert.deepEqual(updates, [[1, { ...item, enabled: !stateToggle.props.checked }]]);
+  }
 
   const buttons = nodes.filter(n => n.type === 'button');
   assert.equal(buttons.length, 2, 'Card must only have Title button and Constant button');

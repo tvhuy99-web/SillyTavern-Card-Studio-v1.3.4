@@ -109,8 +109,17 @@ function createFakeReact(initialStates = []) {
   const toggle = nodes.find(n => n.type === 'ToggleSwitch');
   assert.ok(toggle);
   assert.equal(toggle.props.label, '');
-  assert.equal(toggle.props.ariaLabel, "Bật lời nhắc Không có");
+  assert.equal(toggle.props.ariaLabel, "Chưa chọn");
   assert.equal(toggle.props.checked, false);
+  for (const enabled of [true, false, undefined]) {
+    const updates = [];
+    const item = { identifier: "p2", name: "Mô phỏng thế giới", enabled };
+    const stateToggle = flatten(PromptListItem({ prompt: item, index: 1, onUpdate: (...args) => updates.push(args), movingPromptIndex: null })).find(n => n.type === "ToggleSwitch");
+    assert.equal(stateToggle.props.ariaLabel, enabled ? "Đã chọn" : "Chưa chọn");
+    assert.equal(stateToggle.props.checked, enabled ?? false);
+    stateToggle.props.onChange(!stateToggle.props.checked);
+    assert.deepEqual(updates, [[1, { ...item, enabled: !stateToggle.props.checked }]]);
+  }
 
   const buttons = nodes.filter(n => n.type === 'button');
   assert.equal(buttons.length, 1, 'Only the title button should be rendered on the row (no inline move/delete buttons)');

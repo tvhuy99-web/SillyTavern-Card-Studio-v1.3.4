@@ -84,7 +84,7 @@ export function createPromptListItem(getDependencies) {
             onClick: event => event.stopPropagation(),
             children: (0, jsxRuntime.jsx)(ToggleSwitch, {
               label: "",
-              ariaLabel: `Bật lời nhắc ${displayName}`,
+              ariaLabel: propPrompt.enabled ? "Đã chọn" : "Chưa chọn",
               checked: propPrompt.enabled ?? false,
               onChange: enabled => onUpdate(index, {
                 ...propPrompt,
