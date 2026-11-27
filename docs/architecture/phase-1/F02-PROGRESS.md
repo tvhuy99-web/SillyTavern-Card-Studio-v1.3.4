@@ -26,10 +26,14 @@ The original 14 batches below record implementation of the imported F02 snapshot
 | F02-R01 AST factory parity | Verified | 103/103 historical UI factories and 247/247 imported F02 factories; zero missing/unexplained body changes; helper AST checks added |
 | F02-R02 Mandatory CI | Verified | Core job runs pinned TypeScript 5.8.3, strict module inventory, factory/helper parity, UI wiring and F01 checks; no optional npm-job bypass |
 | F02-R03 UI composition | Verified | Ten stages, 28-line orchestrator; ordered AST parity for 152 initialization statements and 151 bindings; 91/91 regression files |
-| F02-R04 shared context and initialization | Open | Context ABI retained deliberately; broader DI contract review remains |
-| F02-R05 renderer and entity repositories | Open | Responsibility/transaction rationale still requires explicit review |
-| F02-R06/R07 npm and browser/storage | Verified for R03 | Package-backed, portable and source browser/IndexedDB acceptance in run 45912977965 |
+| F02-R04 shared context and initialization | Verified | Eight explicit domain input contracts, ten late reads, ordered initialization VM witness, ten scoped UI stages and seven published UI bindings |
+| F02-R05 renderer and entity repositories | Verified | Seven renderer fragments; 45 byte-identical cases per layout; three repository operation owners; exact transaction-body extraction witness |
+| F02-R06/R07 npm and browser/storage | Verified through R04/R05 | Package-backed, portable and source browser/IndexedDB acceptance in run 45917732574 |
 | F02-R08 Android APK | Verified for imported F02 only | Run 45911595964; fresh APK/device acceptance after hardening not established |
 | F02-R09 final acceptance | Open | This tracker distinguishes verified implementation from release acceptance |
 
 See [F02-HARDENING.md](F02-HARDENING.md) for immutable baseline commits and scope.
+
+### R04/R05 acceptance evidence
+
+[`7e05572`](https://github.com/tvhuy99-web/SillyTavern-Card-Studio-v1.3.4/commit/7e05572f3b9527c2131a545844022dd95c59137c), [Quality Gates 45917732574](https://github.com/tvhuy99-web/SillyTavern-Card-Studio-v1.3.4/actions/runs/45917732574) passed all three jobs, including mandatory AST gates, 91/91 regression files, renderer byte parity, domain initialization witness, native Java contract/overlay, npm build and browser/IndexedDB acceptance. Android APK and final F02 acceptance remain open; live providers and real Android device checks are not established. Feature-level DI simplification remains F04 scope.

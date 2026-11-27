@@ -28,7 +28,6 @@
 ### Post-Split Single-Responsibility 500–800 Line Modules (Documented for F02-G15)
 - `src/features/rpg/ui/mythic/mythic-configuration-dialog.js` (777 lines, 1 factory) — Single cohesive Mythic configuration dialog
 - `src/ui/card-runtime/card-frame.js` (716 lines, 1 factory) — Single cohesive Card Frame iframe lifecycle & RPC bridge component
-- `src/runtime/card-runtime/renderer.js` (594 lines) — Canonical Card Runtime iframe renderer source emitted directly by `build/build-card-runtime.mjs`
 - `src/features/chat/ui/chat-session-screen.js` (572 lines, 1 factory) — Single cohesive ChatSessionScreen orchestration component (further logic extraction deferred to F03)
 - `src/features/rpg/ui/actions/action-suggestion-dialog.js` (550 lines, 1 factory) — Single cohesive ActionSuggestionDialog
 - `src/features/rpg/ui/database/rpg-database-editor.js` (542 lines, 1 factory) — Single cohesive RpgDatabaseEditor
@@ -51,4 +50,12 @@ The 55.2 KB imported UI composition has been replaced by a 28-line orchestrator 
 | rpg-actions | Action proposal/suggestion, variables and RPG table HUD |
 | application-shell | Chat HUD, route, lifecycle and top-level shell |
 
-Each stage destructures only its required domain and already initialized UI inputs. The catalog stage receives an explicit late reader for the model-test button initialized in the settings stage. All 151 original output bindings remain present and in order. All new sources are registered in the asset manifest; static tests use the manifest-derived composition owner list. The shared context and overall DI ABI are intentionally retained for R04/F04. The settings stage still has 74 domain inputs; this is a documented remaining dependency-contract concern, not a reason to create arbitrary micro-modules.
+Each stage destructures only its required domain and already initialized UI inputs. The catalog stage receives an explicit late reader for the model-test button initialized in the settings stage. All 151 original internal bindings remain present and in order; R04 publishes only seven of them to the host. All new sources are registered in the asset manifest; static tests use the manifest-derived composition owner list. The historical R03 shared context was replaced by R04 explicit stage input contracts. Deeper feature DI simplification remains F04 scope. The settings stage still has 74 domain inputs; this is a documented remaining dependency-contract concern, not a reason to create arbitrary micro-modules.
+
+## R04/R05 verified ownership
+
+- Composition: the host owns explicit domain wiring, initialization order and ten late reads; each UI stage receives only declared inputs. The internal UI binding set is 151, with seven published mount/toast bindings. No shared cumulative context crosses domain boundaries.
+- Renderer: `renderer.js` composes seven responsibility-owned classic script fragments; the emitted script keeps the original lexical scope and is byte-identical across baseline cases. Its former >500-line exception is removed.
+- Entity repositories: the facade owns CRUD, editor identity and the shared ordinary-write boundary. `repositories/session-operations.js` owns session writes; `repositories/restore-operations.js` owns multi-store snapshots, marker/merge/rollback; `repositories/cross-entity-operations.js` owns linked entity transactions. Each original transaction body is preserved.
+
+Evidence: [`7e05572`](https://github.com/tvhuy99-web/SillyTavern-Card-Studio-v1.3.4/commit/7e05572f3b9527c2131a545844022dd95c59137c), [Quality Gates 45917732574](https://github.com/tvhuy99-web/SillyTavern-Card-Studio-v1.3.4/actions/runs/45917732574).

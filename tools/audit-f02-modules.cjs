@@ -17,7 +17,6 @@ const DOCUMENTED_SIZE_EXCEPTIONS = new Map([
   ['android-native/EmbeddingGemma2LiteRTPlugin.java', 'Cohesive Android LiteRT JNI/Capacitor plugin bridge (571 lines); tightly coupled native lifecycle'],
   ['src/features/rpg/ui/mythic/mythic-configuration-dialog.js', 'Single cohesive Mythic configuration dialog factory (777 lines); splitting adds artificial indirection'],
   ['src/ui/card-runtime/card-frame.js', 'Single cohesive Card Frame iframe lifecycle & RPC bridge component (716 lines); kept intact for runtime safety'],
-  ['src/runtime/card-runtime/renderer.js', 'Canonical Card Runtime iframe renderer source emitted directly by build/build-card-runtime.mjs (594 lines)'],
   ['src/features/chat/ui/chat-session-screen.js', 'Single cohesive ChatSessionScreen orchestration component (572 lines); further decomposition deferred to F03'],
   ['src/features/rpg/ui/actions/action-suggestion-dialog.js', 'Single cohesive ActionSuggestionDialog factory (550 lines)'],
   ['src/features/rpg/ui/database/rpg-database-editor.js', 'Single cohesive RpgDatabaseEditor factory (542 lines)'],
