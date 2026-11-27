@@ -67,7 +67,14 @@ const oldKeys = returnedKeys(oldStatements.at(-1));
 const originalImports = imports(old);
 const actualRoot = read(originalPath);
 const actualCalls = exportedFunction(actualRoot, 'composeApplicationUi');
-const expectedRoot = parse('expected.js', 'export function composeApplicationUi(ctx) { const bindings = {}; ' + stages.map(stage => 'Object.assign(bindings, ' + stageName(stage) + '(ctx' + (stage === 'editor-foundations' ? '' : ', bindings') + (stage === 'catalog-editor' ? ', () => bindings.__stsModelTestButton' : '') + '));').join(' ') + ' return bindings; }');
+const projection = (owner, names) => '{ ' + names.map(name => name + ': ' + owner + '.' + name).join(', ') + ' }';
+const expectedRoot = parse('expected.js', 'export function composeApplicationUi(ctx) { const bindings = {}; ' + stages.map(stage => {
+  const stageAst = read('src/app/composition/ui/' + stage + '.js');
+  const fn = exportedFunction(stageAst, stageName(stage));
+  const domain = projection('ctx', bindingNames(fn.parameters[0].name));
+  const prior = fn.parameters[1] ? ', ' + projection('bindings', bindingNames(fn.parameters[1].name)) : '';
+  return 'Object.assign(bindings, ' + stageName(stage) + '(' + domain + prior + (stage === 'catalog-editor' ? ', () => bindings.__stsModelTestButton' : '') + '));';
+}).join(' ') + ' return bindings; }');
 assert.equal(fingerprint(actualCalls, actualRoot), fingerprint(expectedRoot.statements[0], expectedRoot), 'Initialization sequence or late getter changed');
 const rootImports = imports(actualRoot);
 const priorKeys = new Set();
