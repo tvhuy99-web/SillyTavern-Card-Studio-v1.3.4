@@ -1,0 +1,5 @@
+# R05B: Entity repository ownership
+
+The facade retains generic CRUD, one editor identity, record-generation helpers and one mutable write guard/coordinator. Session editing, existing-session saves and diagnostic cleanup move to `repositories/session-operations.js`. Five-store export, commit marker, merge and rollback move to `repositories/restore-operations.js`. Character/session removal and preset/session rename move to `repositories/cross-entity-operations.js`. Each operation keeps its complete original transaction body and request callbacks. Ordinary writes continue to use the single shared ordinaryTransaction closure; restore/rollback retain their direct database transaction capability, and ordinary imports remain guarded at the facade. Public keys, object freezing, record generation and error messages are unchanged.
+
+The mandatory factory parity audit verifies an exact extraction witness against the immutable imported F02 source before reconstructing the historical factory entry. It does not silently skip the modified factory. Generated portable mirrors are registered. CI/browser IndexedDB acceptance is required before closing R05B.

@@ -209,7 +209,11 @@ if (require.main === module) {
     const oldFactories = inventory(originalSources, true);
     const oldUi = compareInventories(oldFactories, inventory(currentSources, true));
     const uiHelpers = compareUiHelpers(originalSources, currentSources, oldFactories, after);
-    const imported = compareInventories(inventory(gitSources(IMPORTED_F02)), after);
+    // The only intentionally decomposed historical factory is checked against an exact
+    // mechanical extraction witness before reconstructing its historical inventory entry.
+    const repository = require('./audit-f02-entity-repositories.cjs').verifyEntityRepositoryExtraction();
+    const reconstructed = inventory(currentSources.map(([file, content]) => [file, file === repository.file ? repository.baseline : content]));
+    const imported = compareInventories(inventory(gitSources(IMPORTED_F02)), reconstructed);
     // Historical UI scope and imported full-factory scope are independent.
     console.log(JSON.stringify({ historicalUi: { ...oldUi, added: undefined }, uiHelpers, imported }, null, 2));
     if (!oldUi.ok || !uiHelpers.ok || !imported.ok) process.exitCode = 1;
