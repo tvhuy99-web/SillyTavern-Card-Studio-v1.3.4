@@ -54,6 +54,7 @@ jobs:
           node tools/audit-f02-modules.cjs --strict
           node tools/audit-f02-factory-parity.cjs
           node tools/audit-f02-ui-composition.cjs
+          node tools/audit-f02-domain-composition.cjs
           node tools/audit-f02-renderer-parity.mjs
           git fetch --no-tags --depth=1 origin ab71bcd1c877807b631c6900c7d2312787733b9c decccad6022412ea4b1457c229ed6dcf95e804ea
           status=0

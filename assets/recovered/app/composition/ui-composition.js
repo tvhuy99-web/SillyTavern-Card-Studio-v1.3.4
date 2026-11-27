@@ -382,5 +382,5 @@ export function composeApplicationUi(ctx) {
     LorebookLibrary: bindings.LorebookLibrary,
     SettingsScreen: bindings.SettingsScreen
   }));
-  return bindings;
+  return { useToast: bindings.useToast, ErrorBoundary: bindings.ErrorBoundary, InitialLoader: bindings.InitialLoader, ToastProvider: bindings.ToastProvider, SpeechProvider: bindings.SpeechProvider, CardPopupProvider: bindings.CardPopupProvider, ApplicationShell: bindings.ApplicationShell };
 }

@@ -74,7 +74,7 @@ const expectedRoot = parse('expected.js', 'export function composeApplicationUi(
   const domain = projection('ctx', bindingNames(fn.parameters[0].name));
   const prior = fn.parameters[1] ? ', ' + projection('bindings', bindingNames(fn.parameters[1].name)) : '';
   return 'Object.assign(bindings, ' + stageName(stage) + '(' + domain + prior + (stage === 'catalog-editor' ? ', () => bindings.__stsModelTestButton' : '') + '));';
-}).join(' ') + ' return bindings; }');
+}).join(' ') + ' return { useToast: bindings.useToast, ErrorBoundary: bindings.ErrorBoundary, InitialLoader: bindings.InitialLoader, ToastProvider: bindings.ToastProvider, SpeechProvider: bindings.SpeechProvider, CardPopupProvider: bindings.CardPopupProvider, ApplicationShell: bindings.ApplicationShell }; }');
 assert.equal(fingerprint(actualCalls, actualRoot), fingerprint(expectedRoot.statements[0], expectedRoot), 'Initialization sequence or late getter changed');
 const rootImports = imports(actualRoot);
 const priorKeys = new Set();
@@ -117,4 +117,4 @@ assert.equal(lateReads, 1, 'Exactly one reviewed late UI dependency must be pres
 assert.deepEqual([...priorKeys], oldKeys, 'Original return keys or order changed');
 const expectedStatements = oldStatements.slice(1, -1).map(statement => fingerprint(statement, old));
 assert.deepEqual(movedStatements, expectedStatements, 'Factory wiring, callback, expression or initialization order changed');
-console.log(JSON.stringify({ ok: true, stages: report, originalStatements: expectedStatements.length, preservedBindings: oldKeys.length, lateReads }, null, 2));
+console.log(JSON.stringify({ ok: true, stages: report, originalStatements: expectedStatements.length, preservedBindings: oldKeys.length, publishedBindings: 7, lateReads }, null, 2));
