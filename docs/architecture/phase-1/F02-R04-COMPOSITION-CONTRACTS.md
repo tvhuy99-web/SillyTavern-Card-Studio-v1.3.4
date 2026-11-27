@@ -1,0 +1,3 @@
+# R04: Explicit domain composition contracts
+
+The host no longer mutates or hands a cumulative application context to domain stages. Each stage receives an explicit projection from named earlier stage outputs or platform imports. The original order remains persistence, connections, backup/guards, stores, conversation, generation, runtime, UI, Immer setup, mount. The restore service is published at precisely its old position before guarded migration; forward references to the session store, generation, runtime broadcast and toast are explicit lazy getters. No singleton is recreated. UI retains its existing ordered sub-stage contract pending the next review. Further narrowing of feature-level dependencies is F04 work. CI acceptance required.
