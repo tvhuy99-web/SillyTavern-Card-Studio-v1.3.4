@@ -2,7 +2,7 @@ export function createAttachLorebookDialog(getDependencies) {
   return function AttachLorebookDialog({
     isOpen: isOpen,
     onClose: onClose,
-    lorebooks: lorebooks,
+    lorebooks: availableLorebooks,
     onAction: onAction
   }) {
     const {
@@ -10,6 +10,7 @@ export function createAttachLorebookDialog(getDependencies) {
       react,
       jsxRuntime
     } = getDependencies();
+    const lorebooks = Array.isArray(availableLorebooks) ? availableLorebooks : [];
     let [selectedLorebookName, setSelectedLorebookName] = (0, react.useState)("");
     let selectedLorebook = lorebooks.find(lorebook => lorebook.name === selectedLorebookName);
     let dialogRef = (0, react.useRef)(null);

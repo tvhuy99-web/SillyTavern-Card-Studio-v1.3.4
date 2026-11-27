@@ -242,6 +242,36 @@ latePing();
 await checking;
 
 const ai = harness({ source: 'aistudio' });
+const loginLabel = 'Mở Google / AI Studio để đăng nhập';
+const visibilityLabel = 'Hiển thị trang web AI Studio';
+assert.ok(byText(ai.render(), loginLabel), 'Login button is visible without opening the options menu');
+assert.equal(byLabel(ai.render(), visibilityLabel).props.checked, true);
+assert.equal(byText(harness({ source: 'gemini' }).render(), loginLabel), undefined);
+const oldCapacitor = globalThis.Capacitor;
+const oldWindowCapacitor = window.Capacitor;
+const nativeCalls = [];
+const mockCapacitor = {
+  getPlatform: () => 'android',
+  isNativePlatform: () => true,
+  nativePromise: async (...args) => { nativeCalls.push(args); return {}; },
+};
+try {
+  globalThis.Capacitor = window.Capacitor = mockCapacitor;
+  await byText(ai.render(), loginLabel).props.onClick();
+  await byLabel(ai.render(), visibilityLabel).props.onChange({ target: { checked: false } });
+  assert.equal(byLabel(ai.render(), visibilityLabel).props.checked, false);
+  assert.equal(storage.getItem('sts_aistudio_show_page'), 'false');
+  await byLabel(ai.render(), visibilityLabel).props.onChange({ target: { checked: true } });
+  assert.equal(byLabel(ai.render(), visibilityLabel).props.checked, true);
+  assert.deepEqual(nativeCalls, [
+    ['AIStudioText', 'openSession', {}],
+    ['AIStudioText', 'setVisibility', { visible: false }],
+    ['AIStudioText', 'setVisibility', { visible: true }],
+  ]);
+} finally {
+  globalThis.Capacitor = oldCapacitor;
+  window.Capacitor = oldWindowCapacitor;
+}
 await byText(ai.render(), 'Tải mô hình').props.onClick();
 assert.ok(find(ai.render(), x => x.props['data-sts-aistudio-model-status']));
 byText(openOptions(ai), 'Xóa danh sách model AI Studio').props.onClick();

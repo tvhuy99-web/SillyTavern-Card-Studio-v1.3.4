@@ -17,7 +17,8 @@ export function createLorebookManager(getDependencies) {
       jsxRuntime,
     } = getDependencies();
 
-    const { lorebooks, createLorebook } = lorebookStore();
+    const { lorebooks: storedLorebooks, createLorebook } = lorebookStore();
+    const lorebooks = Array.isArray(storedLorebooks) ? storedLorebooks : [];
     const { showToast } = useToast();
 
     const [entries, setEntries] = react.useState(() => {
@@ -403,7 +404,7 @@ export function createLorebookManager(getDependencies) {
         jsxRuntime.jsx(AttachLorebookDialog, {
           isOpen: isAttachDialogOpen,
           onClose: () => setIsAttachDialogOpen(false),
-          availableLorebooks: lorebooks,
+          lorebooks,
           alreadyAttached: attachedBooks,
           onAction: handleAttachOrMergeAction,
         }),

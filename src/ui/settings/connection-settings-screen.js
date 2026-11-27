@@ -1,5 +1,6 @@
 import { buildProbeTarget, createModelTestButton } from './model-test-button.js';
 import { useConnectionSettings } from './settings-controller.js';
+import { openAiStudioSession } from '../../providers/aistudio/text.js';
 
 const PROVIDERS = [
   { value: 'gemini', label: 'Google Gemini' },
@@ -471,6 +472,35 @@ export function createConnectionSettingsScreen(jsxRuntime, react, getDependencie
           jsxRuntime.jsx('p', {
             className: 'text-sm text-slate-300',
             children: 'Sử dụng phiên đăng nhập Google AI Studio trực tiếp trên thiết bị.',
+          }),
+          jsxRuntime.jsx('button', {
+            type: 'button',
+            onClick: async () => {
+              try {
+                await openAiStudioSession();
+              } catch (error) {
+                showToast('AI Studio: ' + (error?.message || String(error)), 'error');
+              }
+            },
+            className: 'w-full rounded-lg bg-indigo-600 hover:bg-indigo-500 px-4 py-2.5 text-sm font-semibold text-white',
+            children: 'Mở Google / AI Studio để đăng nhập',
+          }),
+          jsxRuntime.jsxs('label', {
+            className: 'flex items-center gap-3 rounded-lg border border-slate-600 bg-slate-900/60 p-3 cursor-pointer',
+            children: [
+              jsxRuntime.jsx('input', {
+                type: 'checkbox',
+                checked: aiStudioVisible,
+                disabled: aiStudioVisibilityBusy,
+                onChange: event => changeAiStudioVisibility(event.target.checked),
+                className: 'h-5 w-5 accent-indigo-500',
+                'aria-label': 'Hiển thị trang web AI Studio',
+              }),
+              jsxRuntime.jsx('span', {
+                className: 'text-sm font-semibold text-slate-100',
+                children: 'Hiển thị trang web AI Studio',
+              }),
+            ],
           }),
           aiStudioStatus && jsxRuntime.jsx('p', {
             'data-sts-aistudio-model-status': true,

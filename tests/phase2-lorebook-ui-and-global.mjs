@@ -3,6 +3,7 @@ import { createLorebookLibrary } from '../src/features/world-info/ui/lorebook-li
 import { createLorebookEntryCard } from '../src/features/world-info/ui/lorebook-entry-item.js';
 import { createLorebookEntryList } from '../src/features/world-info/ui/lorebook-entry-list.js';
 import { createLorebookManager } from '../src/features/world-info/ui/lorebook-manager.js';
+import { createAttachLorebookDialog } from '../src/features/world-info/ui/attach-lorebook-dialog.js';
 import { scanWorldInfo } from '../src/features/world-info/smart-scan-service.js';
 
 const jsx = (type, props, key) => ({ type, props: props || {}, key });
@@ -181,6 +182,31 @@ function createFakeReact(initialStates = []) {
   const menuItems = nodes.filter(n => n.type === 'button' && n.props.role === 'menuitem').map(n => n.props.children);
   assert.ok(menuItems.includes('Nhân bản'));
   assert.ok(menuItems.includes('Gộp'));
+
+  // Render the actual child component, not just the parent's JSX descriptor.
+  const attach = nodes.find(n => n.type === 'AttachLorebookDialog');
+  assert.ok(attach);
+  assert.deepEqual(attach.props.lorebooks.map(book => book.name), ['GlobalBook']);
+  const AttachDialog = createAttachLorebookDialog(() => ({
+    react: createFakeReact(['GlobalBook']), jsxRuntime, useDialogFocus: () => {},
+  }));
+  assert.equal(AttachDialog(attach.props), null, 'Closed dialog must render safely');
+  const openDialog = createAttachLorebookDialog(() => ({
+    react: createFakeReact(['GlobalBook']), jsxRuntime, useDialogFocus: () => {},
+  }));
+  const actions = [];
+  const openNodes = flatten(openDialog({ ...attach.props, isOpen: true, onAction: (...args) => actions.push(args) }));
+  assert.ok(openNodes.some(n => n.type === 'option' && n.props.value === 'GlobalBook'));
+  const actionButtons = openNodes.filter(n => n.type === 'button' && n.props.disabled === false);
+  assert.equal(actionButtons.length, 2);
+  actionButtons.forEach(button => button.props.onClick());
+  assert.deepEqual(actions.map(([action, book]) => [action, book.name]), [['link', 'GlobalBook'], ['merge', 'GlobalBook']]);
+  for (const lorebooks of [undefined, null, {}]) {
+    const SafeDialog = createAttachLorebookDialog(() => ({
+      react: createFakeReact(), jsxRuntime, useDialogFocus: () => {},
+    }));
+    assert.doesNotThrow(() => SafeDialog({ ...attach.props, lorebooks, isOpen: true }));
+  }
 }
 
 {
