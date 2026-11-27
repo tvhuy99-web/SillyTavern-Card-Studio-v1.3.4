@@ -82,10 +82,10 @@ function createFakeReact(overrides = {}) {
   const tabs = nodes.filter(n => n.type === 'button' && n.props.role === 'tab').map(n => n.props.children);
   assert.deepEqual(tabs, ['API chính', 'API phụ']);
 
-  const providerSelect = nodes.find(n => n.type === 'select' && n.props['aria-label'] === 'Nhà cung cấp API chính');
+  const providerSelect = nodes.find(n => n.type?.name === 'ChoiceSelect' && n.props['aria-label'] === 'Nhà cung cấp API chính');
   assert.ok(providerSelect, 'Provider dropdown must exist');
 
-  const profileSelect = nodes.find(n => n.type === 'select' && n.props['aria-label'] === 'Chọn cấu hình đã lưu');
+  const profileSelect = nodes.find(n => n.type?.name === 'ChoiceSelect' && n.props['aria-label'] === 'Chọn cấu hình đã lưu');
   assert.ok(profileSelect, 'Saved profile dropdown must exist');
 
   const menuItems = nodes.filter(n => n.type === 'button' && n.props.role === 'menuitem').map(n => n.props.children);

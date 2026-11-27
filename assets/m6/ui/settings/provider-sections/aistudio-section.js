@@ -1,7 +1,7 @@
 import { openAiStudioSession } from '../../../../m4/providers/aistudio/text.js';
 import { modelTestProps } from './model-test-props.js';
 
-export function renderAiStudioSection({ ModelSelect, modelTest, aiStudioLoading, aiStudioModels, aiStudioStatus, aiStudioVisible, aiStudioVisibilityBusy, changeAiStudioVisibility, loadAiStudioModels, clearAiStudioModels, defaultGeminiModels, jsxRuntime, settings, showToast, updateSetting }) { return jsxRuntime.jsxs("div", {
+export function renderAiStudioSection({ SearchableSelect, ModelSelect, modelTest, aiStudioLoading, aiStudioModels, aiStudioStatus, aiStudioVisible, aiStudioVisibilityBusy, changeAiStudioVisibility, loadAiStudioModels, clearAiStudioModels, defaultGeminiModels, jsxRuntime, settings, showToast, updateSetting }) { return jsxRuntime.jsxs("div", {
     className: "space-y-4", children: [jsxRuntime.jsxs("div", {
             className: "bg-slate-900/50 p-4 rounded-lg border border-slate-600 space-y-4", children: [jsxRuntime.jsxs("div", {
                     className: "flex flex-wrap justify-between gap-3 items-center", children: [jsxRuntime.jsx("div", {
@@ -32,10 +32,10 @@ export function renderAiStudioSection({ ModelSelect, modelTest, aiStudioLoading,
                                 }, ...defaultGeminiModels, ...aiStudioModels].filter(model => model && model.id).map(model => [model.id, model])).values())
                         })]
                 }), jsxRuntime.jsxs("div", {
-                    className: "grid grid-cols-1 md:grid-cols-2 gap-4", children: [jsxRuntime.jsxs("label", {
+                    className: "grid grid-cols-1 md:grid-cols-2 gap-4", children: [jsxRuntime.jsxs("div", {
                             className: "text-sm text-indigo-200 block", children: [jsxRuntime.jsx("span", {
-                                    className: "block mb-2 font-bold", children: "Mức suy nghĩ Chat"
-                                }), jsxRuntime.jsxs("select", {
+                                    "aria-hidden": "true", className: "block mb-2 font-bold", children: "Mức suy nghĩ Chat"
+                                }), jsxRuntime.jsx(SearchableSelect, {
                                     "aria-label": "Mức suy nghĩ Chat", className: "w-full rounded bg-slate-800 border border-slate-600 p-2 text-white", value: settings.aistudio_thinking || "default", onChange: event => updateSetting("aistudio_thinking", event.target.value), children: [jsxRuntime.jsx("option", {
                                             value: "default", children: "Mặc định theo trang web (AI Studio)"
                                         }), jsxRuntime.jsx("option", {
@@ -48,10 +48,10 @@ export function renderAiStudioSection({ ModelSelect, modelTest, aiStudioLoading,
                                             value: "high", children: "Cao"
                                         })]
                                 })]
-                        }), jsxRuntime.jsxs("label", {
+                        }), jsxRuntime.jsxs("div", {
                             className: "text-sm text-indigo-200 block", children: [jsxRuntime.jsx("span", {
-                                    className: "block mb-2 font-bold", children: "Mức suy nghĩ Tool"
-                                }), jsxRuntime.jsxs("select", {
+                                    "aria-hidden": "true", className: "block mb-2 font-bold", children: "Mức suy nghĩ Tool"
+                                }), jsxRuntime.jsx(SearchableSelect, {
                                     "aria-label": "Mức suy nghĩ Tool", className: "w-full rounded bg-slate-800 border border-slate-600 p-2 text-white", value: settings.aistudio_tool_thinking || "default", onChange: event => updateSetting("aistudio_tool_thinking", event.target.value), children: [jsxRuntime.jsx("option", {
                                             value: "default", children: "Mặc định theo trang web (AI Studio)"
                                         }), jsxRuntime.jsx("option", {

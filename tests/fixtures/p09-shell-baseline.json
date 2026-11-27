@@ -1268,7 +1268,6 @@
                   "id": "tabpanel-character",
                   "aria-labelledby": "tab-character",
                   "className": "app-tab-panel flex-grow flex flex-col focus:outline-none",
-                  "tabIndex": -1,
                   "children": {
                     "type": "Characters",
                     "props": {}
@@ -1364,7 +1363,6 @@
                   "id": "tabpanel-preset",
                   "aria-labelledby": "tab-preset",
                   "className": "app-tab-panel flex-grow flex flex-col focus:outline-none",
-                  "tabIndex": -1,
                   "children": {
                     "type": "Presets",
                     "props": {}
@@ -1460,7 +1458,6 @@
                   "id": "tabpanel-lorebook",
                   "aria-labelledby": "tab-lorebook",
                   "className": "app-tab-panel flex-grow flex flex-col focus:outline-none",
-                  "tabIndex": -1,
                   "children": {
                     "type": "Lorebooks",
                     "props": {}
@@ -1556,7 +1553,6 @@
                   "id": "tabpanel-chat",
                   "aria-labelledby": "tab-chat",
                   "className": "app-tab-panel flex-grow flex flex-col focus:outline-none",
-                  "tabIndex": -1,
                   "children": {
                     "type": "Chat",
                     "props": {
@@ -1656,7 +1652,6 @@
                   "id": "tabpanel-settings",
                   "aria-labelledby": "tab-settings",
                   "className": "app-tab-panel flex-grow flex flex-col focus:outline-none",
-                  "tabIndex": -1,
                   "children": {
                     "type": "Settings",
                     "props": {}
@@ -1752,7 +1747,6 @@
                   "id": "tabpanel-unknown",
                   "aria-labelledby": "tab-unknown",
                   "className": "app-tab-panel flex-grow flex flex-col focus:outline-none",
-                  "tabIndex": -1,
                   "children": null
                 }
               }
@@ -1845,7 +1839,6 @@
                   "id": "tabpanel-character",
                   "aria-labelledby": "tab-character",
                   "className": "app-tab-panel flex-grow flex flex-col focus:outline-none",
-                  "tabIndex": -1,
                   "children": {
                     "type": "Characters",
                     "props": {}

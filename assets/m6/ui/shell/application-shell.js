@@ -57,7 +57,7 @@ export function createApplicationShell({ jsx, jsxs }, { useState }, { Header, Ma
           }),
         }), jsx('div', {
           role: 'tabpanel', id: `tabpanel-${activeTab}`, 'aria-labelledby': `tab-${activeTab}`,
-          className: 'app-tab-panel flex-grow flex flex-col focus:outline-none', tabIndex: -1, children: renderScreen(),
+          className: 'app-tab-panel flex-grow flex flex-col focus:outline-none', children: renderScreen(),
         })],
       })],
     });

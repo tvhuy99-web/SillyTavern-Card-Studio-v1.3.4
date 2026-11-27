@@ -1,3 +1,4 @@
+import { createChoiceSelect } from '../components/dialog-focus.js';
 import { resolveCatalogTarget, refreshDialogProxyCatalog } from '../../providers/common/model-catalog.js';
 
 function resolveSelectedQuickModel(connectionSettings, proxyProfiles) {
@@ -15,6 +16,7 @@ function resolveSelectedQuickModel(connectionSettings, proxyProfiles) {
 }
 
 export function createQuickConnectionDialog(getDependencies) {
+  const ChoiceSelect = createChoiceSelect(getDependencies);
   return function QuickConnectionDialog({
     isOpen,
     onClose,
@@ -237,7 +239,7 @@ export function createQuickConnectionDialog(getDependencies) {
                   className: 'flex items-center gap-2',
                   children: [
                     jsxRuntime.jsx('span', { className: 'text-xs text-slate-400 w-12 shrink-0', children: 'Nguồn:' }),
-                    jsxRuntime.jsxs('select', {
+                    jsxRuntime.jsxs(ChoiceSelect, {
                       value: connectionSettings.source,
                       'aria-label': 'Nguồn mô hình',
                       onChange: handleSourceChange,
@@ -255,7 +257,7 @@ export function createQuickConnectionDialog(getDependencies) {
                   className: 'flex items-center gap-2 ',
                   children: [
                     jsxRuntime.jsx('span', { className: 'text-xs text-emerald-400 w-12 shrink-0', children: 'Profile:' }),
-                    jsxRuntime.jsxs('select', {
+                    jsxRuntime.jsxs(ChoiceSelect, {
                       value: connectionSettings.proxy_profile_id || '',
                       'aria-label': 'Cấu hình proxy',
                       onChange: handleProxyProfileChange,
@@ -277,7 +279,7 @@ export function createQuickConnectionDialog(getDependencies) {
                     jsxRuntime.jsxs('div', {
                       className: 'flex-grow min-w-0 relative',
                       children: [
-                        jsxRuntime.jsxs('select', {
+                        jsxRuntime.jsxs(ChoiceSelect, {
                           value: currentModelValue,
                           'aria-label': 'Mô hình',
                           onChange: handleModelChange,

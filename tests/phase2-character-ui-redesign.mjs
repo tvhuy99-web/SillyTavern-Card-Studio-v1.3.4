@@ -67,7 +67,7 @@ function createFakeReact(initialStates = []) {
   const h2Texts = nodes.filter(n => n.type === 'h2').map(n => n.props.children);
   assert.deepEqual(h2Texts, ['Nhân vật', 'Cơ bản']);
 
-  const select = nodes.find(n => n.type === 'select' && n.props['aria-label'] === 'Chọn nhân vật');
+  const select = nodes.find(n => n.type?.name === 'ChoiceSelect' && n.props['aria-label'] === 'Chọn nhân vật');
   assert.ok(select, 'Character selector dropdown must exist');
 
   const menuItems = nodes.filter(n => n.type === 'button' && n.props.role === 'menuitem').map(n => n.props.children);

@@ -1,4 +1,6 @@
+import { createChoiceSelect } from '../../../../ui/components/dialog-focus.js';
 export function createRpgDatabaseEditor(getDependencies) {
+  const ChoiceSelect = createChoiceSelect(getDependencies);
   return function RpgDatabaseEditor({ isOpen, onClose, database, onSave }) {
     const {
       SearchableSelect,
@@ -394,7 +396,7 @@ export function createRpgDatabaseEditor(getDependencies) {
                                         className: 'w-32 bg-slate-900 border border-slate-600 rounded px-2 py-1 text-xs text-indigo-300 font-mono',
                                         placeholder: 'Key ID',
                                       }),
-                                      jsxRuntime.jsxs('select', {
+                                      jsxRuntime.jsxs(ChoiceSelect, {
                                         value: column.type,
                                         'aria-label': `Kiểu dữ liệu cột ${colIndex + 1}`,
                                         onChange: event => updateColumn(colIndex, { type: event.target.value }),

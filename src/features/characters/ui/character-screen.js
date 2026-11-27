@@ -1,3 +1,4 @@
+import { createChoiceSelect } from '../../../ui/components/dialog-focus.js';
 const CHARACTER_TABS = [
   { id: "basic", label: "Cơ bản" },
   { id: "dialogue", label: "Hội thoại & Kịch bản" },
@@ -6,6 +7,7 @@ const CHARACTER_TABS = [
 ];
 
 export function createCharacterScreen(getDependencies) {
+  const ChoiceSelect = createChoiceSelect(getDependencies);
   return function CharacterScreen() {
     const {
       CharacterDetailSections,
@@ -174,7 +176,7 @@ export function createCharacterScreen(getDependencies) {
             (0, jsxRuntime.jsxs)("div", {
               className: "flex items-center gap-3",
               children: [
-                (0, jsxRuntime.jsxs)("select", {
+                (0, jsxRuntime.jsxs)(ChoiceSelect, {
                   "aria-label": "Chọn nhân vật",
                   value: activeCharacterFileName || "",
                   onChange: event => setActiveCharacterFileName(event.target.value),
@@ -293,7 +295,6 @@ export function createCharacterScreen(getDependencies) {
               role: "tabpanel",
               "aria-labelledby": `character-subtab-${activeSubTab}`,
               className: "focus:outline-none space-y-4",
-              tabIndex: 0,
               children: [
                 (0, jsxRuntime.jsx)("h2", {
                   className: "text-lg font-bold text-slate-200",

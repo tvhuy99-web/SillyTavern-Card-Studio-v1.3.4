@@ -1,4 +1,6 @@
+import { createChoiceSelect } from '../../../../ui/components/dialog-focus.js';
 export function createActionSuggestionDialog(getDependencies) {
+  const ChoiceSelect = createChoiceSelect(getDependencies);
   return function ActionSuggestionDialog({
     isOpen,
     onClose,
@@ -358,7 +360,7 @@ export function createActionSuggestionDialog(getDependencies) {
                 jsxRuntime.jsxs('div', {
                   className: 'flex items-center gap-2',
                   children: [
-                    jsxRuntime.jsx('select', {
+                    jsxRuntime.jsx(ChoiceSelect, {
                       'aria-label': 'Model Trợ Lý',
                       value: selectedModel,
                       onChange: event => setSelectedModel(event.target.value),

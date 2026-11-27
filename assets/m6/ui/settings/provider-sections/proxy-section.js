@@ -1,6 +1,6 @@
 import { modelTestProps } from './model-test-props.js';
 
-export function renderProxySection({ LoadingIndicator, ModelSelect, TextInput, ToggleSwitch, modelTest, createProfile, loadProxyModels, clearProxyCatalog, invalidateProxyCatalog, pingProxy, jsxRuntime, legacyMode, pingError, pingLoading, pingStatus, profileFileRef, profileId, profiles, proxyForTools, proxyLoading, proxyModelOptions, proxyPassword, proxyPersistence, proxyUrl, rememberProxySecrets, saveProfiles, selectProfile, setLegacyMode, setProfileId, setProfiles, setProxyForTools, setProxyModels, setProxyPassword, setProxyUrl, setRememberProxySecrets, setSettings, settings, showToast, updateSetting }) { return jsxRuntime.jsxs("div", {
+export function renderProxySection({ LoadingIndicator, SearchableSelect, ModelSelect, TextInput, ToggleSwitch, modelTest, createProfile, loadProxyModels, clearProxyCatalog, invalidateProxyCatalog, pingProxy, jsxRuntime, legacyMode, pingError, pingLoading, pingStatus, profileFileRef, profileId, profiles, proxyForTools, proxyLoading, proxyModelOptions, proxyPassword, proxyPersistence, proxyUrl, rememberProxySecrets, saveProfiles, selectProfile, setLegacyMode, setProfileId, setProfiles, setProxyForTools, setProxyModels, setProxyPassword, setProxyUrl, setRememberProxySecrets, setSettings, settings, showToast, updateSetting }) { return jsxRuntime.jsxs("div", {
     className: "space-y-6 ", children: [jsxRuntime.jsxs("div", {
             className: "bg-slate-900/50 p-3 rounded-lg border border-slate-700 flex flex-col gap-3", children: [jsxRuntime.jsxs("div", {
                     className: "flex items-center justify-between", children: [jsxRuntime.jsx("label", {
@@ -30,7 +30,7 @@ export function renderProxySection({ LoadingIndicator, ModelSelect, TextInput, T
                                 })]
                         })]
                 }), jsxRuntime.jsxs("div", {
-                    className: "flex gap-2 items-center", children: [jsxRuntime.jsxs("select", {
+                    className: "flex gap-2 items-center", children: [jsxRuntime.jsx(SearchableSelect, {
                             "aria-label": "Cấu hình proxy", value: profileId, onChange: event => selectProfile(event.target.value), className: "flex-grow bg-slate-800 border border-slate-600 rounded p-2 text-sm text-white", children: [jsxRuntime.jsx("option", {
                                     value: "", children: "-- Chọn cấu hình --"
                                 }), profiles.map(profile => jsxRuntime.jsx("option", {

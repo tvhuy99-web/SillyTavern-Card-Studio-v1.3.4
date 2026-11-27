@@ -20,6 +20,15 @@ async function clickTab(id, panelId) {
   await waitFor(() => doc().getElementById(id)?.getAttribute('aria-selected') === 'true' && doc().getElementById(panelId), panelId);
   check(true, 'mount and navigate ' + panelId);
 }
+async function choose(label, option) {
+  await waitFor(() => [...doc().querySelectorAll('button')].some(button => button.getAttribute('aria-label')?.startsWith(label + ': ')), label);
+  [...doc().querySelectorAll('button')].find(button => button.getAttribute('aria-label')?.startsWith(label + ': ')).click();
+  await waitFor(() => doc().querySelector('dialog[open]'), 'open ' + label);
+  const choice = [...doc().querySelectorAll('dialog[open] button[aria-pressed]')].find(button => button.textContent === option);
+  check(Boolean(choice), label + ' offers ' + option);
+  choice.click();
+  await waitFor(() => !doc().querySelector('dialog[open]'), 'close ' + label);
+}
 async function countRecords(dbName, stores) {
   return new Promise((resolve, reject) => {
     const request = frame.contentWindow.indexedDB.open(dbName, 6);
@@ -51,6 +60,7 @@ try {
       counts = await countRecords('SillyTavernCardStudioDB', ['characters','presets','userPersonas','chatSessions','lorebooks']); if (counts.characters && counts.presets && counts.userPersonas) break; } catch {}
     await pause(150);
   }
+  check(!doc().querySelector('[role=tabpanel][tabindex]'), 'layout panels introduce no extra focus targets');
   check(counts?.characters > 0 && counts?.presets > 0 && counts?.userPersonas > 0, 'default catalog persisted in real IndexedDB');
   await clickTab('tab-preset', 'tabpanel-preset');
   check(doc().querySelector('input[type="file"]')?.hidden, 'preset file input stays outside screen-reader navigation');
@@ -90,16 +100,43 @@ try {
   await waitFor(() => scanChoice()?.getAttribute('aria-label').includes('4. Suy luận Sâu (Chỉ LLM)'), 'select deep scan mode');
   check(doc().activeElement === scanChoice(), 'choosing a scan mode restores focus and updates its single label');
   await clickTab('settings-subtab-api','settings-subtabpanel-api');
-  const selector = () => doc().querySelector('select[aria-label="Nhà cung cấp API chính"]');
-  await waitFor(selector,'API settings');
-  check([...selector().options].map(option=>option.value).join(',') === 'gemini,openrouter,proxy,aistudio','four provider choices');
+  const selector = () => doc().querySelector('button[aria-label^="Nhà cung cấp API chính:"]');
+  await waitFor(selector, 'API settings');
+  selector().click();
+  await waitFor(() => doc().querySelector('dialog[open]'), 'provider choices');
+  check([...doc().querySelectorAll('dialog[open] [aria-pressed]')].map(button => button.textContent).join(',') === 'Google Gemini,OpenRouter,Reverse Proxy,Tài khoản Google / AI Studio', 'four provider choices');
+  doc().querySelector('dialog[open] [data-dialog-close]').click();
+  await waitFor(() => !doc().querySelector('dialog[open]'), 'close provider choices');
+  const providerLabels = { gemini: 'Google Gemini', openrouter: 'OpenRouter', proxy: 'Reverse Proxy', aistudio: 'Tài khoản Google / AI Studio' };
   const sectionLabels = {openrouter:'OpenRouter API Key',proxy:'Proxy URL',aistudio:'Sử dụng phiên đăng nhập Google AI Studio',gemini:'Sử dụng API Key mặc định'};
   for (const provider of ['openrouter','proxy','aistudio','gemini']) {
-    const field=selector();
-
-    Object.getOwnPropertyDescriptor(frame.contentWindow.HTMLSelectElement.prototype,'value').set.call(field,provider);
-    field.dispatchEvent(new frame.contentWindow.Event('change',{bubbles:true}));
-    await waitFor(() => selector()?.value === provider && doc().getElementById('settings-subtabpanel-api')?.textContent.includes(sectionLabels[provider]), `provider ${provider}`);
+    await choose('Nhà cung cấp API chính', providerLabels[provider]);
+    await waitFor(() => doc().getElementById('settings-subtabpanel-api')?.textContent.includes(sectionLabels[provider]), `provider ${provider}`);
+    check(!doc().querySelector('#settings-subtabpanel-api select'), `all ${provider} API selectors use one closed control`);
+    check(doc().querySelector('#settings-subtabpanel-api input[type=file]')?.hidden, 'API profile import stays outside navigation');
+    if (provider === 'proxy') {
+      await choose('Giao thức Proxy', 'Google Native');
+      check(doc().activeElement?.getAttribute('aria-label') === 'Giao thức Proxy: Google Native', 'proxy protocol choice restores focus');
+    }
+    if (provider === 'aistudio') {
+      await choose('Mức suy nghĩ API chính', 'Cao');
+      [...doc().querySelectorAll('button')].find(button => button.textContent === 'API phụ').click();
+      await waitFor(() => doc().querySelector('button[aria-label^="Mức suy nghĩ API phụ:"]'), 'auxiliary thinking selector');
+      await choose('Mức suy nghĩ API phụ', 'Thấp');
+      [...doc().querySelectorAll('button')].find(button => button.textContent === 'Áp dụng').click();
+      await pause(100);
+      const previousDocument = doc();
+      frame.contentWindow.location.reload();
+      await waitFor(() => doc() !== previousDocument && doc()?.querySelector('.app-shell'), 'reloaded settings');
+      await clickTab('tab-settings', 'tabpanel-settings');
+      await clickTab('settings-subtab-api', 'settings-subtabpanel-api');
+      await waitFor(() => doc().querySelector('button[aria-label="Mức suy nghĩ API chính: Cao"]'), 'saved main thinking');
+      [...doc().querySelectorAll('button')].find(button => button.textContent === 'API phụ').click();
+      await waitFor(() => doc().querySelector('button[aria-label="Mức suy nghĩ API phụ: Thấp"]'), 'saved auxiliary thinking');
+      check(true, 'AI Studio thinking levels persist independently across reload');
+      [...doc().querySelectorAll('button')].find(button => button.textContent === 'API chính').click();
+      await waitFor(selector, 'main API tab');
+    }
     check(true, `provider selection ${provider}`);
   }
   await clickTab('tab-character','tabpanel-character');

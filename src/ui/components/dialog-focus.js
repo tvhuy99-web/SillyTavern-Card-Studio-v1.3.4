@@ -86,6 +86,9 @@ export function createAnchoredDialog(getDependencies) {
       'data-sts-anchored-dialog': '',
       'aria-label': label,
       className: 'sts-anchored-dialog',
+      onKeyDown: event => {
+        if (event.key === 'Escape' || event.key === 'Tab') event.stopPropagation();
+      },
       onCancel: event => {
         event.preventDefault();
         closeRef.current();
@@ -119,16 +122,35 @@ export function createAnchoredDialog(getDependencies) {
 
 export function createChoiceSelect(getDependencies) {
   const ChoiceDialog = createAnchoredDialog(getDependencies);
-  return function ChoiceSelect({ id, label, value, onChange, options, disabled, className, tooltip, placeholder }) {
+  return function ChoiceSelect({
+    id,
+    ref,
+    label,
+    'aria-label': ariaLabel,
+    value,
+    onChange,
+    options,
+    children,
+    disabled,
+    className,
+    tooltip,
+    placeholder,
+  }) {
     const { react, jsxRuntime } = getDependencies();
     const [anchor, setAnchor] = react.useState(null);
     const searchRef = react.useRef({ text: '', time: 0 });
-    const selected = options.find(option => String(option.value) === String(value));
+    const choices = options || react.Children.toArray(children).map(option => ({
+      value: option.props.value,
+      label: react.Children.toArray(option.props.children).join(''),
+      disabled: option.props.disabled,
+    }));
+    const controlLabel = label || ariaLabel || 'Chọn';
+    const selected = choices.find(option => String(option.value) === String(value));
     const displayValue = selected?.label || placeholder || 'Chọn';
     const close = () => setAnchor(null);
 
     const navigateChoices = event => {
-      const buttons = [...event.currentTarget.querySelectorAll('button')];
+      const buttons = [...event.currentTarget.querySelectorAll('button:not([disabled])')];
       const index = buttons.indexOf(event.target);
       let next;
       switch (event.key) {
@@ -154,10 +176,11 @@ export function createChoiceSelect(getDependencies) {
       children: [
         jsxRuntime.jsx('button', {
           id,
+          ref,
           type: 'button',
           disabled,
           className,
-          'aria-label': `${label}: ${displayValue}`,
+          'aria-label': `${controlLabel}: ${displayValue}`,
           'aria-description': tooltip || undefined,
           'aria-haspopup': 'dialog',
           'aria-expanded': Boolean(anchor),
@@ -166,13 +189,14 @@ export function createChoiceSelect(getDependencies) {
         }),
         anchor && jsxRuntime.jsx(ChoiceDialog, {
           anchor,
-          label,
+          label: controlLabel,
           onClose: close,
           initialFocusSelector: '[aria-pressed="true"]',
           children: jsxRuntime.jsx('div', {
             onKeyDown: navigateChoices,
-            children: options.map((option, index) => jsxRuntime.jsx('button', {
+            children: choices.map((option, index) => jsxRuntime.jsx('button', {
               type: 'button',
+              disabled: option.disabled,
               'aria-pressed': String(option.value) === String(value),
               className: 'block w-full text-left px-4 py-3 text-sm hover:bg-slate-800',
               onClick: () => {

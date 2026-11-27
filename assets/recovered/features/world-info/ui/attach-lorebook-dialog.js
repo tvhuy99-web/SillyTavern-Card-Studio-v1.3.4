@@ -1,8 +1,10 @@
+import { createChoiceSelect } from '../../../ui/components/dialog-focus.js';
 export function createAttachLorebookDialog(getDependencies) {
+  const ChoiceSelect = createChoiceSelect(getDependencies);
   return function AttachLorebookDialog({
     isOpen: isOpen,
     onClose: onClose,
-    lorebooks: lorebooks,
+    lorebooks: availableLorebooks,
     onAction: onAction
   }) {
     const {
@@ -10,6 +12,7 @@ export function createAttachLorebookDialog(getDependencies) {
       react,
       jsxRuntime
     } = getDependencies();
+    const lorebooks = Array.isArray(availableLorebooks) ? availableLorebooks : [];
     let [selectedLorebookName, setSelectedLorebookName] = (0, react.useState)("");
     let selectedLorebook = lorebooks.find(lorebook => lorebook.name === selectedLorebookName);
     let dialogRef = (0, react.useRef)(null);
@@ -34,10 +37,12 @@ export function createAttachLorebookDialog(getDependencies) {
           children: [(0, jsxRuntime.jsxs)("div", {
             children: [(0, jsxRuntime.jsx)("label", {
               htmlFor: "attach-lorebook-select",
+              "aria-hidden": "true",
               className: "block text-sm font-medium text-slate-300 mb-2",
               children: "Chọn Sổ tay Thế giới"
-            }), (0, jsxRuntime.jsxs)("select", {
+            }), (0, jsxRuntime.jsxs)(ChoiceSelect, {
               id: "attach-lorebook-select",
+              label: "Chọn Sổ tay Thế giới",
               ref: closeButtonRef,
               value: selectedLorebookName,
               onChange: event => setSelectedLorebookName(event.target.value),

@@ -1,4 +1,6 @@
+import { createChoiceSelect } from '../../../ui/components/dialog-focus.js';
 export function createGenerateEntryDialog(getDependencies) {
+  const ChoiceSelect = createChoiceSelect(getDependencies);
   return function GenerateEntryDialog({
     isOpen,
     onClose,
@@ -191,11 +193,13 @@ export function createGenerateEntryDialog(getDependencies) {
                 children: [
                   jsxRuntime.jsx('label', {
                     htmlFor: 'new-lorebook-target',
+                    'aria-hidden': 'true',
                     className: 'block text-sm font-medium text-slate-300 mb-1',
                     children: 'Lưu vào Sổ tay',
                   }),
-                  jsxRuntime.jsx('select', {
+                  jsxRuntime.jsx(ChoiceSelect, {
                     id: 'new-lorebook-target',
+                    label: 'Lưu vào Sổ tay',
                     value: targetLorebookName,
                     onChange: event => setTargetLorebookName(event.target.value),
                     className: 'w-full bg-slate-700 border border-slate-600 rounded-md p-2 text-slate-200',

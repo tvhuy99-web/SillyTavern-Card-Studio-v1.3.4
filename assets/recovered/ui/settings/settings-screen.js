@@ -75,7 +75,6 @@ export function createSettingsScreen(getDependencies) {
         role: "tabpanel",
         "aria-labelledby": `settings-subtab-${activeTab}`,
         className: "settings-content focus:outline-none",
-        tabIndex: 0,
         children: ["persona" === activeTab && (0, jsxRuntime.jsx)(PersonaScreen, {}), "api" === activeTab && (0, jsxRuntime.jsx)(ConnectionSettingsScreen, {}), "backup" === activeTab && (0, jsxRuntime.jsx)(BackupSettings, {}), "html" === activeTab && (0, jsxRuntime.jsx)("div", {
           className: "bg-slate-800/50 p-6 rounded-xl shadow-lg max-w-3xl mx-auto",
           children: (0, jsxRuntime.jsx)(CardRuntimeSettings, {})

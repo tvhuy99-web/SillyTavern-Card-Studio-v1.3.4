@@ -1,5 +1,15 @@
+import { createChoiceSelect } from '../../../recovered/ui/components/dialog-focus.js';
 import { buildProbeTarget, createModelTestButton } from './model-test-button.js';
 import { useConnectionSettings } from './settings-controller.js';
+import { openAiStudioSession } from '../../../m4/providers/aistudio/text.js';
+
+const THINKING_LEVELS = [
+  { value: 'default', label: 'Mặc định theo trang web (AI Studio)' },
+  { value: 'minimal', label: 'Tối thiểu' },
+  { value: 'low', label: 'Thấp' },
+  { value: 'medium', label: 'Trung bình' },
+  { value: 'high', label: 'Cao' },
+];
 
 const PROVIDERS = [
   { value: 'gemini', label: 'Google Gemini' },
@@ -9,6 +19,7 @@ const PROVIDERS = [
 ];
 
 export function createConnectionSettingsScreen(jsxRuntime, react, getDependencies) {
+  const ChoiceSelect = createChoiceSelect(() => ({ react, jsxRuntime }));
   const ModelTestButton = createModelTestButton(jsxRuntime, react);
 
   return function ConnectionSettingsScreen() {
@@ -383,7 +394,7 @@ export function createConnectionSettingsScreen(jsxRuntime, react, getDependencie
                   className: 'block text-sm font-medium text-slate-300 mb-1',
                   children: 'Giao thức Proxy',
                 }),
-                jsxRuntime.jsxs('select', {
+                jsxRuntime.jsxs(ChoiceSelect, {
                   'aria-label': 'Giao thức Proxy',
                   value: settings.proxy_protocol || 'openai',
                   onChange: event => updateSetting('proxy_protocol', event.target.value),
@@ -471,6 +482,36 @@ export function createConnectionSettingsScreen(jsxRuntime, react, getDependencie
           jsxRuntime.jsx('p', {
             className: 'text-sm text-slate-300',
             children: 'Sử dụng phiên đăng nhập Google AI Studio trực tiếp trên thiết bị.',
+          }),
+          jsxRuntime.jsx('button', {
+            type: 'button',
+            onClick: async () => {
+              try {
+                await openAiStudioSession();
+              } catch (error) {
+                showToast('AI Studio: ' + (error?.message || String(error)), 'error');
+              }
+            },
+            className: 'w-full rounded-lg bg-indigo-600 hover:bg-indigo-500 px-4 py-2.5 text-sm font-semibold text-white',
+            children: 'Mở Google / AI Studio để đăng nhập',
+          }),
+          jsxRuntime.jsxs('label', {
+            className: 'flex items-center gap-3 rounded-lg border border-slate-600 bg-slate-900/60 p-3 cursor-pointer',
+            children: [
+              jsxRuntime.jsx('input', {
+                type: 'checkbox',
+                checked: aiStudioVisible,
+                disabled: aiStudioVisibilityBusy,
+                onChange: event => changeAiStudioVisibility(event.target.checked),
+                className: 'h-5 w-5 accent-indigo-500',
+                'aria-label': 'Hiển thị trang web AI Studio',
+              }),
+              jsxRuntime.jsx('span', {
+                className: 'text-sm font-semibold text-slate-100',
+                'aria-hidden': 'true',
+                children: 'Hiển thị trang web AI Studio',
+              }),
+            ],
           }),
           aiStudioStatus && jsxRuntime.jsx('p', {
             'data-sts-aistudio-model-status': true,
@@ -582,7 +623,7 @@ export function createConnectionSettingsScreen(jsxRuntime, react, getDependencie
             jsxRuntime.jsxs('div', {
               className: 'flex items-center gap-3',
               children: [
-                jsxRuntime.jsx('select', {
+                jsxRuntime.jsx(ChoiceSelect, {
                   'aria-label': isAuxTab ? 'Nhà cung cấp API phụ' : 'Nhà cung cấp API chính',
                   value: activeProvider,
                   disabled: isAuxTab && auxUseMain,
@@ -722,7 +763,7 @@ export function createConnectionSettingsScreen(jsxRuntime, react, getDependencie
                 }),
               ],
             }),
-            jsxRuntime.jsxs('select', {
+            jsxRuntime.jsxs(ChoiceSelect, {
               'aria-label': 'Chọn cấu hình đã lưu',
               value: activeProfileId,
               disabled: isAuxTab && auxUseMain,
@@ -741,7 +782,7 @@ export function createConnectionSettingsScreen(jsxRuntime, react, getDependencie
               type: 'file',
               'aria-label': 'Nhập tệp cấu hình API JSON',
               accept: '.json',
-              className: 'sr-only',
+              hidden: true,
               onChange: handleImportProfiles,
             }),
             !(isAuxTab && auxUseMain) && renderProviderInputs(),
@@ -758,6 +799,12 @@ export function createConnectionSettingsScreen(jsxRuntime, react, getDependencie
                     : 'Tải mô hình',
                 }),
                 renderModelSelector(),
+                activeProvider === 'aistudio' && jsxRuntime.jsx(SearchableSelect, {
+                  label: isAuxTab ? 'Mức suy nghĩ API phụ' : 'Mức suy nghĩ API chính',
+                  value: settings[isAuxTab ? 'aistudio_tool_thinking' : 'aistudio_thinking'] || 'default',
+                  options: THINKING_LEVELS,
+                  onChange: event => updateSetting(isAuxTab ? 'aistudio_tool_thinking' : 'aistudio_thinking', event.target.value),
+                }),
               ],
             }),
             jsxRuntime.jsxs('div', {

@@ -221,7 +221,6 @@ export function createPresetScreen(getDependencies) {
               role: "tabpanel",
               "aria-labelledby": `preset-subtab-${activeSubTab}`,
               className: "focus:outline-none space-y-4",
-              tabIndex: -1,
               children: [
                 (0, jsxRuntime.jsx)("h2", {
                   className: "text-lg font-bold text-slate-200",

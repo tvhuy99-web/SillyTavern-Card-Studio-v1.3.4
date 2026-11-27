@@ -1,4 +1,6 @@
+import { createChoiceSelect } from '../../../ui/components/dialog-focus.js';
 export function createLorebookManager(getDependencies) {
+  const ChoiceSelect = createChoiceSelect(getDependencies);
   return function LorebookManager({
     initialEntries,
     initialAttached = [],
@@ -229,7 +231,7 @@ export function createLorebookManager(getDependencies) {
             jsxRuntime.jsxs('div', {
               className: 'flex items-center gap-3',
               children: [
-                jsxRuntime.jsxs('select', {
+                jsxRuntime.jsxs(ChoiceSelect, {
                   'aria-label': 'Chọn nguồn sổ tay nhân vật',
                   value: selectedSource,
                   onChange: event => setSelectedSource(event.target.value),
@@ -370,7 +372,7 @@ export function createLorebookManager(getDependencies) {
                 className: 'text-lg font-bold text-slate-100',
                 children: 'Gộp sổ tay',
               }),
-              jsxRuntime.jsx('select', {
+              jsxRuntime.jsx(ChoiceSelect, {
                 'aria-label': 'Chọn sổ tay cần gộp',
                 value: mergeSourceName,
                 onChange: event => setMergeSourceName(event.target.value),

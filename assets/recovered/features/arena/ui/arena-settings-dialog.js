@@ -1,6 +1,8 @@
+import { createChoiceSelect } from '../../../ui/components/dialog-focus.js';
 import { resolveCatalogTarget, refreshDialogProxyCatalog } from '../../../../m4/providers/common/model-catalog.js';
 
 export function createArenaSettingsDialog(getDependencies) {
+  const ChoiceSelect = createChoiceSelect(getDependencies);
   return function ArenaSettingsDialog({ isOpen, onClose }) {
     const {
       defaultProxyModels,
@@ -202,7 +204,7 @@ export function createArenaSettingsDialog(getDependencies) {
                   className: 'text-[10px] font-bold text-emerald-400 uppercase',
                   children: 'Cấu hình Proxy (Profile)',
                 }),
-                jsxRuntime.jsxs('select', {
+                jsxRuntime.jsxs(ChoiceSelect, {
                   value: arenaUserProfileId || '',
                   'aria-label': 'Cấu hình Proxy đối thủ',
                   onChange: event => setArenaUserProfileId(event.target.value || null),
@@ -237,7 +239,7 @@ export function createArenaSettingsDialog(getDependencies) {
                     : jsxRuntime.jsxs('div', {
                         className: 'flex items-center gap-2',
                         children: [
-                          jsxRuntime.jsxs('select', {
+                          jsxRuntime.jsxs(ChoiceSelect, {
                             value: arenaModelId || '',
                             'aria-label': 'Model đối thủ',
                             onChange: event => setArenaModelId(event.target.value),
