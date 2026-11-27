@@ -43,7 +43,8 @@ assert.ok(presets.includes("BOOT.context.presetName = previous"));
 const gemini = read('src/providers/gemini/generation.js');
 assert.ok(gemini.includes("abortSignal: signal"));
 
-const renderer = read('src/runtime/card-runtime/renderer.js');
+const { buildCardRuntimeRendererScript } = await import('../src/runtime/card-runtime/renderer.js');
+const renderer = buildCardRuntimeRendererScript('', [], { executeScripts: false });
 assert.ok(renderer.includes("data-st-keyboard-button"));
 assert.ok(renderer.includes("event.key !== 'Enter' && event.key !== ' '"));
 assert.ok(renderer.includes("target.removeEventListener('keydown', accessibilityKeyHandler)"));
