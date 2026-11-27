@@ -45,7 +45,7 @@ assert.match(loreSource, /jsxRuntime\.jsxs\)\("article",\s*\{/);
 assert.match(loreSource, /jsxRuntime\.jsxs\)\("h3",\s*\{/);
 assert.ok(!loreSource.includes('role: "button"'));
 assert.ok(!loreSource.includes('Chỉnh sửa mục'));
-assert.match(loreSource, /ariaLabel:\s*`Bật quy tắc \$\{entryTitle\}`,[\s\S]*?checked:\s*(?:propEntry\.enabled\s*!==\s*false|(?:false|!1)\s*!==\s*propEntry\.enabled)/);
+assert.match(loreSource, /ariaLabel:\s*propEntry\.enabled\s*!==\s*false\s*\?\s*"Đã chọn"\s*:\s*"Chưa chọn",[\s\S]*?checked:\s*propEntry\.enabled\s*!==\s*false/);
 assert.ok(!loreSource.includes('role: "img"'));
 assert.ok(!production.includes('Chưa đồng bộ Semantic'));
 assert.ok(/showPipeline(?:\s*:\s*__stsShowPipeline)?\s*=\s*(?:false|!1)/.test(production));
@@ -68,7 +68,7 @@ assert.ok(
 
 const promptSource = read('src/features/presets/ui/prompt-manager.js').split('export function createPromptManager')[0];
 assert.ok(production.includes('PromptListItem=__stsCreatePromptListItem('));
-assert.match(promptSource, /ariaLabel:\s*`Bật lời nhắc \$\{displayName\}`,[\s\S]*?checked:\s*propPrompt\.enabled\s*\?\?\s*(?:false|!1)/);
+assert.match(promptSource, /ariaLabel:\s*propPrompt\.enabled\s*\?\s*"Đã chọn"\s*:\s*"Chưa chọn",[\s\S]*?checked:\s*propPrompt\.enabled\s*\?\?\s*false/);
 
 assert.equal(read('src/ui/styles/accessibility.css'), read('assets/m6/ui/accessibility.css'), 'assets/m6/ui/accessibility.css must match source owner');
 

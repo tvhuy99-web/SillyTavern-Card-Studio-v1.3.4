@@ -41,6 +41,7 @@ export const copiedAssets = Object.freeze([
   Object.freeze(['src/runtime/card-runtime/host/slash-command-reference.js', 'assets/recovered/runtime/card-runtime/host/slash-command-reference.js']),
   Object.freeze(['src/features/rpg/action-proposal-prompt.js', 'assets/recovered/features/rpg/action-proposal-prompt.js']),
   Object.freeze(['src/app/lifecycle/application-lifecycle.js', 'assets/recovered/app/lifecycle/application-lifecycle.js']),
+  Object.freeze(['src/features/chat/hooks/session-view.js', 'assets/recovered/features/chat/hooks/session-view.js']),
   Object.freeze(['src/features/chat/hooks/use-diagnostics.js', 'assets/recovered/features/chat/hooks/use-diagnostics.js']),
   Object.freeze(['src/features/chat/hooks/use-response-pipeline.js', 'assets/recovered/features/chat/hooks/use-response-pipeline.js']),
   Object.freeze(['src/features/chat/hooks/use-smart-scan.js', 'assets/recovered/features/chat/hooks/use-smart-scan.js']),
