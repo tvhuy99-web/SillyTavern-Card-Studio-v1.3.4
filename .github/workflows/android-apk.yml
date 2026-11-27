@@ -1,13 +1,13 @@
 name: Android APK (debug)
 
-# Use "Run workflow" on GitHub Actions after this file is merged to main.
-# Pull requests and main-branch pushes also build automatically.
+# Build the current Phase 1 acceptance branch as well as main and pull requests.
+# Manual workflow dispatch remains available.
 on:
   workflow_dispatch:
   pull_request:
     branches: [main]
   push:
-    branches: [main]
+    branches: [main, phase1-latest-2026-11-26]
 
 permissions:
   contents: write
