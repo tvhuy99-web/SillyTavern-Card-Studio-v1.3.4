@@ -46,7 +46,6 @@ export function createChatHud(react, getDependencies) {
           gameHistory: data.messages,
           card: data.card,
           variables: data.variables,
-          logs: data.logs,
           onUpdateVariable: actions.handleUpdateVariable,
           onRewriteMessage: actions.handleRewriteLastTurn,
         }),

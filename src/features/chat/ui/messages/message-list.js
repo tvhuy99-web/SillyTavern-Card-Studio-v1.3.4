@@ -1,3 +1,10 @@
+export function canFollowNewMessage(container) {
+  if (!container) return false;
+  const focused = container.ownerDocument?.activeElement;
+  if (focused && focused !== container && container.contains?.(focused)) return false;
+  return container.scrollHeight - container.scrollTop - container.clientHeight <= 48;
+}
+
 export function createMessageList(react, getDependencies) {
   return react.memo(function MessageList({
     messages,
@@ -58,6 +65,14 @@ export function createMessageList(react, getDependencies) {
       messages.length > 0 ? messages[messages.length - 1].id : null,
     );
     const autoScrollTimerRef = reactRuntime.useRef(null);
+    const followLatestRef = reactRuntime.useRef(true);
+    const cancelAutoScroll = () => {
+      followLatestRef.current = false;
+      if (autoScrollTimerRef.current !== null) {
+        clearTimeout(autoScrollTimerRef.current);
+        autoScrollTimerRef.current = null;
+      }
+    };
 
     const { settings: speechSettings } = useSpeech();
     const isTtsEnabled = speechSettings.tts_enabled;
@@ -76,6 +91,7 @@ export function createMessageList(react, getDependencies) {
     reactRuntime.useEffect(() => {
       setVisibleCount(10);
       setManuallyActivatedMessageId(null);
+      followLatestRef.current = true;
     }, [sessionId]);
 
     reactRuntime.useEffect(() => {
@@ -127,13 +143,16 @@ export function createMessageList(react, getDependencies) {
       const latestMessageId = messages.length > 0 ? messages[messages.length - 1].id : null;
       const latestMessageChanged = latestMessageId !== previousLastMessageIdRef.current;
 
-      if ((appendedMessages || latestMessageChanged) && !editingMessageId) {
+      // Only a newly sent user message may move the viewport, not assistant updates.
+      const latestMessage = messages[messages.length - 1];
+      if ((appendedMessages || latestMessageChanged) && latestMessage?.role === 'user'
+          && !editingMessageId && followLatestRef.current) {
         if (autoScrollTimerRef.current) {
           clearTimeout(autoScrollTimerRef.current);
         }
         autoScrollTimerRef.current = setTimeout(() => {
           const container = containerRef.current;
-          if (container && container.scrollHeight - container.scrollTop - container.clientHeight <= 320) {
+          if (followLatestRef.current && canFollowNewMessage(container)) {
             container.scrollTo({
               top: container.scrollHeight,
               behavior: 'auto',
@@ -164,6 +183,7 @@ export function createMessageList(react, getDependencies) {
     const lastMessageIndex = messages.length - 1;
 
     const handleLoadMoreMessages = () => {
+      cancelAutoScroll();
       if (containerRef.current) {
         previousScrollHeightRef.current = containerRef.current.scrollHeight;
       }
@@ -172,15 +192,20 @@ export function createMessageList(react, getDependencies) {
 
     const showLoadingPlaceholder = isLoading
       && (messages.length === 0
-        || messages[messages.length - 1].role !== 'model'
-        || (!messages[messages.length - 1].content && !messages[messages.length - 1].arena));
+        || messages[messages.length - 1].role !== 'model');
 
     return jsxRuntime.jsxs('div', {
       id: 'chat',
       ref: containerRef,
       role: 'region',
       'aria-label': 'Lịch sử trò chuyện',
-      'aria-busy': isLoading ? 'true' : 'false',
+      onPointerDown: cancelAutoScroll,
+      onTouchStart: cancelAutoScroll,
+      onWheel: cancelAutoScroll,
+      onFocusCapture: cancelAutoScroll,
+      onScroll: event => {
+        followLatestRef.current = canFollowNewMessage(event.currentTarget);
+      },
       className: `flex-grow min-h-0 p-4 md:p-6 overflow-y-auto custom-scrollbar relative z-10 w-full ${
         isImmersive ? 'max-w-5xl mx-auto ' : ''
       }`,
@@ -248,6 +273,7 @@ export function createMessageList(react, getDependencies) {
             message.content.trim()
             || htmlBlocks.length > 0
             || message.arena
+            || isMessageStreaming
             || editingMessageId === message.id,
           );
           if (!hasRenderableContent) {
@@ -306,11 +332,12 @@ export function createMessageList(react, getDependencies) {
             id: `message-${absoluteIndex}`,
             className: 'mes chat_msg group relative flex flex-col gap-2 my-4',
             'data-message-id': absoluteIndex,
+            'aria-busy': isMessageStreaming ? 'true' : undefined,
             mesid: absoluteIndex,
             ch_name: message.role === 'user' ? userPersonaName : characterName,
             is_user: message.role === 'user' ? 'true' : 'false',
             children: [
-              (message.content.trim() || message.arena || editingMessageId === message.id)
+              (message.content.trim() || message.arena || isMessageStreaming || editingMessageId === message.id)
                 && jsxRuntime.jsx(ChatMessage, {
                   message,
                   avatarUrl: characterAvatarUrl,

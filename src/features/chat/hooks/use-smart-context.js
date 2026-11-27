@@ -1,3 +1,4 @@
+import { useSessionView } from './session-view.js';
 import { awaitAbortable } from '../../../core/async/cancellation.js';
 
 import { summaryChunkSize } from '../history-policy.js';
@@ -13,7 +14,7 @@ function findTurnRange(messages, firstTurn, endTurn) {
 }
 
 export function useSmartContext(dependencies) {
-    const { messages, longTermSummaries, setSessionData, card, summaryQueue, isSummarizing, sessionId } = (0, dependencies.sessionStore)();
+    const { messages, longTermSummaries, setSessionData, card, summaryQueue, isSummarizing, sessionId } = useSessionView(dependencies.sessionStore);
     const runtime = dependencies.__stsRuntimeState;
     const revision = runtime.getSessionRevision();
     const readState = () => dependencies.sessionStore.getState();

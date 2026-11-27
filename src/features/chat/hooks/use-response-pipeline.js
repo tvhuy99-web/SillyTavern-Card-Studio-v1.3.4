@@ -1,3 +1,4 @@
+import { useSessionView } from './session-view.js';
 const CHOICE_TAG_RE = /\[CHOICE:\s*(?:["'“「])(.*?)(?:["'”」])\s*\]/gi;
 
 function extractQuickReplyChoices(rawResponseText) {
@@ -23,7 +24,7 @@ export function useResponsePipeline(dependencies) {
     card,
     setQuickReplies,
     visualState,
-  } = dependencies.sessionStore();
+  } = useSessionView(dependencies.sessionStore);
 
   const processAIResponse = dependencies.react.useCallback(async (rawContent, messageId) => {
     const initialState = dependencies.sessionStore.getState();

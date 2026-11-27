@@ -1,3 +1,4 @@
+import { useSessionView } from './session-view.js';
 import { firstChangedHistoryIndex, invalidateHistorySummaries } from '../history-policy.js';
 import { createHostRpcDispatcher, authorizeFrameRpc, createFrameIdentityReader, isFrameMessageOrigin, frameMessageTargetOrigin, postFrameMessage } from '../../../runtime/card-runtime/host/rpc-dispatcher.js';
 import { createRuntimeGenerationTasks, createRuntimeGenerationService } from '../../../runtime/card-runtime/host/generation-tasks.js';
@@ -31,7 +32,7 @@ export function useCardRuntime(dependencies, options) {
 function useRuntimeBridge(deps, { logSystemMessage, executeSlashCommands, saveSession, changePreset }) {
   const { useMemo, useCallback, useEffect } = deps.react;
   const { sessionStore, lorebookStore, runtimeState } = deps;
-  const { quickReplies, setQuickReplies, scriptButtons, setScriptButtons, isInputLocked, setIsInputLocked, isAutoLooping, setIsAutoLooping } = sessionStore();
+  const { quickReplies, setQuickReplies, scriptButtons, setScriptButtons, isInputLocked, setIsInputLocked, isAutoLooping, setIsAutoLooping } = useSessionView(sessionStore);
   const readState = () => sessionStore.getState();
   const findFrame = source => deps.frames().find(frame => frame.contentWindow === source);
   const isActiveSource = (source, event) => {

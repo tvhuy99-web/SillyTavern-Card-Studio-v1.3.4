@@ -2,7 +2,6 @@ import { buildRewindPatch, invalidateHistorySummaries } from '../history-policy.
 
 export function useMessageHistory(dependencies, {saveSession, logSystemMessage: log}) {
   const { useCallback } = dependencies.react;
-  dependencies.sessionStore();
   const readState = () => dependencies.sessionStore.getState();
   const busy = (state, options = {}) => state.isSummarizing || (state.isLoading && !options.allowBusy);
   const deleteMessage = useCallback(async (id, options = {}) => {

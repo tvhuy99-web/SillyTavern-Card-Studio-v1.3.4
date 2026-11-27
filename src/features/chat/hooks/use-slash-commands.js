@@ -1,3 +1,4 @@
+import { useSessionView } from './session-view.js';
 const MAX_EXECUTION_STEPS = 5000;
 
 function parseSlashScriptCommands(scriptText) {
@@ -183,7 +184,7 @@ export function useSlashCommands(
     showPopup,
   },
 ) {
-  const { setVariables, setQuickReplies, setIsInputLocked } = dependencies.sessionStore();
+  const { setVariables, setQuickReplies, setIsInputLocked } = useSessionView(dependencies.sessionStore);
 
   const executeSlashCommands = dependencies.react.useCallback(async scriptInput => {
     if (!scriptInput.trim()) {

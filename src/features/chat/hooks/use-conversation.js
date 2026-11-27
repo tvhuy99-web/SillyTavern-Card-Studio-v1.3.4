@@ -1,10 +1,11 @@
+import { useSessionView } from './session-view.js';
 import { createStandaloneMythic } from '../standalone-mythic.js';
 import { useResponsePipeline } from './use-response-pipeline.js';
 import { useSmartScan } from './use-smart-scan.js';
 
 export function createConversationHook(dependencies) {
   return () => {
-    const chatStore = dependencies.sessionStore();
+    const chatStore = useSessionView(dependencies.sessionStore);
     const {
       processAIResponse: runOutputPipeline,
       createPlaceholderMessage,
@@ -13,7 +14,7 @@ export function createConversationHook(dependencies) {
     const allCharacters = dependencies.characterStore?.()?.characters || [];
     const effectiveLorebooks = (0, dependencies.react.useMemo)(() => {
       const globalCharBooks = allCharacters
-        .filter(item => item?.card?.char_book?.isGlobal && item.fileName !== chatStore.getState()?.card?.fileName)
+        .filter(item => item?.card?.char_book?.isGlobal && item.fileName !== dependencies.sessionStore.getState()?.card?.fileName)
         .map(item => ({
           name: `__char__:${item.fileName}`,
           isGlobal: true,

@@ -1,3 +1,4 @@
+import { useSessionView } from './session-view.js';
 import { summaryChunkSize } from '../history-policy.js';
 import { useSessionPersistence } from './use-session-persistence.js';
 import { useSmartContext } from './use-smart-context.js';
@@ -32,7 +33,7 @@ export function createStoryAdvance({ readState, getRevision, sendMessage, saveSe
 export function createChatSessionHook(dependencies) {
   const { useCallback, useEffect } = dependencies.react;
   return function useChatSession(sessionId) {
-    const state = dependencies.sessionStore();
+    const state = useSessionView(dependencies.sessionStore);
     const diagnostics = dependencies.useDiagnostics();
     dependencies.lorebookStore();
     const { saveSession, changePreset, changePersona } = useSessionPersistence(dependencies, sessionId);

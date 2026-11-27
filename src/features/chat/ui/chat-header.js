@@ -1,3 +1,4 @@
+import { useSessionView } from '../hooks/session-view.js';
 export function createChatHeader(getDependencies) {
   return function ChatHeader({
     characterName,
@@ -38,7 +39,7 @@ export function createChatHeader(getDependencies) {
     const [isArenaSettingsOpen, setIsArenaSettingsOpen] = react.useState(false);
     const [connectionRefreshKey, setConnectionRefreshKey] = react.useState(0);
     const settingsButtonRef = react.useRef(null);
-    const { isArenaMode, setArenaMode, arenaModelId } = sessionStore();
+    const { isArenaMode, setArenaMode, arenaModelId } = useSessionView(sessionStore);
 
     return jsxRuntime.jsxs('div', {
       className: isImmersive

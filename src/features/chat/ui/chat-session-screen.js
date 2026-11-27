@@ -475,7 +475,6 @@ export function createChatSessionScreen(getDependencies) {
           isRefiningWriting,
           writingRefinementEnabled: getLiterarySettings().enabled,
           children: jsxRuntime.jsx(DiagnosticsFooter, {
-            logs: session.logs,
             messages: session.messages,
             onClearLogs: session.clearLogs,
             onInspectState: () => setIsHUDOpen(true),
@@ -513,7 +512,6 @@ export function createChatSessionScreen(getDependencies) {
             worldInfoPinned: session.worldInfoPinned,
             worldInfoPlacement: session.worldInfoPlacement,
             variables: session.variables,
-            logs: session.logs,
             lastInteractiveMsg: lastInteractiveMessage,
             characterAvatarUrl,
             userPersonaAvatarUrl: session.persona?.avatar || null,

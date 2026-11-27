@@ -1,3 +1,4 @@
+import { useSessionView } from './session-view.js';
 export function useSessionPersistence(dependencies, sessionId) {
   const {
     setSessionData,
@@ -26,7 +27,7 @@ export function useSessionPersistence(dependencies, sessionId) {
     arenaModelId,
     arenaProvider,
     arenaUserProfileId,
-  } = (0, dependencies.sessionStore)();
+  } = useSessionView(dependencies.sessionStore);
   const { characters, isLoading: charactersLoading } = (0, dependencies.characterStore)();
   const { presets, isLoading: presetsLoading } = (0, dependencies.presetStore)();
   const { personas, isLoading: personasLoading } = (0, dependencies.personaStore)();

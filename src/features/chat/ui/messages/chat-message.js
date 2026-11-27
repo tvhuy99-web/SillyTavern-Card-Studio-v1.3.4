@@ -94,7 +94,9 @@ export function createChatMessage(react, getDependencies) {
           mainHtml: htmlSanitizer.sanitize(parsedHtml, MARKDOWN_SANITIZE_OPTIONS),
           thinkingBlocks: blocks,
         };
-      }, [isUserMessage, message.content, activePersona, isStreaming, isPendingArena, showPipeline]);
+      }, [isUserMessage, message.content, message.reasoning_content, activePersona, isStreaming, isPendingArena, showPipeline]);
+      // Keep unchanged message HTML stable across parent renders.
+      const renderedHtml = reactRuntime.useMemo(() => ({ __html: mainHtml }), [mainHtml]);
 
       reactRuntime.useEffect(() => {
         if (isEditing && editTextareaRef.current) {
@@ -259,7 +261,7 @@ export function createChatMessage(react, getDependencies) {
                       ? jsxRuntime.jsx(LiveStreamText, {
                           messageId: message.id,
                           slot: 'main',
-                          fallback: message.content,
+                          fallback: message.content || 'Đang phân tích bối cảnh & tạo câu trả lời...',
                         })
                       : jsxRuntime.jsxs(jsxRuntime.Fragment, {
                           children: [
@@ -269,7 +271,7 @@ export function createChatMessage(react, getDependencies) {
                             }, index)),
                             jsxRuntime.jsx('div', {
                               className: 'mes_text markdown-content',
-                              dangerouslySetInnerHTML: { __html: mainHtml },
+                              dangerouslySetInnerHTML: renderedHtml,
                             }),
                           ],
                         }),
@@ -281,6 +283,8 @@ export function createChatMessage(react, getDependencies) {
     },
     (prevProps, nextProps) => (
       prevProps.message.content === nextProps.message.content
+      && prevProps.message.reasoning_content === nextProps.message.reasoning_content
+      && prevProps.showPipeline === nextProps.showPipeline
       && prevProps.message.role === nextProps.message.role
       && prevProps.message.id === nextProps.message.id
       && prevProps.isEditing === nextProps.isEditing

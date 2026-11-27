@@ -1,3 +1,4 @@
+import { useSessionView } from './session-view.js';
 function classifyDiagnosticLevel(line) {
   if (line.includes('[ERR]') || line.includes('[LỖI]') || line.includes('Error')) {
     return 'error';
@@ -20,7 +21,6 @@ function classifyDiagnosticLevel(line) {
 export function createDiagnosticsHook(dependencies) {
   return () => {
     const {
-      logs,
       addLogTurn,
       updateCurrentTurn,
       addSystemLog,
@@ -28,7 +28,7 @@ export function createDiagnosticsHook(dependencies) {
       addMythicLog,
       addSelectionLog,
       clearLogs,
-    } = dependencies.sessionStore();
+    } = useSessionView(dependencies.sessionStore);
 
     const startTurn = dependencies.react.useCallback(() => {
       addLogTurn({
@@ -128,7 +128,7 @@ export function createDiagnosticsHook(dependencies) {
     const clearSystemLogs = dependencies.react.useCallback(() => {}, []);
 
     return {
-      logs,
+      get logs() { return dependencies.sessionStore.getState().logs; },
       startTurn,
       logPrompt,
       logResponse,
