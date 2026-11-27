@@ -25,12 +25,7 @@ export function createCollapsibleSection({ jsx, jsxs }) {
           'aria-level': 3,
           className: 'p-4 cursor-pointer list-none flex justify-between items-center outline-none select-none hover:bg-slate-800/80 rounded-xl ',
           children: [
-            jsx('span', { className: 'text-lg font-bold text-sky-400 group-hover:text-sky-300  flex items-center gap-2', children: title }),
-            jsx('svg', {
-              className: 'w-5 h-5 text-slate-500    group-open:rotate-180', xmlns: 'http://www.w3.org/2000/svg',
-              fill: 'none', viewBox: '0 0 24 24', stroke: 'currentColor', 'aria-hidden': 'true',
-              children: jsx('path', { strokeLinecap: 'round', strokeLinejoin: 'round', strokeWidth: '2', d: 'M19 9l-7 7-7-7' }),
-            }),
+            jsx('span', { className: 'text-lg font-bold text-sky-400 group-hover:text-sky-300  flex items-center gap-2', children: title })
           ],
         }),
         jsxs('div', {

@@ -1,3 +1,5 @@
+import { createChoiceSelect } from "./dialog-focus.js";
+
 export function createTableCellInput({ jsx }) {
   return function TableCellInput({ value, onSave, column }) {
     return jsx('input', {
@@ -10,7 +12,10 @@ export function createTableCellInput({ jsx }) {
   };
 }
 
-export function createModelSelect({ jsx, jsxs }, { useMemo }) {
+export function createModelSelect(jsxRuntime, react) {
+  const { jsx, jsxs } = jsxRuntime;
+  const { useMemo } = react;
+  const ChoiceSelect = createChoiceSelect(() => ({ react, jsxRuntime }));
   return function ModelSelect({ label, value, onChange, options, provider, testButton }) {
     const isKnownModel = useMemo(() => options.some(option => option.id === value), [value, options]);
     return jsxs('div', {
@@ -18,14 +23,14 @@ export function createModelSelect({ jsx, jsxs }, { useMemo }) {
       className: 'bg-slate-900/50 p-4 rounded-lg border border-slate-700',
       children: [
         jsx('label', { 'aria-hidden': 'true', className: 'block text-sm font-bold text-indigo-300 mb-2', children: label }),
-        jsxs('select', {
-          'aria-label': label,
+        jsx(ChoiceSelect, {
+          label,
           value: isKnownModel ? value : 'custom_option',
           onChange: event => onChange(event.target.value === 'custom_option' ? '' : event.target.value),
-          className: 'w-full bg-slate-800 border border-slate-600 rounded p-2 text-white mb-2',
-          children: [
-            options.map(option => jsx('option', { value: option.id, children: option.name }, option.id)),
-            jsx('option', { value: 'custom_option', children: 'Khác (Tự nhập Model ID)' }),
+          className: 'w-full text-left bg-slate-800 border border-slate-600 rounded p-2 text-white mb-2',
+          options: [
+            ...options.map(option => ({ value: option.id, label: option.name })),
+            { value: 'custom_option', label: 'Khác (Tự nhập Model ID)' },
           ],
         }),
         ...(testButton ? [testButton] : []),

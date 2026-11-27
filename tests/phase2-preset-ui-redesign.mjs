@@ -68,7 +68,7 @@ function createFakeReact(initialStates = []) {
   const h2Texts = nodes.filter(n => n.type === 'h2').map(n => n.props.children);
   assert.deepEqual(h2Texts, ['Preset', 'Cấu hình']);
 
-  const select = nodes.find(n => n.type === 'select' && n.props['aria-label'] === 'Chọn Preset');
+  const select = nodes.find(n => n.type?.name === 'ChoiceSelect' && n.props.label === 'Chọn Preset');
   assert.ok(select, 'Preset selector dropdown must exist');
 
   const menuItems = nodes.filter(n => n.type === 'button' && n.props.role === 'menuitem').map(n => n.props.children);
@@ -109,7 +109,7 @@ function createFakeReact(initialStates = []) {
   const toggle = nodes.find(n => n.type === 'ToggleSwitch');
   assert.ok(toggle);
   assert.equal(toggle.props.label, '');
-  assert.equal(toggle.props.ariaLabel, undefined);
+  assert.equal(toggle.props.ariaLabel, "Bật lời nhắc Không có");
   assert.equal(toggle.props.checked, false);
 
   const buttons = nodes.filter(n => n.type === 'button');
@@ -121,6 +121,8 @@ function createFakeReact(initialStates = []) {
 
   buttons[0].props.onContextMenu({ preventDefault() {}, stopPropagation() {} });
   assert.deepEqual(opened, [0]);
+  buttons[0].props.onClick({ stopPropagation() {} });
+  assert.deepEqual(edited, [0], 'Releasing a context-menu press must not open the editor');
 }
 
 {
@@ -148,9 +150,9 @@ function createFakeReact(initialStates = []) {
 
   const nodes = flatten(tree);
   assert.ok(nodes.some(n => n.type === 'MacroReference'), 'MacroReference must remain');
-  const filterSelect = nodes.find(n => n.type === 'select' && n.props['aria-label'] === 'Lọc lời nhắc');
+  const filterSelect = nodes.find(n => n.type?.name === 'ChoiceSelect' && n.props.label === 'Lọc lời nhắc');
   assert.ok(filterSelect, 'Filter must be a dropdown');
-  const filterOptions = flatten(filterSelect).filter(n => n.type === 'option').map(n => n.props.children);
+  const filterOptions = filterSelect.props.options.map(option => option.label);
   assert.deepEqual(filterOptions, ['Tất cả', 'Đã bật', 'Đã tắt']);
 
   const allText = nodes.map(n => typeof n.props.children === 'string' ? n.props.children : '').join(' ');
@@ -159,7 +161,7 @@ function createFakeReact(initialStates = []) {
   assert.ok(nodes.some(n => n.type === 'PromptPreview'), 'PromptPreview must remain');
   assert.ok(nodes.some(n => n.type === 'button' && n.props.children === 'Hủy di chuyển'), 'Top cancel move button must render');
 
-  const dialog = nodes.find(n => n.props.role === 'dialog');
+  const dialog = nodes.find(n => n.type?.name === 'AnchoredDialog');
   assert.ok(dialog, 'Long-press action dialog must render');
   const actionLabels = flatten(dialog).filter(n => n.type === 'button').map(n => n.props.children);
   assert.deepEqual(actionLabels, [

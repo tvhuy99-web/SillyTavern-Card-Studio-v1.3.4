@@ -7,6 +7,7 @@ export function createLorebookEntryCard(getDependencies) {
     onUpdate,
     onEdit,
     onOpenActions,
+    actionsOpen = false,
     syncStatus
   }) {
     const {
@@ -27,15 +28,21 @@ export function createLorebookEntryCard(getDependencies) {
       }
     };
 
-    const startLongPress = () => {
+    const startLongPress = event => {
+      const anchor = event.currentTarget;
       clearPressTimer();
       longPressFiredRef.current = false;
       pressTimerRef.current = setTimeout(() => {
         pressTimerRef.current = null;
         longPressFiredRef.current = true;
-        onOpenActions?.(index);
+        onOpenActions?.(index, anchor);
       }, LONG_PRESS_DELAY_MS);
     };
+
+    react.useEffect?.(() => clearPressTimer, []);
+    react.useEffect?.(() => {
+      if (!actionsOpen) longPressFiredRef.current = false;
+    }, [actionsOpen]);
 
     const handleTitleClick = event => {
       event.stopPropagation();
@@ -50,8 +57,9 @@ export function createLorebookEntryCard(getDependencies) {
       event.preventDefault();
       event.stopPropagation();
       clearPressTimer();
-      longPressFiredRef.current = false;
-      onOpenActions?.(index);
+      if (longPressFiredRef.current) return;
+      longPressFiredRef.current = true;
+      onOpenActions?.(index, event.currentTarget);
     };
 
     return (0, jsxRuntime.jsxs)("article", {
@@ -62,7 +70,7 @@ export function createLorebookEntryCard(getDependencies) {
           className: "flex-shrink-0 self-start mt-1",
           children: (0, jsxRuntime.jsx)(ToggleSwitch, {
             label: "",
-            ariaLabel: undefined,
+            ariaLabel: `Bật quy tắc ${entryTitle}`,
             checked: propEntry.enabled !== false,
             onChange: enabled => onUpdate(index, {
               ...propEntry,

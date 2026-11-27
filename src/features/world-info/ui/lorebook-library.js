@@ -1,3 +1,5 @@
+import { createChoiceSelect } from "../../../ui/components/dialog-focus.js";
+
 const CHAR_BOOK_PREFIX = "__char__:";
 
 export function createLorebookListItem(getDependencies) {
@@ -89,6 +91,7 @@ export function createLorebookUploadControl(getDependencies) {
 }
 
 export function createLorebookLibrary(getDependencies) {
+  const ChoiceSelect = createChoiceSelect(getDependencies);
   return function LorebookLibrary() {
     const {
       FileNameDialog,
@@ -336,17 +339,14 @@ export function createLorebookLibrary(getDependencies) {
             (0, jsxRuntime.jsxs)("div", {
               className: "flex items-center gap-3",
               children: [
-                (0, jsxRuntime.jsx)("select", {
-                  "aria-label": "Chọn sổ tay thế giới",
+                (0, jsxRuntime.jsx)(ChoiceSelect, {
+                  label: "Chọn sổ tay thế giới",
                   value: effectiveSelectedId,
                   onChange: event => setSelectedId(event.target.value),
                   className: "flex-grow min-w-0 bg-slate-900 border border-slate-700 rounded-lg px-3 py-2.5 text-sm font-medium text-slate-100 focus:outline-none focus:ring-2 focus:ring-sky-500",
-                  children: allBooks.length === 0
-                    ? (0, jsxRuntime.jsx)("option", { value: "", children: "Chưa có sổ tay nào" })
-                    : allBooks.map(book => (0, jsxRuntime.jsx)("option", {
-                        value: book.id,
-                        children: book.label
-                      }, book.id))
+                  options: allBooks.length === 0
+                    ? [{ value: "", label: "Chưa có sổ tay nào" }]
+                    : allBooks.map(book => ({ value: book.id, label: book.label }))
                 }),
                 (0, jsxRuntime.jsxs)("div", {
                   ref: menuRef,
@@ -441,7 +441,7 @@ export function createLorebookLibrary(getDependencies) {
               ref: fileInputRef,
               type: "file",
               "aria-label": "Nhập sổ tay JSON",
-              className: "sr-only",
+              hidden: true,
               accept: ".json",
               multiple: true,
               onChange: event => {
@@ -521,7 +521,7 @@ export function createLorebookLibrary(getDependencies) {
                 className: "text-lg font-bold text-slate-100",
                 children: "Gộp sổ tay"
               }),
-              (0, jsxRuntime.jsx)("select", {
+              (0, jsxRuntime.jsx)(ChoiceSelect, {
                 "aria-label": "Chọn sổ tay cần gộp",
                 value: mergeSourceId,
                 onChange: event => setMergeSourceId(event.target.value),

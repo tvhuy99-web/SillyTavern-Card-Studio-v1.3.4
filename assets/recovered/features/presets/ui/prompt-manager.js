@@ -1,3 +1,5 @@
+import { createAnchoredDialog, createChoiceSelect } from "../../../ui/components/dialog-focus.js";
+
 const LONG_PRESS_DELAY_MS = 500;
 
 export function createPromptListItem(getDependencies) {
@@ -7,6 +9,7 @@ export function createPromptListItem(getDependencies) {
     onUpdate,
     onEdit,
     onOpenActions,
+    actionsOpen = false,
     movingPromptIndex,
     onMoveTo
   }) {
@@ -31,16 +34,22 @@ export function createPromptListItem(getDependencies) {
       }
     };
 
-    const startLongPress = () => {
+    const startLongPress = event => {
+      const anchor = event.currentTarget;
       if (isMoveActive) return;
       clearPressTimer();
       longPressFiredRef.current = false;
       pressTimerRef.current = setTimeout(() => {
         pressTimerRef.current = null;
         longPressFiredRef.current = true;
-        onOpenActions?.(index);
+        onOpenActions?.(index, anchor);
       }, LONG_PRESS_DELAY_MS);
     };
+
+    react.useEffect?.(() => clearPressTimer, []);
+    react.useEffect?.(() => {
+      if (!actionsOpen) longPressFiredRef.current = false;
+    }, [actionsOpen]);
 
     const handleTitleClick = event => {
       event.stopPropagation();
@@ -60,8 +69,9 @@ export function createPromptListItem(getDependencies) {
       event.preventDefault();
       event.stopPropagation();
       clearPressTimer();
-      longPressFiredRef.current = false;
-      onOpenActions?.(index);
+      if (longPressFiredRef.current) return;
+      longPressFiredRef.current = true;
+      onOpenActions?.(index, event.currentTarget);
     };
 
     return (0, jsxRuntime.jsx)("article", {
@@ -74,7 +84,7 @@ export function createPromptListItem(getDependencies) {
             onClick: event => event.stopPropagation(),
             children: (0, jsxRuntime.jsx)(ToggleSwitch, {
               label: "",
-              ariaLabel: undefined,
+              ariaLabel: `Bật lời nhắc ${displayName}`,
               checked: propPrompt.enabled ?? false,
               onChange: enabled => onUpdate(index, {
                 ...propPrompt,
@@ -118,6 +128,8 @@ export function createPromptListItem(getDependencies) {
 }
 
 export function createPromptManager(getDependencies) {
+  const ChoiceSelect = createChoiceSelect(getDependencies);
+  const ActionMenu = createAnchoredDialog(getDependencies);
   return function PromptManager({
     preset,
     onUpdate
@@ -138,19 +150,13 @@ export function createPromptManager(getDependencies) {
     const [movingPromptIndex, setMovingPromptIndex] = (0, react.useState)(null);
     const [editingPromptIndex, setEditingPromptIndex] = (0, react.useState)(null);
     const [actionPromptIndex, setActionPromptIndex] = (0, react.useState)(null);
+    const actionAnchorRef = react.useRef(null);
+    const openActions = (index, element) => {
+      actionAnchorRef.current = element;
+      setActionPromptIndex(index);
+    };
     const lastFocusedRef = (0, react.useRef)(null);
     const prompts = preset.prompts || [];
-
-    if (typeof react.useEffect === "function") {
-      (0, react.useEffect)(() => {
-        if (actionPromptIndex === null) return;
-        const handleKeyDown = event => {
-          if (event.key === "Escape") setActionPromptIndex(null);
-        };
-        document.addEventListener("keydown", handleKeyDown);
-        return () => document.removeEventListener("keydown", handleKeyDown);
-      }, [actionPromptIndex]);
-    }
 
     const handleUpdatePrompt = (0, react.useCallback)((index, updatedPrompt) => {
       const nextPrompts = [...prompts];
@@ -262,15 +268,15 @@ export function createPromptManager(getDependencies) {
         (0, jsxRuntime.jsx)(MacroReference, {}),
         (0, jsxRuntime.jsx)("div", {
           className: "flex items-center justify-between gap-3 p-2 bg-slate-800/50 rounded-lg",
-          children: (0, jsxRuntime.jsxs)("select", {
-            "aria-label": "Lọc lời nhắc",
+          children: (0, jsxRuntime.jsx)(ChoiceSelect, {
+            label: "Lọc lời nhắc",
             value: filterMode,
             onChange: event => setFilterMode(event.target.value),
             className: "bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-200 focus:outline-none focus:ring-2 focus:ring-sky-500",
-            children: [
-              (0, jsxRuntime.jsx)("option", { value: "all", children: "Tất cả" }),
-              (0, jsxRuntime.jsx)("option", { value: "enabled", children: "Đã bật" }),
-              (0, jsxRuntime.jsx)("option", { value: "disabled", children: "Đã tắt" })
+            options: [
+              { value: "all", label: "Tất cả" },
+              { value: "enabled", label: "Đã bật" },
+              { value: "disabled", label: "Đã tắt" }
             ]
           })
         }),
@@ -299,7 +305,8 @@ export function createPromptManager(getDependencies) {
               index: originalIndex,
               onUpdate: handleUpdatePrompt,
               onEdit: handleOpenEdit,
-              onOpenActions: setActionPromptIndex,
+              onOpenActions: openActions,
+              actionsOpen: actionPromptIndex === originalIndex,
               movingPromptIndex,
               onMoveTo: handleMovePrompt
             }, prompt.identifier || originalIndex)),
@@ -317,64 +324,52 @@ export function createPromptManager(getDependencies) {
           className: "w-full bg-slate-700 hover:bg-slate-600 text-sky-400 font-semibold py-3 px-4 rounded-lg flex items-center justify-center gap-2 border border-slate-600",
           children: "Thêm Lời nhắc Mới"
         }),
-        actionPrompt && (0, jsxRuntime.jsx)("div", {
-          className: "fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4",
-          onClick: () => setActionPromptIndex(null),
+        actionPrompt && (0, jsxRuntime.jsx)(ActionMenu, {
+          anchor: actionAnchorRef.current,
+          label: `Tùy chọn cho ${actionPrompt.name?.trim() || "Untitled Prompt"}`,
+          onClose: () => setActionPromptIndex(null),
           children: (0, jsxRuntime.jsxs)("div", {
-            role: "dialog",
-            "aria-modal": "true",
-            "aria-label": `Tùy chọn cho ${actionPrompt.name?.trim() || "Untitled Prompt"}`,
-            className: "w-full max-w-xs bg-slate-900 border border-slate-700 rounded-xl shadow-2xl overflow-hidden",
-            onClick: event => event.stopPropagation(),
+            className: "py-1",
             children: [
-              (0, jsxRuntime.jsx)("div", {
-                className: "px-4 py-3 border-b border-slate-800 text-sm font-semibold text-slate-200 truncate",
-                children: actionPrompt.name?.trim() || "Untitled Prompt"
+              (0, jsxRuntime.jsx)("button", {
+                type: "button",
+                onClick: () => {
+                  const idx = actionPromptIndex;
+                  setActionPromptIndex(null);
+                  setMovingPromptIndex(idx);
+                },
+                className: "w-full text-left px-4 py-3 text-sm text-slate-100 hover:bg-slate-800",
+                children: "Chọn để di chuyển"
               }),
-              (0, jsxRuntime.jsxs)("div", {
-                className: "py-1",
-                children: [
-                  (0, jsxRuntime.jsx)("button", {
-                    type: "button",
-                    onClick: () => {
-                      const idx = actionPromptIndex;
-                      setActionPromptIndex(null);
-                      setMovingPromptIndex(idx);
-                    },
-                    className: "w-full text-left px-4 py-3 text-sm text-slate-100 hover:bg-slate-800",
-                    children: "Chọn để di chuyển"
-                  }),
-                  (0, jsxRuntime.jsx)("button", {
-                    type: "button",
-                    onClick: () => {
-                      const idx = actionPromptIndex;
-                      setActionPromptIndex(null);
-                      handleCopyPromptContent(idx);
-                    },
-                    className: "w-full text-left px-4 py-3 text-sm text-slate-100 hover:bg-slate-800",
-                    children: "Sao chép nội dung"
-                  }),
-                  (0, jsxRuntime.jsx)("button", {
-                    type: "button",
-                    onClick: () => {
-                      const idx = actionPromptIndex;
-                      setActionPromptIndex(null);
-                      handleInsertPromptBelow(idx);
-                    },
-                    className: "w-full text-left px-4 py-3 text-sm text-slate-100 hover:bg-slate-800",
-                    children: "Thêm lời nhắc bên dưới"
-                  }),
-                  (0, jsxRuntime.jsx)("button", {
-                    type: "button",
-                    onClick: () => {
-                      const idx = actionPromptIndex;
-                      setActionPromptIndex(null);
-                      handleRemovePrompt(idx);
-                    },
-                    className: "w-full text-left px-4 py-3 text-sm text-red-400 hover:bg-red-950/60",
-                    children: "Xóa"
-                  })
-                ]
+              (0, jsxRuntime.jsx)("button", {
+                type: "button",
+                onClick: () => {
+                  const idx = actionPromptIndex;
+                  setActionPromptIndex(null);
+                  handleCopyPromptContent(idx);
+                },
+                className: "w-full text-left px-4 py-3 text-sm text-slate-100 hover:bg-slate-800",
+                children: "Sao chép nội dung"
+              }),
+              (0, jsxRuntime.jsx)("button", {
+                type: "button",
+                onClick: () => {
+                  const idx = actionPromptIndex;
+                  setActionPromptIndex(null);
+                  handleInsertPromptBelow(idx);
+                },
+                className: "w-full text-left px-4 py-3 text-sm text-slate-100 hover:bg-slate-800",
+                children: "Thêm lời nhắc bên dưới"
+              }),
+              (0, jsxRuntime.jsx)("button", {
+                type: "button",
+                onClick: () => {
+                  const idx = actionPromptIndex;
+                  setActionPromptIndex(null);
+                  handleRemovePrompt(idx);
+                },
+                className: "w-full text-left px-4 py-3 text-sm text-red-400 hover:bg-red-950/60",
+                children: "Xóa"
               })
             ]
           })

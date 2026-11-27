@@ -44,37 +44,24 @@
           }
         },
         {
-          "type": "select",
+          "type": "[callback]",
           "props": {
-            "aria-label": "Chat Model ID",
+            "label": "Chat Model ID",
             "value": "g1",
             "onChange": "[callback]",
-            "className": "w-full bg-slate-800 border border-slate-600 rounded p-2 text-white mb-2",
-            "children": [
-              [
-                {
-                  "type": "option",
-                  "props": {
-                    "value": "g1",
-                    "children": "Gemini 1"
-                  },
-                  "key": "g1"
-                },
-                {
-                  "type": "option",
-                  "props": {
-                    "value": "g2",
-                    "children": "Gemini 2"
-                  },
-                  "key": "g2"
-                }
-              ],
+            "className": "w-full text-left bg-slate-800 border border-slate-600 rounded p-2 text-white mb-2",
+            "options": [
               {
-                "type": "option",
-                "props": {
-                  "value": "custom_option",
-                  "children": "Khác (Tự nhập Model ID)"
-                }
+                "value": "g1",
+                "label": "Gemini 1"
+              },
+              {
+                "value": "g2",
+                "label": "Gemini 2"
+              },
+              {
+                "value": "custom_option",
+                "label": "Khác (Tự nhập Model ID)"
               }
             ]
           }
@@ -98,37 +85,24 @@
           }
         },
         {
-          "type": "select",
+          "type": "[callback]",
           "props": {
-            "aria-label": "Tool Model ID",
+            "label": "Tool Model ID",
             "value": "custom_option",
             "onChange": "[callback]",
-            "className": "w-full bg-slate-800 border border-slate-600 rounded p-2 text-white mb-2",
-            "children": [
-              [
-                {
-                  "type": "option",
-                  "props": {
-                    "value": "g1",
-                    "children": "Gemini 1"
-                  },
-                  "key": "g1"
-                },
-                {
-                  "type": "option",
-                  "props": {
-                    "value": "g2",
-                    "children": "Gemini 2"
-                  },
-                  "key": "g2"
-                }
-              ],
+            "className": "w-full text-left bg-slate-800 border border-slate-600 rounded p-2 text-white mb-2",
+            "options": [
               {
-                "type": "option",
-                "props": {
-                  "value": "custom_option",
-                  "children": "Khác (Tự nhập Model ID)"
-                }
+                "value": "g1",
+                "label": "Gemini 1"
+              },
+              {
+                "value": "g2",
+                "label": "Gemini 2"
+              },
+              {
+                "value": "custom_option",
+                "label": "Khác (Tự nhập Model ID)"
               }
             ]
           }
@@ -168,20 +142,16 @@
           }
         },
         {
-          "type": "select",
+          "type": "[callback]",
           "props": {
-            "aria-label": "Model",
+            "label": "Model",
             "value": "custom_option",
             "onChange": "[callback]",
-            "className": "w-full bg-slate-800 border border-slate-600 rounded p-2 text-white mb-2",
-            "children": [
-              [],
+            "className": "w-full text-left bg-slate-800 border border-slate-600 rounded p-2 text-white mb-2",
+            "options": [
               {
-                "type": "option",
-                "props": {
-                  "value": "custom_option",
-                  "children": "Khác (Tự nhập Model ID)"
-                }
+                "value": "custom_option",
+                "label": "Khác (Tự nhập Model ID)"
               }
             ]
           }
@@ -263,26 +233,6 @@
                   "className": "text-lg font-bold text-sky-400 group-hover:text-sky-300  flex items-center gap-2",
                   "children": "Title"
                 }
-              },
-              {
-                "type": "svg",
-                "props": {
-                  "className": "w-5 h-5 text-slate-500    group-open:rotate-180",
-                  "xmlns": "http://www.w3.org/2000/svg",
-                  "fill": "none",
-                  "viewBox": "0 0 24 24",
-                  "stroke": "currentColor",
-                  "aria-hidden": "true",
-                  "children": {
-                    "type": "path",
-                    "props": {
-                      "strokeLinecap": "round",
-                      "strokeLinejoin": "round",
-                      "strokeWidth": "2",
-                      "d": "M19 9l-7 7-7-7"
-                    }
-                  }
-                }
               }
             ]
           }
@@ -324,26 +274,6 @@
                 "props": {
                   "className": "text-lg font-bold text-sky-400 group-hover:text-sky-300  flex items-center gap-2",
                   "children": "Closed"
-                }
-              },
-              {
-                "type": "svg",
-                "props": {
-                  "className": "w-5 h-5 text-slate-500    group-open:rotate-180",
-                  "xmlns": "http://www.w3.org/2000/svg",
-                  "fill": "none",
-                  "viewBox": "0 0 24 24",
-                  "stroke": "currentColor",
-                  "aria-hidden": "true",
-                  "children": {
-                    "type": "path",
-                    "props": {
-                      "strokeLinecap": "round",
-                      "strokeLinejoin": "round",
-                      "strokeWidth": "2",
-                      "d": "M19 9l-7 7-7-7"
-                    }
-                  }
                 }
               }
             ]

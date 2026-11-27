@@ -65,9 +65,9 @@ function createFakeReact(initialStates = []) {
 
   const nodes = flatten(LorebookLibrary());
   assert.ok(nodes.some(n => n.type === 'h2' && n.props.children === 'Sổ tay Thế giới'));
-  const select = nodes.find(n => n.type === 'select' && n.props['aria-label'] === 'Chọn sổ tay thế giới');
+  const select = nodes.find(n => n.type?.name === 'ChoiceSelect' && n.props.label === 'Chọn sổ tay thế giới');
   assert.ok(select);
-  const options = flatten(select).filter(n => n.type === 'option').map(n => n.props.children);
+  const options = select.props.options.map(option => option.label);
   assert.deepEqual(options, ['World A [Toàn cầu]', 'Đấu Phá Thương Khung (Mặc định)']);
 
   const menuItems = nodes.filter(n => n.type === 'button' && n.props.role === 'menuitem').map(n => n.props.children);
@@ -106,7 +106,7 @@ function createFakeReact(initialStates = []) {
   const nodes = flatten(tree);
   const toggle = nodes.find(n => n.type === 'ToggleSwitch');
   assert.equal(toggle.props.label, '');
-  assert.equal(toggle.props.ariaLabel, undefined);
+  assert.equal(toggle.props.ariaLabel, "Bật quy tắc Không có");
 
   const buttons = nodes.filter(n => n.type === 'button');
   assert.equal(buttons.length, 2, 'Card must only have Title button and Constant button');
@@ -117,6 +117,8 @@ function createFakeReact(initialStates = []) {
   buttons[0].props.onContextMenu({ preventDefault() {}, stopPropagation() {} });
   assert.deepEqual(edited, [0]);
   assert.deepEqual(opened, [0]);
+  buttons[0].props.onClick({ stopPropagation() {} });
+  assert.deepEqual(edited, [0], 'Releasing a context-menu press must not open the editor');
 }
 
 {
@@ -129,9 +131,9 @@ function createFakeReact(initialStates = []) {
   }));
   const emptyNodes = flatten(LorebookEntryList({ entries: [], onUpdate: () => {} }));
   assert.ok(!emptyNodes.some(n => n.type === 'input'), 'Search box must be removed');
-  const filterSelect = emptyNodes.find(n => n.type === 'select' && n.props['aria-label'] === 'Lọc quy tắc sổ tay');
+  const filterSelect = emptyNodes.find(n => n.type?.name === 'ChoiceSelect' && n.props.label === 'Lọc quy tắc sổ tay');
   assert.deepEqual(
-    flatten(filterSelect).filter(n => n.type === 'option').map(n => n.props.children),
+    filterSelect.props.options.map(option => option.label),
     ['Tất cả', 'Đã bật', 'Đã tắt', 'Hằng số'],
   );
   assert.ok(emptyNodes.some(n => n.type === 'button' && n.props.children === 'Tạo mới quy tắc'), 'Standalone create button must appear when empty');
@@ -148,7 +150,7 @@ function createFakeReact(initialStates = []) {
     entries: [{ uid: 'u1', comment: 'Rule', content: 'Body', enabled: true }],
     onUpdate: next => { updatedList = next; },
   }));
-  const dialog = popNodes.find(n => n.props.role === 'dialog');
+  const dialog = popNodes.find(n => n.type?.name === 'AnchoredDialog');
   assert.ok(dialog);
   const dialogBtns = flatten(dialog).filter(n => n.type === 'button');
   assert.deepEqual(dialogBtns.map(b => b.props.children), ['Tạo mới quy tắc', 'Xóa']);

@@ -1,3 +1,5 @@
+import { createChoiceSelect } from "./dialog-focus.js";
+
 function resolveInputControlDeps(getDependencies) {
   const deps = getDependencies();
   return {
@@ -280,6 +282,7 @@ export function createTextArea(getDependencies) {
 }
 
 export function createSearchableSelect(getDependencies) {
+  const ChoiceSelect = createChoiceSelect(getDependencies);
   return function SearchableSelect({
     label,
     ariaLabel,
@@ -312,24 +315,16 @@ export function createSearchableSelect(getDependencies) {
             children: label,
           }),
         }),
-        jsxRuntime.jsxs('select', {
+        jsxRuntime.jsx(ChoiceSelect, {
           id: selectId,
+          label: ariaLabel || label,
           value,
           onChange,
           disabled,
-          className: 'w-full bg-slate-700 border border-slate-600 rounded-md p-2 text-slate-200 focus:ring-2 focus:ring-sky-500 focus:border-sky-500 transition disabled:opacity-50 disabled:cursor-not-allowed',
-          'aria-label': ariaLabel || label,
-          'aria-description': tooltip,
-          children: [
-            placeholder && jsxRuntime.jsx('option', {
-              value: '',
-              children: placeholder,
-            }),
-            options.map((option, index) => jsxRuntime.jsx('option', {
-              value: option.value,
-              children: option.label,
-            }, `${option.value}-${index}`)),
-          ],
+          tooltip,
+          placeholder,
+          options: placeholder ? [{ value: '', label: placeholder }, ...options] : options,
+          className: 'w-full text-left bg-slate-700 border border-slate-600 rounded-md p-2 text-slate-200 focus:ring-2 focus:ring-sky-500 focus:border-sky-500 transition disabled:opacity-50 disabled:cursor-not-allowed',
         }),
         ...(testButton ? [testButton] : []),
       ],

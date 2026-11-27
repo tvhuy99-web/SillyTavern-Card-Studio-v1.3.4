@@ -1,3 +1,5 @@
+import { createAnchoredDialog, createChoiceSelect } from "../../../ui/components/dialog-focus.js";
+
 export function createEntrySelectionControl(getDependencies) {
   return function EntrySelectionControl({
     filter,
@@ -31,6 +33,8 @@ export function createEntrySelectionControl(getDependencies) {
 }
 
 export function createLorebookEntryList(getDependencies) {
+  const ChoiceSelect = createChoiceSelect(getDependencies);
+  const ActionMenu = createAnchoredDialog(getDependencies);
   return function LorebookEntryList({
     entries,
     onUpdate,
@@ -47,17 +51,11 @@ export function createLorebookEntryList(getDependencies) {
     const [filterMode, setFilterMode] = (0, react.useState)("all");
     const [editingIndex, setEditingIndex] = (0, react.useState)(null);
     const [actionIndex, setActionIndex] = (0, react.useState)(null);
-
-    if (typeof react.useEffect === "function") {
-      (0, react.useEffect)(() => {
-        if (actionIndex === null) return;
-        const handleKeyDown = event => {
-          if (event.key === "Escape") setActionIndex(null);
-        };
-        document.addEventListener("keydown", handleKeyDown);
-        return () => document.removeEventListener("keydown", handleKeyDown);
-      }, [actionIndex]);
-    }
+    const actionAnchorRef = react.useRef(null);
+    const openActions = (index, element) => {
+      actionAnchorRef.current = element;
+      setActionIndex(index);
+    };
 
     const createBlankEntry = () => ({
       keys: [],
@@ -115,16 +113,16 @@ export function createLorebookEntryList(getDependencies) {
         (0, jsxRuntime.jsxs)("div", {
           className: "flex items-center justify-between gap-3 bg-slate-800/50 p-2.5 rounded-lg border border-slate-700 shrink-0",
           children: [
-            (0, jsxRuntime.jsxs)("select", {
-              "aria-label": "Lọc quy tắc sổ tay",
+            (0, jsxRuntime.jsx)(ChoiceSelect, {
+              label: "Lọc quy tắc sổ tay",
               value: filterMode,
               onChange: event => setFilterMode(event.target.value),
               className: "bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-200 focus:outline-none focus:ring-2 focus:ring-sky-500",
-              children: [
-                (0, jsxRuntime.jsx)("option", { value: "all", children: "Tất cả" }),
-                (0, jsxRuntime.jsx)("option", { value: "enabled", children: "Đã bật" }),
-                (0, jsxRuntime.jsx)("option", { value: "disabled", children: "Đã tắt" }),
-                (0, jsxRuntime.jsx)("option", { value: "constant", children: "Hằng số" })
+              options: [
+                { value: "all", label: "Tất cả" },
+                { value: "enabled", label: "Đã bật" },
+                { value: "disabled", label: "Đã tắt" },
+                { value: "constant", label: "Hằng số" }
               ]
             }),
             (0, jsxRuntime.jsxs)("span", {
@@ -147,7 +145,8 @@ export function createLorebookEntryList(getDependencies) {
                 index,
                 onUpdate: handleUpdateEntry,
                 onEdit: () => setEditingIndex(index),
-                onOpenActions: setActionIndex,
+                onOpenActions: openActions,
+                actionsOpen: actionIndex === index,
                 syncStatus: statusMap && entry.uid ? statusMap[entry.uid] : undefined
               }, entry.uid || index))
         }),
@@ -157,44 +156,32 @@ export function createLorebookEntryList(getDependencies) {
           className: "w-full bg-slate-700 hover:bg-slate-600 text-sky-400 font-semibold py-3 px-4 rounded-lg flex items-center justify-center gap-2 border border-slate-600 shrink-0",
           children: "Tạo mới quy tắc"
         }),
-        actionEntry && (0, jsxRuntime.jsx)("div", {
-          className: "fixed inset-0 z-[120] flex items-center justify-center bg-black/60 p-4",
-          onClick: () => setActionIndex(null),
+        actionEntry && (0, jsxRuntime.jsx)(ActionMenu, {
+          anchor: actionAnchorRef.current,
+          label: `Tùy chọn cho ${actionEntry.comment?.trim() || "Không có tiêu đề"}`,
+          onClose: () => setActionIndex(null),
           children: (0, jsxRuntime.jsxs)("div", {
-            role: "dialog",
-            "aria-modal": "true",
-            "aria-label": `Tùy chọn cho ${actionEntry.comment?.trim() || "Không có tiêu đề"}`,
-            className: "w-full max-w-xs bg-slate-900 border border-slate-700 rounded-xl shadow-2xl overflow-hidden",
-            onClick: event => event.stopPropagation(),
+            className: "py-1",
             children: [
-              (0, jsxRuntime.jsx)("div", {
-                className: "px-4 py-3 border-b border-slate-800 text-sm font-semibold text-slate-200 truncate",
-                children: actionEntry.comment?.trim() || "Không có tiêu đề"
+              (0, jsxRuntime.jsx)("button", {
+                type: "button",
+                onClick: () => {
+                  const idx = actionIndex;
+                  setActionIndex(null);
+                  handleInsertEntryBelow(idx);
+                },
+                className: "w-full text-left px-4 py-3 text-sm text-slate-100 hover:bg-slate-800",
+                children: "Tạo mới quy tắc"
               }),
-              (0, jsxRuntime.jsxs)("div", {
-                className: "py-1",
-                children: [
-                  (0, jsxRuntime.jsx)("button", {
-                    type: "button",
-                    onClick: () => {
-                      const idx = actionIndex;
-                      setActionIndex(null);
-                      handleInsertEntryBelow(idx);
-                    },
-                    className: "w-full text-left px-4 py-3 text-sm text-slate-100 hover:bg-slate-800",
-                    children: "Tạo mới quy tắc"
-                  }),
-                  (0, jsxRuntime.jsx)("button", {
-                    type: "button",
-                    onClick: () => {
-                      const idx = actionIndex;
-                      setActionIndex(null);
-                      handleDeleteEntry(idx);
-                    },
-                    className: "w-full text-left px-4 py-3 text-sm text-red-400 hover:bg-red-950/60",
-                    children: "Xóa"
-                  })
-                ]
+              (0, jsxRuntime.jsx)("button", {
+                type: "button",
+                onClick: () => {
+                  const idx = actionIndex;
+                  setActionIndex(null);
+                  handleDeleteEntry(idx);
+                },
+                className: "w-full text-left px-4 py-3 text-sm text-red-400 hover:bg-red-950/60",
+                children: "Xóa"
               })
             ]
           })

@@ -12,7 +12,7 @@ import { createCollapsibleSection, createSectionNavigator } from '../src/ui/comp
 
 const jsx = (type, props, key) => ({ type, props, key });
 const jsxRuntime = { jsx, jsxs: jsx, Fragment: 'Fragment' };
-const react = { useId: () => ':a11y:', useMemo: fn => fn(), useState: init => [init, () => {}] };
+const react = { useId: () => ':a11y:', useMemo: fn => fn(), useState: init => [init, () => {}], useRef: init => ({ current: init }) };
 const deps = () => ({
   react,
   jsxRuntime,
@@ -45,9 +45,15 @@ const ssTree = SearchableSelect({
 const ssLabels = collect(ssTree, n => n.type === 'label');
 assert.equal(ssLabels.length, 1);
 assert.equal(ssLabels[0].props['aria-hidden'], 'true');
-const ssSelects = collect(ssTree, n => n.type === 'select');
+const ssSelects = collect(ssTree, n => n.type?.name === 'ChoiceSelect');
 assert.equal(ssSelects.length, 1);
-assert.equal(ssSelects[0].props['aria-label'], 'Chế độ Quét');
+assert.equal(ssSelects[0].props.label, 'Chế độ Quét');
+const closedSelect = ssSelects[0].type(ssSelects[0].props);
+assert.equal(collect(closedSelect, n => n.type === 'button').length, 1);
+assert.equal(collect(closedSelect, n => n.type === 'button')[0].props['aria-label'], 'Chế độ Quét: 4. Suy luận Sâu (Chỉ LLM)');
+assert.equal(collect(closedSelect, n => n.type === 'option').length, 0);
+assert.equal(collect(closedSelect, n => n.type?.name === 'AnchoredDialog').length, 0);
+
 
 const ModelSelect = createModelSelect(jsxRuntime, react);
 const msTree = ModelSelect({
@@ -58,7 +64,7 @@ const msTree = ModelSelect({
   provider: 'proxy',
 });
 assert.equal(collect(msTree, n => n.type === 'label')[0].props['aria-hidden'], 'true');
-assert.equal(collect(msTree, n => n.type === 'select')[0].props['aria-label'], 'Chọn mô hình');
+assert.equal(collect(msTree, n => n.type?.name === 'ChoiceSelect')[0].props.label, 'Chọn mô hình');
 
 const TextInput = createTextInput(deps);
 const tiTree = TextInput({ label: 'Proxy URL', value: 'https://a.test', onChange: () => {} });

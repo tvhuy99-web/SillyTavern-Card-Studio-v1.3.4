@@ -1,4 +1,7 @@
+import { createChoiceSelect } from "../../../ui/components/dialog-focus.js";
+
 export function createPresetScreen(getDependencies) {
+  const ChoiceSelect = createChoiceSelect(getDependencies);
   return function PresetScreen() {
     const {
       FileNameDialog,
@@ -91,17 +94,14 @@ export function createPresetScreen(getDependencies) {
             (0, jsxRuntime.jsxs)("div", {
               className: "flex items-center gap-3",
               children: [
-                (0, jsxRuntime.jsx)("select", {
-                  "aria-label": "Chọn Preset",
+                (0, jsxRuntime.jsx)(ChoiceSelect, {
+                  label: "Chọn Preset",
                   value: activePresetName || "",
                   onChange: event => setActivePresetName(event.target.value),
                   className: "flex-grow min-w-0 bg-slate-900 border border-slate-700 rounded-lg px-3 py-2.5 text-sm font-medium text-slate-100 focus:outline-none focus:ring-2 focus:ring-sky-500",
-                  children: presets.length === 0
-                    ? (0, jsxRuntime.jsx)("option", { value: "", children: "Chưa có preset" })
-                    : presets.map(preset => (0, jsxRuntime.jsx)("option", {
-                        value: preset.name,
-                        children: preset.name
-                      }, preset.name))
+                  options: presets.length === 0
+                    ? [{ value: "", label: "Chưa có preset" }]
+                    : presets.map(preset => ({ value: preset.name, label: preset.name }))
                 }),
                 (0, jsxRuntime.jsxs)("div", {
                   ref: menuRef,
@@ -180,7 +180,7 @@ export function createPresetScreen(getDependencies) {
               ref: fileInputRef,
               type: "file",
               "aria-label": "Nhập preset JSON",
-              className: "sr-only",
+              hidden: true,
               accept: ".json",
               onChange: event => {
                 if (event.target.files && event.target.files.length > 0) {
@@ -221,7 +221,7 @@ export function createPresetScreen(getDependencies) {
               role: "tabpanel",
               "aria-labelledby": `preset-subtab-${activeSubTab}`,
               className: "focus:outline-none space-y-4",
-              tabIndex: 0,
+              tabIndex: -1,
               children: [
                 (0, jsxRuntime.jsx)("h2", {
                   className: "text-lg font-bold text-slate-200",
