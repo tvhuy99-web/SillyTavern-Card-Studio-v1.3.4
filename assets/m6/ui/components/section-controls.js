@@ -1,4 +1,3 @@
-// Presentation only: these components own layout and local navigation, not data.
 export function createTooltip({ jsx, jsxs, Fragment }) {
   return function Tooltip({ text, children }) {
     if (!text) return jsx(Fragment, { children });
@@ -22,9 +21,11 @@ export function createCollapsibleSection({ jsx, jsxs }) {
       className: 'app-section bg-slate-800/50 rounded-xl shadow-lg open:mb-4 group', defaultOpen,
       children: [
         jsxs('summary', {
+          role: 'heading',
+          'aria-level': 3,
           className: 'p-4 cursor-pointer list-none flex justify-between items-center outline-none select-none hover:bg-slate-800/80 rounded-xl ',
           children: [
-            jsx('h3', { className: 'text-lg font-bold text-sky-400 group-hover:text-sky-300  flex items-center gap-2', children: title }),
+            jsx('span', { className: 'text-lg font-bold text-sky-400 group-hover:text-sky-300  flex items-center gap-2', children: title }),
             jsx('svg', {
               className: 'w-5 h-5 text-slate-500    group-open:rotate-180', xmlns: 'http://www.w3.org/2000/svg',
               fill: 'none', viewBox: '0 0 24 24', stroke: 'currentColor', 'aria-hidden': 'true',
@@ -45,7 +46,7 @@ export function createSectionNavigator({ jsx, jsxs }) {
   function navigate(event, target) {
     const editor = event.currentTarget.closest('.character-editor');
     const section = editor ? [...editor.querySelectorAll('.app-section')]
-      .find(item => item.querySelector('h3')?.textContent?.includes(target)) : null;
+      .find(item => item.querySelector('summary, h3')?.textContent?.includes(target)) : null;
     if (section) {
       section.open = true;
       section.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -55,7 +56,7 @@ export function createSectionNavigator({ jsx, jsxs }) {
     return jsxs('nav', {
       className: 'app-section-navigator', 'aria-label': 'Điều hướng nhanh các phần',
       children: [
-        jsx('span', { className: 'app-section-navigator__label', children: 'Đi đến' }),
+        jsx('span', { className: 'app-section-navigator__label', 'aria-hidden': 'true', children: 'Đi đến' }),
         jsx('div', {
           className: 'app-section-navigator__items',
           children: items.map(item => jsx('button', {

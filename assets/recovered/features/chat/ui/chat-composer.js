@@ -269,7 +269,6 @@ export function createChatComposer(getDependencies) {
                 jsxRuntime.jsxs('span', {
                   className: 'text-xs font-bold text-amber-500 uppercase tracking-wider flex items-center gap-1',
                   children: [
-                    jsxRuntime.jsx('span', { className: 'text-sm', children: '💡' }),
                     ' Gợi ý Hành động',
                   ],
                 }),
@@ -323,7 +322,6 @@ export function createChatComposer(getDependencies) {
                               jsxRuntime.jsxs('span', {
                                 className: 'text-amber-400 font-bold flex items-center gap-2 shrink-0',
                                 children: [
-                                  jsxRuntime.jsx('span', { className: 'text-xl', children: '📖' }),
                                   jsxRuntime.jsx('span', {
                                     className: 'hidden sm:inline',
                                     children: 'Chế độ Cốt truyện',
@@ -418,8 +416,8 @@ export function createChatComposer(getDependencies) {
                   title: 'Gợi ý hành động từ AI',
                   'aria-label': 'Gợi ý hành động từ AI',
                   children: isFetchingSuggestions
-                    ? jsxRuntime.jsx('span', { className: 'animate-spin text-lg', children: '⏳' })
-                    : jsxRuntime.jsx('span', { className: 'text-lg', 'aria-hidden': 'true', children: '💡' }),
+                    ? jsxRuntime.jsx('span', { className: 'text-xs font-semibold', 'aria-hidden': 'true', children: '...' })
+                    : jsxRuntime.jsx('span', { className: 'text-xs font-semibold', 'aria-hidden': 'true', children: 'Gợi ý' }),
                 }),
                 writingRefinementEnabled && !isStoryMode && !isAutoLooping && !isLoading && jsxRuntime.jsx('button', {
                   type: 'button',
@@ -433,8 +431,8 @@ export function createChatComposer(getDependencies) {
                   title: 'Cải thiện văn chương (Tin nhắn AI cuối cùng)',
                   'aria-label': 'Cải thiện văn chương',
                   children: isRefiningWriting
-                    ? jsxRuntime.jsx('span', { className: 'animate-spin text-lg', children: '⏳' })
-                    : jsxRuntime.jsx('span', { className: 'text-lg', 'aria-hidden': 'true', children: '✨' }),
+                    ? jsxRuntime.jsx('span', { className: 'text-xs font-semibold', 'aria-hidden': 'true', children: '...' })
+                    : jsxRuntime.jsx('span', { className: 'text-xs font-semibold', 'aria-hidden': 'true', children: 'Sửa văn' }),
                 }),
                 onToggleAutoLoop && !isInputLocked && !isSummarizing && jsxRuntime.jsx('button', {
                   type: 'button',
@@ -450,7 +448,7 @@ export function createChatComposer(getDependencies) {
                   children: jsxRuntime.jsx('span', {
                     className: 'text-xl leading-none ',
                     'aria-hidden': 'true',
-                    children: '♾️',
+                    children: 'Tự động',
                   }),
                 }),
               ],

@@ -1,5 +1,3 @@
-// Recovered from the application host. One owner; dependency getters preserve late binding.
-
 const DEFAULT_MAX_BYTES = 2000000;
 const DEFAULT_TIMEOUT_MS = 5000;
 

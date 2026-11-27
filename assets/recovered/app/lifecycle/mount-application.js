@@ -1,5 +1,3 @@
-// The application has exactly one React root and one provider tree.
-// Keep the root lookup before element creation so missing markup is reported clearly.
 export function mountApplication({ react, jsxRuntime, reactDom, ErrorBoundary, InitialLoader, ToastProvider, SpeechProvider, CardPopupProvider, Shell, document = globalThis.document }) {
     const rootElement = document.getElementById('root');
     if (!rootElement) throw Error('Could not find root element to mount to');

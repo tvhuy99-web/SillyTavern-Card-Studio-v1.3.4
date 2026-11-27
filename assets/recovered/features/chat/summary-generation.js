@@ -1,4 +1,3 @@
-// Provider routing stays compatible with the existing tool settings.
 export function createSummaryGeneration(dependencies = {}) {
   async function generateSummary(history, characterName, template, signal) {
     const transcript = history.map(message => `${message.role === 'user' ? 'User' : characterName}: ${dependencies.extractStoryContent(message.content)}`).join('\n');

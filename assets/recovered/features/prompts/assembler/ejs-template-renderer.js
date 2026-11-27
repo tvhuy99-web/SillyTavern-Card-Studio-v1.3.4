@@ -1,16 +1,6 @@
-/**
- * Isolated EJS Web Worker rendering and referenced lorebook line expansion.
- */
-
 const DEFAULT_EJS_TIMEOUT_MS = 5000;
 const MAX_EJS_DEPTH = 5;
 
-/**
- * Generates the isolated Web Worker source used to evaluate EJS templates safely.
- *
- * @param {string} ejsRuntimeSource
- * @returns {string}
- */
 function buildIsolatedEjsWorkerSource(ejsRuntimeSource) {
   const sendChannelIdentifier = `__send_${Math.random().toString(36).slice(2)}`;
   return `${ejsRuntimeSource}
@@ -63,17 +53,6 @@ self.onmessage = async function (__event) {
 };`;
 }
 
-/**
- * Executes an EJS template inside the isolated worker sandbox.
- *
- * @param {string} template
- * @param {Record<string, any>} variables
- * @param {string} characterName
- * @param {Array<Record<string, any>>} flattenedEntries
- * @param {number} depth
- * @param {Record<string, any>} deps
- * @returns {Promise<string>}
- */
 async function executeIsolatedEjsWorker(
   template,
   variables,
@@ -104,17 +83,6 @@ async function executeIsolatedEjsWorker(
   return String(workerResponse.output || '');
 }
 
-/**
- * Renders EJS directives in a prompt or World Info template string.
- *
- * @param {string} template
- * @param {Record<string, any>} variables
- * @param {Record<string, any>} card
- * @param {Array<Record<string, any>>} externalLorebooks
- * @param {number} depth
- * @param {Record<string, any>} deps
- * @returns {Promise<string>}
- */
 export async function renderEjsTemplate(template, variables, card, externalLorebooks, depth, deps) {
   if (depth > MAX_EJS_DEPTH || !template) {
     return '';
@@ -161,17 +129,6 @@ export async function renderEjsTemplate(template, variables, card, externalLoreb
   }
 }
 
-/**
- * Expands standalone lines that match a non-constant World Info entry key,
- * comment, or name by rendering that entry's content through EJS.
- *
- * @param {string} content
- * @param {Record<string, any>} variables
- * @param {Record<string, any>} card
- * @param {Array<Record<string, any>>} externalLorebooks
- * @param {Record<string, any>} deps
- * @returns {Promise<string>}
- */
 export async function expandReferencedLorebookLines(content, variables, card, externalLorebooks, deps) {
   if (!content || !content.trim()) {
     return content;

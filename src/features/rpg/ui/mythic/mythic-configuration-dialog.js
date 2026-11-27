@@ -1,6 +1,3 @@
-// Recovered application UI. The existing React instance and feature dependencies are injected.
-// Semantic dependency contract: callers inject named dependencies directly.
-
 function downloadJsonFile(payload, fileName) {
   const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
   const objectUrl = URL.createObjectURL(blob);
@@ -264,7 +261,6 @@ export function createMythicConfigurationDialog(getDependencies) {
                 id: 'mythic-config-title',
                 className: 'text-xl font-bold text-sky-400 flex items-center gap-2',
                 children: [
-                  jsxRuntime.jsx('span', { children: '⚙️' }),
                   ' Cấu hình Mythic Engine',
                 ],
               }),
@@ -348,8 +344,8 @@ export function createMythicConfigurationDialog(getDependencies) {
                           executionMode: event.target.value,
                         }),
                         options: [
-                          { value: 'standalone', label: '🛡️ 2-Pass (Tách biệt - An toàn)' },
-                          { value: 'integrated', label: '⚡ 1-Pass (Tích hợp - Tốc độ)' },
+                          { value: 'standalone', label: '2-Pass (Tách biệt - An toàn)' },
+                          { value: 'integrated', label: '1-Pass (Tích hợp - Tốc độ)' },
                         ],
                       }),
                       jsxRuntime.jsx('div', {
@@ -398,9 +394,9 @@ export function createMythicConfigurationDialog(getDependencies) {
                           triggerMode: event.target.value,
                         }),
                         options: [
-                          { value: 'auto', label: '🔴 Tự động (Auto)' },
-                          { value: 'keyword', label: '🟡 Từ khóa (Keyword)' },
-                          { value: 'manual', label: '🔵 Thủ công (Manual)' },
+                          { value: 'auto', label: 'Tự động (Auto)' },
+                          { value: 'keyword', label: 'Từ khóa (Keyword)' },
+                          { value: 'manual', label: 'Thủ công (Manual)' },
                         ],
                       }),
                       jsxRuntime.jsxs('div', {
@@ -557,7 +553,6 @@ export function createMythicConfigurationDialog(getDependencies) {
                       jsxRuntime.jsxs('div', {
                         className: 'bg-slate-800/50 border border-slate-700 p-6 rounded-xl text-center flex flex-col justify-center hover:border-emerald-500/50 ',
                         children: [
-                          jsxRuntime.jsx('div', { className: 'text-4xl mb-4', children: '📤' }),
                           jsxRuntime.jsx('h3', {
                             className: 'text-lg font-bold text-emerald-400 mb-2',
                             children: 'Xuất Dữ liệu (File)',
@@ -586,7 +581,6 @@ export function createMythicConfigurationDialog(getDependencies) {
                       jsxRuntime.jsxs('div', {
                         className: 'bg-slate-800/50 border border-slate-700 p-6 rounded-xl text-center flex flex-col justify-center hover:border-sky-500/50 ',
                         children: [
-                          jsxRuntime.jsx('div', { className: 'text-4xl mb-4', children: '📥' }),
                           jsxRuntime.jsx('h3', {
                             className: 'text-lg font-bold text-sky-400 mb-2',
                             children: 'Nhập Dữ liệu (File)',
@@ -672,7 +666,6 @@ export function createMythicConfigurationDialog(getDependencies) {
                       jsxRuntime.jsxs('div', {
                         className: 'flex items-center gap-2 mb-3',
                         children: [
-                          jsxRuntime.jsx('span', { className: 'text-xl', children: '📋' }),
                           jsxRuntime.jsx('h3', {
                             className: 'text-lg font-bold text-indigo-400',
                             children: 'Nhập nhanh từ văn bản (JSON)',

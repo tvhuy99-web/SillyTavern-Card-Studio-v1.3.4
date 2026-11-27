@@ -19,7 +19,7 @@ assert.doesNotMatch(native,/MODEL_LIST_SCAN_JS/);
 assert.match(catalog,/__STS_MODEL_CATALOG_V2__/);
 assert.match(native,/void (?:configureThinking|configure)\(/);
 assert.match(native,/AI_STUDIO_THINKING_NOT_SUPPORTED/);
-// The provider resolves thinking once for both native dispatch and diagnostics.
+
 assert.match(provider,/const resolvedThinking = resolveThinkingLevel\(thinkingLevel\)/);
 assert.match(provider,/thinkingLevel: resolvedThinking, requestId/);
 assert.match(provider,/sentThinking: resolvedThinking/);
@@ -41,8 +41,7 @@ assert.equal(resolveAiStudioWebModelId('default'), '');
 assert.equal(resolveAiStudioWebModelId('web_default'), '');
 assert.equal(resolveAiStudioWebModelId('gemini-2.5-flash'), 'gemini-2.5-flash');
 assert.equal(resolveAiStudioWebModelId('my-custom-model-id'), 'my-custom-model-id');
-// Model discovery must mirror the reference WebView's cross-origin
-// fetch/XHR observation and never fail silently.
+
 assert.doesNotMatch(catalog,/origin!==location\.origin/);
 assert.match(catalog,/MODEL_LOAD_STARTED/);
 assert.match(catalog,/MODEL_LOAD_FAILED/);

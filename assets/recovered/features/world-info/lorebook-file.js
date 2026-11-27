@@ -1,4 +1,3 @@
-// Recovered from the application host. One owner; dependency getters preserve late binding.
 export function createLorebookFileCodec(dependencies = {}) {
   var isRecordObject = value => "object" == typeof value && !!value && !Array.isArray(value);
   var toStringList = value => Array.isArray(value) ? value.map(item => String(item)).filter(Boolean) : null == value || "" === value ? [] : [String(value)];

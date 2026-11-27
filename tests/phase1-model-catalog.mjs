@@ -1,3 +1,4 @@
+import { portableCompositionPaths } from './helpers/composition-paths.mjs';
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import { createAiStudioModelCatalog } from '../src/providers/aistudio/model-catalog.js';
@@ -17,7 +18,7 @@ let complete; host.Capacitor.nativePromise=()=>new Promise(resolve=>{complete=re
 await assert.rejects(createAiStudioModelCatalog(host,{timeoutMs:5}).load(),/AI_STUDIO_MODEL_TIMEOUT/);
 complete({models:[{id:'gemini-2.5-pro'}]}); await new Promise(resolve=>setTimeout(resolve,10));
 assert.deepEqual(catalog.read(),[],'late native result after timeout must not mutate cache');
-const production=(await Promise.all(['../assets/app-production-v1.3.6.js','../assets/recovered/app/composition/persistence-composition.js','../assets/recovered/app/composition/provider-composition.js','../assets/recovered/app/composition/store-composition.js','../assets/recovered/app/composition/conversation-composition.js','../assets/recovered/app/composition/runtime-composition.js','../assets/recovered/app/composition/ui-composition.js'].map(p=>readFile(new URL(p,import.meta.url),'utf8')))).join('\n');
+const production=(await Promise.all(portableCompositionPaths.map(p=>readFile(new URL(p,import.meta.url),'utf8')))).join('\n');
 assert.ok(!production.includes('window.__STS_MODEL_CONNECTION_TEST__'));
 assert.ok(production.includes('testModel:__stsGenerationGateway.testModel'));
 assert.ok(production.includes('__stsModelTestButton=__stsCreateModelTestButton(jsxRuntime,React)'));
@@ -32,7 +33,7 @@ assert.ok(controls.includes("'data-sts-provider': provider"));
 assert.ok(production.includes('connections:__stsConnections,catalog:__stsCatalog'));
 assert.ok(!production.includes('Wo={...__stsConnectionDefaults}'));
 console.log('Phase 1 model catalog, timeout and production wiring: OK');
-// Multiple screen instances must not launch simultaneous native scans.
+
 let scanCount=0,resolveScan;host.Capacitor.nativePromise=()=>{scanCount++;return new Promise(resolve=>resolveScan=resolve);};
 const sharedA=catalog.load(),sharedB=createAiStudioModelCatalog(host).load();assert.equal(sharedA,sharedB);assert.equal(scanCount,1);
 resolveScan({models:[{id:'gemini-2.5-pro'}]});await sharedA;assert.equal(catalog.read().length,1);

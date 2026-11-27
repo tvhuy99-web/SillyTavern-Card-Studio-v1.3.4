@@ -1,4 +1,3 @@
-/** Normalize SillyTavern JSON/JSONL without depending on an active chat or UI. */
 export function parseImportedChat(text, { now = Date.now, clone = structuredClone, maxMessages = 20000 } = {}) {
   let rows;
   try {

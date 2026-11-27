@@ -11,14 +11,6 @@ import com.getcapacitor.PluginCall;
 import com.getcapacitor.PluginMethod;
 import com.getcapacitor.annotation.CapacitorPlugin;
 
-/**
- * Text-only AI Studio browser session, using the user's visible first-party
- * AI Studio UI. Inspired by GeminiLiveTranslate's session lifecycle,
- * diagnostics, partial text output and persistent WebView host.
- *
- * No API key, cookies, OAuth tokens, prompts, or answer texts are logged.
- * Browser UI automation remains experimental and may fail after UI updates.
- */
 @CapacitorPlugin(name = "AIStudioText")
 public class AiStudioTextPlugin extends Plugin {
     private final Handler handler = new Handler(Looper.getMainLooper());

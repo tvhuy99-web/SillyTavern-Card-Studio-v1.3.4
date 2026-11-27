@@ -26,7 +26,6 @@ const CORE_MODULE_FRAGMENTS = [
   { name: "BRIDGE_HANDSHAKE", token: "/*__STS_MODULE_BRIDGE_HANDSHAKE__*/", url: new URL("../src/runtime/card-runtime/modules/bridge-handshake.jsfrag", import.meta.url) },
 ];
 
-// Catalog APIs must exist before the TavernHelper facade captures them.
 const CATALOG_FRAGMENTS = [
   '../src/runtime/card-runtime/compat/catalog-characters.jsfrag',
   '../src/runtime/card-runtime/compat/personas-presets.jsfrag',
@@ -111,9 +110,6 @@ function makeCoreBuilderModule(classicCoreSource) {
 })();
 `;
 
-  // String.raw is intentional: generated source must retain two backslashes
-  // in '\\\\u003c' so the generated module emits a literal \\u003c sequence
-  // into the inline script instead of reconstructing a raw '<'.
   return String.raw`const CARD_RUNTIME_CORE_SOURCE = ${JSON.stringify(safeCoreSource)};
 const CARD_RUNTIME_BOOTSTRAP_SOURCE = ${JSON.stringify(runtimeBootstrapSource)};
 
@@ -141,8 +137,7 @@ export async function buildCardRuntimeAssets({ coreOutput = CORE_BUILDER_OUTPUT_
     const source = await readFile(fragment.url, 'utf8');
     core = replaceExactlyOnce(core, fragment.token, source, 'module/' + fragment.name);
   }
-  // The iframe is a classic script (including opaque-origin safe mode). Embed
-  // the same self-contained factory exercised by normal ESM unit tests.
+
   core = replaceExactlyOnce(core, '/*__STS_RPC_CLIENT_FACTORY__*/', createRpcClient.toString(), 'rpc client factory');
   async function compose(token, urls) {
     const fragments = await Promise.all(urls.map(url => readFile(url, 'utf8')));

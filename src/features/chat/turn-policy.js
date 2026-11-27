@@ -28,9 +28,6 @@ export function modelContextContent(message) {
   const content = String(message?.content ?? '');
   if (!INTERNAL_PIPELINE_OR_CONTENT_RE.test(content)) return content;
 
-  // Remove internal blocks first. Internal reasoning may literally mention tags such as
-  // "<content>" while describing the output contract; extracting content before this
-  // cleanup would mistake that mention for the start of the real story block.
   const cleaned = stripInternalPipeline(content);
   const blocks = extractContentBlocks(cleaned);
   if (blocks.length) return blocks.join('\n\n').trim();
@@ -93,11 +90,6 @@ export function compactModelMessages(messages, options = {}) {
   return { messages: next, changed };
 }
 
-// Semantic embedding contexts must privilege what the user just said.
-// Previous code placed up to three entire assistant messages BEFORE the
-// current turn: with a 2,048-token local model, tokenizer truncation could
-// silently discard the newest user request on turns two and three.
-// Do not modify promptHistory, which remains available to the LLM selector.
 export function buildSemanticScanInput(recentText, userContent, forcedContent = '') {
   const clipCurrent = value => {
     const text = String(value ?? '').trim();

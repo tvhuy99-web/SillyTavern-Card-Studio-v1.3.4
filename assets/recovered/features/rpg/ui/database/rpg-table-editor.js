@@ -1,6 +1,3 @@
-// Recovered application UI. The existing React instance and feature dependencies are injected.
-// Semantic dependency contract: callers inject named dependencies directly.
-
 export function createRpgTableEditor(getDependencies) {
   return function RpgTableEditor({ table }) {
     const {

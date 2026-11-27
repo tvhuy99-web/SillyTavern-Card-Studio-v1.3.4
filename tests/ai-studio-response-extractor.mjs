@@ -6,10 +6,6 @@ const source = fs.readFileSync(new URL('../android-native/AiStudioPageScripts.ja
 const block = source.match(/INSTALL_JS = """\n([\s\S]*?)\n        """;/);
 assert.ok(block, 'native AI Studio JavaScript bootstrap exists');
 
-// Java text blocks process escape sequences before Android's WebView sees the
-// JavaScript. Test the compiled-equivalent string, not the raw Java source!
-// Previously output.join('\n') became a literal line break inside JS quotes,
-// which made evaluateJavascript return "null" in an infinite bootstrap loop.
 function decodeJavaTextBlockEscapes(source) {
   const substitutions = {
     '\\': '\\',
@@ -24,7 +20,6 @@ function decodeJavaTextBlockEscapes(source) {
 }
 const installedJs = decodeJavaTextBlockEscapes(block[1]);
 assert.doesNotThrow(() => new vm.Script(installedJs), 'Java-compiled WebView script must parse');
-
 
 function evaluate(outputText, responseAvailable) {
   const node = {

@@ -1,5 +1,5 @@
 import { awaitAbortable } from '../../../../m4/core/async/cancellation.js';
-// Summary coordination belongs to the conversation feature, not the application shell.
+
 import { summaryChunkSize } from '../history-policy.js';
 function findTurnRange(messages, firstTurn, endTurn) {
     let start = 0, end = -1, turn = 0;

@@ -1,8 +1,5 @@
-// F01 scoped alpha-equivalence check: compare lexical binding identities rather
-// than spellings, but preserve property names, literal tokens and syntax.
 const ts = require(process.env.TYPESCRIPT_PATH || 'typescript');
 const assert = require('node:assert/strict');
-const fs = require('node:fs');
 const path = require('node:path');
 const { execFileSync } = require('node:child_process');
 function fingerprint(content, bindingKeyAliases = {}) {
@@ -76,6 +73,8 @@ if(require.main===module){
   console.log('F01 alpha-equivalence fixtures: OK');
   const root=path.resolve(__dirname,'..');
   const baseline=process.argv[2];
+  const target=process.argv[3];
+  if(!/^[0-9a-f]{40}$/.test(target||''))throw Error('Pass a full accepted F01 target commit SHA');
   if(!/^[0-9a-f]{40}$/.test(baseline||''))throw Error('Pass a full baseline commit SHA');
   const files=[
     'src/ui/shell/providers.js',
@@ -87,9 +86,8 @@ if(require.main===module){
     'src/diagnostics/ui/diagnostic-panels.js'
   ];
   for(const file of files){
-    if(!fs.existsSync(path.join(root,file))){console.log('F01 alpha-equivalence SKIP (decomposed in F02; verify via tools/audit-f02-modules.cjs --factory-parity): '+file);continue;}
     const before=execFileSync('git',['show',baseline+':'+file],{cwd:root,encoding:'utf8',maxBuffer:4*1024*1024});
-    const after=fs.readFileSync(path.join(root,file),'utf8');
+    const after=execFileSync('git',['show',target+':'+file],{cwd:root,encoding:'utf8',maxBuffer:4*1024*1024});
     const aliases=file==='src/ui/shell/providers.js'?{"b":"react","dl":"toastContext","pl":"ToastNotification","wt":"jsxRuntime","Bd":"stopNativeSpeech","Gd":"speechContext","Ld":"generateGeminiSpeech","Ud":"speakNativeText","hl":"useToast","qo":"speechSettingsKey","ts":"speechDefaults","Xf":"cardPopupContext","Xl":"useDialogFocus","Yg":"htmlSanitizer"}:{};
     const mismatch=compare(before,after,aliases);
     if(mismatch){console.error(file,JSON.stringify(mismatch));process.exitCode=1;}else console.log('F01 alpha-equivalence PASS: '+file);

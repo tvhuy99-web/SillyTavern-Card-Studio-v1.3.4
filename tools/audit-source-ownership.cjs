@@ -1,5 +1,3 @@
-// Scope-aware audit. Candidates require manual review: no evaluation of generated
-// scripts, computed namespace access, host contracts, or externally used APIs.
 const fs = require('node:fs');
 const path = require('node:path');
 const ts = require(process.env.TYPESCRIPT_PATH || 'typescript');
@@ -52,7 +50,7 @@ for(const file of files){const source=program.getSourceFile(file);walk(source,no
  if(spec&&ts.isStringLiteralLike(spec)&&spec.text.startsWith('.')){const target=path.resolve(path.dirname(file),spec.text.split(/[?#]/)[0]);if(graph.has(target))graph.get(file).add(target);}
 });}
 const seen=new Set();function visit(file){if(seen.has(file)||!graph.has(file))return;seen.add(file);for(const target of graph.get(file))visit(target);}
-// Build-time entry points and core-builder assembly are intentionally separate.
+
 for(const file of ['src/app/entry.js','src/app/host.js','src/runtime/card-runtime/core-builder.js'])visit(path.join(root,file));
 const result={typescript:ts.version,sourceFiles:files.length,parseErrors,scopeCandidatesReviewed:candidates.size,zeroReferenceCandidates:rows,unreachableFromLiteralRoots:files.filter(file=>!seen.has(file)).map(rel),limitations:['Zero lexical references is not proof of dead code. Review exports, eval, generated scripts, side effects, tests and external consumers before removal.','Literal root reachability does not model computed imports or generated build-time modules.','Vendor code is inventoried but not automatically edited.']};
 console.log(JSON.stringify(result,null,2));

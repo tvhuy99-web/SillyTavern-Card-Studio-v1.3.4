@@ -1,5 +1,3 @@
-// Recovered from the application host. One owner; dependency getters preserve late binding.
-
 const MAX_RECURSION_DEPTH = 2;
 
 function escapeRegexLiteral(text) {

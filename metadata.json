@@ -1,6 +1,6 @@
 {
   "name": "SillyTavern Card Studio",
-  "description": "SillyTavern Card Studio v1.3.6 source-owned migration build",
+  "description": "SillyTavern Card Studio v2.0.0",
   "requestFramePermissions": [],
   "majorCapabilities": [
     "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"

@@ -54,7 +54,6 @@ export function normalizePromptVariableScopes(chatVariables, globalVariables) {
   });
 }
 
-// Persisted key formats are compatibility contracts shared by host reads and writes.
 const encodeScopePart = value => encodeURIComponent(String(value ?? '').slice(0, 300));
 export const normalizeRuntimeScope = option => ({ ...(option || {}), type: option?.type || 'chat' });
 export function resolveRuntimeMessageIndex(value, length) {

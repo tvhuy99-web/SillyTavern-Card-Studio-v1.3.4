@@ -160,7 +160,6 @@ assert.equal(parseFailureDiagnostic.cardWorldbook.matches[0].parse.json.ok, fals
 assert.equal(parseFailureDiagnostic.cardWorldbook.matches[0].parse.yaml.attempted, true);
 assert.equal(parseFailureDiagnostic.cardWorldbook.matches[0].parse.yaml.ok, false);
 
-
 const diagnosticShapeCard = {
   name: 'Ly Hỏa Tiên Ma Lục',
   first_mes: 'Lời mở đầu ngắn không chứa biến.',

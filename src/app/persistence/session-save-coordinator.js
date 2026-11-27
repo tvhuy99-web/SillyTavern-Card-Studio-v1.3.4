@@ -1,4 +1,3 @@
-// Serialize writes across hook instances so a remount cannot overtake an older save.
 export function createSessionWriteQueue(writeOrOptions) {
   const isOptions = Boolean(writeOrOptions && typeof writeOrOptions === 'object');
   const write = isOptions ? writeOrOptions.write : writeOrOptions;
@@ -84,8 +83,6 @@ function defaultIsStaleOwnershipError(error) {
   return /deleted or replaced|bị xóa hoặc thay thế|stale.*ownership|session ownership/i.test(text);
 }
 
-// Each coordinator is bound to one route/session. Never capture the newly active
-// session from an old timer or from a stale component cleanup.
 export function createSessionSaveCoordinator({
   sessionId, getState, captureSnapshot, queue, isBusy = () => false, getRevision = () => undefined,
   initialRevision,
@@ -115,8 +112,7 @@ export function createSessionSaveCoordinator({
   const unsubscribeLifecycle = typeof subscribeRestoreLifecycle === 'function'
     ? subscribeRestoreLifecycle(event => {
       if (event?.type === 'restore-started' || event?.type === 'rollback-started') {
-        // Immediately discard pre-restore timer and dirty state so deferred pre-restore
-        // edits can NEVER flush onto freshly restored data after restore completes.
+
         cancelTimer();
         dirty = false;
         dirtyEpoch = getRestoreEpoch();
@@ -170,7 +166,7 @@ export function createSessionSaveCoordinator({
         }
         throw error;
       }
-      // Preserve dirty state for explicit retry while this session is active and epoch unchanged.
+
       if (
         !isRestoreInProgress() &&
         attemptedEpoch === getRestoreEpoch() &&

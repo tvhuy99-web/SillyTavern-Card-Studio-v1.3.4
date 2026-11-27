@@ -1,4 +1,3 @@
-// Recovered from the application host. One owner; dependency getters preserve late binding.
 export function createDialogFocusHook(dependencies = {}) {
   let dialogStack = [];
   function useDialogFocus(isOpen, onClose, dialogRef, initialFocusRef) {

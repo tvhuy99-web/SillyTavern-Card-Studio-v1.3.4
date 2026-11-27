@@ -5,7 +5,6 @@ export const UTILITY_RPC_METHODS = Object.freeze([
   'generation.models', 'preset.get', 'preset.load', 'scripts.buttons',
 ]);
 
-/** Remaining host adapters. Import commits are guarded after asynchronous decoding. */
 export function createUtilityRpcHandlers({ readState, characters, presets, personas, describeCharacter,
   readText, safeName, clone, sessions, slash, loadPreset, listProxyModels, currentModel, now = Date.now,
   makeFile = (parts, name, options) => new File(parts, name, options) }) {
@@ -40,7 +39,7 @@ export function createUtilityRpcHandlers({ readState, characters, presets, perso
         const chatHistory = parseImportedChat(text, { now: () => stamp, clone });
         const sessionId = `import-${safeName(args.name, 'chat').replace(/[^\p{L}\p{N}_-]+/gu, '-')}-${stamp}`;
         guard();
-        // Never overwrite an existing session on an ID collision.
+
         await sessions.add({ sessionId, ...identity, chatHistory, longTermSummaries: [], variables: {}, lastUpdated: stamp,
           lastMessageSnippet: chatHistory.at(-1)?.content.slice(0, 100) || '' });
         guard(); return { ok: true, chatId: sessionId, messages: chatHistory.length };

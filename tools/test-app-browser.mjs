@@ -1,4 +1,3 @@
-// Serve the actual built portable app and run a browser-only acceptance harness.
 import { createServer } from 'node:http';
 import { readFile, mkdtemp, rm } from 'node:fs/promises';
 import { spawn, spawnSync } from 'node:child_process';
@@ -10,7 +9,7 @@ const root = fileURLToPath(new URL('../',import.meta.url));
 const dist=resolve(root,process.env.APP_DIST || 'dist'), fixtures=resolve(root,'tests/browser');
 const browser=process.env.CHROME_BIN||['chromium','chromium-browser','google-chrome','google-chrome-stable'].find(cmd=>spawnSync(cmd,['--version'],{stdio:'ignore'}).status===0);
 if(!browser) throw Error('Chromium/Chrome required; set CHROME_BIN.');
-const serve=await createStaticHandler(dist); // Same headers and public routes as the deployed app.
+const serve=await createStaticHandler(dist);
 const profile=await mkdtemp(join(tmpdir(),'stcs-app-browser-'));
 let settle;const result=new Promise(resolve=>settle=resolve);
 const mime={'.html':'text/html; charset=utf-8','.js':'text/javascript; charset=utf-8','.css':'text/css; charset=utf-8','.json':'application/json; charset=utf-8','.svg':'image/svg+xml','.woff2':'font/woff2'};

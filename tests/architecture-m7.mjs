@@ -63,7 +63,6 @@ for (const removed of [
   'SHA256SUMS.txt',
 ]) assert.equal(exists(removed), false, 'legacy cleanup target survived: ' + removed);
 
-// Asset Manifest is the canonical inventory, including nested generated modules.
 await verifyAssetInventory();
 
 assert.equal(version.architectureStage, 'M7-complete');

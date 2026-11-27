@@ -1,4 +1,3 @@
-// Run only after the isolated npm build. Exercise emitted package code, not mocks.
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import { sourceModulePath } from '../build/source-layout.mjs';

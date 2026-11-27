@@ -28,11 +28,6 @@ import org.json.JSONTokener;
 import java.util.LinkedHashMap;
 import java.util.Collections;
 
-/**
- * Discover Google AI Studio models using the signed-in first-party WebView.
- * Adapted from GeminiLiveTranslate's document-start + DOM + network-response
- * catalog discovery. Never reads/exposes credentials or model response text.
- */
 final class AiStudioModelCatalogReader {
     private static final String ORIGIN = AiStudioWebViewPolicy.ORIGIN;
     private static final String PAGE = ORIGIN + "/u/0/prompts/new_chat";
@@ -317,8 +312,6 @@ final class AiStudioModelCatalogReader {
         });
     }
 
-    // Match the reference app's video/text-generation model filtering. The
-    // AI Studio network may also advertise embedding, speech and image models.
     private static boolean isTextGenerationModel(String id){
         String value=id.toLowerCase(java.util.Locale.ROOT);
         return !(value.contains("transcribe") || value.contains("embedding") ||

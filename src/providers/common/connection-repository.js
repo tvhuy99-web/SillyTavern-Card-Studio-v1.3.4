@@ -1,7 +1,5 @@
 import { CONNECTION_DEFAULTS } from './provider-registry.js';
 
-// Preserve the installed application's storage schema. All ordinary reads and
-// writes for connection settings/Gemini/OpenRouter credentials pass here.
 export const CONNECTION_KEYS = Object.freeze({
   settings: 'sillyTavernStudio_globalConnection',
   gemini: 'sillyTavernStudio_apiSettings',
@@ -15,8 +13,7 @@ function normalizeGemini(value) {
   return { useDefault: typeof value?.useDefault !== 'boolean' || value.useDefault,
     keys: Array.isArray(value?.keys) ? value.keys.filter(key => typeof key === 'string').slice(0, 100) : [] };
 }
-// An explicit form draft or selected profile is a complete connection target;
-// never fill a missing secret from a different target.
+
 export function resolveProxyProbe({ profileId, profile, draft, saved }) {
   if (!draft && profileId && !profile) throw new Error('Cấu hình Proxy không còn tồn tại.');
   const target = draft ?? profile ?? saved;
@@ -25,7 +22,7 @@ export function resolveProxyProbe({ profileId, profile, draft, saved }) {
     legacyMode: Boolean(target.legacyMode), protocol: target.protocol || 'openai' };
 }
 export function createConnectionRepository(host = globalThis, { assertWriteAllowed = () => {} } = {}) {
-  // Resolve storage lazily so browsers with blocked storage can still read defaults.
+
   const local = () => host.localStorage;
   const session = () => host.sessionStorage;
   const safe = getter => { try { return getter(); } catch { return undefined; } };

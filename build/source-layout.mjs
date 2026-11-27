@@ -1,5 +1,3 @@
-// Source-native deployment: publish browser modules at their original relative
-// positions, without the historical portable asset path relocation.
 import { cp, mkdir, readFile, writeFile, readdir, stat } from 'node:fs/promises';
 import { createHash } from 'node:crypto';
 import { posix, relative, join } from 'node:path';
@@ -41,7 +39,7 @@ export async function assembleSourceDeployment(stage,{replaceModules}={}) {
   await buildCardRuntimeAssets({coreOutput:new URL(sourceModulePath('src/runtime/card-runtime/core-builder.js'),stage),rendererOutput:null});
   if(replaceModules) await replaceModules(stage);
   for(const asset of sourceStaticAssets) assert.ok((await stat(new URL(asset,stage))).isFile(),asset);
-  // Cache policy covers the new module namespace; keep the original CSP intact.
+
   const headers=new URL('_headers',stage);
   await writeFile(headers,(await readFile(headers,'utf8')).trimEnd()+'\n\n/modules/*\n  Cache-Control: public, max-age=0, must-revalidate\n');
   const files=(await readdir(stage,{recursive:true,withFileTypes:true})).filter(e=>e.isFile());

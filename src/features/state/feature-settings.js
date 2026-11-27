@@ -1,4 +1,3 @@
-// Recovered from the application host. One owner; dependency getters preserve late binding.
 export function createFeatureSettings(dependencies = {}) {
   const storage = dependencies.storage ?? globalThis.localStorage;
   var getSmartScanSettings = () => {

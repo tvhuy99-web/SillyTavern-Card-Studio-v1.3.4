@@ -138,7 +138,6 @@ export function createStorySetupDialog(getDependencies) {
             id: 'story-import-title',
             className: 'text-xl font-bold text-sky-400 mb-4 flex items-center gap-2',
             children: [
-              jsxRuntime.jsx('span', { children: '📖' }),
               ' Nhập Tiền Truyện (Story Mode)',
             ],
           }),
@@ -170,7 +169,6 @@ export function createStorySetupDialog(getDependencies) {
                         })
                       : jsxRuntime.jsxs(jsxRuntime.Fragment, {
                           children: [
-                            jsxRuntime.jsx('span', { className: 'text-3xl mb-2', children: '📄' }),
                             jsxRuntime.jsx('span', {
                               className: 'text-sm text-slate-400',
                               children: 'Nhấn để chọn file truyện (.txt, .epub)',

@@ -137,8 +137,6 @@ export function normalizePresetConfig(value) {
     ...(Object.prototype.hasOwnProperty.call(value, 'prompts') ? { prompts } : {}),
   };
 
-  // Card Studio owns runtime prompt ordering and enablement in preset.prompts.
-  // SillyTavern prompt_order is converted once at the import/read boundary.
   if (Array.isArray(value.prompt_order)) delete normalized.prompt_order;
 
   return normalized;

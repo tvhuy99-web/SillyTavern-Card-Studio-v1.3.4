@@ -1,4 +1,3 @@
-// Recovered from the application host. One owner; dependency getters preserve late binding.
 export function createDisplayFormatting(dependencies = {}) {
   function truncateText(text, maxLength) {
     return !text || text.length <= maxLength ? text : text.substring(0, maxLength) + "...";

@@ -14,11 +14,6 @@ import java.util.function.Consumer;
 import java.util.function.LongSupplier;
 import java.util.function.Predicate;
 
-/**
- * Polls the AI Studio WebView for response text and thinking summary updates,
- * emits replaceable streaming snapshots, and checks terminal completion via
- * {@link AiStudioCompletionPolicy}.
- */
 final class AiStudioResponsePoller {
     static final long POLL_MS = 600L;
 
@@ -156,8 +151,7 @@ final class AiStudioResponsePoller {
                     responseNodes = Math.max(responseNodes, obj.optInt("responseNodes", 0));
                     boolean busy = obj.optBoolean("busy", false);
                     everSawBusy |= busy;
-                    // A brief pause between tokens is not a completed answer.
-                    // The old 5s stable-text fallback completed while busy=true.
+
                     if (busy) {
                         observedIdleSince = 0L;
                         consecutiveIdlePolls = 0;
@@ -183,12 +177,7 @@ final class AiStudioResponsePoller {
                         long stable = SystemClock.elapsedRealtime() - lastChanged;
                         long confirmedIdle = observedIdleSince == 0L ? 0L :
                             SystemClock.elapsedRealtime() - observedIdleSince;
-                        // Never finalize while the UI reports generating. For
-                        // sites with a Stop control, require the Stop state to
-                        // vanish continuously for 7+ seconds and the output to
-                        // stop changing. This defeats one-frame idle flickers.
-                        // If no busy indicator was ever detected, require a
-                        // conservative 15s idle+stable fallback.
+
                         boolean terminal = AiStudioCompletionPolicy.isTerminal(busy, everSawBusy,
                             confirmedIdle, stable, consecutiveIdlePolls);
                         if (terminal) {
@@ -220,9 +209,7 @@ final class AiStudioResponsePoller {
     }
 
     private void emitSnapshot(String text) {
-        // AI Studio updates already-rendered Markdown as it streams. Treat
-        // each observation as a replaceable snapshot instead of assuming that
-        // each new observation extends the previous one byte-for-byte.
+
         if (text.equals(lastStreamSnapshot) && latestThinkingSummary.equals(lastStreamedThinkingSummary)) return;
         boolean revision = !text.startsWith(lastStreamSnapshot);
         if (revision && !lastStreamSnapshot.isEmpty()) {

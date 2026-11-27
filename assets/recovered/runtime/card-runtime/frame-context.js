@@ -1,4 +1,3 @@
-// Recovered from the application host. One owner; dependency getters preserve late binding.
 export function createFrameContext(dependencies = {}) {
   var baseFrameImportMap = Object.freeze({
     vue: "https://esm.sh/vue@3.5.40",

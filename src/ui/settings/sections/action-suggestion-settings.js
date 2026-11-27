@@ -1,4 +1,3 @@
-
 export function createActionSuggestionSettings(getDependencies) {
   return function ActionSuggestionSettings() {
     const {
@@ -49,36 +48,11 @@ export function createActionSuggestionSettings(getDependencies) {
             label: "Bật Gợi ý Hành động",
             checked: isEnabled,
             onChange: setIsEnabled
-          }), isEnabled && usesGemini && (0, jsxRuntime.jsxs)("div", {
+          }), isEnabled && (0, jsxRuntime.jsx)("div", {
             className: "bg-slate-900/50 p-4 rounded-lg border border-slate-700",
-            children: [(0, jsxRuntime.jsx)("label", {
-              className: "block text-sm font-bold text-indigo-300 mb-2",
-              children: "Mô hình Google Gemini (Chuyên dụng)"
-            }), (0, jsxRuntime.jsx)(SearchableSelect, {
-              ariaLabel: "Mô hình Google Gemini",
-              value: geminiModel,
-              onChange: event => setGeminiModel(event.target.value),
-              options: geminiModels.map(model => ({
-                value: model.id,
-                label: model.name
-              })),
-              disabled: isLoadingModels,
-              testButton: ModelTestButton && buildSavedProbeTarget && testModel ? (0, jsxRuntime.jsx)(ModelTestButton, {
-                target: buildSavedProbeTarget({
-                  provider: "gemini",
-                  model: geminiModel,
-                  connections: connections,
-                  proxyPersistence: proxyPersistence
-                }),
-                testModel,
-                notify: showToast
-              }) : undefined
-            })]
-          }), isEnabled && !usesGemini && (0, jsxRuntime.jsx)("div", {
-            className: "bg-slate-900/50 p-4 rounded-lg border border-slate-700",
-            children: (0, jsxRuntime.jsxs)("p", {
+            children: (0, jsxRuntime.jsx)("p", {
               className: "text-sm text-slate-300",
-              children: ["Đang sử dụng ", "proxy" === connectionSettings.source ? "Proxy Tool Model" : "OpenRouter Model", " (Được cấu hình trong Thiết lập API)"]
+              children: "Đang sử dụng mô hình chung từ Thiết lập API → API phụ."
             })
           }), isEnabled && (0, jsxRuntime.jsxs)("div", {
             className: "bg-slate-900/50 p-4 rounded-lg border border-slate-700",

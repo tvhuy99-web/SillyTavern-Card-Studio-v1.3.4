@@ -1,4 +1,3 @@
-// Serve only the portable deployment; source, tests, .git, and native code are not public.
 import { createServer } from 'node:http';
 import { readFile, realpath, stat } from 'node:fs/promises';
 import { extname, resolve, sep } from 'node:path';
@@ -12,7 +11,7 @@ export function resolvePublicRoute(rawUrl, accept='', {sourceModules=false}={}) 
   if(pathname==='/' || pathname==='/index.html') return {status:200,file:'index.html'};
   if(pathname==='/version.json'||pathname==='/api-unavailable.json') return {status:200,file:pathname.slice(1)};
   if(pathname.startsWith('/assets/')||pathname.startsWith('/scripts/')||(sourceModules&&pathname.startsWith('/modules/')&&pathname.endsWith('.js'))) return {status:200,file:pathname.slice(1)};
-  // A navigation may fall back to the application, but a missing script must not return HTML.
+
   if(accept.includes('text/html')&&!extname(pathname)) return {status:200,file:'index.html'};
   return {status:404};
 }
@@ -21,7 +20,7 @@ export async function createStaticHandler(directory) {
   await stat(resolve(root,'index.html'));
   const sourceModules=await stat(resolve(root,'modules/app/entry.js')).then(s=>s.isFile(),()=>false);
   const universalHeaders={};
-  // Read the same universal policy used by the portable deployment host.
+
   const policy=await readFile(resolve(root,'_headers'),'utf8');
   const lines=policy.split(/\r?\n/); let universal=false;
   for(const line of lines){if(!line.trim()||line.trim().startsWith('#'))continue;if(!/^\s/.test(line)){universal=line.trim()==='/*';continue;}if(universal){const i=line.indexOf(':');if(i>0)universalHeaders[line.slice(0,i).trim()]=line.slice(i+1).trim();}}

@@ -1,4 +1,3 @@
-// Recovered from the application host. One owner; dependency getters preserve late binding.
 export function createFeatureDefaults(dependencies = {}) {
 var smartScanDefaults={enabled:!0,mode:"hybrid_fast",model:"gemini-3-flash-preview",depth:6,max_entries:20,aiStickyDuration:3,system_prompt:"",scan_strategy:"efficient",embedding_provider:"gemini",semantic_threshold:.7,max_semantic_entries:20,embedding_batch_size:30};
 var smartContextDefaults={context_depth:12,summarization_chunk_size:6,context_mode:"ai_only",summarization_prompt:""};

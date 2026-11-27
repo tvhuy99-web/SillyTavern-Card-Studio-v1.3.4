@@ -6,10 +6,6 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.Properties;
 
-/** Private receipt for an uncertain SAF write. Recovery never deletes a user
- * document: the process could have died after close but before acknowledgement.
- * Single worker owns all journal operations. The last interrupted export is
- * retained until explicitly acknowledged. */
 final class NativeExportJournal {
     static final class Receipt {
         private final String id, fileName;

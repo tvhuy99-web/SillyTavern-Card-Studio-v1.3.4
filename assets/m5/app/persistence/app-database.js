@@ -1,4 +1,3 @@
-// Browser persistence boundary. Keep the existing database identity and key paths.
 export const APP_DATABASE = Object.freeze({
   name: 'SillyTavernCardStudioDB',
   version: 6,
@@ -16,7 +15,7 @@ export function createAppDatabase({ indexedDB = globalThis.indexedDB, name = APP
         for (const [store, keyPath] of Object.entries(APP_DATABASE.stores)) {
           if (!db.objectStoreNames.contains(store)) db.createObjectStore(store, { keyPath });
         }
-        // Do not delete historical stores during an upgrade without a verified migration.
+
       };
       request.onerror = () => reject(new Error('Lỗi khi mở IndexedDB.', { cause: request.error }));
       request.onsuccess = () => {
@@ -32,8 +31,6 @@ export function createAppDatabase({ indexedDB = globalThis.indexedDB, name = APP
     return pending;
   }
 
-  // enqueue must be synchronous; further operations may be scheduled by IDB callbacks.
-  // A successful request is not a successful transaction: resolve only on commit.
   async function transaction(stores, mode, enqueue, message = 'Không thể truy cập cơ sở dữ liệu.') {
     const db = await open();
     return new Promise((resolve, reject) => {

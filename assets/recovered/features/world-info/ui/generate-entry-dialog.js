@@ -1,6 +1,3 @@
-// Semantic dependency contract: callers inject named dependencies directly.
-// Factories receive the existing React/runtime bindings lazily to preserve initialization order.
-
 export function createGenerateEntryDialog(getDependencies) {
   return function GenerateEntryDialog({
     isOpen,

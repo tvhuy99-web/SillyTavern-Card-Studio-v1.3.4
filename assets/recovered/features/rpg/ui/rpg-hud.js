@@ -1,6 +1,3 @@
-// Recovered application UI. The existing React instance and feature dependencies are injected.
-// Semantic dependency contract: callers inject named dependencies directly.
-
 export function createRpgHud(getDependencies) {
   return function RpgHud({ data, isOpen, onClose }) {
     const {
@@ -75,7 +72,6 @@ export function createRpgHud(getDependencies) {
                   id: 'mythic-dashboard-title',
                   className: 'text-xl font-bold text-sky-400 flex items-center gap-2',
                   children: [
-                    jsxRuntime.jsx('span', { children: '⚔️' }),
                     ' Mythic Dashboard',
                   ],
                 }),
@@ -200,7 +196,6 @@ export function createRpgHud(getDependencies) {
                   : jsxRuntime.jsxs('div', {
                       className: 'flex items-center justify-center h-full text-slate-500 italic flex-col gap-2',
                       children: [
-                        jsxRuntime.jsx('span', { className: 'text-4xl', children: '🗂️' }),
                         jsxRuntime.jsx('span', { children: 'Chọn bảng dữ liệu để chỉnh sửa' }),
                       ],
                     }),

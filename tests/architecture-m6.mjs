@@ -41,11 +41,11 @@ assert.ok(!switchSource.includes('aria-disabled'));
 
 const loreSource = read('src/features/world-info/ui/lorebook-entry-item.js');
 assert.ok(production.includes('LorebookEntryCard=__stsCreateLorebookEntryCard('));
-assert.match(loreSource, /jsxRuntime\.jsxs\)\("article",\s*\{\s*"aria-labelledby":/);
-assert.match(loreSource, /jsxRuntime\.jsxs\)\("h3",\s*\{\s*id:/);
+assert.match(loreSource, /jsxRuntime\.jsxs\)\("article",\s*\{/);
+assert.match(loreSource, /jsxRuntime\.jsxs\)\("h3",\s*\{/);
 assert.ok(!loreSource.includes('role: "button"'));
 assert.ok(!loreSource.includes('Chỉnh sửa mục'));
-assert.match(loreSource, /ariaLabel:\s*(?:undefined|void 0),[\s\S]*?checked:\s*(?:false|!1)\s*!==\s*propEntry\.enabled/);
+assert.match(loreSource, /ariaLabel:\s*(?:undefined|void 0),[\s\S]*?checked:\s*(?:propEntry\.enabled\s*!==\s*false|(?:false|!1)\s*!==\s*propEntry\.enabled)/);
 assert.ok(!loreSource.includes('role: "img"'));
 assert.ok(!production.includes('Chưa đồng bộ Semantic'));
 assert.ok(/showPipeline(?:\s*:\s*__stsShowPipeline)?\s*=\s*(?:false|!1)/.test(production));

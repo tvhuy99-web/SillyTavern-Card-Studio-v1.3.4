@@ -1,4 +1,3 @@
-
 export function createSpeechSettings(getDependencies) {
   return function SpeechSettings() {
     const {

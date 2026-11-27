@@ -1,6 +1,5 @@
 import { awaitAbortable, abortError } from '../../../m4/core/async/cancellation.js';
-/** Native capability discovery. Never silently choose a native plugin on web/iOS.
- * Legacy Capacitor bridges without getPlatform can still supply nativePromise. */
+
 export const ANDROID_PLUGINS = Object.freeze({
   aiStudio: 'AIStudioText', exportFile: 'AndroidExportFile',
   onnx: 'WorldInfoEmbeddingNative', liteRt: 'EmbeddingGemma2LiteRT',
@@ -23,8 +22,6 @@ export function requireNativePromiseBridge(host = globalThis) {
   return cap;
 }
 
-/** Bounds waiting on the JS side; does not imply that native work has stopped.
- * Attach a handler to late results through Promise.race, then clear the timer. */
 export async function awaitNativeDeadline(work, {signal, timeoutMs = 30000, message = 'Native bridge timeout'} = {}) {
   let timer;
   try {
@@ -42,7 +39,6 @@ export async function awaitNativeDeadline(work, {signal, timeoutMs = 30000, mess
   } finally { clearTimeout(timer); }
 }
 
-/** Standardized native method invocation with consistent abort, deadline, and error codes. */
 export async function invokeNativeMethod(
   pluginName,
   methodName,
@@ -86,8 +82,7 @@ export function releaseNativeListener(handle, {timeoutMs = 2000} = {}) {
 export async function acquireNativeListener(plugin, event, callback, {signal, timeoutMs = 10000, cleanupTimeoutMs = 2000} = {}) {
   if (signal?.aborted) throw abortError();
   let abandoned = false;
-  // Disable the callback immediately if the registration is abandoned, even
-  // when the native side has already registered it but not returned a handle.
+
   const acquisition = Promise.resolve().then(() => {
     if (signal?.aborted) throw abortError();
     return plugin.addListener(event, (...args) => {

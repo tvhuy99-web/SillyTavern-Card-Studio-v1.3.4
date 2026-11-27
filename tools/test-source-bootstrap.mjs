@@ -3,8 +3,7 @@ import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import { pathToFileURL } from 'node:url';
 import { resolve } from 'node:path';
-// Deliberate root sentinel: actual ESM initialization and factory registration,
-// not a substitute for mounting React in a browser.
+
 const root=pathToFileURL(resolve(process.env.APP_DIST||'dist-source')+'/');
 const report=JSON.parse(await readFile(new URL('source-build.json',root),'utf8'));
 assert.equal(report.layout,'source-esm');
@@ -19,7 +18,7 @@ const timeout=globalThis.setTimeout, interval=globalThis.setInterval;
 globalThis.setTimeout=(...args)=>timeout(...args).unref();
 globalThis.setInterval=(...args)=>interval(...args).unref();
 await assert.rejects(import(new URL('modules/app/entry.js',root)),error=>error===mountReached);
-assert.equal(window.__STS_BUILD_PIPELINE__.status,'production-error'); // expected sentinel, not a real bootstrap failure
+assert.equal(window.__STS_BUILD_PIPELINE__.status,'production-error');
 assert.equal(window.__STS_RUNTIME_UX_GUARD__.version,'m5.1');
 window.__STS_RUNTIME_UX_GUARD__.uninstall();
 assert.equal(window.__STS_MODEL_CONNECTION_TEST__,undefined);

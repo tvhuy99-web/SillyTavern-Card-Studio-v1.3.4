@@ -154,8 +154,6 @@ export function createRollbackService({
     }
   }
 
-  // Recovery path B: Full cross-storage rollback (IndexedDB + Web Storage when settings were touched).
-  // Requires an active pending journal (never executes against a stale snapshot when no journal is pending).
   async function rollbackIndexedDb(journalIdArg) {
     const requestedJournalId = resolveJournalIdArg(journalIdArg);
     const op = beginOperation('recover', requestedJournalId || null);
@@ -215,7 +213,6 @@ export function createRollbackService({
         let settingsRolledBack = Boolean(journal.settingsRolledBack);
         let commitMarkerCleared = false;
 
-        // Step 1: Roll back IndexedDB transactionally (if not already rolled back before an interruption).
         if (!idbRolledBack) {
           writeJournal({
             ...journal,
@@ -257,7 +254,7 @@ export function createRollbackService({
           }
 
           idbRolledBack = true;
-          // Persist progress before attempting Web Storage rollback so repeated interruption can resume cleanly.
+
           writeJournal({
             ...journal,
             status: settingsWereTouched ? RESTORE_STAGES.PARTIAL_ROLLBACK : RESTORE_STAGES.RECOVERING,
@@ -267,7 +264,6 @@ export function createRollbackService({
           }, { allowCompactFallback: true });
         }
 
-        // Step 2: Roll back Web Storage settings if settings were touched.
         if (settingsWereTouched && !settingsRolledBack) {
           if (!snapshot.previousSettings) {
             writeJournal({
@@ -328,7 +324,6 @@ export function createRollbackService({
           settingsRolledBack = true;
         }
 
-        // Step 3: Finalize complete rollback — wipe journal, durable snapshot (containing sensitive settings), and marker.
         clearJournal();
         await removeSnapshotQuietly(targetId);
         if (!commitMarkerCleared) await clearCommitMarkerQuietly();
@@ -367,8 +362,6 @@ export function createRollbackService({
     }
   }
 
-  // Protected dismiss: validates journalId ownership, rejects concurrent operations,
-  // and blocks dismissing when actionable recovery (rollback or retry) is still required unless force: true.
   async function dismissPendingRecovery(journalIdArg, { force = false } = {}) {
     const requestedJournalId = resolveJournalIdArg(journalIdArg);
     const op = beginOperation('dismiss', requestedJournalId || null);
@@ -473,11 +466,6 @@ export function createRollbackService({
     }
     throw new TypeError(`Unsupported recovery strategy: ${String(strategy)}`);
   }
-
-  // Full crash-safe state machine:
-  //   in-process mutex + no pending recovery + exclusive cross-tab lock
-  //   -> validate -> stage -> snapshot-persisted -> journaled
-  //   -> applying-idb -> idb-committed -> applying-settings -> settings-applied -> completed.
 
   return { retrySettings, rollbackIndexedDb, dismissPendingRecovery, recover };
 }

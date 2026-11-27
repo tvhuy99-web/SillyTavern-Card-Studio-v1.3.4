@@ -158,7 +158,6 @@ function createInMemoryIdbDatabase() {
   return database;
 }
 
-// 1. app-database.js: explicit request.onerror triggers transaction abort and rejection.
 {
   let readRequest;
   let tx;
@@ -199,9 +198,8 @@ function createInMemoryIdbDatabase() {
   await assert.rejects(pending, err => err.message === 'read failed' && err.cause?.message === 'SimulatedIDBReadError');
 }
 
-// 2. entity-repositories.js: Node 18 crypto fallback + request.onerror + cleanupSessionDiagnostics + mergeRecords normalization.
 {
-  // Test fallback when globalThis.crypto is temporarily absent (bare Node 18).
+
   const originalCryptoDesc = Object.getOwnPropertyDescriptor(globalThis, 'crypto');
   try {
     Object.defineProperty(globalThis, 'crypto', { value: undefined, configurable: true, writable: true });
@@ -226,7 +224,6 @@ function createInMemoryIdbDatabase() {
     normalizePresetList: value => value,
   });
 
-  // Seed legacy sessions directly (bypassing mergeRecords normalization) to test cleanupSessionDiagnostics.
   await repos.characters.put({ fileName: 'hero.png', card: { name: 'Hero' } });
   await repos.presets.put({ name: 'Default', prompts: [] });
   db.stores.chatSessions.set('s-dirty', {
@@ -252,7 +249,6 @@ function createInMemoryIdbDatabase() {
     logs: { turns: [{ id: 9 }] },
   });
 
-  // Open s-dirty for editing so it has active editor ownership, then delete s-deleted before cleanup.
   const activeEdit = await repos.openSessionForEditing('s-dirty');
   await repos.sessions.remove('s-deleted');
 
@@ -269,18 +265,15 @@ function createInMemoryIdbDatabase() {
   assert.deepEqual(cleanedDirty.futureField, { keep: 123 });
   assert.equal(await repos.sessions.get('s-deleted'), undefined, 'cleanup must never resurrect a deleted session');
 
-  // Active editor can still save after cleanup (edit ownership preserved).
   await repos.saveExistingSession({ ...activeEdit, chatHistory: [{ id: 'm1', role: 'user', content: 'updated' }] });
   assert.equal((await repos.sessions.get('s-dirty')).chatHistory[0].content, 'updated');
 
-  // Explicit request.onerror propagation on cursor failure.
   db.setNextRequestError(new Error('IDBCursorBoom'));
   await assert.rejects(
     repos.cleanupSessionDiagnostics(),
     err => err.cause?.message === 'IDBCursorBoom',
   );
 
-  // Legacy data migration through mergeRecords (default normalizeLoadedSession) preserves data with zero loss.
   await repos.mergeRecords({
     characters: [{ fileName: 'hero.png', card: { name: 'Hero' } }],
     presets: [{ name: 'Default', prompts: [] }],
@@ -313,7 +306,6 @@ function createInMemoryIdbDatabase() {
   assert.deepEqual(migrated.futureField, { version: 99 });
 }
 
-// 3. backup-codec.js: clean named helpers + backward-compatible Kd/Wd/Jd/Yd/Xd aliases.
 {
   const codec = createBackupCodec();
   assert.equal(codec.MAX_AVATAR_BASE64_LENGTH, MAX_AVATAR_BASE64_LENGTH);
@@ -327,9 +319,8 @@ function createInMemoryIdbDatabase() {
   assert.deepEqual(new Uint8Array(decoded), new Uint8Array(sample));
 }
 
-// 4. cross-tab-sync.js: BroadcastChannel + storage event fallback + close() cleanup.
 {
-  // 4a. BroadcastChannel transport
+
   const channelsByName = new Map();
   class FakeBroadcastChannel {
     constructor(name) {
@@ -377,7 +368,6 @@ function createInMemoryIdbDatabase() {
   assert.equal(receivedByB.length, CROSS_TAB_EVENT_TYPES.length, 'closed tab must stop receiving');
   tabA.close();
 
-  // 4b. storage event fallback transport
   const windowListeners = new Set();
   const fakeWindow = {
     addEventListener(type, fn) { if (type === 'storage') windowListeners.add(fn); },
@@ -416,7 +406,6 @@ function createInMemoryIdbDatabase() {
   assert.equal(windowListeners.size, 0);
 }
 
-// 5. backup-restore-service.js: 5-step pipeline + QuotaExceededError fault injection + retry & IDB rollback recovery.
 {
   const keys = {
     ...CONNECTION_KEYS,
@@ -482,7 +471,6 @@ function createInMemoryIdbDatabase() {
     },
   };
 
-  // 5a. Happy path
   {
     const h = setupRestoreHarness();
     const result = await h.service.restore(incomingBackup);
@@ -501,7 +489,6 @@ function createInMemoryIdbDatabase() {
     ]);
   }
 
-  // 5b. Fault injection: IDB commits, Web Storage throws QuotaExceededError -> journal persists -> retry-settings succeeds.
   {
     const h = setupRestoreHarness();
     h.connections.saveGemini({ useDefault: false, keys: ['before-key'] });
@@ -530,7 +517,6 @@ function createInMemoryIdbDatabase() {
     assert.equal(caught.atomicAcrossStorages, false);
     assert.equal(caught.recoverable, true);
 
-    // IDB committed, Web Storage rolled back to pre-restore state, durable journal preserved.
     assert.ok(await h.repos.characters.get('new-char.png'));
     assert.equal(h.connections.getGemini().keys[0], 'before-key');
     const pending = h.service.getPendingRecovery();
@@ -541,7 +527,6 @@ function createInMemoryIdbDatabase() {
     assert.equal(pending.atomicAcrossStorages, false);
     assert.ok(h.local.getItem(RESTORE_JOURNAL_KEY));
 
-    // Free quota and recover via retry-settings.
     throwQuotaOnArena = false;
     const recovered = await h.service.recover({ strategy: 'retry-settings', journalId: caught.journalId });
     assert.equal(recovered.ok, true);
@@ -552,7 +537,6 @@ function createInMemoryIdbDatabase() {
     assert.equal(JSON.parse(h.local.getItem(SETTINGS_STORAGE_KEYS.arenaSettings)).enabled, true);
   }
 
-  // 5c. Fault injection: IDB commits, Web Storage throws QuotaExceededError -> rollback-idb restores pre-restore IDB snapshot.
   {
     const h = setupRestoreHarness();
     await h.repos.characters.put({ fileName: 'orig-char.png', card: { name: 'Original' } });
@@ -592,9 +576,8 @@ function createInMemoryIdbDatabase() {
   }
 }
 
-// 6. session-save-coordinator.js: initialRevision lock, bound===false stale guard, stale tab ownership loop stop.
 {
-  // 6a. initialRevision locks revision on creation before markDirty() is ever called.
+
   let revision = 1;
   let state = { sessionId: 'S1', text: 'v1' };
   const writes = [];
@@ -612,7 +595,6 @@ function createInMemoryIdbDatabase() {
   assert.equal(await coordinator.flush({ force: true }), false, 'locked initialRevision must reject forced flush after revision drift');
   assert.equal(writes.length, 0);
 
-  // 6b. Stale tab ownership error stops further retries/loops.
   let ownershipLostCount = 0;
   let errorCount = 0;
   let enqueueAttempts = 0;
@@ -642,13 +624,12 @@ function createInMemoryIdbDatabase() {
   assert.equal(enqueueAttempts, 1);
   assert.equal(ownershipLostCount, 1);
   assert.equal(errorCount, 1);
-  // Subsequent markDirty / flush must be no-ops (no infinite retry loop).
+
   assert.equal(ownershipCoord.markDirty(), false);
   assert.equal(await ownershipCoord.flush({ force: true }), false);
   assert.equal(enqueueAttempts, 1);
 }
 
-// 7. settings-repository.js: unified write owner, corrupt JSON fallback, batch rollback, cross-tab sync.
 {
   const local = createMemoryStorage();
   const syncEvents = [];
@@ -669,16 +650,13 @@ function createInMemoryIdbDatabase() {
   settingsRepo.updateJson(SETTINGS_STORAGE_KEYS.arenaSettings, prev => ({ ...prev, round: 2 }));
   assert.deepEqual(settingsRepo.getJson(SETTINGS_STORAGE_KEYS.arenaSettings), { mode: 'dual', round: 2 });
 
-  // Corrupt legacy JSON returns fallback instead of throwing.
   local.setItem(SETTINGS_STORAGE_KEYS.globalContext, '{corrupt-json');
   assert.deepEqual(settingsRepo.getJson(SETTINGS_STORAGE_KEYS.globalContext, { safe: true }), { safe: true });
 
-  // Prefix listing.
   settingsRepo.setRaw(`${SETTINGS_STORAGE_KEYS.cardRuntimePrefix}a`, '1');
   settingsRepo.setRaw(`${SETTINGS_STORAGE_KEYS.cardRuntimePrefix}b`, '2');
   assert.equal(settingsRepo.listByPrefix().length, 2);
 
-  // Batch setMany rolls back on QuotaExceededError.
   const origSetItem = local.setItem;
   local.setItem = (key, value) => {
     if (key === SETTINGS_STORAGE_KEYS.ttsGlobal) {
@@ -697,7 +675,6 @@ function createInMemoryIdbDatabase() {
   );
   assert.equal(settingsRepo.getRaw(SETTINGS_STORAGE_KEYS.engineMode), null);
 
-  // Remote cross-tab notification triggers local subscriber.
   remoteHandler({ senderId: 'other-tab', payload: { keys: [SETTINGS_STORAGE_KEYS.engineMode] } });
   assert.ok(notifications.some(n => n.source === 'remote' && n.keys[0] === SETTINGS_STORAGE_KEYS.engineMode));
   assert.ok(syncEvents.some(e => e.type === CROSS_TAB_EVENTS.SETTINGS_UPDATED));

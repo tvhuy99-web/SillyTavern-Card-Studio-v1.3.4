@@ -198,7 +198,7 @@ const baseInput = {
 }
 
 {
-  // The journal must retain the actual request and actual raw response.
+
   let requestedPrompt = '';
   const result = await scanWorldInfo(baseInput, {
     getSettings: () => ({ enabled: true, mode: 'llm_only', model: 'my-custom-model' }),
@@ -216,7 +216,7 @@ const baseInput = {
 }
 
 {
-  // No candidates means no API call; the journal must say so.
+
   let calls = 0;
   const result = await scanWorldInfo({
     ...baseInput,
@@ -235,8 +235,6 @@ const baseInput = {
   assert.match(result.smartScanLog.rawResponse, /SKIPPED/);
 }
 
-// Regression: SillyTavern numeric Lorebook UID vs IndexedDB string UID.
-// A scored ID must reach the World Info resolver without string/number loss.
 {
   const logs = [];
   const numericInput = {
@@ -273,8 +271,6 @@ const baseInput = {
   assert.ok(logs.some(item => String(item[2]).includes('selected=2')));
 }
 
-// No more silent zero entries: report whether the index is missing, scored
-// beneath threshold, or has incompatible vector dimensions.
 {
   const logs = [];
   const deps = {
@@ -299,7 +295,6 @@ const baseInput = {
   assert.ok(logs.some(item => String(item[2]).includes('không mục nào đạt threshold')));
 }
 
-// Forced UIDs only skip the semantic query on deliberate regenerate.
 {
   let embedCalls = 0;
   const logs = [];

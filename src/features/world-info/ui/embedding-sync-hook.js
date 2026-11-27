@@ -1,4 +1,3 @@
-// Recovered from the application host. One owner; dependency getters preserve late binding.
 export function createEmbeddingSyncHook(dependencies = {}) {
   var useEmbeddingSync = (lorebookId, entries) => {
     let [statusMap, setStatusMap] = (0,dependencies.react.useState)({});

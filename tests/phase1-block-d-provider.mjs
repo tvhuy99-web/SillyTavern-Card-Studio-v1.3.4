@@ -33,8 +33,7 @@ const controller=new AbortController();let source='gemini', tool=false;const cap
 const {generateSummary}=createSummaryGeneration({extractStoryContent:x=>x,getConnectionSettings:()=>({source,proxy_protocol:'google_native'}),getProxyForTools:()=>tool,generateGeminiToolText:async(...args)=>{captured.push(args.at(-1));return {text:' gemini '};},generateProxyToolText:async(...args)=>{captured.push(args.at(-1));return ' proxy ';},__stsAiStudioToolText:async(...args)=>{captured.push(args.at(-1));return ' studio ';}});
 assert.equal(await generateSummary([], 'C','',controller.signal),'gemini');tool=true;assert.equal(await generateSummary([], 'C','',controller.signal),'proxy');source='aistudio';assert.equal(await generateSummary([], 'C','',controller.signal),'studio');assert.deepEqual(captured,[controller.signal,controller.signal,controller.signal]);
 console.log('Block D provider: credential roundtrip, target ownership, rollback, summary cancellation routing OK.');
-// Restore's Web Storage phase is now compensated as a group, including keys
-// changed indirectly by the credential owners. The separate IDB commit remains.
+
 const restored=setup();restored.connections.saveGemini({useDefault:false,keys:['before']});restored.proxy.setProfiles([{id:'existing',url:'https://before.test',password:'before-password'}]);restored.local.setItem('unrelated','preserve');
 const backupBefore=[restored.local.toJSON(),restored.session.toJSON()];
 const orig=restored.local.setItem;let failOnce=true;restored.local.setItem=(key,value)=>{if(key==='last-setting'&&failOnce){failOnce=false;throw Error('quota');}return orig(key,value);};

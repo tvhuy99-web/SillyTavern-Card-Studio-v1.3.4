@@ -9,7 +9,7 @@ import { createSessionSnapshot } from '../src/app/persistence/session-state.js';
 import { createRuntimePromptBuilder } from '../src/runtime/card-runtime/host/runtime-prompt.js';
 import { runtimeState } from '../src/app/state/runtime-state.js';
 const deferred = () => {let resolve,reject; const promise = new Promise((a,b)=>{resolve=a;reject=b;}); return {promise,resolve,reject};};
-// Global ownership across different dialogs looking at the SAME connection.
+
 const requests=[]; const catalog=createModelCatalog({storage:createMemoryStorage(),normalizeProxyUrl:x=>x,request(){const gate=deferred();requests.push(gate);return gate.promise;}});
 const target={url:'https://proxy.test',password:'secret',protocol:'openai',id:'p'};
 const published=[];
@@ -23,7 +23,7 @@ const cleared=catalog.refreshProxyTarget(target);catalog.clearProxyTarget(target
 const failure=catalog.refreshProxyTarget(target);requests[3].reject(Error('network error'));await assert.rejects(failure,/network error/);
 const retry=catalog.refreshProxyTarget(target);requests[4].resolve(Response.json({data:[{id:'retry'}]}));await retry;assert.equal(catalog.readProxyTarget(target)[0].id,'retry');
 catalog.mergeProxyTarget(target,[{id:'custom'}]);const refreshed=catalog.refreshProxyTarget(target);requests[5].resolve(Response.json({data:[{id:'different'}]}));await refreshed;assert.deepEqual(catalog.readProxyTarget(target).map(x=>x.id),['different','custom']);
-// Host-to-frame messages only target the expected origin for non-opaque frames.
+
 const host='https://studio.test', remote='https://remote.test'; let sandbox=null,load;
 const source={messages:[],postMessage(data,origin){this.messages.push({data,origin});}};
 const frame={contentWindow:source,getAttribute:key=>key==='sandbox'?sandbox:key==='srcdoc'?'card':null,addEventListener(type,listener){if(type==='load')load=listener;}};
@@ -41,7 +41,7 @@ await dispatcher.dispatch(event(host,'reload'),{execute:()=> 'new document'});as
 let persisted=0;const handler=createRuntimeMessageHandler({isActiveSource:(_s,event)=>isFrameMessageOrigin(frame,event.origin,host),dispatcher,readState:()=>({messages:[]}),persistMessages(){persisted++;},validatePayload(){}});
 await handler({source,origin:remote,data:{type:'APPEND_MESSAGE',payload:'untrusted'}});assert.equal(persisted,0);
 await handler({source,origin:host,data:{type:'APPEND_MESSAGE',payload:'trusted'}});assert.equal(persisted,1);
-// Keep the original summary width in prompt, rewind and persistence after settings change.
+
 const messages=Array.from({length:4},(_,i)=>({id:String(i),role:'model',content:`turn ${i}`}));
 let state={sessionId:'s',card:{name:'Hero',fileName:'hero'},preset:{name:'P'},messages,longTermSummaries:['old'],summaryChunkSize:2,summaryQueue:[],isSummarizing:false,variables:{},visualState:{}};
 const settings={summarization_chunk_size:1,context_depth:1};const countTurns=m=>m.filter(x=>x.role==='model').length;

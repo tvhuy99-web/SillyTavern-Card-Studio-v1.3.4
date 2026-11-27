@@ -1,5 +1,3 @@
-// Extracted custom hook. Its caller preserves the original unconditional hook order.
-
 const MAX_EXECUTION_STEPS = 5000;
 
 function parseSlashScriptCommands(scriptText) {

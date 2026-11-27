@@ -1,6 +1,3 @@
-// Recovered application UI. The existing React instance and feature dependencies are injected.
-// Semantic dependency contract: callers inject named dependencies directly.
-
 export function createRpgDatabaseEditor(getDependencies) {
   return function RpgDatabaseEditor({ isOpen, onClose, database, onSave }) {
     const {
@@ -178,7 +175,6 @@ export function createRpgDatabaseEditor(getDependencies) {
                 id: 'schema-builder-title',
                 className: 'text-xl font-bold text-sky-400 flex items-center gap-2',
                 children: [
-                  jsxRuntime.jsx('span', { children: '🛠️' }),
                   ' Schema Builder (V2 - 2D Array)',
                 ],
               }),

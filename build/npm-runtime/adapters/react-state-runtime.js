@@ -1,4 +1,3 @@
-// Transitional adapter: keep the recovered host ABI while using public package APIs.
 import * as React from 'react';
 import * as ReactDOM from 'react-dom/client';
 import * as jsxRuntime from 'react/jsx-runtime';

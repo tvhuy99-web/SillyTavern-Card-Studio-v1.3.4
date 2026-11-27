@@ -1,18 +1,3 @@
-// Durable restore journal & cross-tab lock keys.
-//
-// HONESTY CONTRACT:
-// 1. IndexedDB and Web Storage are separate persistence engines and CANNOT be committed
-//    atomically across storages (atomicAcrossStorages: false).
-// 2. When navigator.locks.request is available, cross-tab mutual exclusion uses an
-//    exclusive non-blocking Web Lock (crossTabLockMechanism: 'web-locks', crossTabLockAtomic: true).
-//    When unavailable, it falls back to a localStorage advisory lease
-//    (crossTabLockMechanism: 'localStorage-advisory', crossTabLockAtomic: false) — NEVER
-//    claiming localStorage is atomic. Both modes are paired with strict in-process mutual exclusion.
-// 3. IndexedDB commit verification relies on a durable commit marker (with journalId,
-//    ownerId, operationId) written inside the EXACT same IndexedDB transaction as restored records.
-// 4. Credentials & sensitive settings are NEVER written to RESTORE_JOURNAL_KEY, inspection
-//    results, error messages, or logs; they exist only inside the dedicated durable snapshotStore
-//    record (containsSensitiveSettings: true) and are wiped immediately on completion or full rollback.
 export const RESTORE_JOURNAL_KEY = 'stcs:backup-restore:journal:v1';
 export const RESTORE_LOCK_KEY = 'stcs:backup-restore:lock:v1';
 

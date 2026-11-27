@@ -1,5 +1,3 @@
-// Inventory source recovery candidates in the generated host; never edits the bundle.
-// JSX factory detection is a heuristic, not a proof of React component identity.
 const fs = require('node:fs');
 const path = require('node:path');
 const ts = require(process.env.TYPESCRIPT_PATH || 'typescript');

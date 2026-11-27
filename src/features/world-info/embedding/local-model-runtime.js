@@ -5,9 +5,6 @@ import { TRANSFORMERS_CACHE_KEY, providerIsCached } from './local-model-cache.js
 
 const TRANSFORMERS_MODULE_URL = 'https://cdn.jsdelivr.net/npm/@huggingface/transformers@3.8.1/+esm';
 
-// Inspired by NgheTruyen's per-device inference profiles. The WebView has a
-// smaller memory budget than Android-native ORT, so batches stay capped at 4.
-// A missing deviceMemory signal is treated conservatively, not as 8 GiB.
 export function planLocalEmbeddingBatch(providerId, options = {}) {
   const requested = Math.max(1, Math.min(30, Math.floor(Number(options.requestedBatchSize) || 30)));
   const memory = Number(options.deviceMemoryGB) || 0;
@@ -18,7 +15,7 @@ export function planLocalEmbeddingBatch(providerId, options = {}) {
     if (providerId === 'embeddinggemma' || providerId === 'embeddinggemma2') {
       limit = memory >= 8 ? 4 : 2;
     } else if (providerId === 'qwen3') {
-      // Large Qwen weights can exhaust the Android WebView process.
+
       limit = memory >= 8 ? 2 : 1;
     }
   }
@@ -26,9 +23,6 @@ export function planLocalEmbeddingBatch(providerId, options = {}) {
   return { maxBatch, initialBatch: Math.min(maxBatch, 2), deviceMemoryGB: memory, hardwareConcurrency: cores };
 }
 
-// Autotune with useful work rather than running an extra benchmark. One batch
-// of 2 is measured before a >=8 GiB device may try 4; slower batches are
-// reduced after comparing per-vector inference time. No model/mode fallback.
 export function createLocalEmbeddingBatchPlanner(profile) {
   const maxBatch = Math.max(1, Math.min(4, Number(profile?.maxBatch) || 1));
   let current = Math.max(1, Math.min(maxBatch, Number(profile?.initialBatch) || 1));
@@ -62,24 +56,19 @@ export function isAndroidHost() {
   return typeof navigator !== 'undefined' && /Android/i.test(String(navigator.userAgent || ''));
 }
 
-// Only the Capacitor Android APK has the registered native ONNX plugin.
-// Android mobile browsers must retain the existing WebAssembly path.
 export function isNativeAndroidEmbeddingHost(host = globalThis) {
   return /Android/i.test(String(host?.navigator?.userAgent || ''))
     && host?.Capacitor?.getPlatform?.() === 'android';
 }
 
 function preferredDevice() {
-  // Android WebView drivers can terminate the renderer on large WebGPU allocations.
+
   return !isAndroidHost() && typeof navigator !== 'undefined' && navigator.gpu ? 'webgpu' : 'wasm';
 }
 
 export function configureTransformersEnvironment(environment) {
   if (!environment) return;
-  // Transformers.js v3 defaults allowLocalModels=false in browsers/WebViews.
-  // Offline sync uses local_files_only=true and must be allowed to read files
-  // previously downloaded into the browser Cache API.
-  // Do not disable allowRemoteModels globally: first-time downloads still need it.
+
   environment.allowLocalModels = true;
   environment.useBrowserCache = true;
   environment.useWasmCache = true;
@@ -155,15 +144,13 @@ async function createLocalRuntime(provider, onProgress, localOnly = false, onSta
     if (!isNativeAndroidEmbeddingHost()) {
       throw new Error('EmbeddingGemma 2 Text 270M yêu cầu APK Android có LiteRT-LM.');
     }
-    // Native LiteRT-LM engine, never import Transformers.js or switch to ONNX.
+
     return createEmbeddingGemma2Runtime(provider, onStage);
   }
   onStage('Import Transformers.js (có thể truy cập CDN cho mã thư viện)');
   const transformers = await getTransformersModule();
   onStage('Đã nạp Transformers.js; chuẩn bị bộ suy luận cục bộ');
-  // Android EmbeddingGemma OFFLINE always uses the native ORT engine.
-  // The explicit Settings download action (localOnly=false) still fills
-  // the original Transformers.js cache; it never changes sync behavior.
+
   if (isNativeAndroidEmbeddingHost() && provider.id === 'embeddinggemma' && localOnly) {
     return createNativeEmbeddingGemmaRuntime({ provider, transformers, onStage });
   }
@@ -258,7 +245,7 @@ export function createLocalRuntimeManager() {
         }
       }
     }
-    // Keep only one heavy ONNX model resident when switching embedding providers.
+
     onStage('Giải phóng các model ONNX không sử dụng');
     await disposeUnusedLocalRuntimes(provider.id);
     const loading = createLocalRuntime(provider, options.onProgress, !!options.localOnly, onStage)

@@ -1,5 +1,3 @@
-// Recovered from the application host. One owner; dependency getters preserve late binding.
-
 function resolveCharacterName(card) {
   return String(card.nickname || card.name || 'Character').trim() || 'Character';
 }

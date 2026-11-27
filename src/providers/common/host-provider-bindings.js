@@ -2,8 +2,6 @@ import { createConnectionRepository } from './connection-repository.js';
 import { createModelCatalog } from './model-catalog.js';
 import { createGenerationGateway } from './generation-gateway.js';
 
-// Keep the established OpenAI base URL convention. Native endpoints are
-// normalized by the native protocol adapter, not by the composition root.
 export function normalizeProxyUrl(url) {
   let base = url.trim().replace(/\/$/, '');
   if (base && !/^https?:\/\//i.test(base)) base = 'http://' + base;
@@ -41,7 +39,7 @@ export function createHostConnectionServices({ proxyPersistence, request, host =
   function getProxyProtocol() { return selectedProfile()?.protocol || readSettings().proxy_protocol; }
   function getDisplayModel() {
     const settings = readEffectiveSettings();
-    // Preserve the old badge fallback for empty settings; actual requests use the registry.
+
     switch (settings.source) {
       case 'aistudio': return settings.aistudio_model || 'gemini-2.5-flash';
       case 'openrouter': return settings.openrouter_model || 'google/gemini-pro-1.5';

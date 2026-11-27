@@ -1,4 +1,3 @@
-// Recovered from the application host. One owner; dependency getters preserve late binding.
 export function createCharacterExport(dependencies = {}) {
   var PNG_SIGNATURE = [137,80,78,71,13,10,26,10];
   var isRecordObject = value => "object" == typeof value && !!value && !Array.isArray(value);

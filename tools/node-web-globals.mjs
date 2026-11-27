@@ -1,5 +1,3 @@
-// Preload standard Web globals (crypto, File, CustomEvent) on Node 18 test runners
-// without altering any product logic or test assertions.
 import { webcrypto } from 'node:crypto';
 import { File as NodeFile } from 'node:buffer';
 

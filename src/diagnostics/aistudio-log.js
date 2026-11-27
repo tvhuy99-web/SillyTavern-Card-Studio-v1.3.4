@@ -1,5 +1,5 @@
 import { ANDROID_PLUGINS, acquireNativeListener, getAndroidPlugin } from '../platform/android/native-bridge.js';
-// Persistent Android AI Studio diagnostics. No prompts, outputs, cookies or tokens.
+
 const KEY = 'sts_aistudio_diagnostics_v1';
 const MAX = 250;
 const EVENT = 'sillytavern:system-log';

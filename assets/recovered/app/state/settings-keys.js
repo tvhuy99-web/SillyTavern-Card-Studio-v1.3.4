@@ -1,4 +1,3 @@
-// Recovered from the application host. One owner; dependency getters preserve late binding.
 export function createSettingsKeys(dependencies = {}) {
 var cardRuntimeCompatibilityKey="st-card-studio:card-runtime:compatibility-mode";
 var cardRuntimeCompatibilityEvent="sillytavern:card-runtime-mode-changed";

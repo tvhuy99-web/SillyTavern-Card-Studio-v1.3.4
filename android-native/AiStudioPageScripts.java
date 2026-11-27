@@ -1,6 +1,5 @@
 package com.tvhuy99.cardstudio;
 
-/** Website selectors and JavaScript expressions, independent of Activity and bridge lifecycle. */
 final class AiStudioPageScripts {
     static final String INSTALL_JS = """
         (function() {

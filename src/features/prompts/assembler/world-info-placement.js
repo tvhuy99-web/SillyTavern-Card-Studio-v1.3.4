@@ -1,32 +1,12 @@
-/**
- * World Info entry partitioning, before/after formatting, and RPG hybrid table
- * snapshot assembly.
- */
-
 import {
   expandReferencedLorebookLines,
   renderEjsTemplate,
 } from './ejs-template-renderer.js';
 
-/**
- * Yields briefly to the event loop to keep long prompt builds responsive.
- *
- * @returns {Promise<void>}
- */
 function yieldMacrotask() {
   return new Promise(resolve => setTimeout(resolve, 0));
 }
 
-/**
- * Partitions active World Info entries into `before` and `after` groups sorted
- * by `insertion_order`.
- *
- * @param {Record<string, any>} card
- * @param {Record<string, boolean> | undefined} worldInfoState
- * @param {Array<Record<string, any>> | undefined} activeEntries
- * @param {Record<string, string> | undefined} worldInfoPlacement
- * @returns {{ before: Array<Record<string, any>>, after: Array<Record<string, any>> }}
- */
 function partitionWorldInfoEntries(card, worldInfoState, activeEntries, worldInfoPlacement) {
   const entries = activeEntries
     ? [...activeEntries]
@@ -58,33 +38,6 @@ function partitionWorldInfoEntries(card, worldInfoState, activeEntries, worldInf
   return { before, after };
 }
 
-/**
- * Formats before/after World Info blocks and builds the RPG hybrid table and
- * row snapshot when RPG data is attached to the card.
- *
- * @param {{
- *   card: Record<string, any>,
- *   worldInfoState?: Record<string, boolean>,
- *   activeEntries?: Array<Record<string, any>>,
- *   worldInfoPlacement?: Record<string, string>,
- *   preset?: Record<string, any>,
- *   variables: Record<string, any>,
- *   userName: string,
- *   externalLorebooks: Array<Record<string, any>>,
- *   expandMacros: (text: string) => string,
- *   deps: Record<string, any>,
- * }} params
- * @returns {Promise<{
- *   worldInfoBeforeItems: string[],
- *   worldInfoAfterItems: string[],
- *   allWorldInfoItems: string[],
- *   worldInfoBeforeText: string,
- *   worldInfoAfterText: string,
- *   allWorldInfoText: string,
- *   rpgHybridTable: string,
- *   rpgSnapshot: any,
- * }>}
- */
 export async function buildWorldInfoSections({
   card,
   worldInfoState,

@@ -1,4 +1,3 @@
-/** Catalog RPC uses strict, identity-based store actions shared with the UI. */
 export const CATALOG_RPC_METHODS = Object.freeze([
   'character.create', 'character.replace', 'character.delete', 'character.select',
   'persona.create', 'persona.replace', 'persona.delete',
@@ -21,7 +20,7 @@ export function createCatalogRpcHandlers({ readState, characters, personas, pres
         const card = updated.card;
         assertCurrent();
         const state = readState();
-        // A filename, when present, is the identity; identical display names are not identities.
+
         if (state.card && (state.card.fileName ? state.card.fileName === item.fileName : state.card.name === item.card.name)) {
           const current = { ...card, fileName: item.fileName };
           state.setSessionData({ card: current, mergedSettings: state.preset ? mergeSettings(current, state.preset) : state.mergedSettings });

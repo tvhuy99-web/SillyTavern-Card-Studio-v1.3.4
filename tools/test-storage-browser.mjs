@@ -1,4 +1,3 @@
-// Run isolated integration tests against real IndexedDB in headless Chromium.
 import { createServer } from 'node:http';
 import { readFile, mkdtemp, rm, stat } from 'node:fs/promises';
 import { spawn, spawnSync } from 'node:child_process';

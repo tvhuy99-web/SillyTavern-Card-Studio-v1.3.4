@@ -12,11 +12,6 @@ import org.json.JSONObject;
 
 import java.util.UUID;
 
-/**
- * Owns the AI Studio text-generation request lifecycle: readiness wait,
- * chunked prompt transfer, submit, watchdog timeout, completion resolution,
- * and cancellation cleanup.
- */
 final class AiStudioGenerationController {
     private static final long TIMEOUT_MS = 300_000L;
 
@@ -142,20 +137,16 @@ final class AiStudioGenerationController {
                 diagnostics.details("showDebugPage", webViewController.isPageDisplayEnabled()));
             if (!chatUrl.equals(AiStudioWebViewController.URL)) webViewController.loadUrl(chatUrl);
         } else {
-            // Each Card Studio model turn has its OWN AI Studio chat.
-            // Request a model through AI Studio's public new-chat URL; Google controls its availability.
+
             diagnostics.trace("state", "NEW_CHAT_NAVIGATE",
                 "Opening fresh AI Studio conversation for this turn", null);
             webViewController.loadUrl(chatUrl);
         }
-        // Keep the inline monitor in place. Never hijack the chat with a modal.
+
         webViewController.applyPanelPresentation(webViewController.isPageDisplayEnabled(), "generate");
         waitUntilReady(call, prompt, 0);
     }
 
-    // A cold app launch must never require Settings -> Open AI Studio first.
-    // Show the real first-party WebView for login/model selection only if the
-    // user has no live session, then resume the original text request.
     private void waitUntilReady(PluginCall call, String prompt, int attempt) {
         if (pending != call) return;
         final long elapsed = SystemClock.elapsedRealtime() - requestStart;
@@ -190,7 +181,7 @@ final class AiStudioGenerationController {
                             diagnostics.details("waitMs", SystemClock.elapsedRealtime() - requestStart,
                                 "editorCount", x.optInt("editors", 0),
                                 "oldModelTurns", x.optInt("oldModelTurns", -1)));
-                        // Reset generation timeout after login/network startup.
+
                         requestStart = SystemClock.elapsedRealtime();
                         armWatchdog(call);
                         thinkingController.configure(call, c -> pending == c,
@@ -204,7 +195,7 @@ final class AiStudioGenerationController {
                             "oldModelTurns", x.optInt("oldModelTurns", -1),
                             "ready", x.optString("ready", "unknown"),
                             "editors", x.optInt("editors", 0), "elapsedMs", elapsed));
-                    // Do not inadvertently send into a prior Google thread.
+
                     if (attempt >= 30 && x.optInt("oldModelTurns", 0) > 0) {
                         fail("AI_STUDIO_NEW_CHAT_NOT_EMPTY: AI Studio has prior model turns.");
                         return;
@@ -245,8 +236,7 @@ final class AiStudioGenerationController {
                     fail("AI_STUDIO_BOOTSTRAP_FAILED: JavaScript returned null after 5 attempts.");
                     return;
                 }
-                // A navigation race is transient. Do not restart the session
-                // watchdog or flood console with an unbounded retry loop.
+
                 handler.postDelayed(() -> prepareText(call, prompt), 1500L);
                 return;
             }
@@ -264,9 +254,6 @@ final class AiStudioGenerationController {
         });
     }
 
-    // A ~66,000-character roleplay prompt should not be embedded into one
-    // evaluateJavascript call. Transfer it as 2,000-UTF16-unit chunks, verify
-    // each acknowledgement, and never log any prompt content.
     private void transferPromptChunk(PluginCall call, String prompt, int offset) {
         WebView sessionWebView = webViewController.getWebView();
         if (pending != call || sessionWebView == null) return;
@@ -400,9 +387,7 @@ final class AiStudioGenerationController {
             return;
         }
         cancelledRequests.cancel(diagnostics.getRequestId());
-        // Reject the generation immediately, but reserve the old WebView
-        // until the best-effort Stop click completes or times out. No new
-        // generation can start on this document during cleanup.
+
         cancellationCall = call;
         fail("AI_STUDIO_CANCELLED");
         final WebView view = webViewController.getWebView();
@@ -427,8 +412,7 @@ final class AiStudioGenerationController {
         if (cancellationCall != call) return;
         cancellationCall = null;
         cancellationHandler.removeCallbacksAndMessages(null);
-        // A queued submit/evaluate callback must not survive into the next
-        // request. Cookies are retained by Android's CookieManager.
+
         webViewController.releaseWebView();
         JSObject result = new JSObject();
         result.put("stopClicked", clicked);

@@ -1,8 +1,7 @@
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import { createHash } from 'node:crypto';
-// Import the actual emitted ESM graph, not a concatenation or isolated syntax check.
-// Stop at root lookup so this can run without a browser DOM implementation.
+
 const mountReached = Error('root lookup reached');
 function storage() { const m = new Map(); return {getItem:k=>m.get(k)??null,setItem:(k,v)=>m.set(k,String(v)),removeItem:k=>m.delete(k),clear:()=>m.clear(),key:i=>[...m.keys()][i]??null,get length(){return m.size}}; }
 const noop=()=>{};
@@ -14,7 +13,7 @@ assert.equal(window.__STS_MODEL_TEST_UI__,undefined);
 const vendor=await import('../assets/recovered/vendor/react-state-runtime.js');
 const sdk=await import('../assets/recovered/vendor/google-genai-runtime.js');
 assert.equal(typeof vendor.b.createElement,'function');assert.equal(typeof vendor.v.createRoot,'function');assert.equal(typeof vendor.wt.jsx,'function');assert.equal(typeof sdk.vo,'function');assert.equal(sdk.De.AUDIO,'AUDIO');
-const records=JSON.parse(await readFile(new URL('../docs/architecture/phase-1/evidence/block-a-recovery-parity.json',import.meta.url),'utf8'));
+const records=JSON.parse(await readFile(new URL('./fixtures/block-a-recovery-parity.json',import.meta.url),'utf8'));
 const sha=value=>createHash('sha256').update(value).digest('hex');let count=0,comparators=0;
 for (const record of records.filter(r=>!r.stateOwner&&!r.defaultData)) {
   const module=await import(new URL('../assets/recovered/'+record.path.slice(4),import.meta.url));

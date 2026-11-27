@@ -1,7 +1,5 @@
 package com.tvhuy99.cardstudio;
 
-/** Export reservation spans picker, open, writes and close. Tokens prevent
- * queued work from being applied to a subsequent file. */
 final class NativeExportSession {
     enum State { IDLE, PICKING, OPENING, OPEN, CLOSED }
     private State state = State.IDLE;

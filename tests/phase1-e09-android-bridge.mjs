@@ -12,7 +12,6 @@ const read = rel => fs.readFileSync(new URL('../' + rel, import.meta.url), 'utf8
 const decodeJavaTextBlock = block =>
   block.replace(/\\(\\|n|r|t|s|"|')/g, (_, ch) => ({ '\\': '\\', n: '\n', r: '\r', t: '\t', s: ' ', '"': '"', "'": "'" })[ch]);
 
-// 1. Consistent abortError() in acquireNativeListener and invokeNativeMethod
 {
   const expected = abortError();
   const controller = new AbortController();
@@ -29,7 +28,6 @@ const decodeJavaTextBlock = block =>
   );
 }
 
-// 2. invokeNativeMethod: nativePromise path, Plugins fallback, unavailable, timeout, mid-flight abort, error normalization
 {
   const calls = [];
   const hostWithPromise = {
@@ -94,7 +92,6 @@ const decodeJavaTextBlock = block =>
   );
 }
 
-// 3. AiStudioPageScripts.java contains NEW_CHAT_READINESS_JS and RUN_SETTINGS_EXPAND_JS and both execute cleanly
 {
   const scriptsSrc = read('android-native/AiStudioPageScripts.java');
   const readinessMatch = scriptsSrc.match(/NEW_CHAT_READINESS_JS = """\n([\s\S]*?)\n        """;/);
@@ -132,7 +129,6 @@ const decodeJavaTextBlock = block =>
   assert.equal(clicked, 1);
 }
 
-// 4. AiStudioTextPlugin.java uses AiStudioPageScripts constants and targeted clearWatchdog()
 {
   const pluginSrc = ['AiStudioTextPlugin.java','AiStudioDiagnostics.java','AiStudioWebViewController.java','AiStudioSessionController.java','AiStudioThinkingController.java','AiStudioGenerationController.java','AiStudioResponsePoller.java'].map(f => read('android-native/' + f)).join('\n');
   assert.match(pluginSrc, /AiStudioPageScripts\.NEW_CHAT_READINESS_JS/);
@@ -143,7 +139,6 @@ const decodeJavaTextBlock = block =>
   assert.doesNotMatch(watchdogMatch[1], /removeCallbacksAndMessages\(null\)/);
 }
 
-// 5. JS consumers use ANDROID_PLUGINS / getAndroidPlugin instead of raw Capacitor.Plugins.AIStudioText
 {
   const logSrc = read('src/diagnostics/aistudio-log.js');
   assert.match(logSrc, /getAndroidPlugin\(ANDROID_PLUGINS\.aiStudio/);
@@ -154,7 +149,6 @@ const decodeJavaTextBlock = block =>
   assert.doesNotMatch(textSrc, /'AIStudioText'|"AIStudioText"/);
 }
 
-// 6. CI workflow pins exact Capacitor 8.0.0 versions
 {
   const workflowSrc = read('.github/workflows/android-apk.yml');
   assert.match(workflowSrc, /@capacitor\/core@8\.0\.0\s+@capacitor\/android@8\.0\.0\s+@capacitor\/cli@8\.0\.0/);

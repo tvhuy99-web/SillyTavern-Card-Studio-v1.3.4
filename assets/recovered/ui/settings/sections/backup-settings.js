@@ -44,6 +44,7 @@ export function createBackupSettings(getDependencies) {
       keys: backupKeys
     };
     const [isBackingUp, setIsBackingUp] = (0, react.useState)(false);
+    const [backupProgress, setBackupProgress] = (0, react.useState)("Đang xử lý...");
     const [isRestoring, setIsRestoring] = (0, react.useState)(false);
     const [isCleaning, setIsCleaning] = (0, react.useState)(false);
     const [pendingRecovery, setPendingRecovery] = (0, react.useState)(() => backupRestoreService?.getPendingRecovery?.() || null);
@@ -71,7 +72,7 @@ export function createBackupSettings(getDependencies) {
           setPendingRecovery(inspected || null);
           return inspected || null;
         } catch {
-          // Fall back to synchronous journal inspection if async store probe fails.
+
         }
       }
       const syncPending = backupRestoreService?.getPendingRecovery?.() || null;
@@ -125,6 +126,7 @@ export function createBackupSettings(getDependencies) {
     };
     const handleBackup = async () => {
       setIsBackingUp(true);
+      setBackupProgress("Đang gom dữ liệu sao lưu...");
       try {
         const backupFile = await (async () => {
           try {
@@ -194,7 +196,29 @@ export function createBackupSettings(getDependencies) {
             throw Error(`Lỗi sao lưu toàn bộ: ${error instanceof Error ? error.message : String(error)}`);
           }
         })();
-        if (navigator.canShare && navigator.canShare({
+        if (typeof globalThis.__cardStudioExportAndroidBlob === "function") {
+          setBackupProgress("Chọn nơi lưu tệp (đừng thoát app khi đang ghi)...");
+          try {
+            const saved = await globalThis.__cardStudioExportAndroidBlob({
+              blob: backupFile,
+              filename: backupFile.name,
+              onProgress: (written, total) => {
+                const doneMb = (written / (1024 * 1024)).toFixed(1);
+                const totalMb = (total / (1024 * 1024)).toFixed(1);
+                setBackupProgress(`Đang ghi sao lưu (${doneMb}/${totalMb} MB)...`);
+              }
+            });
+            const finalMb = (saved.bytes / (1024 * 1024)).toFixed(1);
+            showToast(`Đã lưu file sao lưu thành công (${finalMb} MB).`, "success");
+          } catch (androidError) {
+            const msg = androidError instanceof Error ? androidError.message : String(androidError);
+            if (/Người dùng đã hủy lưu tệp/.test(msg)) {
+              showToast("Đã hủy thao tác sao lưu.", "info");
+            } else {
+              throw androidError;
+            }
+          }
+        } else if (navigator.canShare && navigator.canShare({
           files: [backupFile]
         })) {
           try {
@@ -214,6 +238,7 @@ export function createBackupSettings(getDependencies) {
         showToast(`Lỗi sao lưu: ${error instanceof Error ? error.message : String(error)}`, "error");
       } finally {
         setIsBackingUp(false);
+        setBackupProgress("Đang xử lý...");
       }
     };
     const handleRestoreFileChange = async event => {
@@ -225,7 +250,13 @@ export function createBackupSettings(getDependencies) {
           try {
             if (!file.size) throw Error("Tệp sao lưu trống.");
             if (file.size > 2e8) throw Error("Tệp sao lưu vượt quá giới hạn 200 MB.");
-            const rawBackup = await new Response(file).json();
+            let rawBackup;
+            try {
+              rawBackup = await new Response(file).json();
+            } catch (parseError) {
+              const detail = parseError instanceof Error ? parseError.message : String(parseError);
+              throw Error(`Tệp sao lưu JSON bị cắt ngang hoặc hỏng cấu trúc (có thể quá trình sao lưu trước đó bị ngắt trước khi ghi xong): ${detail}`);
+            }
             if (!backupRestoreService || typeof backupRestoreService.restore !== "function") {
               throw Error("Dịch vụ khôi phục dữ liệu không khả dụng.");
             }
@@ -323,7 +354,7 @@ export function createBackupSettings(getDependencies) {
           className: "bg-slate-900/50 p-6 rounded-xl border border-slate-700 flex flex-col items-center text-center hover:border-sky-500/50 ",
           children: [(0, jsxRuntime.jsx)("div", {
             className: "w-16 h-16 bg-sky-900/30 text-sky-400 rounded-full flex items-center justify-center mb-4 text-3xl",
-            children: "📤"
+            children: ""
           }), (0, jsxRuntime.jsx)("h3", {
             className: "text-lg font-bold text-slate-200 mb-2",
             children: "Sao Lưu Toàn Bộ"
@@ -335,7 +366,7 @@ export function createBackupSettings(getDependencies) {
             disabled: isBackingUp,
             className: "w-full py-3 bg-sky-600 hover:bg-sky-500 text-white font-bold rounded-lg shadow-lg shadow-sky-900/20  active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 mt-4",
             children: isBackingUp ? (0, jsxRuntime.jsx)(LoadingIndicator, {
-              message: "Đang xử lý..."
+              message: backupProgress
             }) : (0, jsxRuntime.jsxs)(jsxRuntime.Fragment, {
               children: [(0, jsxRuntime.jsx)("svg", {
                 "aria-hidden": "true",
@@ -355,7 +386,7 @@ export function createBackupSettings(getDependencies) {
           className: "bg-slate-900/50 p-6 rounded-xl border border-slate-700 flex flex-col items-center text-center hover:border-emerald-500/50 ",
           children: [(0, jsxRuntime.jsx)("div", {
             className: "w-16 h-16 bg-emerald-900/30 text-emerald-400 rounded-full flex items-center justify-center mb-4 text-3xl",
-            children: "📥"
+            children: ""
           }), (0, jsxRuntime.jsx)("h3", {
             className: "text-lg font-bold text-slate-200 mb-2",
             children: "Khôi Phục Dữ Liệu"
@@ -392,7 +423,7 @@ export function createBackupSettings(getDependencies) {
         className: "bg-slate-900/50 p-6 rounded-xl border border-slate-700 flex flex-col md:flex-row items-center gap-6 hover:border-orange-500/50 ",
         children: [(0, jsxRuntime.jsx)("div", {
           className: "w-16 h-16 bg-orange-900/30 text-orange-400 rounded-full flex items-center justify-center text-3xl shrink-0",
-          children: "🧹"
+          children: ""
         }), (0, jsxRuntime.jsx)("div", {
           className: "flex-grow text-center md:text-left",
           children: (0, jsxRuntime.jsx)("h3", {

@@ -1,5 +1,3 @@
-// Recovered application UI. The existing React instance and feature dependencies are injected.
-// Keep the factory boundary until the native React build replaces the recovered host.
 function resolveDiagnosticDeps(getDependencies) {
   const deps = getDependencies();
   return {
@@ -153,7 +151,7 @@ export function createSystemLogPanel(getDependencies) {
               onClick: onInspectState,
               className: "px-2 py-1 bg-teal-600/20 text-teal-400 border border-teal-600/30 rounded hover:bg-teal-600/40",
               title: "Kiểm tra trạng thái biến",
-              children: "🔍 State"
+              children: "State"
             }), (0, jsxRuntime.jsx)("button", {
               onClick: () => {
                 let text = filteredLogs.map(log => `[${formatTimestamp(log.timestamp)}] [${log.source.toUpperCase()}] [${log.level.toUpperCase()}] ${log.message}`).join("\n");

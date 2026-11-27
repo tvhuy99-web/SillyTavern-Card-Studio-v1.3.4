@@ -1,5 +1,3 @@
-// A candidate pin is not a verified installation. Require the actual npm lock
-// and record the installed package metadata without asserting license clearance.
 import { readFile, readdir, realpath } from 'node:fs/promises';
 import { createHash } from 'node:crypto';
 import { resolve, sep } from 'node:path';

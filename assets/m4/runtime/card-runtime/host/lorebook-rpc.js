@@ -1,4 +1,3 @@
-/** Runtime lorebook API. Keep embedded session books distinct from catalog books. */
 export const LOREBOOK_RPC_METHODS = Object.freeze([
   'lorebook.names', 'lorebook.entries.get', 'lorebook.entries.replace',
   'lorebook.entries.create', 'lorebook.entries.delete', 'lorebook.create', 'lorebook.delete',
@@ -46,7 +45,7 @@ export function createLorebookRpcHandlers({ readState, lorebooks, saveSession, r
         guard();
         const latest = readState().card;
         if ((latest?.fileName || latest?.name) !== target.characterKey || latest?.char_book !== card.char_book) {
-          // Do not publish an obsolete embedded snapshot after another owner changed it.
+
           return;
         }
         publish({ type: 'CARD_RUNTIME_STATE_UPDATE', payload: { worldInfo: entries } });
@@ -78,7 +77,7 @@ export function createLorebookRpcHandlers({ readState, lorebooks, saveSession, r
         const input = (Array.isArray(args.entries) ? args.entries : [args.entries]).filter(Boolean).slice(0, maxEntries);
         const numeric = current.map(entry => Number(entry.uid ?? entry.id)).filter(Number.isSafeInteger);
         let nextUid = numeric.length ? Math.max(...numeric) + 1 : 0;
-        // Reserve explicit numeric IDs in this batch before assigning automatic IDs.
+
         const explicit = new Set(input.filter(entry => entry.uid != null).map(entry => String(entry.uid)));
         const added = input.map(entry => {
           let uid = entry.uid;

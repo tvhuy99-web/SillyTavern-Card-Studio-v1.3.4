@@ -1,11 +1,3 @@
-/**
- * Canonical prompt assembly engine for SillyTavern Card Studio.
- *
- * Thin orchestrator delegating base section building, World Info placement,
- * history context formatting, prompt variable operations, and isolated EJS
- * worker rendering to dedicated submodules under `./assembler/`.
- */
-
 import { extractStoryContent } from './story-content.js';
 import { createMacroProcessing } from './macro-processing.js';
 import { createRegexProcessing } from '../chat/regex-processing.js';
@@ -33,12 +25,6 @@ const defaultTableHelpers = createTableProcessing({
   parseRelaxedJson: text => JSON.parse(text),
 });
 
-/**
- * Resolves semantic or legacy dependency bindings into a single normalized table.
- *
- * @param {Record<string, any>} [rawDependencies={}]
- * @returns {Record<string, any>}
- */
 function resolveAssemblerDependencies(rawDependencies = {}) {
   const deps = rawDependencies && typeof rawDependencies === 'object' ? rawDependencies : {};
 
@@ -82,15 +68,6 @@ function resolveAssemblerDependencies(rawDependencies = {}) {
   };
 }
 
-/**
- * Builds the ordered list of base prompt sections from a character card and
- * preset configuration.
- *
- * @param {Record<string, any>} card
- * @param {Record<string, any>} preset
- * @param {Record<string, any>} [dependencies]
- * @returns {{ baseSections: Array<{ id: string, name: string, content: string, role: string }> }}
- */
 export function buildBaseSections(card, preset, dependencies) {
   const resolvedDeps = dependencies && typeof dependencies === 'object'
     && ('resolvePromptOverride' in dependencies || 'Ku' in dependencies)
@@ -100,10 +77,6 @@ export function buildBaseSections(card, preset, dependencies) {
   return buildBasePromptSections(card, preset, resolvedDeps);
 }
 
-/**
- * Assembles the final prompt text, structured sections, RPG snapshot, and
- * updated chat/global variable scopes.
- */
 export async function assemblePrompt(
   baseSections,
   messages,
@@ -263,9 +236,6 @@ export async function assemblePrompt(
   };
 }
 
-/**
- * Creates a prompt assembler bound to a shared dependency container.
- */
 export function createPromptAssembler(dependencies = {}) {
   const boundDeps = resolveAssemblerDependencies(dependencies);
 

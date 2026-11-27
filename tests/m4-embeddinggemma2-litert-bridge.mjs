@@ -37,8 +37,6 @@ const [normalized] = validateEmbeddingGemma2Vectors([vector], 1);
 assert.ok(Math.abs(normalized[0] - 0.6) < 1e-12);
 assert.ok(Math.abs(normalized[1] - 0.8) < 1e-12);
 
-// Download requires user action; no automatic download in model load/query.
-// Status and progress are forwarded through the Capacitor event listener.
 {
   const previous = globalThis.Capacitor;
   const events = [];
@@ -129,7 +127,6 @@ assert.ok(Math.abs(normalized[1] - 0.8) < 1e-12);
   }
 }
 
-// An offline load failure must surface as-is. It cannot switch provider.
 await assert.rejects(
   createEmbeddingGemma2Runtime({ id: 'qwen3' }, () => {}, mock),
   /Sai model/,
@@ -139,8 +136,7 @@ await assert.rejects(
     { status: async () => ({ modelReady: false }) }),
   /chưa được tải/,
 );
-// Binary float32/LE transport: same normalized vectors, much smaller
-// Android->WebView bridge payload than nested JSON number arrays.
+
 {
   const count = 2;
   const bytes = Buffer.alloc(count * 768 * 4);
@@ -173,8 +169,6 @@ await assert.rejects(
   assert.equal(report.warnings.length, 1);
 }
 
-// CPU/GPU profiling must be explicit in logs, and native failures must never
-// change model, query prefix, embedding dimension, or Smart Scan mode.
 {
   const previous = globalThis.Capacitor;
   const bytes = Buffer.alloc(768 * 4);

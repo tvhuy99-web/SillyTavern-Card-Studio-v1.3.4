@@ -1,5 +1,3 @@
-// Application lifecycle owner: ErrorBoundary, global error hunters, and InitialLoader.
-// Dependency getters preserve late binding with the host.
 export function createApplicationLifecycle(dependencies = {}) {
   class ErrorBoundary extends dependencies.react.Component {
     state = { hasError: false, error: null };
@@ -169,7 +167,7 @@ export function createApplicationLifecycle(dependencies = {}) {
         const errorArg = args.find(arg => arg instanceof Error);
         (0, dependencies.dispatchSystemLog)('error', 'console', formatted, errorArg ? errorArg.stack : undefined);
       } catch {
-        // Ignore forwarding errors.
+
       } finally {
         isForwardingConsole = false;
       }
@@ -183,7 +181,7 @@ export function createApplicationLifecycle(dependencies = {}) {
         const formatted = args.map(arg => (typeof arg === 'object' ? JSON.stringify(arg) : String(arg))).join(' ');
         (0, dependencies.dispatchSystemLog)('warn', 'console', formatted);
       } catch {
-        // Ignore forwarding errors.
+
       } finally {
         isForwardingConsole = false;
       }
@@ -275,14 +273,14 @@ export function createApplicationLifecycle(dependencies = {}) {
           atomicAcrossStorages: false,
         });
       } catch {
-        // Diagnostics logging must not block startup.
+
       }
 
       if (typeof dependencies.onPendingRecovery === 'function') {
         try {
           dependencies.onPendingRecovery(pending, warningMessage);
         } catch {
-          // Callback errors must not block startup.
+
         }
       }
 
@@ -290,7 +288,7 @@ export function createApplicationLifecycle(dependencies = {}) {
         try {
           toastApi.showToast(warningMessage, 'warning');
         } catch {
-          // Toast notification is optional during startup.
+
         }
       }
     }, []);

@@ -1,6 +1,3 @@
-// First-party application contract for browser libraries. The portable and
-// package-backed builds provide the same ABI below this boundary; application
-// code must not access the extracted runtime's private Immer registry.
 import * as runtime from '../vendor/react-state-runtime.js';
 import { installImmerMapSet } from '../vendor/immer-mapset.js';
 export { b as React, v as ReactDOM, wt as jsxRuntime, At as createStore, It as withImmer,
@@ -8,7 +5,7 @@ export { b as React, v as ReactDOM, wt as jsxRuntime, At as createStore, It as w
 export { vo as GoogleGenAI, Ce as HarmBlockThreshold, ke as HarmCategory,
   De as Modality, xe as ThinkingLevel } from '../vendor/google-genai-runtime.js';
 import { createLodashRuntime as createVendorLodashRuntime } from '../vendor/lodash-runtime.js';
-// Keep the retained vendor ABI behind the first-party library boundary.
+
 export function createLodashRuntime({ wrapModule, commonJsFactory } = {}) {
   return createVendorLodashRuntime({ l: wrapModule, o: commonJsFactory });
 }

@@ -1,7 +1,3 @@
-/**
- * Orchestrator for seeding, merging, and diagnosing initial card variables.
- */
-
 import {
   cloneValue,
   isRecord,

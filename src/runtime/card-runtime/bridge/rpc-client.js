@@ -1,4 +1,3 @@
-/** Owns the iframe's in-flight requests. Self-contained for classic-script embedding. */
 export function createRpcClient({ send, makeId, readContext, clone, onTimeout = () => {}, schedule = setTimeout, cancel = clearTimeout }) {
     const pending = new Map();
     let closed = false;

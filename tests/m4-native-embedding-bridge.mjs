@@ -13,7 +13,6 @@ const provider = {
   dimensions: 768,
 };
 
-// Never silently route an Android APK with a missing native plugin to WASM.
 assert.equal(getNativeEmbeddingPlugin({}), null);
 assert.equal(getNativeEmbeddingPlugin({ Capacitor: {
   getPlatform: () => 'web',
@@ -33,8 +32,6 @@ await assert.rejects(
   /mới hỗ trợ EmbeddingGemma/,
 );
 
-// BigInt tensors are from Transformers.js v3. Verify padded shape is preserved
-// rather than losing or coercing token IDs in Capacitor JSON transport.
 assert.deepEqual(packNativeEmbeddingInputs({
   input_ids: { dims: [2, 3], data: BigInt64Array.from([4n, 5n, 0n, 6n, 7n, 8n]) },
   attention_mask: { dims: [2, 3], data: BigInt64Array.from([1n, 1n, 0n, 1n, 1n, 1n]) },
@@ -48,8 +45,6 @@ assert.throws(() => packNativeEmbeddingInputs({
   attention_mask: { dims: [1, 2], data: [1, -1] },
 }), /hợp lệ/);
 
-// Test importing from WebView Cache API without fetch(), arrayBuffer() or
-// any network fallback. The bridge copies each required file and can re-use it.
 {
   let graphReady = false;
   let weightsReady = false;
@@ -102,8 +97,6 @@ assert.throws(() => packNativeEmbeddingInputs({
   assert.equal(names.length, length, 'should re-use completed native weights');
 }
 
-// The tokenizer stays on WebView, native receives padded IDs only, and vectors
-// are L2 normalized. No ONNX session/model fallback on a native failure.
 {
   const vector = Array.from({ length: 768 }, (_, i) => i < 2 ? 3 : 0);
   const callLog = [];

@@ -1,6 +1,3 @@
-// Recovered application UI. The existing React instance and feature dependencies are injected.
-// Semantic dependency contract: callers inject named dependencies directly.
-
 export function createVariableHud(getDependencies) {
   return function VariableHud({ variables, isOpen, onClose }) {
     const { VariableTree, Icon, jsxRuntime } = getDependencies();
@@ -23,7 +20,6 @@ export function createVariableHud(getDependencies) {
                 id: 'game-hud-title',
                 className: 'font-bold text-slate-200 flex items-center gap-2',
                 children: [
-                  jsxRuntime.jsx('span', { className: 'text-lg', children: '📊' }),
                   ' Trạng thái (Game HUD)',
                 ],
               }),

@@ -1,5 +1,3 @@
-// Recovered application UI. The existing React instance and feature dependencies are injected.
-// Keep the factory boundary until the native React build replaces the recovered host.
 function resolveDiagnosticDeps(getDependencies) {
   const deps = getDependencies();
   return {

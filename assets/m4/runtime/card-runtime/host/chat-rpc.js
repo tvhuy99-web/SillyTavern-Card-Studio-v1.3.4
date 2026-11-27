@@ -1,4 +1,3 @@
-/** Chat RPC owns message mutations; storage and display conversion are injected. */
 export const CHAT_RPC_METHODS = Object.freeze(['chat.get', 'chat.set', 'chat.create', 'chat.delete', 'chat.rotate']);
 export const CHAT_SESSION_RPC_METHODS = Object.freeze([
   'chat.refresh', 'chat.reload', 'chat.save', 'chat.rename',
@@ -47,7 +46,7 @@ export function createChatRpcHandlers({ readState, persistMessages, resolveIndex
     async 'chat.create'(args, state, persist) {
       const inserted = boundedMessages(args.messages).map(input => {
         const message = applyFields({ id: makeId(), role: normalizeRole(input.role), content: String(input.message ?? ''), contextState: {}, timestamp: now() }, input);
-        // Creation preserves the legacy null-message and default-role semantics.
+
         message.content = String(input.message ?? '');
         return message;
       });

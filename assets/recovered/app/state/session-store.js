@@ -1,7 +1,5 @@
 import { createSessionRpgActions } from './session-rpg-actions.js';
 
-// This is the existing Zustand store, not an additional copy of session data.
-// Explicit action groups share its original Immer transaction.
 function createDiagnosticsActions(setState, dependencies) {
     const log = (method, value) => setState(draft => {
         draft.logs = dependencies.__stsDiagnosticsState[method](value);

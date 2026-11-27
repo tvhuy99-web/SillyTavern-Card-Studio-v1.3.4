@@ -1,7 +1,3 @@
-/**
- * YAML and structured JSON/object parser helpers for initial card variables.
- */
-
 export function isRecord(value) {
   return value !== null && typeof value === 'object' && !Array.isArray(value);
 }

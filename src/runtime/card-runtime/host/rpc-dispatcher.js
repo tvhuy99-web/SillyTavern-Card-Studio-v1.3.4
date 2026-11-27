@@ -1,6 +1,5 @@
 import { awaitAbortable } from '../../../core/async/cancellation.js';
 
-/** Host-side transport and request ownership. Domain handlers are injected. */
 export function createHostRpcDispatcher({ isActiveSource, getSessionRevision, getSessionId,
   validatePayload, clone, getFrameIdentity = source => source, authorize = () => {}, targetOriginForSource = () => '*',
   deadlineForMethod = method => method === 'generation.generate' ? 360000 : 30000, onTransportError = () => {}, recentLimit = 256, maxPendingPerSource = 32, maxPendingTotal = 128 }) {
@@ -30,7 +29,7 @@ export function createHostRpcDispatcher({ isActiveSource, getSessionRevision, ge
     const frame = getFrameIdentity(source);
     let ledger = sources.get(source);
     if (!ledger || ledger.frame !== frame) {
-      // Retire old frame requests before accepting IDs from a new document.
+
       sweep();
       ledger = { frame, pending: new Set(), recent: new Set() }; sources.set(source, ledger);
     }
@@ -64,7 +63,7 @@ export function createHostRpcDispatcher({ isActiveSource, getSessionRevision, ge
       validatePayload(result);
       respond({ ok: true, result: clone(result) });
     } catch (error) {
-      // Never attribute an old request's failure to the newly opened chat.
+
       if (timedOut) {
         if (lease.sameFrame() && lease.revision === getSessionRevision() && lease.sessionId === getSessionId()) respond({ok:false,error:'Card runtime request timed out.'});
       } else if (!lease.isCurrent()) {
@@ -90,7 +89,6 @@ export function createHostRpcDispatcher({ isActiveSource, getSessionRevision, ge
   return Object.freeze({ dispatch, sweep, cancelAll });
 }
 
-/** Frame identities change when a reused iframe receives a new document. */
 export function createFrameIdentityReader(findFrame) {
   const identities = new WeakMap();
   return source => {
@@ -109,8 +107,6 @@ export function createFrameIdentityReader(findFrame) {
   };
 }
 
-/** Opaque sandboxed srcdoc frames send origin "null"; trusted full frames
- * must remain on the application origin. Remote navigations are not Host RPC clients. */
 export function isFrameMessageOrigin(frame, origin, hostOrigin) {
   if (!frame || typeof origin !== 'string') return false;
   const target = frameMessageTargetOrigin(frame, hostOrigin);
@@ -129,8 +125,6 @@ export function postFrameMessage(frame, message, hostOrigin = globalThis.locatio
   return true;
 }
 
-/** Explicit capability inventory. Safe frames may edit their chat, not the
- * application catalog or persistent global scopes. Full remains trusted. */
 export const SAFE_RPC_METHODS = Object.freeze([
   'chat.get','chat.set','chat.create','chat.delete','chat.rotate','chat.refresh','chat.reload','chat.save','chat.rename',
   'variables.replace','storage.set','storage.remove','storage.clear','extension.settings.save',

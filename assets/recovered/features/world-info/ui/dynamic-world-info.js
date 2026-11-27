@@ -1,6 +1,3 @@
-// Semantic dependency contract: callers inject named dependencies directly.
-// Factories receive the existing React/runtime bindings lazily to preserve initialization order.
-
 export function createActiveWorldInfoEntry(getDependencies) {
   return function ActiveWorldInfoEntry({
     entry: entry,
@@ -75,7 +72,7 @@ export function createActiveWorldInfoEntry(getDependencies) {
           className: "px-3 py-1.5 rounded text-xs font-bold  flex items-center gap-1 " + (isPinned ? "bg-amber-600 hover:bg-amber-500 text-white shadow-sm shadow-amber-500/20" : "bg-slate-600 hover:bg-slate-500 text-slate-300"),
           children: [(0, jsxRuntime.jsx)("span", {
             "aria-hidden": "true",
-            children: "📌"
+            children: ""
           }), (0, jsxRuntime.jsx)("span", {
             children: isPinned ? "Đã ghim" : "Ghim"
           })]
@@ -231,7 +228,6 @@ export function createDynamicWorldInfoDialog(getDependencies) {
                       onClick: () => setIsTesterOpen(true),
                       className: 'px-3 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg text-xs font-bold flex items-center gap-2  shadow-lg shadow-indigo-900/20',
                       children: [
-                        jsxRuntime.jsx('span', { className: 'text-sm', children: '🔍' }),
                         'Tester',
                       ],
                     }),

@@ -1,4 +1,3 @@
-/** Non-RPC messages from active Card frames. Keep transport and React separate. */
 export function createRuntimeMessageHandler({ isActiveSource, dispatcher, execute, readState, persistMessages,
   setScriptButtons, setInputLocked, log, diagnostics, validatePayload = () => {}, window = globalThis.window, navigator = globalThis.navigator }) {
   const event = (name, detail) => window.dispatchEvent(new CustomEvent(name, { detail }));
@@ -70,7 +69,6 @@ export function createRuntimeMessageHandler({ isActiveSource, dispatcher, execut
   };
 }
 
-/** Publish the established Card event protocol from store changes. */
 export function subscribeRuntimeSession({ store, publish, clone, formatHistory }) {
   let previous = store.getState();
   const event = (eventName, args) => publish({ type: 'CARD_RUNTIME_EVENT', eventName, args });

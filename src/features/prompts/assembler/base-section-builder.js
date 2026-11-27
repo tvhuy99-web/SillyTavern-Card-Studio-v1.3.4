@@ -1,22 +1,8 @@
-/**
- * Base prompt section construction and per-section placeholder, variable macro,
- * and EJS template rendering.
- */
-
 import { renderEjsTemplate } from './ejs-template-renderer.js';
 import { applyPromptVariableMacros } from './prompt-variable-operations.js';
 
 const VALID_DEPTH_PROMPT_ROLES = ['system', 'user', 'assistant'];
 
-/**
- * Builds the ordered list of base prompt sections from a character card and
- * preset configuration using already-resolved assembler dependencies.
- *
- * @param {Record<string, any>} card
- * @param {Record<string, any>} preset
- * @param {Record<string, any>} resolvedDeps
- * @returns {{ baseSections: Array<{ id: string, name: string, content: string, role: string }> }}
- */
 export function buildBasePromptSections(card, preset, resolvedDeps) {
   let baseSections = (preset.prompts || [])
     .filter(promptItem => promptItem.enabled === true && promptItem.content)
@@ -84,17 +70,6 @@ export function buildBasePromptSections(card, preset, resolvedDeps) {
   return { baseSections };
 }
 
-/**
- * Evaluates each base section in order: collects sub-sections, expands macros
- * and variable mutations, substitutes context placeholders, and renders EJS.
- *
- * @param {Record<string, any>} params
- * @returns {Promise<{
- *   structuredPrompt: Array<Record<string, any>>,
- *   chatVariables: Record<string, any>,
- *   globalVariables: Record<string, any>,
- * }>}
- */
 export async function renderStructuredPromptSections({
   baseSections,
   card,

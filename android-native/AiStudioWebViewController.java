@@ -23,11 +23,6 @@ import java.util.function.BooleanSupplier;
 import java.util.function.IntSupplier;
 import java.util.function.Supplier;
 
-/**
- * Owns the persistent AI Studio WebView, its WebViewClient/WebChromeClient
- * callbacks, non-modal panel attachment/presentation, visibility preferences,
- * and diagnostic UI inspection.
- */
 final class AiStudioWebViewController {
     static final String URL = "https://aistudio.google.com/prompts/new_chat";
     static final String PREFS_NAME = "ai_studio_page_preferences";
@@ -42,9 +37,7 @@ final class AiStudioWebViewController {
     private final Runnable onRenderProcessGone;
 
     private WebView sessionWebView;
-    // The reference app keeps a REAL visible WebView at its normal opacity
-    // while translating its host completely off-screen. Alpha hiding allows
-    // WebView compositor surfaces to bleed through above the app on devices.
+
     private AiStudioPanel panel;
     private boolean freshChatLoaded = false;
 
@@ -86,7 +79,6 @@ final class AiStudioWebViewController {
         freshChatLoaded = false;
     }
 
-    // Default OFF: the AI Studio WebView runs behind the Card Studio UI.
     boolean isPageDisplayEnabled() {
         return contextSupplier.get().getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
             .getBoolean(PREFS_SHOW_PAGE, false);
@@ -196,9 +188,7 @@ final class AiStudioWebViewController {
                 });
                 diagnostics.trace("state", "SESSION_CREATE", "Creating persistent WebView session",
                     diagnostics.details("androidSdk", Build.VERSION.SDK_INT));
-                // Attach BELOW Capacitor's app WebView before the first load.
-                // Without a parent, Android may postpone WebView rendering/JS.
-                // This backing view does not intercept Card Studio's touch input.
+
                 retainWebView();
                 sessionWebView.loadUrl(URL);
             } catch (RuntimeException failure) {

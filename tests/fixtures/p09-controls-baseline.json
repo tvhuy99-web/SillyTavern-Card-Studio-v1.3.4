@@ -38,6 +38,7 @@
         {
           "type": "label",
           "props": {
+            "aria-hidden": "true",
             "className": "block text-sm font-bold text-indigo-300 mb-2",
             "children": "Chat Model ID"
           }
@@ -91,6 +92,7 @@
         {
           "type": "label",
           "props": {
+            "aria-hidden": "true",
             "className": "block text-sm font-bold text-indigo-300 mb-2",
             "children": "Tool Model ID"
           }
@@ -160,6 +162,7 @@
         {
           "type": "label",
           "props": {
+            "aria-hidden": "true",
             "className": "block text-sm font-bold text-indigo-300 mb-2",
             "children": "Model"
           }
@@ -250,10 +253,12 @@
         {
           "type": "summary",
           "props": {
+            "role": "heading",
+            "aria-level": 3,
             "className": "p-4 cursor-pointer list-none flex justify-between items-center outline-none select-none hover:bg-slate-800/80 rounded-xl ",
             "children": [
               {
-                "type": "h3",
+                "type": "span",
                 "props": {
                   "className": "text-lg font-bold text-sky-400 group-hover:text-sky-300  flex items-center gap-2",
                   "children": "Title"
@@ -310,10 +315,12 @@
         {
           "type": "summary",
           "props": {
+            "role": "heading",
+            "aria-level": 3,
             "className": "p-4 cursor-pointer list-none flex justify-between items-center outline-none select-none hover:bg-slate-800/80 rounded-xl ",
             "children": [
               {
-                "type": "h3",
+                "type": "span",
                 "props": {
                   "className": "text-lg font-bold text-sky-400 group-hover:text-sky-300  flex items-center gap-2",
                   "children": "Closed"
@@ -365,6 +372,7 @@
           "type": "span",
           "props": {
             "className": "app-section-navigator__label",
+            "aria-hidden": "true",
             "children": "Đi đến"
           }
         },
@@ -407,6 +415,7 @@
           "type": "span",
           "props": {
             "className": "app-section-navigator__label",
+            "aria-hidden": "true",
             "children": "Đi đến"
           }
         },
@@ -431,14 +440,6 @@
             "onClick": "[callback]",
             "className": "w-full text-xs bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-3 px-4 rounded-lg border border-indigo-400/30  shadow-lg shadow-indigo-500/20 flex items-center justify-center gap-2",
             "children": [
-              {
-                "type": "span",
-                "props": {
-                  "className": "text-lg",
-                  "aria-hidden": "true",
-                  "children": "✨"
-                }
-              },
               {
                 "type": "span",
                 "props": {

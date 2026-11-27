@@ -1,5 +1,3 @@
-// Shared form controls recovered from the host. The temporary factory boundary
-// ensures hooks and elements use the host's existing React instance.
 export function createTableCellInput({ jsx }) {
   return function TableCellInput({ value, onSave, column }) {
     return jsx('input', {
@@ -19,7 +17,7 @@ export function createModelSelect({ jsx, jsxs }, { useMemo }) {
       'data-sts-provider': provider,
       className: 'bg-slate-900/50 p-4 rounded-lg border border-slate-700',
       children: [
-        jsx('label', { className: 'block text-sm font-bold text-indigo-300 mb-2', children: label }),
+        jsx('label', { 'aria-hidden': 'true', className: 'block text-sm font-bold text-indigo-300 mb-2', children: label }),
         jsxs('select', {
           'aria-label': label,
           value: isKnownModel ? value : 'custom_option',
@@ -47,7 +45,7 @@ export function createModelSelect({ jsx, jsxs }, { useMemo }) {
 
 export function createToggleSwitch({ jsx, jsxs }, { useId }, Tooltip) {
   return function ToggleSwitch({ label, ariaLabel, checked, onChange, tooltip, disabled, className = '', clean = false }) {
-    // Keep the existing hook order while the host is being migrated.
+
     useId();
     return jsxs('button', {
       type: 'button', disabled,

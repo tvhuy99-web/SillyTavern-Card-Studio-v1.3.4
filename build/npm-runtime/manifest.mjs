@@ -1,4 +1,3 @@
-// Each npm package adapter replaces one emitted runtime, never the source or committed assets.
 export const npmRuntimeNames = Object.freeze([
   'react-state-runtime', 'google-genai-runtime', 'lodash-runtime',
   'markdown-runtime', 'html-sanitizer-runtime', 'immer-mapset',

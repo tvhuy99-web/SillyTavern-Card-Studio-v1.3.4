@@ -1,6 +1,3 @@
-// Semantic dependency contract: callers inject named dependencies directly.
-// Factories receive the existing React/runtime bindings lazily to preserve initialization order.
-
 export function createAttachLorebookDialog(getDependencies) {
   return function AttachLorebookDialog({
     isOpen: isOpen,
@@ -61,7 +58,7 @@ export function createAttachLorebookDialog(getDependencies) {
               className: "p-4 rounded-lg bg-amber-900/20 border border-amber-600/30 hover:bg-amber-900/40 hover:border-amber-500  text-left group disabled:opacity-50",
               children: [(0, jsxRuntime.jsx)("div", {
                 className: "text-amber-400 font-bold mb-1 group-hover:text-amber-300",
-                children: "🔗 Liên kết (Link)"
+                children: "Liên kết (Link)"
               }), (0, jsxRuntime.jsx)("p", {
                 className: "text-xs text-slate-400",
                 children: "Tạo một bản sao riêng của sổ tay này và gắn nhãn. Bạn có thể chỉnh sửa trực tiếp."
@@ -72,7 +69,7 @@ export function createAttachLorebookDialog(getDependencies) {
               className: "p-4 rounded-lg bg-sky-900/20 border border-sky-600/30 hover:bg-sky-900/40 hover:border-sky-500  text-left group disabled:opacity-50",
               children: [(0, jsxRuntime.jsx)("div", {
                 className: "text-sky-400 font-bold mb-1 group-hover:text-sky-300",
-                children: "📥 Gộp (Merge)"
+                children: "Gộp (Merge)"
               }), (0, jsxRuntime.jsx)("p", {
                 className: "text-xs text-slate-400",
                 children: "Trộn lẫn các mục vào Sổ tay Gốc (Nội bộ). Mất đi ranh giới giữa các sổ."

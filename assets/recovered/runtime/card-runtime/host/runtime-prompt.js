@@ -1,6 +1,5 @@
 import { summaryChunkSize } from '../../../features/chat/history-policy.js';
-/** Prompt construction for Card generation. The host state is captured once and
- * checked before publishing changes caused by asynchronous prompt processing. */
+
 export function createRuntimePromptBuilder({ readState, readLorebooks, resolvePreset, turnPolicy,
   baseSections, buildPrompt, readContextSettings, writeGlobalVariables, publish }) {
   const contextContent = message => turnPolicy.modelContextContent(message);

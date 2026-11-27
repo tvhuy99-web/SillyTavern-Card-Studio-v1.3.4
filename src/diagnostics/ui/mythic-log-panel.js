@@ -1,5 +1,3 @@
-// Recovered application UI. The existing React instance and feature dependencies are injected.
-// Keep the factory boundary until the native React build replaces the recovered host.
 function resolveDiagnosticDeps(getDependencies) {
   const deps = getDependencies();
   return {
@@ -88,14 +86,14 @@ export function createMythicLogItem(react, getDependencies) {
         let systemText = prompt.substring(0, schemaIndex).trim();
         systemText && sections.push({
           id: "mythic_system",
-          name: "🎛️ System Instructions (Chỉ dẫn)",
+          name: "System Instructions (Chỉ dẫn)",
           content: systemText,
           role: "system"
         });
         let schemaMatch = prompt.match(/<Cấu trúc bảng & Luật lệ>([\s\S]*?)<\/Cấu trúc bảng & Luật lệ>/);
         schemaMatch && sections.push({
           id: "mythic_schema",
-          name: "📐 Schema & Rules (Cấu trúc bảng)",
+          name: "Schema & Rules (Cấu trúc bảng)",
           content: schemaMatch[1].trim(),
           role: "system"
         });
@@ -105,7 +103,7 @@ export function createMythicLogItem(react, getDependencies) {
           let lorebookSections = lorebookText.split("### [Lore:").filter(Boolean).map(section => "### [Lore:" + section);
           sections.push({
             id: "mythic_lore",
-            name: "📚 Lorebook Reference (Dữ liệu tham khảo)",
+            name: "Lorebook Reference (Dữ liệu tham khảo)",
             content: lorebookText,
             role: "system",
             subSections: lorebookSections.length > 0 ? lorebookSections : undefined
@@ -114,21 +112,21 @@ export function createMythicLogItem(react, getDependencies) {
         let databaseMatch = prompt.match(/<Dữ liệu bảng hiện tại>([\s\S]*?)<\/Dữ liệu bảng hiện tại>/);
         databaseMatch && sections.push({
           id: "mythic_data",
-          name: "💾 Current Database (Dữ liệu hiện tại)",
+          name: "Current Database (Dữ liệu hiện tại)",
           content: databaseMatch[1].trim(),
           role: "system"
         });
         let chatMatch = prompt.match(/<Dữ liệu chính văn>([\s\S]*?)<\/Dữ liệu chính văn>/);
         chatMatch && sections.push({
           id: "mythic_chat",
-          name: "💬 Chat Context (Chính văn)",
+          name: "Chat Context (Chính văn)",
           content: chatMatch[1].trim(),
           role: "system"
         });
         let rulesMatch = prompt.match(/LUẬT CHUNG:([\s\S]*)$/);
         rulesMatch && sections.push({
           id: "mythic_global",
-          name: "⚖️ Global Rules (Luật chung)",
+          name: "Global Rules (Luật chung)",
           content: rulesMatch[1].trim(),
           role: "system"
         });
@@ -164,7 +162,7 @@ export function createMythicLogItem(react, getDependencies) {
           children: [(0, jsxRuntime.jsxs)("div", {
             className: "flex items-center gap-2",
             children: [(0, jsxRuntime.jsx)("span", {
-              children: "📤 Lời nhắc Gửi đi (Outgoing Prompt)"
+              children: "Lời nhắc Gửi đi (Outgoing Prompt)"
             }), (0, jsxRuntime.jsx)("span", {
               className: " group-open:rotate-90  text-[8px]",
               "aria-hidden": "true",
@@ -190,7 +188,7 @@ export function createMythicLogItem(react, getDependencies) {
           className: "flex justify-between items-center mb-1",
           children: [(0, jsxRuntime.jsx)("span", {
             className: "text-[10px] text-orange-400 font-bold",
-            children: "📥 Phản hồi Thô (AI Response)"
+            children: "Phản hồi Thô (AI Response)"
           }), (0, jsxRuntime.jsx)(CopyButton, {
             textToCopy: parsedLog.rawResponse,
             label: "Copy",

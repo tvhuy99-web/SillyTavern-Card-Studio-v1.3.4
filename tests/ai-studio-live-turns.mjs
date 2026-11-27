@@ -13,14 +13,11 @@ assert.match(native,/NEW_CHAT_CONFIRMED/);
 assert.match(native,/oldModelTurns/);
 assert.match(native,/AI_STUDIO_NEW_CHAT_NOT_EMPTY/);
 
-// Google login is retained across requests; the troubleshooting WebView must
-// be hidden by default without stopping the native page or text streaming.
 assert.match(native, /PREFS_SHOW_PAGE = "show_ai_studio_page"/);
 assert.match(native, /getBoolean\(PREFS_SHOW_PAGE, false\)/);
 assert.match(native, /public void setVisibility\(PluginCall call\)/);
 assert.match(native, /public void getVisibility\(PluginCall call\)/);
-// A visible AI Studio page is an inline non-modal monitor, never an
-// AlertDialog. The user must be able to send messages without leaving it.
+
 assert.match(panel, /root\.addView\(offscreenHost,0,p\)/);
 assert.match(panel, /offscreenHost\.setTranslationY\(visible\?0f:screenHeight\+Math\.max\(1,panelHeight\)\)/);
 assert.match(panel, /offscreenHost\.setImportantForAccessibility\(accessibility\)/);
@@ -45,9 +42,10 @@ const screen = fs.readFileSync(new URL('../src/ui/settings/connection-settings-s
 assert.match(sections, /Hiển thị trang web AI Studio/);
 assert.match(sections, /checked: aiStudioVisible/);
 assert.match(sections, /changeAiStudioVisibility\(event.target.checked\)/);
-assert.match(screen, /"aria-label": "Nhà cung cấp AI"/);
-for (const source of ['gemini','openrouter','proxy','aistudio']) assert.ok(screen.includes('value: "'+source+'"'));
-assert.match(screen, /value: settings\.source, onChange: ([\w$]+) => updateSetting\("source", \1\.target\.value\)/);
+assert.match(screen, /Nhà cung cấp API chính/);
+assert.match(screen, /Nhà cung cấp API phụ/);
+for (const source of ['gemini','openrouter','proxy','aistudio']) assert.ok(screen.includes("value: '"+source+"'"));
+assert.match(screen, /updateSetting\('source', nextProvider\)/);
 for (const note of ['Dùng phiên Google / AI Studio trong WebView Android (thử nghiệm)', 'Hãy chọn mô hình trực tiếp trên trang AI Studio', 'Mặc định tắt. Bật khi cần đăng nhập, chọn mô hình hoặc kiểm tra lỗi']) assert.ok(!sections.includes(note));
 
 assert.match(native,/event\.put\("replace",\s*true\)/);
@@ -71,7 +69,7 @@ globalThis.Capacitor = {
     if(method==='cancel') return {};
     assert.equal(method,'generate');
     assert.equal(args.prompt,'Test streaming');
-    // Simulate a UI response that is revised after the first visible text.
+
     for(const [delay,text] of [[10,'Mở đầu tạm'],[22,'Mở đầu đã sửa, câu một'],[33,'Mở đầu đã sửa, câu một và câu hai']]){
       setTimeout(()=>handlers.get('textProgress')?.({
         requestId:args.requestId,text,replace:true,

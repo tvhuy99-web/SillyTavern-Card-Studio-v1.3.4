@@ -13,14 +13,6 @@ import android.os.IBinder;
 import android.os.PowerManager;
 import android.util.Log;
 
-/**
- * User-initiated foreground data transfer for an active AI Studio text reply.
- * Keeps the process eligible for background work after pressing Home.
- *
- * The actual Google session stays in the plugin's Android WebView; this
- * service never receives prompts, model answers, cookies, or account tokens.
- * Android may still stop WebView when the app is force-stopped or killed.
- */
 public class AiStudioGenerationService extends Service {
     public static final String ACTION_BEGIN = "com.tvhuy99.cardstudio.AISTUDIO_BEGIN";
     private static final String CHANNEL_WORK = "ai_studio_generation";
@@ -40,13 +32,11 @@ public class AiStudioGenerationService extends Service {
             .putExtra(EXTRA_TOKEN, token);
     }
 
-    /** Called on the main thread. A finished request cannot stop a later one. */
     public static void finish(Context context, String token, boolean successful) {
         if (!LEASE.release(token)) return;
         AiStudioGenerationService current = instance;
         if (current != null && token.equals(current.activeToken)) current.finishRequest(successful);
-        // A queued startForegroundService still needs to acknowledge Android's
-        // start request. onStartCommand promotes then stops a stale start.
+
     }
 
     public static boolean isActive(String token) {

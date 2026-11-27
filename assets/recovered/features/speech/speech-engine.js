@@ -1,4 +1,3 @@
-// Recovered from the application host. One owner; dependency getters preserve late binding.
 export function createSpeechEngine(dependencies = {}) {
 var speechSafetySettings=[{category:dependencies.HarmCategory.HARM_CATEGORY_HARASSMENT,threshold:dependencies.HarmBlockThreshold.BLOCK_NONE},{category:dependencies.HarmCategory.HARM_CATEGORY_HATE_SPEECH,threshold:dependencies.HarmBlockThreshold.BLOCK_NONE},{category:dependencies.HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT,threshold:dependencies.HarmBlockThreshold.BLOCK_NONE},{category:dependencies.HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT,threshold:dependencies.HarmBlockThreshold.BLOCK_NONE},{category:dependencies.HarmCategory.HARM_CATEGORY_CIVIC_INTEGRITY,threshold:dependencies.HarmBlockThreshold.BLOCK_NONE}];
 var generateGeminiSpeech = async (text, voiceName = "Kore") => {

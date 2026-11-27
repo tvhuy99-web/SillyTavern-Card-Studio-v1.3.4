@@ -1,6 +1,3 @@
-// Recovered application UI. The existing React instance and feature dependencies are injected.
-// Semantic dependency contract: callers inject named dependencies directly.
-
 export function createVariableTree(getDependencies) {
   return function VariableTree({ data, level = 0 }) {
     const { react, jsxRuntime } = getDependencies();

@@ -1,6 +1,5 @@
 import { modelTestProps } from './model-test-props.js';
-// Provider-specific render helpers. These are pure render functions, not mounted components.
-// Preserve the previous element tree and hook ownership in the screen controller.
+
 export function renderOpenRouterSection({ LoadingIndicator, SearchableSelect, ToggleSwitch, modelTest, filteredOpenRouterModels, freeOnly, jsxRuntime, keyChecking, keyStatus, loadOpenRouterModels, openRouterKey, openRouterLoading, openRouterModels, request, setFreeOnly, setKeyChecking, setKeyStatus, setOpenRouterKey, settings, updateSetting }) { return jsxRuntime.jsxs("div", {
     className: "space-y-6 ", children: [jsxRuntime.jsxs("div", {
             className: "bg-slate-900/50 p-4 rounded-lg border border-slate-700", children: [jsxRuntime.jsx("label", {

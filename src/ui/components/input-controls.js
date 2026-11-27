@@ -1,6 +1,3 @@
-// Semantic dependency contract: callers inject named dependencies directly.
-// Factories receive the existing React/runtime bindings lazily to preserve initialization order.
-
 function resolveInputControlDeps(getDependencies) {
   const deps = getDependencies();
   return {
@@ -149,6 +146,7 @@ export function createInlineCopyButton(getDependencies) {
         jsxRuntime.jsx('button', {
           onClick: handleCopyMacro,
           className: 'p-2 bg-slate-600 hover:bg-slate-500 rounded-md text-slate-300 hover:text-white  flex-shrink-0 group',
+          'aria-label': isCopied ? 'Đã sao chép!' : `Sao chép ${macro.name}`,
           title: isCopied ? 'Đã sao chép!' : `Sao chép ${macro.name}`,
           children: isCopied
             ? jsxRuntime.jsx('svg', {
@@ -212,27 +210,21 @@ export function createTextInput(getDependencies) {
           text: tooltip,
           children: jsxRuntime.jsx('label', {
             htmlFor: inputId,
+            'aria-hidden': 'true',
             className: 'block text-sm font-medium text-slate-300 mb-1 cursor-help',
             children: label,
           }),
         }),
-        jsxRuntime.jsxs('div', {
-          className: 'relative',
-          children: [
-            jsxRuntime.jsx('input', {
-              id: inputId,
-              type,
-              value,
-              onChange,
-              placeholder,
-              disabled,
-              className: 'w-full bg-slate-700 border border-slate-600 rounded-md p-2 pr-10 text-slate-200 focus:ring-2 focus:ring-sky-500 focus:border-sky-500 transition disabled:opacity-50 disabled:cursor-not-allowed',
-            }),
-            value !== '' && jsxRuntime.jsx(CopyButton, {
-              textToCopy: String(value),
-              absolute: true,
-            }),
-          ],
+        jsxRuntime.jsx('input', {
+          id: inputId,
+          type,
+          value,
+          onChange,
+          placeholder,
+          disabled,
+          'aria-label': label,
+          'aria-description': tooltip || undefined,
+          className: 'w-full bg-slate-700 border border-slate-600 rounded-md p-2 text-slate-200 focus:ring-2 focus:ring-sky-500 focus:border-sky-500 transition disabled:opacity-50 disabled:cursor-not-allowed',
         }),
       ],
     });
@@ -267,27 +259,20 @@ export function createTextArea(getDependencies) {
           text: tooltip,
           children: label && jsxRuntime.jsx('label', {
             htmlFor: textareaId,
+            'aria-hidden': 'true',
             className: 'block text-sm font-medium text-slate-300 mb-1 cursor-help',
             children: label,
           }),
         }),
-        jsxRuntime.jsxs('div', {
-          className: 'relative',
-          children: [
-            jsxRuntime.jsx('textarea', {
-              id: textareaId,
-              value,
-              onChange,
-              rows,
-              placeholder,
-              'aria-label': ariaLabel || undefined,
-              className: `w-full bg-slate-700 border border-slate-600 rounded-md p-2 pr-10 text-slate-200 focus:ring-2 focus:ring-sky-500 focus:border-sky-500 transition font-mono text-sm ${className}`,
-            }),
-            jsxRuntime.jsx(CopyButton, {
-              textToCopy: value,
-              absolute: true,
-            }),
-          ],
+        jsxRuntime.jsx('textarea', {
+          id: textareaId,
+          value,
+          onChange,
+          rows,
+          placeholder,
+          'aria-label': ariaLabel || label || undefined,
+          'aria-description': tooltip || undefined,
+          className: `w-full bg-slate-700 border border-slate-600 rounded-md p-2 text-slate-200 focus:ring-2 focus:ring-sky-500 focus:border-sky-500 transition font-mono text-sm ${className}`,
         }),
       ],
     });
@@ -322,6 +307,7 @@ export function createSearchableSelect(getDependencies) {
           text: tooltip,
           children: label && jsxRuntime.jsx('label', {
             htmlFor: selectId,
+            'aria-hidden': 'true',
             className: 'block text-sm font-medium text-slate-300 mb-1 cursor-help',
             children: label,
           }),
@@ -368,8 +354,7 @@ export function createNumberInput(getDependencies) {
       jsxRuntime,
     } = resolveInputControlDeps(getDependencies);
 
-    const rangeId = react.useId();
-    const numericValue = typeof value === 'number' ? value : (Number.parseFloat(value) || min);
+    const inputId = react.useId();
 
     return jsxRuntime.jsxs('div', {
       className,
@@ -377,37 +362,28 @@ export function createNumberInput(getDependencies) {
         jsxRuntime.jsx(Tooltip, {
           text: tooltip,
           children: jsxRuntime.jsx('label', {
-            htmlFor: rangeId,
+            htmlFor: inputId,
+            'aria-hidden': 'true',
             className: 'block text-sm font-medium text-slate-300 mb-1 cursor-help',
             children: label,
           }),
         }),
-        jsxRuntime.jsxs('div', {
-          className: 'flex items-center gap-4',
-          children: [
-            jsxRuntime.jsx('input', {
-              id: rangeId,
-              type: 'range',
-              min,
-              max,
-              step,
-              value: numericValue,
-              onChange: event => onChange(Number.parseFloat(event.target.value)),
-              className: 'w-full h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-sky-500',
-            }),
-            jsxRuntime.jsx('input', {
-              type: 'number',
-              value,
-              onChange: event => {
-                const parsed = Number.parseFloat(event.target.value);
-                if (!Number.isNaN(parsed)) {
-                  onChange(parsed);
-                }
-              },
-              className: 'w-20 bg-slate-700 border border-slate-600 rounded-md p-1 text-slate-200 text-center focus:ring-2 focus:ring-sky-500 focus:border-sky-500 transition font-mono text-sm',
-              'aria-label': `${label} (Nhập số)`,
-            }),
-          ],
+        jsxRuntime.jsx('input', {
+          id: inputId,
+          type: 'number',
+          min,
+          max,
+          step,
+          value,
+          onChange: event => {
+            const parsed = Number.parseFloat(event.target.value);
+            if (!Number.isNaN(parsed)) {
+              onChange(parsed);
+            }
+          },
+          className: 'w-full bg-slate-700 border border-slate-600 rounded-md p-2 text-slate-200 focus:ring-2 focus:ring-sky-500 focus:border-sky-500 transition font-mono text-sm',
+          'aria-label': label,
+          'aria-description': tooltip || undefined,
         }),
       ],
     });
@@ -444,6 +420,7 @@ export function createStringListInput(getDependencies) {
         jsxRuntime.jsx(Tooltip, {
           text: tooltipText,
           children: jsxRuntime.jsx('label', {
+            'aria-hidden': 'true',
             className: 'block text-sm font-medium text-slate-300 cursor-help',
             children: label,
           }),
@@ -453,22 +430,13 @@ export function createStringListInput(getDependencies) {
           children: values.map((itemValue, index) => jsxRuntime.jsxs('div', {
             className: 'flex items-center gap-2',
             children: [
-              jsxRuntime.jsxs('div', {
-                className: 'relative flex-grow',
-                children: [
-                  jsxRuntime.jsx('input', {
-                    type: 'text',
-                    value: itemValue,
-                    onChange: event => handleUpdateItem(index, event.target.value),
-                    className: 'w-full bg-slate-700 border border-slate-600 rounded-md p-2 pr-10 text-slate-200 focus:ring-2 focus:ring-sky-500 focus:border-sky-500 transition',
-                    placeholder,
-                    'aria-label': `${label} mục ${index + 1}`,
-                  }),
-                  jsxRuntime.jsx(CopyButton, {
-                    textToCopy: itemValue,
-                    absolute: true,
-                  }),
-                ],
+              jsxRuntime.jsx('input', {
+                type: 'text',
+                value: itemValue,
+                onChange: event => handleUpdateItem(index, event.target.value),
+                className: 'flex-grow bg-slate-700 border border-slate-600 rounded-md p-2 text-slate-200 focus:ring-2 focus:ring-sky-500 focus:border-sky-500 transition',
+                placeholder,
+                'aria-label': `${label} mục ${index + 1}`,
               }),
               jsxRuntime.jsx('button', {
                 onClick: () => handleRemoveItem(index),
@@ -534,6 +502,7 @@ export function createToastItem(getDependencies) {
       children: [
         jsxRuntime.jsx('div', {
           className: 'flex-shrink-0',
+          'aria-hidden': 'true',
           children: jsxRuntime.jsx(Icon, {
             name: getToastIconName(toast.type),
             className: 'h-5 w-5',

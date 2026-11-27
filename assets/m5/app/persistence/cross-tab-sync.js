@@ -1,5 +1,3 @@
-// Cross-tab persistence synchronization via BroadcastChannel with storage-event fallback.
-// Pure browser/Web-API module with no React or DOM component dependency.
 export const CROSS_TAB_EVENTS = Object.freeze({
   SESSION_CLAIMED: 'session-claimed',
   SESSION_DELETED: 'session-deleted',
@@ -90,7 +88,7 @@ export function createCrossTabSync({
       const parsed = JSON.parse(event.newValue);
       dispatch(parsed);
     } catch {
-      // Ignore malformed cross-tab payloads written by external actors.
+
     }
   }
 
@@ -139,7 +137,7 @@ export function createCrossTabSync({
         try {
           storage.removeItem(storageKey);
         } catch {
-          // Best-effort cleanup of transient signal key.
+
         }
         return true;
       } catch (error) {
@@ -193,7 +191,7 @@ export function createCrossTabSync({
         }
         if (typeof channel.close === 'function') channel.close();
       } catch {
-        // Ignore teardown errors.
+
       }
       channel = null;
     }
@@ -201,7 +199,7 @@ export function createCrossTabSync({
       try {
         targetWindow.removeEventListener('storage', handleStorageEvent);
       } catch {
-        // Ignore teardown errors.
+
       }
     }
     listenersByType.clear();

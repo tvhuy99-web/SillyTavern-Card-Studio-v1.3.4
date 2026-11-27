@@ -13,7 +13,6 @@ function deferred() {
 }
 const turn = () => new Promise(resolve => setImmediate(resolve));
 
-// Fake clock: a stale callback must never capture a different session.
 {
   let state = { sessionId: 'A', value: 1 }, busy = true, timerId = 0;
   const pending = new Map(), records = [], errors = [];
@@ -40,7 +39,7 @@ const turn = () => new Promise(resolve => setImmediate(resolve));
   assert.equal(await coordinator.flush(), true); assert.equal(pending.size, 0);
   assert.deepEqual(records.at(-1), state); assert.equal(errors.length, 0);
 }
-// Queue ordering survives failures; stale queued writes do not overtake new ones.
+
 {
   const gate = deferred(); const writes = [];
   const queue = createSessionWriteQueue(async record => {
@@ -51,7 +50,7 @@ const turn = () => new Promise(resolve => setImmediate(resolve));
   await turn(); assert.deepEqual(writes, [1]); gate.resolve();
   await failed; await second; await queue.drain(); assert.deepEqual(writes, [1, 2]);
 }
-// A failed autosave can be retried with a fresh snapshot, not a stale record.
+
 {
   let state = { sessionId: 'A', value: 1 }, attempt = 0;
   const writes = [];
@@ -102,7 +101,7 @@ for (const phase of ['scan','prompt']) {
   assert.deepEqual(f.getState().worldInfoRuntime,{new:true}); assert.equal(f.getState().loading,true);
   assert.deepEqual(f.events.slice(start),[],'no stale commits after session revision change');
 }
-// Non-stream requests receive a signal, settle on Stop, and ignore late provider results.
+
 {
   const gate=deferred(), entered=deferred(); let signal;
   const f=fixture({generationGateway:{generateOnce:args=>{signal=args.signal;entered.resolve();return gate.promise;}}});
@@ -111,7 +110,7 @@ for (const phase of ['scan','prompt']) {
   assert.equal(f.getState().messages.at(-1).content,''); gate.resolve({response:{text:'late'}}); await turn();
   assert.equal(f.getState().messages.at(-1).content,''); assert.ok(!f.events.some(event=>event[0]==='response'));
 }
-// Abort must release a stuck streaming iterator without waiting for its idle timeout.
+
 {
   const entered=deferred(); const pending=deferred(); let returned=0;
   const f=fixture({generationGateway:{stream:()=>({[Symbol.asyncIterator](){let n=0;return {next(){if(n++===0)return Promise.resolve({value:{text:'partial'}});entered.resolve();return pending.promise;},return(){returned++;return Promise.resolve({done:true});}};}})}});
@@ -120,7 +119,7 @@ for (const phase of ['scan','prompt']) {
   assert.equal(returned,1); assert.equal(f.getState().messages.at(-1).content,'partial'); assert.equal(f.getState().loading,false);
   pending.resolve({value:{text:'late'}}); await turn(); assert.equal(f.getState().messages.at(-1).content,'partial');
 }
-// Two Arena sides share the parent cancellation and cannot overwrite a new session.
+
 {
   const entered=deferred(), pending=deferred(), signals=[];
   const f=fixture({generationGateway:{stream:({signal})=>{signals.push(signal);if(signals.length===2)entered.resolve();return {[Symbol.asyncIterator](){return {next:()=>pending.promise,return:async()=>({done:true})};}};}}});
@@ -129,7 +128,7 @@ for (const phase of ['scan','prompt']) {
   assert.equal(f.getState().messages[0].content,'NEW'); assert.equal(f.getState().loading,true); assert.equal(runtimeState.size(),0);
   pending.resolve({done:true});
 }
-// Response processor itself does not apply post-output RPG work to a new session.
+
 {
   const gate=deferred(); const writes=[]; let state={sessionId:'A',messages:[{id:'m'}],card:{rpg_data:{settings:{executionMode:'integrated'}}}};
   const request=processAIResponse({messageId:'m',content:'long enough response for this test',forced:true},{getState:()=>state,getSessionRevision:runtimeState.getSessionRevision,
@@ -138,7 +137,6 @@ for (const phase of ['scan','prompt']) {
 }
 console.log('P05/P06 session lifecycle, autosave queue, abort and stale response boundaries: OK');
 
-// Opening the same ID again must invalidate a timer created by the old lifecycle.
 {
   let revision=1, state={sessionId:'A',value:1}, fired;const records=[];
   const queue=createSessionWriteQueue(async record=>records.push(record));
@@ -147,7 +145,7 @@ console.log('P05/P06 session lifecycle, autosave queue, abort and stale response
   assert.deepEqual(records,[]);assert.equal(await coordinator.flush({force:true}),false);
   coordinator.markDirty();await coordinator.flush();assert.deepEqual(records,[state]);
 }
-// Retry reuses the original provider/model/profile, active lorebook UIDs and replacement-stream semantics.
+
 {
   const f=fixture();const requestArgs=[];let promptInput;
   Object.assign(f.getState(),{card:{char_book:{entries:[{uid:'a'},{uid:'unused'}]}},generatedLorebookEntries:[{uid:'g'}],messages:[{id:'u',role:'user'},{id:'m',role:'model',activeLorebookUids:['a','b','g'],arena:{modelA:{provider:'proxy',modelId:'old-model',profileId:'old-profile',content:'before'},modelB:{content:'keep'}}}]});
@@ -162,7 +160,7 @@ console.log('P05/P06 session lifecycle, autosave queue, abort and stale response
   const arena=f.getState().messages[1].arena;assert.equal(arena.modelA.content,'replacement');assert.equal(arena.modelA.status,'success');assert.equal(arena.modelA.completed,true);assert.equal(arena.modelB.content,'keep');
   assert.equal(runtimeState.size(),0);assert.equal(f.getState().loading,false);
 }
-// A retry owns its controller before the first paint; Stop can cancel it immediately.
+
 {
   const f=fixture();const paint=deferred();let promptCalled=false;
   f.getState().messages=[{id:'m',arena:{modelA:{provider:'gemini',modelId:'main'},modelB:{}}}];
@@ -172,7 +170,6 @@ console.log('P05/P06 session lifecycle, autosave queue, abort and stale response
 }
 console.log('Arena retry shared stream, original model/profile, lorebook, early cancellation, same-ID autosave: OK');
 
-// AI Studio uses its own model selection, not an unrelated OpenRouter model.
 {
   const connection={source:'aistudio',aistudio_model:'native-model',openrouter_model:'wrong-model'};
   const arena=chatTurnPolicy.createArenaState(connection,{arenaModelId:'challenger'});

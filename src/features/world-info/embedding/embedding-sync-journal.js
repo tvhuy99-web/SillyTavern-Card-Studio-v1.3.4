@@ -1,7 +1,5 @@
 let nextWorldInfoSyncId = 0;
 
-// A bounded, privacy-safe diagnostic journal for the System Console.
-// Checkpoints are emitted BEFORE each awaited model/IndexedDB operation.
 export function createWorldInfoSyncJournal(logger, providerId, options = {}) {
   const now = options.now || Date.now;
   const schedule = options.setInterval || setInterval;

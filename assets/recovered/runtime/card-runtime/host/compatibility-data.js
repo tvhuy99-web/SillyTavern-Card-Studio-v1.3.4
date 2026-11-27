@@ -1,4 +1,3 @@
-// Recovered from the application host. One owner; dependency getters preserve late binding.
 export function createRuntimeCompatibilityData(dependencies = {}) {
   var applySamplingOverrides = (overrides, preset) => {
     let result = JSON.parse(JSON.stringify(preset));

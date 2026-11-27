@@ -2,8 +2,6 @@ package com.tvhuy99.cardstudio;
 
 import java.util.LinkedHashSet;
 
-/** Small bounded set of cancelled IDs, including cancel-before-start races.
- * Explicit IDs are never truncated or rewritten to avoid collisions. */
 final class NativeRequestLedger {
     private final LinkedHashSet<String> cancelled = new LinkedHashSet<>();
     static boolean valid(String id) { return id != null && id.matches("[A-Za-z0-9_-]{1,80}"); }

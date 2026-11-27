@@ -1,7 +1,6 @@
 import { createSerialQueue } from '../../core/async/serial-queue.js';
 import { createCharacterMutations } from '../../features/catalog/catalog-mutations.js';
 
-/** Zustand/Immer instance is supplied by composition. Repositories own data. */
 export function createCharacterStore({ createStore, immer, repositories, prepareRecord, parseCharacter, normalizeDefault, defaultCharacter, url = globalThis.URL }) {
   const run = createSerialQueue();
   const revoke = value => { if (value) url.revokeObjectURL(value); };

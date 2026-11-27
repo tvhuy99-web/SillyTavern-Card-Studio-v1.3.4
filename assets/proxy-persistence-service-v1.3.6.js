@@ -157,8 +157,6 @@ export function createProxyPersistence(options = {}) {
     });
   }
 
-  // Web Storage has no multi-key transaction. Restore owned keys on a failed
-  // synchronous write where possible; never report success on a partial write.
   function mutate(work) {
     options.assertWriteAllowed?.("proxy.mutate");
     const snapshot = [local, session].map(storage => [storage, Object.values(storageKeys).map(key => [key, storage.getItem(key)])]);

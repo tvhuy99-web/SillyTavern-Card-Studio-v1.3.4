@@ -1,27 +1,9 @@
-/**
- * Conversation history slicing, prompt-regex application, current page history
- * formatting, and last-turn extraction.
- */
-
 import { extractStoryContent } from '../story-content.js';
 
-/**
- * Yields briefly to the event loop to keep long prompt builds responsive.
- *
- * @returns {Promise<void>}
- */
 function yieldMacrotask() {
   return new Promise(resolve => setTimeout(resolve, 0));
 }
 
-/**
- * Finds the first message index in `historyMessages` that belongs to the current
- * unsummarized page after `summarizedModelTurns` turns have been summarized.
- *
- * @param {Array<Record<string, any>>} historyMessages
- * @param {number} summarizedModelTurns
- * @returns {number}
- */
 function findCurrentPageStartIndex(historyMessages, summarizedModelTurns) {
   if (summarizedModelTurns <= 0) {
     return 0;
@@ -38,13 +20,6 @@ function findCurrentPageStartIndex(historyMessages, summarizedModelTurns) {
   return historyMessages.length;
 }
 
-/**
- * Selects the preferred raw or rendered content for a conversation message.
- *
- * @param {Record<string, any>} message
- * @param {boolean} [preferOriginalRaw=false]
- * @returns {string}
- */
 function selectMessageSourceContent(message, preferOriginalRaw = false) {
   if (preferOriginalRaw && message.originalRawContent) {
     return message.originalRawContent;
@@ -55,32 +30,6 @@ function selectMessageSourceContent(message, preferOriginalRaw = false) {
   return message.originalRawContent || '';
 }
 
-/**
- * Builds the long-term summary text, current unsummarized page history, and
- * most recent turn lines with official-local prompt regex processing.
- *
- * @param {{
- *   historyMessages: Array<Record<string, any>>,
- *   longTermSummaries: string[],
- *   summaryChunkSize: number,
- *   contextMode: string,
- *   userName: string,
- *   characterName: string,
- *   userPersonaDescription: string,
- *   card: Record<string, any>,
- *   preset?: Record<string, any>,
- *   disableInteractiveMode?: boolean,
- *   expandMacros: (text: string) => string,
- *   deps: Record<string, any>,
- * }} params
- * @returns {Promise<{
- *   longTermSummaryText: string,
- *   currentPageLines: string[],
- *   currentPageHistoryText: string,
- *   lastTurnLines: string[],
- *   lastTurnText: string,
- * }>}
- */
 export async function buildHistoryContext({
   historyMessages,
   longTermSummaries,

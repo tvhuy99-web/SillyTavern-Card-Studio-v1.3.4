@@ -1,4 +1,3 @@
-// RPG actions share the store's existing Immer transaction and derived Lorebook builder.
 export function createSessionRpgActions(setState, dependencies) {
     function synchronize(draft, operation) {
         draft.card.rpg_data.lastUpdated = Date.now();

@@ -1,6 +1,3 @@
-/* Performance-first accessibility mode.
-   This installation is optimized for screen-reader use and low UI latency. */
-
 html,
 body,
 #root {
@@ -53,8 +50,6 @@ body,
   }
 }
 
-
-/* M6 semantic controls */
 button[role="switch"] {
   font: inherit;
   text-align: inherit;

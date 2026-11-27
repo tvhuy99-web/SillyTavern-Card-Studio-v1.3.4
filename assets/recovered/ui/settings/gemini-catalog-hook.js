@@ -1,4 +1,3 @@
-// Recovered from the application host. One owner; dependency getters preserve late binding.
 export function createGeminiCatalogHook(dependencies = {}) {
 var useGeminiCatalog = defaultModels => {
   let [models, setModels] = (0,dependencies.react.useState)(() => {

@@ -24,7 +24,6 @@ import {
 } from '../src/providers/common/provider-registry.js';
 import { createGenerationGateway } from '../src/providers/common/generation-gateway.js';
 
-// 1. Provider capability matrix & validateConfig contracts
 const expectedCapabilityKeys = [
   'streaming',
   'cancellation',
@@ -46,7 +45,6 @@ for (const id of ['gemini', 'openrouter', 'proxy', 'aistudio']) {
   assert.equal(typeof contract.validateConfig, 'function');
 }
 
-// AI Studio must NOT be forced to support connectionTest
 assert.equal(BUILTIN_PROVIDER_CONTRACTS.aistudio.capabilities.connectionTest, false);
 assert.equal(BUILTIN_PROVIDER_CONTRACTS.aistudio.capabilities.testConnection, false);
 assert.equal(BUILTIN_PROVIDER_CONTRACTS.aistudio.capabilities.streaming, true);
@@ -65,7 +63,6 @@ for (const id of ['gemini', 'openrouter', 'proxy']) {
   assert.equal(caps.toolCalling, true);
 }
 
-// validateConfig matrix checks
 assert.equal(BUILTIN_PROVIDER_CONTRACTS.gemini.validateConfig({}).valid, false);
 assert.equal(BUILTIN_PROVIDER_CONTRACTS.gemini.validateConfig({ useDefault: true }).valid, true);
 assert.equal(BUILTIN_PROVIDER_CONTRACTS.gemini.validateConfig({ geminiApiKey: 'AIza-secret' }).valid, true);
@@ -87,7 +84,6 @@ assert.equal(BUILTIN_PROVIDER_CONTRACTS.proxy.validateConfig({ url: 'https://pro
 assert.equal(BUILTIN_PROVIDER_CONTRACTS.aistudio.validateConfig({}).valid, true);
 assert.equal(BUILTIN_PROVIDER_CONTRACTS.aistudio.validateConfig({ nativeAvailable: false }).valid, false);
 
-// 2. Gemini config: DEFAULT_GEMINI_SAFETY_SETTINGS, createGeminiClient, buildGeminiRequest
 assert.equal(DEFAULT_GEMINI_SAFETY_SETTINGS.length, 4);
 assert.deepEqual(
   DEFAULT_GEMINI_SAFETY_SETTINGS.map(item => [item.category, item.threshold]),
@@ -152,7 +148,6 @@ const invalidTopKReq = buildGeminiRequest('No topK', { top_k: 0, thinking_budget
 assert.equal(invalidTopKReq.config.topK, undefined);
 assert.equal(invalidTopKReq.config.thinkingConfig, undefined);
 
-// 3. Network redaction: zero secret/API key leakage
 const secretUrl = 'https://user:super-pass@api.example.com/v1/models?key=AIzaSecret123&api_key=sk-secret-456&safe=1';
 const cleanUrl = redactUrl(secretUrl);
 assert.equal(cleanUrl.includes('super-pass'), false);
@@ -206,7 +201,6 @@ assert.equal(textBodyRedacted.includes('abc123'), false);
 assert.equal(textBodyRedacted.includes('xyz789'), false);
 assert.ok(textBodyRedacted.includes('mode=chat'));
 
-// 4. HTTP transport: direct fetch, /api/forward, abort & error handling
 const fetchCalls = [];
 const transportLogs = [];
 let directBypass = true;
@@ -240,21 +234,17 @@ const transport = createHttpTransport({
   },
 });
 
-// Internal /api/* passes straight through
 const healthRes = await transport.request('/api/health', { method: 'GET' });
 assert.equal(await healthRes.text(), 'ok');
 assert.equal(fetchCalls.at(-1).url, '/api/health');
 
-// Direct mode calls target directly and redacts secret in log
 const directRes = await transport.request('https://api.example/v1/chat?api_key=direct-secret-999', { method: 'POST' });
 assert.deepEqual(await directRes.json(), { direct: 'https://api.example/v1/chat?api_key=direct-secret-999' });
 assert.equal(transportLogs.some(line => line.includes('direct-secret-999')), false);
 
-// Direct network failure wraps with proxy hint, while AbortError rethrows directly
 await assert.rejects(transport.request('https://fail.example/net', {}), /Kết nối trực tiếp thất bại/);
 await assert.rejects(transport.request('https://abort.example/net', {}), { name: 'AbortError' });
 
-// /api/forward mode
 directBypass = false;
 const forwardRes = await transport.request('https://upstream.example/v1/chat/completions', {
   method: 'POST',
@@ -267,13 +257,11 @@ assert.equal(forwardJson.forwarded, 'https://upstream.example/v1/chat/completion
 assert.equal(forwardJson.method, 'POST');
 assert.equal(forwardJson.headers.authorization, 'Bearer fwd-secret');
 
-// /api/forward 504 / 502 / 429 handling
 await assert.rejects(transport.request('https://upstream.example/timeout', {}), /quá thời gian phản hồi/);
 await assert.rejects(transport.request('https://upstream.example/bad-gateway', {}), /Proxy Error \(502\): Bad upstream/);
 const rateLimitRes = await transport.request('https://upstream.example/rate-limit', {});
 assert.equal(rateLimitRes.status, 429);
 
-// 5. readResponseError helper in generation-utils.js
 assert.equal(
   await readResponseError(new Response(JSON.stringify({ error: { message: 'Invalid key' } }), { status: 401 }), 'OpenRouter Error'),
   'OpenRouter Error: Invalid key',
@@ -291,7 +279,6 @@ assert.equal(
   'API Error: HTTP 503',
 );
 
-// 6. Full Provider Contract Matrix via Generation Gateway + experimental provider registration
 const gatewaySettings = {
   ...CONNECTION_DEFAULTS,
   source: 'openrouter',
@@ -380,18 +367,15 @@ const gateway = createGenerationGateway({
   extraProviders: [experimentalProvider],
 });
 
-// Registered providers include the 4 built-ins + experimental provider without modifying any subsystem
 assert.deepEqual(
   gateway.listProviders().map(p => p.id),
   ['gemini', 'openrouter', 'proxy', 'aistudio', 'experimental-local'],
 );
 
-// Gateway validateConfig works for built-ins and experimental provider
 assert.equal(gateway.validateConfig('experimental-local', {}).valid, false);
 assert.equal(gateway.validateConfig('experimental-local', { endpoint: 'http://127.0.0.1:9999' }).valid, true);
 assert.throws(() => gateway.validateConfig('unknown-provider', {}), UnsupportedProviderError);
 
-// Experimental provider end-to-end: generateOnce, stream, testModel
 const expGen = await gateway.generateOnce({ source: 'experimental-local', prompt: 'hello' });
 assert.deepEqual(expGen, { response: { text: 'exp:exp-v1:hello' } });
 const expChunks = [];
@@ -403,7 +387,6 @@ const expProbe = await gateway.testModel({ provider: 'experimental-local', model
 assert.equal(expProbe.ok, true);
 assert.equal(expProbe.provider, 'experimental-local');
 
-// Streaming + cancellation on OpenRouter & Gemini
 const orStreamChunks = [];
 for await (const chunk of gateway.stream({ source: 'openrouter', model: 'or-m', prompt: 'hi' })) {
   orStreamChunks.push(chunk);
@@ -418,7 +401,6 @@ for await (const chunk of gateway.stream({ source: 'gemini', model: 'gemini-2.5-
 }
 assert.deepEqual(gemStreamChunks, [{ text: 'g1' }, { text: 'g2' }]);
 
-// Error handling across OpenRouter & Proxy
 await assert.rejects(
   gateway.generateOnce({ source: 'openrouter', model: 'fail-or-model', prompt: 'hi' }),
   /OpenRouter Error: Bad OR model/,
@@ -428,7 +410,6 @@ await assert.rejects(
   /Proxy rejected model/,
 );
 
-// Cancellation on stream & generateOnce
 const abortController = new AbortController();
 abortController.abort();
 await assert.rejects(
@@ -438,7 +419,6 @@ await assert.rejects(
   { name: 'AbortError' },
 );
 
-// Standalone provider-registry validation
 const standaloneRegistry = createProviderRegistry([experimentalProvider]);
 assert.equal(standaloneRegistry.has('experimental-local'), true);
 assert.equal(standaloneRegistry.has('missing'), false);

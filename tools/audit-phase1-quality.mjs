@@ -30,8 +30,6 @@ const FORBIDDEN_SYMBOLS = [
   'window.__STS_MODEL_CONNECTION_TEST__',
 ];
 
-// Explicit public compatibility / diagnostic / library API exports intentionally kept
-// even when not directly imported via static ESM edges from another file inside src/.
 const DOCUMENTED_PUBLIC_APIS = new Map([
   ['src/diagnostics/aistudio-log.js::recordAiStudioDiagnostic', 'Public AI Studio diagnostic logger API (also exposed on window.__STS_AI_STUDIO_LOGS__.record)'],
   ['src/diagnostics/aistudio-log.js::exportAiStudioDiagnostics', 'Public AI Studio diagnostic export API (also exposed on window.__STS_AI_STUDIO_LOGS__.export)'],
@@ -42,7 +40,6 @@ const DOCUMENTED_PUBLIC_APIS = new Map([
   ['src/features/chat/turn-policy.js::compactModelMessages', 'Public chat turn-policy API (exported standalone and on chatTurnPolicy.compactModelMessages; used by conversation-service, use-card-runtime, and turn-policy tests)'],
 ]);
 
-// Map portable-build asset mirrors back to canonical src/ paths for test/build import attribution.
 const ASSET_MIRROR_TO_SRC = new Map([
   ['assets/prompt-normalizer-v1.3.6.js', 'src/features/presets/prompt-normalizer.js'],
   ['assets/proxy-persistence-service-v1.3.6.js', 'src/providers/proxy/persistence.js'],
@@ -60,7 +57,6 @@ const ASSET_MIRROR_PREFIXES = [
   'assets/recovered/',
 ];
 
-// Explicit semantic ownership inventory across all 11 business domains.
 const SEMANTIC_OWNERSHIP_INVENTORY = Object.freeze([
   {
     domain: 'Providers',
@@ -278,11 +274,6 @@ function parseEsmBindings(filePath, rawCode) {
   const code = stripComments(rawCode);
   const edges = [];
 
-  // 1. Static import statements:
-  //    import { a, b as c } from './x.js'
-  //    import def, { a } from './x.js'
-  //    import * as ns from './x.js'
-  //    import def from './x.js'
   const importRe = /\bimport\s+([\s\S]*?)\s+from\s+['"]([^'"]+)['"]/g;
   let match;
   while ((match = importRe.exec(code)) !== null) {
@@ -290,7 +281,6 @@ function parseEsmBindings(filePath, rawCode) {
     const target = resolveSpecifierToCanonicalSrc(filePath, match[2]);
     if (!target) continue;
 
-    // Namespace import: `* as ns`
     const nsMatch = clause.match(/\*\s+as\s+([A-Za-z_$][A-Za-z0-9_$]*)/);
     if (nsMatch) {
       const nsName = nsMatch[1];
@@ -300,14 +290,13 @@ function parseEsmBindings(filePath, rawCode) {
       while ((mm = memberRe.exec(code)) !== null) {
         accessed.add(mm[1]);
       }
-      // Detect whether the namespace object itself is passed dynamically (e.g. `({ ns })`, `(ns)`, `= ns`)
+
       const strippedImport = code.replace(match[0], '');
       const withoutMemberAccess = strippedImport.replace(new RegExp(`\\b${escapeRegExp(nsName)}\\.[A-Za-z_$][A-Za-z0-9_$]*`, 'g'), '');
       const passedDynamically = new RegExp(`\\b${escapeRegExp(nsName)}\\b`).test(withoutMemberAccess);
       edges.push({ target, kind: 'namespace', accessed: [...accessed], allExports: passedDynamically });
     }
 
-    // Named imports: `{ a, b as c }`
     const namedMatch = clause.match(/\{([\s\S]*?)\}/);
     if (namedMatch) {
       const names = [];
@@ -322,7 +311,6 @@ function parseEsmBindings(filePath, rawCode) {
       }
     }
 
-    // Default import: `foo` before comma or standalone (not starting with `{` or `*`)
     if (!clause.startsWith('{') && !clause.startsWith('*')) {
       const defaultName = clause.split(',')[0].trim();
       if (/^[A-Za-z_$][A-Za-z0-9_$]*$/.test(defaultName)) {
@@ -331,7 +319,6 @@ function parseEsmBindings(filePath, rawCode) {
     }
   }
 
-  // 2. Re-exports: `export { a, b as c } from './x.js'` and `export * from './x.js'`
   const reexportNamedRe = /\bexport\s*\{([\s\S]*?)\}\s*from\s*['"]([^'"]+)['"]/g;
   while ((match = reexportNamedRe.exec(code)) !== null) {
     const target = resolveSpecifierToCanonicalSrc(filePath, match[2]);
@@ -355,7 +342,6 @@ function parseEsmBindings(filePath, rawCode) {
     edges.push({ target, kind: 'reexport-all', allExports: true });
   }
 
-  // 3. Dynamic imports: `import('./x.js')`
   const dynamicRe = /\bimport\s*\(\s*['"]([^'"]+)['"]\s*\)/g;
   while ((match = dynamicRe.exec(code)) !== null) {
     const target = resolveSpecifierToCanonicalSrc(filePath, match[1]);
@@ -415,7 +401,7 @@ function auditUnusedExportsByImportGraph(srcFiles) {
     const tRef = testBuildRefs.get(rel);
 
     for (const symbol of exportsList) {
-      // Host CJS compatibility shims (`export { c as n, o as t }`) consumed by generated portable bundle loader
+
       if (rel === 'src/app/host.js' && (symbol === 'n' || symbol === 't')) {
         totalExports++;
         usedInSrc++;
@@ -494,7 +480,6 @@ function evaluateSemanticOwnership(srcFiles) {
 function detectLegacyDependencyKeys(cleanedCode) {
   const legacyKeys = new Set();
 
-  // 1. Destructured 1-2 character keys directly from getDependencies(): `const { b, wt, ol } = getDependencies()`
   const destructRe = /\{([^}]*)\}\s*=\s*getDependencies\s*\(\s*\)/g;
   let match;
   while ((match = destructRe.exec(cleanedCode)) !== null) {
@@ -508,7 +493,6 @@ function detectLegacyDependencyKeys(cleanedCode) {
     }
   }
 
-  // 2. Member access on `deps = getDependencies()` with 1-2 character keys: `deps.b`, `deps.wt`, `deps.ol`, `deps.hl`, etc.
   const depsVarNames = new Set(['deps']);
   const assignRe = /\b(?:const|let|var)\s+([A-Za-z_$][A-Za-z0-9_$]*)\s*=\s*getDependencies\s*\(\s*\)/g;
   while ((match = assignRe.exec(cleanedCode)) !== null) {

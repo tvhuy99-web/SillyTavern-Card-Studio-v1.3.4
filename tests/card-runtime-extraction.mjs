@@ -11,14 +11,12 @@ const coreBuilder = fs.readFileSync(
   new URL('../src/runtime/card-runtime/core-builder.js', import.meta.url),
   'utf8',
 );
-const renderer = fs.readFileSync(
-  new URL('../assets/card-runtime-renderer-v1.3.6.js', import.meta.url),
-  'utf8',
-);
+const { buildCardRuntimeRendererScript } = await import('../assets/card-runtime-renderer-v1.3.6.js');
+const renderer = buildCardRuntimeRendererScript('', [], { executeScripts: false });
 assert.ok(coreBuilder.includes('buildCardRuntimeCoreScript'));
 assert.ok(coreBuilder.includes('__STS_START_CARD_RUNTIME__'));
 assert.ok(!coreBuilder.includes('/*__STS_COMPATIBILITY_API__*/'));
-assert.ok(renderer.includes('buildCardRuntimeRendererScript'));
+assert.equal(typeof buildCardRuntimeRendererScript, 'function');
 assert.ok(renderer.includes('parentVariableDiagnostics'));
 assert.ok(renderer.includes('bootVariableScopeNames'));
 assert.ok(renderer.includes('uiReportedNotReady'));

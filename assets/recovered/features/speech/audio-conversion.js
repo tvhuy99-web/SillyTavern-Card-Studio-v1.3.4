@@ -1,4 +1,3 @@
-// Recovered from the application host. One owner; dependency getters preserve late binding.
 export function createAudioConversion(dependencies = {}) {
 var audioContext=null;
 var getAudioContext=async()=>(audioContext||=new(window.AudioContext||window.webkitAudioContext)({sampleRate:24e3}),"suspended"===audioContext.state&&await audioContext.resume(),audioContext);

@@ -100,7 +100,6 @@ function createPersistentIdbBacking() {
   };
 }
 
-// Persistent mock IndexedDB for SillyTavernCardStudioRecoveryDB v1.
 function createFakeRecoveryIndexedDB() {
   const databases = new Map();
   return {
@@ -230,10 +229,6 @@ function createServiceInstance(idbBacking, persistentLocal, persistentSession, e
   return { repositories, connections, proxy, service };
 }
 
-// ============================================================================
-// DEFECT 1: Same-instance mutual exclusion, operationId lock ownership,
-// renewal/expiration, crossTabLockAtomic: false, and stale dismiss protection.
-// ============================================================================
 {
   const idbBacking = createPersistentIdbBacking();
   const persistentLocal = createMemoryStorage();
@@ -257,17 +252,14 @@ function createServiceInstance(idbBacking, persistentLocal, persistentSession, e
   assert.equal(h.service.atomicAcrossStorages, false);
   assert.equal(h.service.crossTabLockAtomic, false);
 
-  // Start first restore and pause inside IDB commit.
   const firstRestore = h.service.restore(buildBackupPayload());
   await enteredMerge;
 
-  // Verify lock exists with operationId and crossTabLockAtomic: false.
   const activeLock = JSON.parse(persistentLocal.getItem(RESTORE_LOCK_KEY));
   assert.equal(activeLock.ownerId, 'same-tab-owner');
   assert.equal(typeof activeLock.operationId, 'string');
   assert.equal(activeLock.crossTabLockAtomic, false);
 
-  // Concurrent restore() on SAME instance MUST reject immediately!
   await assert.rejects(
     h.service.restore(buildBackupPayload()),
     err => err instanceof BackupRestoreError
@@ -275,7 +267,6 @@ function createServiceInstance(idbBacking, persistentLocal, persistentSession, e
       && err.crossTabLockAtomic === false,
   );
 
-  // Concurrent recover() and dismiss() on SAME instance MUST reject immediately!
   await assert.rejects(
     h.service.recover({ strategy: 'rollback-idb' }),
     err => err instanceof BackupRestoreError && err.code === 'CONCURRENT_OPERATION_IN_PROGRESS',
@@ -285,7 +276,6 @@ function createServiceInstance(idbBacking, persistentLocal, persistentSession, e
     err => err instanceof BackupRestoreError && err.code === 'CONCURRENT_OPERATION_IN_PROGRESS',
   );
 
-  // Advance clock before completing so lock renewal is exercised.
   currentTime += 5_000;
   releaseGate();
   const firstResult = await firstRestore;
@@ -293,7 +283,6 @@ function createServiceInstance(idbBacking, persistentLocal, persistentSession, e
   assert.equal(firstResult.crossTabLockAtomic, false);
   assert.equal(persistentLocal.getItem(RESTORE_LOCK_KEY), null, 'lock must be released after completion');
 
-  // Lock with SAME ownerId but DIFFERENT operationId (non-expired) MUST reject (no ownerId-only re-entry!).
   persistentLocal.setItem(RESTORE_LOCK_KEY, JSON.stringify({
     ownerId: 'same-tab-owner',
     operationId: 'other-op-id-999',
@@ -305,20 +294,15 @@ function createServiceInstance(idbBacking, persistentLocal, persistentSession, e
     h.service.restore(buildBackupPayload()),
     err => err instanceof BackupRestoreError && err.code === 'CONCURRENT_RESTORE_IN_PROGRESS',
   );
-  // Foreign lock must NOT be deleted when our restore failed to acquire it!
+
   assert.equal(JSON.parse(persistentLocal.getItem(RESTORE_LOCK_KEY)).operationId, 'other-op-id-999');
 
-  // Once lock expires (past TTL), restore can acquire it and release cleanly.
   currentTime += 35_000;
   const afterExpiry = await h.service.restore(buildBackupPayload());
   assert.equal(afterExpiry.ok, true);
   assert.equal(persistentLocal.getItem(RESTORE_LOCK_KEY), null);
 }
 
-// ============================================================================
-// DEFECT 2A: Crash AFTER IDB commit BEFORE journal updates to idb-committed
-// (journal stuck at applying-idb, idbCommitted: false; commit marker IS in IDB).
-// ============================================================================
 {
   const idbBacking = createPersistentIdbBacking();
   const recoveryIndexedDB = createFakeRecoveryIndexedDB();
@@ -343,7 +327,6 @@ function createServiceInstance(idbBacking, persistentLocal, persistentSession, e
     chatHistory: [{ id: 'm0', role: 'user', content: 'original session' }],
   });
 
-  // Simulate crash right AFTER IDB commit by making writeJournal(IDB_COMMITTED) throw!
   const origSetItem = persistentLocal.setItem;
   let crashOnIdbCommittedJournal = true;
   persistentLocal.setItem = (key, value) => {
@@ -362,26 +345,22 @@ function createServiceInstance(idbBacking, persistentLocal, persistentSession, e
   } catch (error) {
     crashError = error;
   }
-  // Journal write failure MUST propagate explicitly (never silently swallowed)!
+
   assert.ok(crashError instanceof BackupRestoreError);
   assert.equal(crashError.code, 'JOURNAL_WRITE_FAILED');
   assert.equal(crashError.atomicAcrossStorages, false);
   assert.equal(crashError.crossTabLockAtomic, false);
 
-  // Journal on disk is still at applying-idb with idbCommitted: false,
-  // while IDB has committed BOTH the restored records AND the atomic commit marker!
   const rawJournal = JSON.parse(persistentLocal.getItem(RESTORE_JOURNAL_KEY));
   assert.equal(rawJournal.status, RESTORE_STAGES.APPLYING_IDB);
   assert.equal(rawJournal.idbCommitted, false);
 
-  // Internal commit marker MUST be invisible to normal persona queries & exportRecords!
   assert.equal(await inst1.repositories.personas.get(RESTORE_COMMIT_MARKER_ID), undefined);
   const visiblePersonas = await inst1.repositories.personas.list();
   assert.ok(!visiblePersonas.some(p => p.id === RESTORE_COMMIT_MARKER_ID));
   const exported = await inst1.repositories.exportRecords();
   assert.ok(!exported.personas.some(p => p.id === RESTORE_COMMIT_MARKER_ID));
 
-  // Restart with fresh Instance 2 (empty RAM).
   crashOnIdbCommittedJournal = false;
   const snapshotStore2 = createDurableRecoveryStore({ indexedDB: recoveryIndexedDB });
   const inst2 = createServiceInstance(idbBacking, persistentLocal, createMemoryStorage(), {
@@ -397,18 +376,16 @@ function createServiceInstance(idbBacking, persistentLocal, persistentSession, e
   assert.equal(inspected.availableActions.canRollbackIdb, true);
   assert.equal(inspected.availableActions.canDismiss, false, 'cannot dismiss when IDB committed and recovery actions exist');
 
-  // Stale dismiss with wrong journalId MUST reject with JOURNAL_ID_MISMATCH.
   await assert.rejects(
     inst2.service.recover({ strategy: 'dismiss', journalId: 'wrong-journal-id' }),
     err => err instanceof BackupRestoreError && err.code === 'JOURNAL_ID_MISMATCH',
   );
-  // Unforced dismiss with matching journalId MUST reject with DISMISS_NOT_ALLOWED.
+
   await assert.rejects(
     inst2.service.recover({ strategy: 'dismiss', journalId: inspected.id }),
     err => err instanceof BackupRestoreError && err.code === 'DISMISS_NOT_ALLOWED',
   );
 
-  // Transactional rollback-idb WITHOUT passing previousRecords externally!
   const txCountBeforeRollback = idbBacking.transactions.length;
   const rolledBack = await inst2.service.recover({ strategy: 'rollback-idb', journalId: inspected.id });
   assert.equal(rolledBack.ok, true);
@@ -416,13 +393,11 @@ function createServiceInstance(idbBacking, persistentLocal, persistentSession, e
   assert.equal(rolledBack.atomicAcrossStorages, false);
   assert.equal(rolledBack.crossTabLockAtomic, false);
 
-  // Verify rollback executed in a SINGLE 5-store IDB transaction!
   const rollbackTxs = idbBacking.transactions.slice(txCountBeforeRollback);
   assert.equal(rollbackTxs.length, 1, 'rollback must run in a single atomic IndexedDB transaction');
   assert.equal(rollbackTxs[0].mode, 'readwrite');
   assert.equal(rollbackTxs[0].names.length, 5);
 
-  // Verify commit marker, journal, and durable snapshot are all cleaned up, and original data restored!
   assert.equal(await inst2.repositories.readRestoreCommitMarker(), null);
   assert.equal(await inst2.service.inspectPendingRecovery(), null);
   assert.equal(persistentLocal.getItem(RESTORE_JOURNAL_KEY), null);
@@ -434,10 +409,6 @@ function createServiceInstance(idbBacking, persistentLocal, persistentSession, e
   assert.equal((await inst2.repositories.sessions.get('s-orig')).chatHistory[0].content, 'original session');
 }
 
-// ============================================================================
-// DEFECT 2B: Crash BEFORE IDB commit (journal stuck at applying-idb, NO commit
-// marker in IDB, durable snapshot exists) -> service MUST REJECT retry-settings!
-// ============================================================================
 {
   const idbBacking = createPersistentIdbBacking();
   const recoveryIndexedDB = createFakeRecoveryIndexedDB();
@@ -479,7 +450,6 @@ function createServiceInstance(idbBacking, persistentLocal, persistentSession, e
   assert.equal(inspected.availableActions.canRollbackIdb, true, 'canRollbackIdb should be true when durable snapshot exists');
   assert.equal(inspected.availableActions.canDismiss, false, 'canDismiss MUST be false while durable snapshot is pending');
 
-  // Service MUST reject direct retry-settings with IDB_COMMIT_NOT_VERIFIED!
   await assert.rejects(
     inst.service.recover({ strategy: 'retry-settings', journalId }),
     err => err instanceof BackupRestoreError
@@ -488,7 +458,6 @@ function createServiceInstance(idbBacking, persistentLocal, persistentSession, e
       && err.atomicAcrossStorages === false,
   );
 
-  // Pre-IDB journaled stage (before applying-idb) allows safe dismiss.
   persistentLocal.setItem(RESTORE_JOURNAL_KEY, JSON.stringify({
     id: journalId,
     status: RESTORE_STAGES.JOURNALED,
@@ -508,10 +477,6 @@ function createServiceInstance(idbBacking, persistentLocal, persistentSession, e
   assert.equal(await snapshotStore.get(journalId), null);
 }
 
-// ============================================================================
-// DEFECT 2C: QuotaExceededError on Web Storage -> restart -> retry-settings
-// succeeds and clears commit marker, journal, and durable snapshot.
-// ============================================================================
 {
   const idbBacking = createPersistentIdbBacking();
   const persistentLocal = createMemoryStorage();
@@ -544,7 +509,6 @@ function createServiceInstance(idbBacking, persistentLocal, persistentSession, e
   assert.equal(restoreError.idbCommitted, true);
   assert.equal((await inst1.repositories.readRestoreCommitMarker())?.journalId, restoreError.journalId);
 
-  // Restart with fresh Instance 2, free quota, retry-settings.
   blockSettings = false;
   const snapshotStore2 = createDurableRecoveryStore({ indexedDB: null, storage: snapshotStorage });
   const inst2 = createServiceInstance(idbBacking, persistentLocal, createMemoryStorage(), {
@@ -559,10 +523,6 @@ function createServiceInstance(idbBacking, persistentLocal, persistentSession, e
   assert.equal(await snapshotStore2.get(restoreError.journalId), null);
 }
 
-// ============================================================================
-// Fault injection: snapshotStore failure, IDB failure, PENDING_RECOVERY_EXISTS,
-// RECOVERY_SNAPSHOT_UNAVAILABLE, and UI BackupSettings gating.
-// ============================================================================
 {
   const idbBacking = createPersistentIdbBacking();
   const persistentLocal = createMemoryStorage();
@@ -580,7 +540,6 @@ function createServiceInstance(idbBacking, persistentLocal, persistentSession, e
   );
   assert.equal(h1.service.getPendingRecovery(), null);
 
-  // IDB mergeRecords failure cleans up journal & snapshot.
   const recoveryIndexedDB = createFakeRecoveryIndexedDB();
   const snapStore = createDurableRecoveryStore({ indexedDB: recoveryIndexedDB });
   idbBacking.setFailNextMerge(true);
@@ -597,7 +556,6 @@ function createServiceInstance(idbBacking, persistentLocal, persistentSession, e
   assert.equal(h2.service.getPendingRecovery(), null);
   assert.equal(await snapStore.get(idbErr.journalId), null);
 
-  // Pending recovery exists -> restore() rejects with PENDING_RECOVERY_EXISTS.
   persistentLocal.setItem(RESTORE_JOURNAL_KEY, JSON.stringify({
     id: 'pending-guard-1',
     status: RESTORE_STAGES.FAILED_SETTINGS,
@@ -609,14 +567,13 @@ function createServiceInstance(idbBacking, persistentLocal, persistentSession, e
     h2.service.restore(buildBackupPayload()),
     err => err instanceof BackupRestoreError && err.code === 'PENDING_RECOVERY_EXISTS' && err.journalId === 'pending-guard-1',
   );
-  // Missing snapshot -> rollback-idb rejects with RECOVERY_SNAPSHOT_UNAVAILABLE.
+
   await assert.rejects(
     h2.service.recover({ strategy: 'rollback-idb', journalId: 'pending-guard-1' }),
     err => err instanceof BackupRestoreError && err.code === 'RECOVERY_SNAPSHOT_UNAVAILABLE',
   );
   persistentLocal.removeItem(RESTORE_JOURNAL_KEY);
 
-  // UI BackupSettings gating + InitialLoader boot check.
   const jsx = (type, props, key) => ({ type, props, key });
   const wt = { jsx, jsxs: jsx, Fragment: 'Fragment' };
   const find = (tree, pred) => {
@@ -720,11 +677,6 @@ function createServiceInstance(idbBacking, persistentLocal, persistentSession, e
   assert.equal(diagnosticLogs[0].payload.atomicAcrossStorages, false);
 }
 
-
-// ============================================================================
-// S01: Full cross-storage rollback (IDB + Web Storage), credential redaction,
-// partial-rollback preservation, and repeated interruption/restart recovery.
-// ============================================================================
 {
   const idbBacking = createPersistentIdbBacking();
   const recoveryIndexedDB = createFakeRecoveryIndexedDB();
@@ -738,10 +690,9 @@ function createServiceInstance(idbBacking, persistentLocal, persistentSession, e
     webLocks: null,
   });
 
-  // Seed pre-restore state in IDB and Web Storage (including sensitive credentials).
   await inst1.repositories.characters.put({ fileName: 'orig-char.png', card: { name: 'Orig S01' } });
   inst1.connections.saveGemini({ useDefault: false, keys: ['AIzaSyOriginalSecretKey12345'] });
-  // Ensure arenaSettings did NOT exist before restore (so rollback must REMOVE it).
+
   assert.equal(persistentLocal.getItem(SETTINGS_STORAGE_KEYS.arenaSettings), null);
 
   const backupWithSecrets = buildBackupPayload();
@@ -750,7 +701,6 @@ function createServiceInstance(idbBacking, persistentLocal, persistentSession, e
     keys: ['AIzaSyIncomingSecretKey99999'],
   });
 
-  // Simulate crash AFTER BOTH IDB and Web Storage settings are applied (right before clearJournal).
   const origRemoveItem = persistentLocal.removeItem;
   let crashBeforeClearJournal = true;
   persistentLocal.removeItem = key => {
@@ -765,8 +715,6 @@ function createServiceInstance(idbBacking, persistentLocal, persistentSession, e
     /SimulatedCrashAfterSettingsAppliedBeforeCleanup/,
   );
 
-  // Verify BOTH IDB and Web Storage were mutated, journal is at SETTINGS_APPLIED,
-  // and NO plaintext credentials exist in RESTORE_JOURNAL_KEY or inspectPendingRecovery()!
   const rawJournalStr = persistentLocal.getItem(RESTORE_JOURNAL_KEY);
   assert.ok(rawJournalStr);
   assert.equal(JSON.parse(rawJournalStr).status, RESTORE_STAGES.SETTINGS_APPLIED);
@@ -775,7 +723,6 @@ function createServiceInstance(idbBacking, persistentLocal, persistentSession, e
   assert.equal(inst1.connections.getGemini().keys[0], 'AIzaSyIncomingSecretKey99999');
   assert.ok(persistentLocal.getItem(SETTINGS_STORAGE_KEYS.arenaSettings));
 
-  // Restart with fresh Instance 2: first simulate Web Storage rollback failing mid-rollback!
   crashBeforeClearJournal = false;
   const origSessionSetItem = persistentSession.setItem;
   let failSettingsRollback = true;
@@ -813,14 +760,12 @@ function createServiceInstance(idbBacking, persistentLocal, persistentSession, e
   assert.equal(partialErr.rollbackScope, 'idb-only');
   assert.equal(partialErr.atomicAcrossStorages, false);
 
-  // Journal & durable snapshot MUST be preserved at PARTIAL_ROLLBACK (not cleared!).
   const partialJournal = JSON.parse(persistentLocal.getItem(RESTORE_JOURNAL_KEY));
   assert.equal(partialJournal.status, RESTORE_STAGES.PARTIAL_ROLLBACK);
   assert.equal(partialJournal.idbRolledBack, true);
   assert.equal(partialJournal.settingsRolledBack, false);
   assert.ok(await snapStore2.get(inspected2.id), 'durable snapshot must remain for resumed rollback');
 
-  // Restart with fresh Instance 3 after Web Storage recovers -> resume rollback to full completion!
   failSettingsRollback = false;
   const snapStore3 = createDurableRecoveryStore({ indexedDB: recoveryIndexedDB });
   const inst3 = createServiceInstance(idbBacking, persistentLocal, persistentSession, {
@@ -837,7 +782,6 @@ function createServiceInstance(idbBacking, persistentLocal, persistentSession, e
   assert.equal(resumed.settingsRolledBack, true);
   assert.equal(resumed.atomicAcrossStorages, false);
 
-  // Verify BOTH IDB and Web Storage reverted to exact pre-restore state & newly added settings key removed!
   assert.equal(await inst3.repositories.characters.get('restarted-char.png'), undefined);
   assert.equal((await inst3.repositories.characters.get('orig-char.png')).card.name, 'Orig S01');
   assert.equal(inst3.connections.getGemini().keys[0], 'AIzaSyOriginalSecretKey12345');
@@ -846,10 +790,6 @@ function createServiceInstance(idbBacking, persistentLocal, persistentSession, e
   assert.equal(await snapStore3.get(inspected2.id), null, 'sensitive snapshot must be wiped after full rollback');
 }
 
-// ============================================================================
-// S02: Reject stale snapshot rollback when no active pending journal exists,
-// terminal journal, or snapshot ownership mismatch.
-// ============================================================================
 {
   const idbBacking = createPersistentIdbBacking();
   const recoveryIndexedDB = createFakeRecoveryIndexedDB();
@@ -862,10 +802,8 @@ function createServiceInstance(idbBacking, persistentLocal, persistentSession, e
     webLocks: null,
   });
 
-  // Newer IDB state that must NEVER be overwritten by a stale snapshot!
   await inst.repositories.characters.put({ fileName: 'newer-char.png', card: { name: 'Newer Data' } });
 
-  // Plant a stale snapshot in snapshotStore while getPendingRecovery() === null.
   await snapStore.put({
     journalId: 'stale-journal-1',
     previousRecords: { characters: [{ fileName: 'ancient-char.png', card: { name: 'Ancient' } }], presets: [], lorebooks: [], personas: [], chatSessions: [] },
@@ -884,11 +822,10 @@ function createServiceInstance(idbBacking, persistentLocal, persistentSession, e
     inst.service.rollbackIndexedDb({ journalId: 'stale-journal-1' }),
     err => err instanceof BackupRestoreError && err.code === 'NO_PENDING_JOURNAL',
   );
-  // Newer data MUST remain untouched!
+
   assert.equal((await inst.repositories.characters.get('newer-char.png')).card.name, 'Newer Data');
   assert.equal(await inst.repositories.characters.get('ancient-char.png'), undefined);
 
-  // Terminal journal (status: 'completed') MUST be rejected with STALE_RECOVERY_JOURNAL.
   persistentLocal.setItem(RESTORE_JOURNAL_KEY, JSON.stringify({
     id: 'stale-journal-1',
     status: RESTORE_STAGES.COMPLETED,
@@ -901,7 +838,6 @@ function createServiceInstance(idbBacking, persistentLocal, persistentSession, e
     err => err instanceof BackupRestoreError && err.code === 'STALE_RECOVERY_JOURNAL',
   );
 
-  // Snapshot ownership mismatch (snapshot.journalId !== journal.id) MUST reject with SNAPSHOT_OWNERSHIP_MISMATCH.
   const mismatchStore = {
     async get() { return { journalId: 'different-owner-journal', previousRecords: { characters: [], presets: [], lorebooks: [], personas: [], chatSessions: [] } }; },
     async put() { return true; },
@@ -926,12 +862,8 @@ function createServiceInstance(idbBacking, persistentLocal, persistentSession, e
   persistentLocal.removeItem(RESTORE_JOURNAL_KEY);
 }
 
-// ============================================================================
-// S03: Web Locks API exclusive lock + advisory fallback, LOCK_OWNERSHIP_LOST,
-// isRestoreInProgress() + session-save-coordinator guard, and commit marker ownership.
-// ============================================================================
 {
-  // 1. Web Locks API available -> crossTabLockMechanism === 'web-locks', crossTabLockAtomic === true.
+
   const heldLocks = new Set();
   const fakeWebLocks = {
     async request(name, opts, callback) {
@@ -974,7 +906,6 @@ function createServiceInstance(idbBacking, persistentLocal, persistentSession, e
   assert.equal(tab1.service.crossTabLockMechanism, 'web-locks');
   assert.equal(tab1.service.crossTabLockAtomic, true);
 
-  // SessionSaveCoordinator guarded by tab1.service.isRestoreInProgress
   const saveWrites = [];
   const coordinator = createSessionSaveCoordinator({
     sessionId: 's-guard',
@@ -989,8 +920,6 @@ function createServiceInstance(idbBacking, persistentLocal, persistentSession, e
   const tab1Restore = tab1.service.restore(buildBackupPayload());
   await enteredMerge;
 
-  // During active restore: isRestoreInProgress() === true, assertNotRestoring() throws,
-  // coordinator.flush({ force: true }) throws RESTORE_IN_PROGRESS, and tab2 Web Lock rejects!
   assert.equal(tab1.service.isRestoreInProgress(), true);
   assert.throws(() => tab1.service.assertNotRestoring(), err => err.code === 'RESTORE_IN_PROGRESS');
   await assert.rejects(
@@ -1015,11 +944,9 @@ function createServiceInstance(idbBacking, persistentLocal, persistentSession, e
   assert.equal(tab1.service.isRestoreInProgress(), false);
   assert.equal(await tab1.repositories.readRestoreCommitMarker(), null, 'commit marker must be cleaned up on completion');
 
-  // After restore finishes, coordinator can save normally.
   assert.equal(await coordinator.flush({ force: true }), true);
   assert.equal(saveWrites.length, 1);
 
-  // 2. LOCK_OWNERSHIP_LOST when advisory lock is stolen mid-operation before settings apply + commit marker has ownerId/operationId.
   const idbBacking2 = createPersistentIdbBacking();
   const local2 = createMemoryStorage();
   const snapStore2 = createDurableRecoveryStore({ indexedDB: null, storage: createMemoryStorage() });
@@ -1039,7 +966,7 @@ function createServiceInstance(idbBacking, persistentLocal, persistentSession, e
       const parsed = JSON.parse(value);
       if (parsed.status === RESTORE_STAGES.APPLYING_SETTINGS) {
         stealOnce = false;
-        // Another tab steals the lock right before settings mutation!
+
         origSet(RESTORE_LOCK_KEY, JSON.stringify({
           ownerId: 'attacker-owner',
           operationId: 'stolen-op-1',
@@ -1055,9 +982,9 @@ function createServiceInstance(idbBacking, persistentLocal, persistentSession, e
     tabSteal.service.restore(buildBackupPayload()),
     err => err instanceof BackupRestoreError && err.code === 'LOCK_OWNERSHIP_LOST',
   );
-  // Web Storage settings must NOT have been applied after lock ownership was lost!
+
   assert.equal(local2.getItem(SETTINGS_STORAGE_KEYS.arenaSettings), null);
-  // Commit marker written during IDB commit includes ownerId and operationId.
+
   const marker = await tabSteal.repositories.readRestoreCommitMarker();
   assert.ok(marker);
   assert.equal(marker.ownerId, 'victim-owner');

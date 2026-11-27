@@ -1,15 +1,3 @@
-/**
- * Variable path helpers, default getter/mutator, and prompt variable macro
- * evaluation (`addvar`, `setglobalvar`, `setvar`, `getvar`, `getglobalvar`).
- */
-
-/**
- * Normalizes a variable path by stripping `stat_data.`/`variables.` prefixes
- * and converting bracket notation into dot notation.
- *
- * @param {string} rawPath
- * @returns {string}
- */
 function normalizeVariablePath(rawPath) {
   if (!rawPath) return '';
   return String(rawPath)
@@ -20,33 +8,14 @@ function normalizeVariablePath(rawPath) {
     .replace(/\[(\d+)\]/g, '.$1');
 }
 
-/**
- * Checks whether a stored variable value is a `[value, description]` tuple.
- *
- * @param {unknown} value
- * @returns {boolean}
- */
 function isDescribedTuple(value) {
   return Array.isArray(value) && value.length === 2 && typeof value[1] === 'string';
 }
 
-/**
- * Splits a normalized dot-path into non-empty path segments.
- *
- * @param {string} normalizedPath
- * @returns {string[]}
- */
 function splitPathSegments(normalizedPath) {
   return normalizedPath.split('.').filter(Boolean);
 }
 
-/**
- * Reads a nested property from an object using dot notation.
- *
- * @param {Record<string, any>} target
- * @param {string} normalizedPath
- * @returns {any}
- */
 function getNestedProperty(target, normalizedPath) {
   const segments = splitPathSegments(normalizedPath);
   if (segments.length === 0) return undefined;
@@ -58,14 +27,6 @@ function getNestedProperty(target, normalizedPath) {
   return current;
 }
 
-/**
- * Writes a nested property on an object using dot notation, creating intermediate
- * objects/arrays as needed.
- *
- * @param {Record<string, any>} target
- * @param {string} normalizedPath
- * @param {any} value
- */
 function setNestedProperty(target, normalizedPath, value) {
   const segments = splitPathSegments(normalizedPath);
   if (segments.length === 0 || target == null || typeof target !== 'object') return;
@@ -81,12 +42,6 @@ function setNestedProperty(target, normalizedPath, value) {
   current[segments[segments.length - 1]] = value;
 }
 
-/**
- * Removes a nested property from an object using dot notation.
- *
- * @param {Record<string, any>} target
- * @param {string} normalizedPath
- */
 function unsetNestedProperty(target, normalizedPath) {
   const segments = splitPathSegments(normalizedPath);
   if (segments.length === 0 || target == null || typeof target !== 'object') return;
@@ -99,15 +54,6 @@ function unsetNestedProperty(target, normalizedPath) {
   delete current[segments[segments.length - 1]];
 }
 
-/**
- * Default variable getter matching `script-execution.js` (`getVariable`).
- *
- * @param {Record<string, any>} variables
- * @param {string} path
- * @param {any} [fallback]
- * @param {boolean} [unwrapTuple=true]
- * @returns {any}
- */
 export function defaultGetVariable(variables, path, fallback = undefined, unwrapTuple = true) {
   const normalizedPath = normalizeVariablePath(path);
   const rawValue = getNestedProperty(variables, normalizedPath);
@@ -117,13 +63,6 @@ export function defaultGetVariable(variables, path, fallback = undefined, unwrap
   return rawValue === undefined ? fallback : rawValue;
 }
 
-/**
- * Writes a value while preserving `[value, description]` tuple metadata.
- *
- * @param {Record<string, any>} variables
- * @param {string} path
- * @param {any} value
- */
 function writeVariableWithTuple(variables, path, value) {
   const normalizedPath = normalizeVariablePath(path);
   const existing = getNestedProperty(variables, normalizedPath);
@@ -134,15 +73,6 @@ function writeVariableWithTuple(variables, path, value) {
   }
 }
 
-/**
- * Default immutable variable mutator matching `script-execution.js` (`mutateVariable`).
- *
- * @param {Record<string, any>} variables
- * @param {string} operation
- * @param {string} path
- * @param {any} operand
- * @returns {Record<string, any>}
- */
 export function defaultMutateVariable(variables, operation, path, operand) {
   const clonedVariables = JSON.parse(JSON.stringify(variables));
 
@@ -207,13 +137,6 @@ export function defaultMutateVariable(variables, operation, path, operand) {
   return clonedVariables;
 }
 
-/**
- * Parses a macro variable value string into a number when numeric, or keeps it
- * as a trimmed string otherwise.
- *
- * @param {string} rawValue
- * @returns {{ trimmedValue: string, parsedValue: string | number }}
- */
 function parseMacroVariableValue(rawValue) {
   const trimmedValue = rawValue.trim();
   const numericValue = Number(trimmedValue);
@@ -221,20 +144,6 @@ function parseMacroVariableValue(rawValue) {
   return { trimmedValue, parsedValue };
 }
 
-/**
- * Evaluates prompt variable read/write macros in canonical order and returns
- * the updated section content and variable scopes.
- *
- * @param {string} sectionContent
- * @param {Record<string, any>} chatVariables
- * @param {Record<string, any>} globalVariables
- * @param {Record<string, any>} deps
- * @returns {{
- *   content: string,
- *   chatVariables: Record<string, any>,
- *   globalVariables: Record<string, any>,
- * }}
- */
 export function applyPromptVariableMacros(sectionContent, chatVariables, globalVariables, deps) {
   let nextContent = sectionContent;
 

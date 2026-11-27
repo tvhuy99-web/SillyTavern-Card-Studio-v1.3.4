@@ -37,7 +37,7 @@ export function computeAvailableActions({ journal, commitState, idbCommitted, ha
       canDismiss: true,
     };
   }
-  // commitState === 'unverified-or-aborted'
+
   const canRollbackIdb = Boolean(hasDurableSnapshot);
   return {
     canRetrySettings: false,
@@ -45,7 +45,6 @@ export function computeAvailableActions({ journal, commitState, idbCommitted, ha
     canDismiss: !canRollbackIdb,
   };
 }
-
 
 export function createRecoveryJournalManager({ journalStorage, journalKey, lockMeta, crossTabLockMechanism, crossTabLockAtomic, now, sanitizeErrorMessage }) {
   function readJournal() {
@@ -60,8 +59,6 @@ export function createRecoveryJournalManager({ journalStorage, journalKey, lockM
     }
   }
 
-  // Persist non-sensitive journal metadata ONLY — never write plaintext credentials or secrets here,
-  // and never silently swallow journal write errors.
   function writeJournal(entry, { allowCompactFallback = false } = {}) {
     if (!journalStorage || typeof journalStorage.setItem !== 'function') {
       throw new BackupRestoreError('Kho lưu nhật ký khôi phục Web Storage không khả dụng.', {
@@ -74,7 +71,7 @@ export function createRecoveryJournalManager({ journalStorage, journalKey, lockM
         ...lockMeta,
       });
     }
-    // Strip any sensitive settings payload if accidentally passed on entry.
+
     const {
       settingsEntries: _omitIncoming,
       previousSettings: _omitPrevious,
@@ -145,7 +142,6 @@ export function createRecoveryJournalManager({ journalStorage, journalKey, lockM
     journalStorage.removeItem(journalKey);
   }
 
-
   function sanitizeJournalForInspection(journal) {
     const {
       settingsEntries: _omitIncoming,
@@ -184,7 +180,6 @@ export function createRecoveryJournalManager({ journalStorage, journalKey, lockM
     };
   }
 
-
   function requireActiveRecoveryJournal(requestedJournalId) {
     const journal = readJournal();
     if (!journal) {
@@ -213,8 +208,6 @@ export function createRecoveryJournalManager({ journalStorage, journalKey, lockM
     }
     return journal;
   }
-
-  // Recovery path A: Retry applying Web Storage settings — ONLY if active pending journal & IDB commit verified!
 
   return { readJournal, writeJournal, clearJournal, sanitizeJournalForInspection, getPendingRecovery, requireActiveRecoveryJournal };
 }

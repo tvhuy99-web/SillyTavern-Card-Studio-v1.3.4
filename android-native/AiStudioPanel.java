@@ -8,7 +8,6 @@ import android.webkit.WebView;
 import android.widget.Button;
 import android.widget.FrameLayout;
 
-/** Owns only the non-modal AI Studio panel and its view hierarchy. */
 final class AiStudioPanel {
     private final Activity activity;
     private final WebView sessionWebView;

@@ -1,8 +1,5 @@
 import { getAndroidPlugin, ANDROID_PLUGINS } from '../../platform/android/native-bridge.js';
-// Bridge for the Android-native ONNX Runtime engine. Browser/web installations
-// retain their existing Transformers.js implementation. On an Android APK,
-// EmbeddingGemma sync must use the native engine or show an explicit error:
-// there is NO automatic WASM/online/keyword/model fallback.
+
 const GRAPH_FILE = 'model_q4.onnx';
 const DATA_FILE = 'model_q4.onnx_data';
 const TRANSFER_CHUNK_BYTES = 512 * 1024;
@@ -12,9 +9,6 @@ export function getNativeEmbeddingPlugin(host = globalThis) {
   return getAndroidPlugin(ANDROID_PLUGINS.onnx, host);
 }
 
-// Convert Tensor<bigint> token IDs into plain JSON arrays. Never send document
-// text to the native plugin. The web tokenizer preserves the exact formatting,
-// padding and truncation used by the previous WebView implementation.
 export function packNativeEmbeddingInputs(tokenized) {
   const ids = tokenized?.input_ids;
   const mask = tokenized?.attention_mask;
@@ -71,8 +65,6 @@ async function getCachedFile(modelId, fileName, cacheStorage) {
     + ' trong Cache API. Hãy tải lại model trong Cài đặt Smart Scan, không đổi model tự động.');
 }
 
-// Choose both responses from the same cache and model revision path. Never
-// combine graph/weights discovered in different caches or revisions.
 async function getCachedPair(modelId, cacheStorage) {
   if (!cacheStorage?.keys) throw new Error('Cache API không khả dụng.');
   const needle = '/' + modelId.toLowerCase() + '/';
@@ -106,7 +98,6 @@ async function getCachedPair(modelId, cacheStorage) {
 
 function makeImportId() { return `onnx-${Date.now().toString(36)}-${Math.random().toString(36).slice(2)}`; }
 
-// Transfer is bounded by 512 KiB per JS/native bridge call; no full model buffer.
 async function transferFile(plugin, fileName, response, onStage, modelImportId) {
     let copied = 0;
     let nextNotice = PROGRESS_INTERVAL_BYTES;
@@ -166,7 +157,7 @@ export async function copyCachedModelToNative(plugin, provider, onStage = () => 
       }
     }
   } else {
-    // Compatibility with earlier APKs. New APKs publish the pair together.
+
     for (const [name, ready] of [[GRAPH_FILE, status.graphReady], [DATA_FILE, status.weightsReady]]) {
       if (!ready) await transferFile(plugin, name, await getCachedFile(provider.modelId, name, cacheStorage), onStage);
     }
@@ -210,7 +201,7 @@ export async function createNativeEmbeddingGemmaRuntime({
         throw new Error('ONNX native trả về số lượng hoặc kích thước vector không hợp lệ.');
       }
       onMeasurement?.({ tokenizationMs, onnxMs: Number(result.onnxMs) || 0, backend: result.backend });
-      // As in the WebView engine, vectors are L2 normalized before indexing.
+
       return result.vectors.map(row => {
         const values = row.map(Number);
         if (values.some(value => !Number.isFinite(value))) throw new Error('ONNX native trả vector NaN/Infinity.');
@@ -219,7 +210,7 @@ export async function createNativeEmbeddingGemmaRuntime({
       });
     },
     async dispose() {
-      // Keep copied graph/weights on disk; only release the native ORT session.
+
       await plugin.unload();
     },
   };

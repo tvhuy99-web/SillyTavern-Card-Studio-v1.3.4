@@ -129,14 +129,14 @@ public final class NativeArchitectureTest {
         staging=sets.begin(); writePair(staging, (byte)2);
         sets.commit(); check(firstByte(active)==2 && NativeOnnxModelSet.complete(active), "Both files published");
         check(!staging.exists(), "Staging gone");
-        // Simulate process death immediately after moving the old directory.
+
         staging=sets.begin(); writePair(staging,(byte)3);
         File previous = new File(active.getParentFile(), "onnx.previous");
         check(active.renameTo(previous), "Simulate first rename");
         NativeOnnxModelSet reopened = new NativeOnnxModelSet(active);
         reopened.recover(); check(firstByte(active)==2 && !previous.exists(), "Recover old pair after interrupted swap");
         reopened.abort();
-        // Simulate process death after second rename, before cleanup.
+
         staging=reopened.begin(); writePair(staging,(byte)4);
         check(active.renameTo(previous) && staging.renameTo(active), "Simulate both renames");
         reopened.recover(); check(firstByte(active)==4 && !previous.exists(), "Keep published pair and clean old");
@@ -182,7 +182,7 @@ public final class NativeArchitectureTest {
     public static void main(String[] args) throws Exception {
         Path source = Path.of(args[0]), temp = Path.of(args[1]);
         worker(); workerRecreation(); exports(); generation(); modelFiles(temp); modelSets(temp); exportJournal(temp); requestLedger(); parseAll(source);
-        // JVM-decoded text blocks are the exact strings compiled into the APK.
+
         Files.writeString(temp.resolve("install.js"), AiStudioPageScripts.INSTALL_JS);
         Files.writeString(temp.resolve("thinking-open.js"), AiStudioPageScripts.THINKING_OPEN_JS);
         Files.writeString(temp.resolve("thinking-select.js"), AiStudioPageScripts.THINKING_SELECT_JS.replace("__STS_LEVEL__", "\"high\""));

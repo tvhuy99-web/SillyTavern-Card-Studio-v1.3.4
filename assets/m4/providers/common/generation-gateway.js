@@ -35,7 +35,7 @@ export function createGenerationGateway(deps) {
     { ...BUILTIN_PROVIDER_CONTRACTS.gemini, adapter: gemini },
     { ...BUILTIN_PROVIDER_CONTRACTS.openrouter, adapter: openrouter },
     { ...BUILTIN_PROVIDER_CONTRACTS.proxy, adapter: proxy },
-    // Native cancel is currently session-wide, not request-scoped. Do not start a probe that could cancel a chat.
+
     { ...BUILTIN_PROVIDER_CONTRACTS.aistudio, adapter: aistudio },
     ...(deps.extraProviders || []),
   ]);

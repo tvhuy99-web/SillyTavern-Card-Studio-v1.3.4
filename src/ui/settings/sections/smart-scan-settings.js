@@ -1,4 +1,3 @@
-
 export function createSmartScanSettings(getDependencies) {
   return function SmartScanSettings() {
     const {
@@ -139,29 +138,14 @@ export function createSmartScanSettings(getDependencies) {
               onChange: event => updateSetting("scan_strategy", event.target.value),
               options: [{
                 value: "efficient",
-                label: "⚡ Tối ưu hóa (Cắt ngắn)"
+                label: "Tối ưu hóa (Cắt ngắn)"
               }, {
                 value: "full",
-                label: "🧠 Chính xác cao (Full)"
+                label: "Chính xác cao (Full)"
               }]
-            }), (0, jsxRuntime.jsx)(SearchableSelect, {
-              label: "Mô hình Quét (Khuyên dùng Flash)",
-              value: settings.model || "gemini-3-flash-preview",
-              onChange: event => updateSetting("model", event.target.value),
-              options: geminiModels.map(model => ({
-                value: model.id,
-                label: model.name
-              })),
-              testButton: ModelTestButton && buildSavedProbeTarget && testModel ? (0, jsxRuntime.jsx)(ModelTestButton, {
-                target: buildSavedProbeTarget({
-                  provider: "gemini",
-                  model: settings.model || "gemini-3-flash-preview",
-                  connections: connections,
-                  proxyPersistence: proxyPersistence
-                }),
-                testModel,
-                notify: showToast
-              }) : undefined
+            }), (0, jsxRuntime.jsx)("p", {
+              className: "text-xs text-slate-400",
+              children: "Mô hình suy luận LLM dùng chung cấu hình từ Thiết lập API → API phụ."
             })]
           }), (0, jsxRuntime.jsxs)("div", {
             className: "grid grid-cols-1 md:grid-cols-2 gap-6",

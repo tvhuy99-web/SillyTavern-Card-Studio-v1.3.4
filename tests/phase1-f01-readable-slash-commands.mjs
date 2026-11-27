@@ -18,7 +18,7 @@ assert.equal(slash.compareSlashValues('abc','includes','bc'),true);
 assert.equal(slash.compareSlashValues('a','unknown','b'),false);
 const sent=[];const context={characterName:'Hero',userPersonaName:'Reader',variables:{hp:1},setVariables(value){this.variables=value;},sendMessage(text,role){sent.push({text,role});}};
 assert.equal(slash.expandSlashMacros('{{char}}/{{user}}/{{dice:1d1}}/{{getvar::hp}}',context),'Hero/Reader/1/1');
-// Existing macro pipeline resolves getvar before setvar within a single expansion.
+
 assert.equal(slash.expandSlashMacros('{{setvar::hp::3}}{{getvar::hp}}',context),'1');
 assert.equal(context.variables.hp,'3');
 assert.equal(slash.expandSlashMacros('{{getvar::hp}}',context),'3');

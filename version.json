@@ -1,6 +1,6 @@
 {
   "application": "SillyTavern Card Studio",
-  "release": "1.3.6",
+  "release": "2.0.0",
   "sillyTavernReference": "1.18.0",
   "tavernHelperReference": "4.8.19",
   "runtimeCompatibility": "4.8.19-compat.11",
@@ -8,7 +8,7 @@
   "entryBundle": "./assets/app-production-v1.3.6.js",
   "uiBundle": "./assets/ui-d8367f0f.css",
   "deploymentFormat": "portable-static-root",
-  "runtimeSwitchLocation": "C\u00e0i \u0111\u1eb7t > Th\u1ebb HTML",
+  "runtimeSwitchLocation": "Cài đặt > Thẻ HTML",
   "architectureStage": "M7-complete",
   "assetPolicy": "generated-vendor-static-only",
   "sourceOwnership": "./src",

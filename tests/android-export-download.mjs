@@ -8,7 +8,6 @@ import {
   installAndroidExportInterceptor,
 } from '../src/diagnostics/android-export-download.js';
 
-// Browser behavior is untouched; the Android APK gets its native provider.
 assert.equal(getAndroidExportPlugin({}), null);
 assert.equal(getAndroidExportPlugin({
   Capacitor: { getPlatform: () => 'web', Plugins: { AndroidExportFile: {} } },
@@ -24,8 +23,6 @@ assert.equal(exportMimeType('backup.zip'), 'application/zip');
 assert.equal(exportMimeType('example.xyz', 'application/x-example'), 'application/x-example');
 assert.equal(normalizeExportName('../danger/name.json'), '.._danger_name.json');
 
-// Large binary archives must cross the JS/native bridge in bounded chunks.
-// Ensure byte-for-byte data, MIME type, file name and exact length.
 {
   const data = Uint8Array.from({ length: 900_000 }, (_, i) => i % 251);
   const written = [];
@@ -58,7 +55,6 @@ await assert.rejects(
   /Chỉ hỗ trợ export/,
 );
 
-// Failed writes must abort and never emit a success notification.
 {
   let aborted = false;
   await assert.rejects(streamExportUrlToAndroid({
@@ -75,8 +71,6 @@ await assert.rejects(
   assert.equal(aborted, true);
 }
 
-// The normal WebView script creates and revokes a blob URL immediately after
-// anchor.click(). The interceptor must hold it alive and write through SAF.
 {
   const handlers = new Map();
   const revoked = [];

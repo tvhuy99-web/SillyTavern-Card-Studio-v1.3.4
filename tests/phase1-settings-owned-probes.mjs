@@ -18,7 +18,7 @@ for(const protocol of ['openai','google_native']){
  assert.equal(url,'https://example.test/'+(protocol==='openai'?'v1/models':'v1beta/models'));assert.equal(options.headers[protocol==='openai'?'Authorization':'x-goog-api-key'],protocol==='openai'?'Bearer p':'p');
 }
 for(const invalid of [{ok:false,status:401},{ok:false,status:404},{ok:true,status:0,type:'opaque'}]){response=invalid;await assert.rejects(catalog.probeProxy({url:'https://example.test',protocol:'openai'}),/Không xác minh/);}
-// Exercise the React-owned button with persistent hook slots and effect cleanup.
+
 let states=[],refs=[],si=0,ri=0,dependency,cleanup;const notices=[];
 const Button=createModelTestButton({jsx:(type,props)=>({type,props})},{useState(init){const i=si++;if(!(i in states))states[i]=init;return [states[i],value=>states[i]=value];},useRef(init){return refs[ri++]??={current:init};},useEffect(fn,[key]){if(dependency!==key){cleanup?.();dependency=key;cleanup=fn();}}});
 let target=manual,probe=async()=>({latencyMs:7});function render(){si=ri=0;return Button({target,testModel:probe,notify:(...a)=>notices.push(a)});}

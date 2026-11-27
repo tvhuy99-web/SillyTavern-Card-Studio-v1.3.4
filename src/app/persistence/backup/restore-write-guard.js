@@ -11,7 +11,7 @@ export function createRestoreWriteGuard({
   isUnresolvedJournal,
   getPendingRecovery,
 }) {
-  // Strict in-process mutual exclusion across restore / recover / dismiss on this instance.
+
   let activeOperation = null;
   const activeWrites = new Set();
   function runOrdinaryWrite(operation, work) {
@@ -20,7 +20,7 @@ export function createRestoreWriteGuard({
       assertNotRestoring(operation);
       return work();
     };
-    // Hold a shared lock until the transaction settles. Restore uses an exclusive lock.
+
     const pending = Promise.resolve(hasWebLocks
       ? webLocks.request(lockKey, { mode: 'shared', ifAvailable: true }, lock => {
           if (!lock) throw new BackupRestoreError('Restore write boundary is busy.', { code: 'RESTORE_IN_PROGRESS', phase: 'guard' });
@@ -59,7 +59,7 @@ export function createRestoreWriteGuard({
       try {
         listener(event);
       } catch {
-        // Isolate lifecycle subscribers from restore execution.
+
       }
     }
   }
@@ -95,7 +95,6 @@ export function createRestoreWriteGuard({
       activeOperation = null;
     }
   }
-
 
   function isRestoreInProgress() {
     if (activeOperation !== null) return true;
@@ -135,7 +134,6 @@ export function createRestoreWriteGuard({
     }
     return true;
   }
-
 
   function getActiveOperation() { return activeOperation; }
   function incrementRestoreEpoch() { restoreEpoch += 1; return restoreEpoch; }

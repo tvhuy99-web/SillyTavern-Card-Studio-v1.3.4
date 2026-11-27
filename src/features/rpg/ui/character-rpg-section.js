@@ -1,6 +1,3 @@
-// Recovered application UI. The existing React instance and feature dependencies are injected.
-// Semantic dependency contract: callers inject named dependencies directly.
-
 export function createCharacterRpgSection(getDependencies) {
   return function CharacterRpgSection({ card, onUpdate }) {
     const {
@@ -21,8 +18,8 @@ export function createCharacterRpgSection(getDependencies) {
     const tableCount = rpgDatabase?.tables?.length || 0;
     const liveLinkCount = rpgDatabase?.tables?.filter(table => table.config.lorebookLink?.enabled).length || 0;
     const statusText = isEnabled
-      ? `🟢 Mythic Engine: ${(rpgDatabase?.settings?.executionMode || 'standalone') === 'integrated' ? '1-Pass' : '2-Pass'} • ${tableCount} Bảng • ${liveLinkCount} Live-Link`
-      : '⚪ Mythic Engine: Off';
+      ? `Mythic Engine: ${(rpgDatabase?.settings?.executionMode || 'standalone') === 'integrated' ? '1-Pass' : '2-Pass'} • ${tableCount} Bảng • ${liveLinkCount} Live-Link`
+      : 'Mythic Engine: Off';
 
     const handleSaveRpgData = nextDatabase => {
       onUpdate({ ...card, rpg_data: nextDatabase });
@@ -101,7 +98,6 @@ export function createCharacterRpgSection(getDependencies) {
                   onClick: () => setIsSchemaEditorOpen(true),
                   className: 'w-full py-4 bg-indigo-600 hover:bg-indigo-500 text-white font-bold rounded-lg shadow-lg shadow-indigo-500/20  flex flex-col items-center justify-center gap-2 border border-indigo-400/30',
                   children: [
-                    jsxRuntime.jsx('span', { className: 'text-2xl', children: '🛠️' }),
                     jsxRuntime.jsx('span', { children: 'Mở Trình Thiết Kế Cấu Trúc (Schema Builder)' }),
                     jsxRuntime.jsx('span', {
                       className: 'text-xs font-normal opacity-80 text-indigo-200',

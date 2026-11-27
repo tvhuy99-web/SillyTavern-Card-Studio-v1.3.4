@@ -1,6 +1,5 @@
 import { awaitAbortable } from '../../../m4/core/async/cancellation.js';
 
-// Standalone RPG updates are owned by the initiating session and RPG snapshot.
 export function createStandaloneMythic(deps) {
   let active = null;
   return async function run(content, messageId) {
@@ -42,7 +41,7 @@ export function createStandaloneMythic(deps) {
       const result = deps.applyActions(db, actions);
       const generated = deps.buildLorebook(result.newDb);
       if (!current()) return false;
-      // Commit related state together, before notifications or diagnostic side effects.
+
       const messages = deps.readState().messages.map(item => item.id === messageId ? {...item,rpgState:result.newDb} : item);
       state.setSessionData({card:{...deps.readState().card,rpg_data:result.newDb},messages,generatedLorebookEntries:generated,rpgNotification:result.notifications?.length ? result.notifications.join('\n') : null});
       if (result.logs?.length) deps.log('script-success','system',`[RPG Update]:\n${result.logs.join('\n')}`);

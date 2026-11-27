@@ -1,6 +1,5 @@
 import { createSerialQueue } from '../../core/async/serial-queue.js';
 
-/** Catalog writes shared by UI actions and host RPC. Selection is never a mutation target. */
 function report(set, message) { set(state => { state.error = message; }); }
 function uiAction(set, action, message) {
   return async (...args) => {

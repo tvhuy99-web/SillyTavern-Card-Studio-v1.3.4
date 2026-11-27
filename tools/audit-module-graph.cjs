@@ -1,6 +1,3 @@
-// Module graph & boundary auditor.
-// Uses TypeScript AST when installed, with a zero-dependency ESM scanner fallback
-// so boundary checks (B01, B03, B08, layer rules) always run in offline environments.
 const fs = require('node:fs');
 const path = require('node:path');
 
@@ -23,7 +20,7 @@ function list(directory) {
 }
 
 function stripCommentsAndStringsForFallback(code) {
-  // Replace comments with spaces while keeping string literals intact for import regexes.
+
   return code
     .replace(/\/\*[\s\S]*?\*\//g, m => ' '.repeat(m.length))
     .replace(/(^|[^:\\])\/\/[^\n]*/g, '$1');
@@ -72,7 +69,6 @@ function classifyLayer(relPath) {
   return { layer: 'other', feature: null };
 }
 
-// Allowed static vendor asset imports until E01 npm bundle cutover replaces them.
 const ALLOWED_VENDOR_ASSET_PREFIXES = [
   'assets/ejs.min-',
   'assets/jszip.min-',
@@ -86,7 +82,6 @@ function evaluateBoundaries(edges) {
     const fromInfo = classifyLayer(edge.from);
     const toInfo = classifyLayer(edge.to);
 
-    // Rule B08: Canonical source must not import generated application assets
     if (toInfo.layer === 'assets') {
       const isVendorStatic = ALLOWED_VENDOR_ASSET_PREFIXES.some(p => edge.to.startsWith(p));
       if (!isVendorStatic) {
@@ -101,7 +96,6 @@ function evaluateBoundaries(edges) {
       continue;
     }
 
-    // Core cannot depend on UI, features, app, providers, runtime, or platform
     if (fromInfo.layer === 'core' && !['core', 'vendor'].includes(toInfo.layer)) {
       violations.push({
         rule: 'LAYER-CORE',
@@ -112,7 +106,6 @@ function evaluateBoundaries(edges) {
       });
     }
 
-    // Providers cannot depend on UI or feature internals
     if (fromInfo.layer === 'providers' && ['ui', 'feature', 'app'].includes(toInfo.layer)) {
       violations.push({
         rule: 'LAYER-PROVIDER',
@@ -123,7 +116,6 @@ function evaluateBoundaries(edges) {
       });
     }
 
-    // Persistence cannot depend on UI
     if (fromInfo.layer === 'persistence' && toInfo.layer === 'ui') {
       violations.push({
         rule: 'LAYER-PERSISTENCE',
@@ -134,7 +126,6 @@ function evaluateBoundaries(edges) {
       });
     }
 
-    // Diagnostics cannot depend on features or providers (except diagnostic UI panels)
     if (fromInfo.layer === 'diagnostics' && !edge.from.includes('/ui/') && ['ui', 'feature'].includes(toInfo.layer)) {
       violations.push({
         rule: 'LAYER-DIAGNOSTICS',
@@ -145,7 +136,6 @@ function evaluateBoundaries(edges) {
       });
     }
 
-    // Card Runtime cannot depend on app stores or credentials directly
     if (fromInfo.layer === 'runtime' && ['state', 'persistence', 'ui'].includes(toInfo.layer)) {
       violations.push({
         rule: 'LAYER-RUNTIME',

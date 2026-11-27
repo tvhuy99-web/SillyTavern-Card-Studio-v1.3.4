@@ -1,4 +1,3 @@
-// Recovered from the application host. One owner; dependency getters preserve late binding.
 export function createCharacterFileCodec(dependencies = {}) {
   var MAX_CARD_METADATA_BYTES = 50331648;
   var MAX_EMBEDDED_ASSET_BYTES = 67108864;

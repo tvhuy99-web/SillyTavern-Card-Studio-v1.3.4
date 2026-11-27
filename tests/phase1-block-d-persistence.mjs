@@ -2,8 +2,6 @@ import assert from 'node:assert/strict';
 import { APP_DATABASE } from '../src/app/persistence/app-database.js';
 import { createEntityRepositories } from '../src/app/persistence/entity-repositories.js';
 
-// Deterministic transaction double: callbacks queue more requests, mutations
-// commit only after the entire queue succeeds. Real IDB cases also live in tests/browser.
 const stores = Object.fromEntries(Object.keys(APP_DATABASE.stores).map(key => [key, new Map()]));
 const transactions = [];
 let failCursor = false;
@@ -58,7 +56,6 @@ await repos.removeCharacterAndSessions('A');await assert.rejects(repos.saveExist
 await repos.sessions.put({sessionId:'orphan',characterFileName:'missing',presetName:'New'});await assert.rejects(repos.saveExistingSession(await repos.openSessionForEditing('orphan')),/no longer exists/);
 console.log('Block D persistence: one snapshot, validation, migration rollback, non-resurrecting writes OK.');
 
-// Replacement and restore rotate an internal identity even with identical primary keys.
 const previous=await repos.openSessionForEditing('b');
 await repos.sessions.put({...previous,chatHistory:[{content:'replacement'}]});
 await assert.rejects(repos.saveExistingSession(previous),/deleted or replaced/);
@@ -70,8 +67,7 @@ assert.ok(!(await repos.exportRecords()).chatSessions.some(record=>'__stsRecordG
 stores.chatSessions.set('legacy',{sessionId:'legacy',characterFileName:'B',presetName:'New'});
 const legacy=await repos.openSessionForEditing('legacy');assert.ok(legacy.__stsRecordGeneration);assert.equal((await repos.openSessionForEditing('legacy')).__stsRecordGeneration,legacy.__stsRecordGeneration);
 await repos.saveExistingSession({...legacy,chatHistory:[{content:'old format editable'}]});
-// Two application instances share a database. Latest opener claims edit ownership;
-// old snapshots must not overwrite the new editor even with the same session ID.
+
 const second=createEntityRepositories({database,normalizePreset:value=>value,normalizePresetList:value=>value});
 const fromFirst=await repos.openSessionForEditing('b');
 const fromSecond=await second.openSessionForEditing('b');
@@ -85,7 +81,7 @@ assert.notEqual(reopened.__stsRecordGeneration,fromSecond.__stsRecordGeneration)
 await assert.rejects(second.saveExistingSession(fromSecond),/deleted or replaced/);
 assert.ok(!(await repos.exportRecords()).chatSessions.some(record=>'__stsRecordEditor' in record));
 console.log('Block D3: repository-instance edit ownership and backup privacy PASS');
-// A route that has already unmounted must not steal another tab's editor token.
+
 const held = await second.openSessionForEditing('b');
 assert.equal(await repos.openSessionForEditing('b',()=>false),undefined);
 await second.saveExistingSession({...held,chatHistory:[{content:'still the editor'}]});

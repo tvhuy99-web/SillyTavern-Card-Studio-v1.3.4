@@ -1,4 +1,3 @@
-// Recovered from the application host. One owner; dependency getters preserve late binding.
 export function createRpgImport(dependencies = {}) {
 var rpgPromptMacros=[{label:"{{rpg_schema}}",desc:"Cấu trúc bảng & cột"},{label:"{{rpg_data}}",desc:"Dữ liệu hiện tại (JSON/Table)"},{label:"{{global_rules}}",desc:"Luật chơi chung"},{label:"{{chat_history}}",desc:"Lịch sử hội thoại gần nhất"},{label:"{{rpg_lorebook}}",desc:"Dữ liệu Sổ tay (Hybrid)"}];
 var importChatSheetsDatabase = source => {

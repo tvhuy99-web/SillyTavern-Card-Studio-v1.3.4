@@ -1,4 +1,3 @@
-// Extracted custom hook. Its caller preserves the original unconditional hook order.
 export function useSessionPersistence(dependencies, sessionId) {
   const {
     setSessionData,
@@ -33,11 +32,15 @@ export function useSessionPersistence(dependencies, sessionId) {
   const { personas, isLoading: personasLoading } = (0, dependencies.personaStore)();
   const { showToast } = (0, dependencies.useToast)();
   const loadedRef = (0, dependencies.react.useRef)(false);
+  const revisionAnchorRef = (0, dependencies.react.useRef)({ base: 0, hydrated: 0 });
 
   const autosave = (0, dependencies.react.useMemo)(
-    () => (0, dependencies.__stsCreateSessionSaveCoordinator)({
+    () => {
+      const initialRevision = dependencies.__stsRuntimeState.getSessionRevision();
+      revisionAnchorRef.current = { base: initialRevision, hydrated: initialRevision };
+      return (0, dependencies.__stsCreateSessionSaveCoordinator)({
       sessionId,
-      initialRevision: dependencies.__stsRuntimeState.getSessionRevision(),
+      initialRevision,
       getState: () => dependencies.sessionStore.getState(),
       captureSnapshot: (state, overrides) => dependencies.__stsSessionPersistence.createSessionSnapshot(
         state,
@@ -45,7 +48,11 @@ export function useSessionPersistence(dependencies, sessionId) {
         { snippet: dependencies.truncateText, now: Date.now },
       ),
       queue: dependencies.__stsSessionWriteQueue,
-      getRevision: dependencies.__stsRuntimeState.getSessionRevision,
+      getRevision: () => {
+        const current = dependencies.__stsRuntimeState.getSessionRevision();
+        const anchor = revisionAnchorRef.current;
+        return current === anchor.hydrated ? anchor.base : current;
+      },
       isBusy: state => dependencies.__stsRuntimeState.isBusy() || state.isLoading,
       isRestoreInProgress: () => Boolean(dependencies.__stsBackupRestoreService?.isRestoreInProgress?.()),
       getRestoreEpoch: () => dependencies.__stsBackupRestoreService?.getRestoreEpoch?.() ?? 0,
@@ -58,7 +65,8 @@ export function useSessionPersistence(dependencies, sessionId) {
         'Không lưu được phiên. Phiên có thể đã được mở ở tab khác; hãy sao lưu nội dung trước khi mở lại.',
         'error',
       ),
-    }),
+    });
+    },
     [sessionId],
   );
 
@@ -194,6 +202,7 @@ export function useSessionPersistence(dependencies, sessionId) {
             });
           }
           setSessionData({ worldInfoState: nextWorldInfoState });
+          revisionAnchorRef.current = { ...revisionAnchorRef.current, hydrated: dependencies.__stsRuntimeState.getSessionRevision() };
           loadedRef.current = true;
 
           if ((needsSaveAfterHeal || presetHealed) && !dependencies.__stsBackupRestoreService?.isRestoreInProgress?.()) {
@@ -295,6 +304,17 @@ export function useSessionPersistence(dependencies, sessionId) {
     arenaUserProfileId,
     autosave,
   ]);
+
+  (0, dependencies.react.useEffect)(() => {
+    if (typeof window === 'undefined' || typeof window.addEventListener !== 'function') return;
+    const handlePageHide = () => {
+      if (loadedRef.current && !dependencies.__stsBackupRestoreService?.isRestoreInProgress?.()) {
+        autosave.flush().catch(() => {});
+      }
+    };
+    window.addEventListener('pagehide', handlePageHide);
+    return () => window.removeEventListener('pagehide', handlePageHide);
+  }, [autosave]);
 
   (0, dependencies.react.useEffect)(
     () => () => {

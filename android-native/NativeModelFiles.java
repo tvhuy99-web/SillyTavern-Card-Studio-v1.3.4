@@ -7,8 +7,6 @@ import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.nio.charset.StandardCharsets;
 
-/** Preserve existing marker formats, never publish a marker before the model
- * is fully copied. The two files are not a cross-file transaction. */
 final class NativeModelFiles {
     private NativeModelFiles() {}
     static String readMarker(File marker) {
@@ -43,11 +41,9 @@ final class NativeModelFiles {
                 output.write(markerValue.getBytes(StandardCharsets.US_ASCII));
                 output.getFD().sync();
             }
-            // Invalidate the previous marker only after the replacement has
-            // been fully written. A crash must not make incomplete data ready.
+
             if (marker.exists() && !marker.delete()) throw new IOException("Cannot invalidate previous model marker");
-            // Same-directory rename on Android/Linux. Never delete the existing
-            // model before attempting to replace it.
+
             if (!partial.renameTo(target)) throw new IOException("Cannot commit model file");
             if (!stagedMarker.renameTo(marker)) throw new IOException("Cannot commit model marker");
         } finally {

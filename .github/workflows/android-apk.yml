@@ -78,6 +78,8 @@ jobs:
           set -euo pipefail
           echo "STABLE_DEBUG_KEYSTORE=$RUNNER_TEMP/cardstudio-stable-debug.jks" >> "$GITHUB_ENV"
           base64 --decode .github/signing/stable-debug.keystore.b64 > "$RUNNER_TEMP/cardstudio-stable-debug.jks"
+          APP_VERSION="$(node -p "require('./package.json').version")"
+          echo "APP_VERSION=$APP_VERSION" >> "$GITHUB_ENV"
           cat >> android/app/build.gradle <<'GRADLE'
           android {
               signingConfigs {
@@ -97,7 +99,7 @@ jobs:
               }
               defaultConfig {
                   versionCode 10000 + Integer.parseInt(System.getenv('GITHUB_RUN_NUMBER') ?: '1')
-                  versionName "1.3.6." + (System.getenv('GITHUB_RUN_NUMBER') ?: '1')
+                  versionName System.getenv('APP_VERSION') + "." + (System.getenv('GITHUB_RUN_NUMBER') ?: '1')
               }
           }
           GRADLE

@@ -1,3 +1,4 @@
+import { portableCompositionPaths } from './helpers/composition-paths.mjs';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { createHash } from 'node:crypto';
@@ -7,7 +8,7 @@ import { scanWorldInfo } from '../src/features/world-info/smart-scan-service.js'
 
 const tick = () => new Promise(resolve => setImmediate(resolve));
 assert.deepEqual(EMBEDDING_DATABASE, { name:'LorebookEmbeddingsDB', version:2, store:'embeddings' });
-// Controlled IndexedDB event simulation: requests succeeding is not a commit.
+
 let tx, readRequest, openRequest, closeCount = 0, writes = [], failPut = false;
 const db = {
   close() { closeCount++; },
@@ -40,7 +41,6 @@ await assert.rejects(repo.replace([{id:'a'}],[{id:'new'}]),/DataCloneError/);
 assert.deepEqual(writes,[['delete','a']]); assert.equal(closeCount,4);
 await repo.replace([],[]); assert.equal(closeCount,4);
 
-// Golden formatting/hash contract for existing persisted hashes.
 const entry = {uid:'u',name:'Dragon',keys:['fire','gate'],content:'Lore text'};
 const text = 'Name: Dragon | Keys: fire, gate | Content: Lore text';
 assert.equal(buildEmbeddingEntryText(entry),text);
@@ -49,7 +49,7 @@ const gemini = getEmbeddingProvider('gemini');
 const offline = getEmbeddingProvider('embeddinggemma');
 let providerId = 'gemini', resolveRead;
 const records = [
-  {id:'card::u_0',uid:'u',characterId:'card',vector:[1,0]}, // historical Gemini record
+  {id:'card::u_0',uid:'u',characterId:'card',vector:[1,0]},
   {id:'card::embeddinggemma::u_0',uid:'u',characterId:'card',provider:offline.id,indexKey:offline.indexKey,vector:[0,1]},
   {id:'stale',uid:'u',characterId:'card',provider:offline.id,indexKey:'old',vector:[1,1]},
 ];
@@ -61,7 +61,6 @@ const localLoading = svc.loadIndex('card'); resolveRead(records); await localLoa
 assert.deepEqual(svc.getIndex('card'),[records[1]]);
 assert.deepEqual(svc.getIndex('card','gemini'),[records[0]]);
 
-// A provider change during query must not switch the index used by Smart Scan.
 const calls = [];
 const input = {scanInput:'dragon',card:{fileName:'card',char_book:{entries:[entry]}},worldInfoState:{},worldInfoRuntime:{},worldInfoPinned:{},preset:{},promptHistory:[],variables:{},generatedEntries:[],sequence:1};
 providerId = 'gemini';
@@ -74,7 +73,6 @@ await scanWorldInfo(input,{
 });
 assert.deepEqual(calls,[['embed','gemini'],['load','gemini'],['get','gemini']]);
 
-// Sync must use its initial provider, even if a callback changes settings.
 const synced = [], requests = [];
 providerId='gemini';
 const sync = createEmbeddingService({
@@ -93,7 +91,6 @@ assert.equal(synced[0].next[0].contentHash,await hashEmbeddingText(text));
 assert.deepEqual(sync.getIndex('card','gemini'),synced[0].next);
 assert.deepEqual(sync.getIndex('card','embeddinggemma'),[]);
 
-// A failed commit must not publish a new cached record.
 providerId='gemini';
 const failing = createEmbeddingService({
   getSettings:()=>({enabled:true,mode:'semantic',embedding_provider:'gemini'}),getGeminiApiKey:()=> 'test',
@@ -103,7 +100,7 @@ const failing = createEmbeddingService({
 await assert.rejects(failing.syncIndex('card',[entry]),/commit failure/);
 assert.deepEqual(failing.getIndex('card','gemini'),[records[0]]);
 
-const production=['../assets/app-production-v1.3.6.js','../assets/recovered/app/composition/persistence-composition.js','../assets/recovered/app/composition/provider-composition.js','../assets/recovered/app/composition/store-composition.js','../assets/recovered/app/composition/conversation-composition.js','../assets/recovered/app/composition/runtime-composition.js','../assets/recovered/app/composition/ui-composition.js'].map(p=>readFileSync(new URL(p,import.meta.url),'utf8')).join('\n');
+const production=portableCompositionPaths.map(p=>readFileSync(new URL(p,import.meta.url),'utf8')).join('\n');
 assert.ok(!production.includes('Pc=new Map,Mc=new Map'));
 assert.ok(!production.includes('indexedDB.open("LorebookEmbeddingsDB",2)'));
 for (const alias of ['cosineSimilarity=__stsEmbeddingService.cosine','hashEmbeddingText=__stsEmbeddingService.hashText','getEmbeddingEntryText=__stsEmbeddingService.entryText']) assert.ok(production.includes(alias));

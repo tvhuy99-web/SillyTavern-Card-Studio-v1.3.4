@@ -6,10 +6,6 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadFactory;
 
-/** One owner for native resources. Pending jobs are rejected on close;
- * the in-flight job finishes before cleanup (native inference is not interruptible).
- * The resource name also reserves ownership across Activity recreation, until
- * the previous instance's cleanup finishes. Never race two file/model workers. */
 final class NativeSerialWorker {
     private static final Map<String, NativeSerialWorker> OWNERS = new HashMap<>();
     private final ExecutorService executor;

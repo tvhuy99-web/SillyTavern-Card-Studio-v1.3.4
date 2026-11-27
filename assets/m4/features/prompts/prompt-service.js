@@ -58,8 +58,7 @@ export async function buildConversationPrompt(input, deps = {}) {
   });
 
   const preparedAt = nowMs();
-  // Always yield before prompt core execution. This guarantees that a click-triggered
-  // loading state has a chance to paint before regex/EJS/World Info processing begins.
+
   await yieldToBrowser();
   const coreStarted = nowMs();
   const result = await runPromptCore(

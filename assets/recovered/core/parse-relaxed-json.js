@@ -1,4 +1,3 @@
-// Recovered from the application host. One owner; dependency getters preserve late binding.
 export function createRelaxedJsonParser(dependencies = {}) {
 function parseRelaxedJson(text) {
   try {

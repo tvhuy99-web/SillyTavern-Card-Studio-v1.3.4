@@ -4,7 +4,7 @@ import assert from 'node:assert/strict';
 import { vendorAssets } from '../build/asset-manifest.mjs';
 import { npmRuntimeNames } from '../build/npm-runtime/manifest.mjs';
 const root=new URL('../',import.meta.url);
-const manifestFile=new URL('docs/architecture/phase-1/evidence/block-c-vendor-inventory.json',root);
+const manifestFile=new URL('tests/fixtures/block-c-vendor-inventory.json',root);
 const pins=JSON.parse(await readFile(new URL('build/npm-runtime/package.json',root),'utf8')).dependencies;
 const evidence={
   'src/vendor/react-state-runtime.js':{libraries:['React','ReactDOM','Zustand','Immer','JSON5'],detectedVersions:{react:'19.2.7',reactDom:'19.2.7'},provenance:'Recovered bundle; exact Zustand, Immer and JSON5 versions unverified'},

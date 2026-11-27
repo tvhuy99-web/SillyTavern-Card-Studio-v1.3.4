@@ -30,16 +30,6 @@ import ai.onnxruntime.OnnxValue;
 import ai.onnxruntime.OrtEnvironment;
 import ai.onnxruntime.OrtSession;
 
-/**
- * Runs the existing EmbeddingGemma Q4 ONNX graph on Android native threads.
- * The web tokenizer and model selection remain unchanged. JS supplies padded
- * input_ids and attention_mask. Only the sentence_embedding output is accepted,
- * so no semantic search, pooling, or model fallback is introduced.
- *
- * Cache API is owned by the WebView. The existing model is copied in small
- * base64 chunks into private native files before the first native session.
- * Neither the model's content nor any Lorebook text is sent to a network API.
- */
 @CapacitorPlugin(name = "WorldInfoEmbeddingNative")
 public class WorldInfoEmbeddingNativePlugin extends Plugin {
     private static final String TAG = "CardStudioWorldInfoOrt";

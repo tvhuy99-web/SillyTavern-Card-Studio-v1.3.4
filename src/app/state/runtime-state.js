@@ -52,8 +52,6 @@ export function abortAll(reason = 'user-stop') {
   return active.length;
 }
 
-// Invalidate outstanding asynchronous work even when a session is reopened
-// with the same ID. A user Stop does not change the session revision.
 export function invalidateSession(reason = 'session-change') {
   sessionRevision += 1;
   abortAll(reason);

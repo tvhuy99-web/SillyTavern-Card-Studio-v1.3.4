@@ -95,7 +95,7 @@ export function createBackupRestoreService({
     try {
       await durableSnapshotStore.remove(journalId);
     } catch {
-      // Best-effort snapshot cleanup.
+
     }
   }
 
@@ -104,11 +104,10 @@ export function createBackupRestoreService({
     try {
       await repositories.clearRestoreCommitMarker();
     } catch {
-      // Best-effort commit marker cleanup.
+
     }
   }
 
-  // Deterministic verification of whether IndexedDB actually committed this journal.
   async function verifyIdbCommitState(journal) {
     if (!journal) {
       return { idbCommitted: false, commitState: 'none', marker: null };
@@ -135,7 +134,6 @@ export function createBackupRestoreService({
     return { idbCommitted: false, commitState: 'unverified-or-aborted', marker: null };
   }
 
-  // Step 1: Validate backup structure, entity keys, and preflight settings.
   function validate(rawBackup) {
     const data = validateBackupEnvelope(rawBackup);
     let settingsEntries;
@@ -156,7 +154,6 @@ export function createBackupRestoreService({
     };
   }
 
-  // Step 2: Stage decoded records and capture BOTH pre-restore IDB snapshot and pre-restore Web Storage settings.
   async function stage(validated) {
     const { data, settingsEntries } = validated;
     const restoredCharacters = [];
@@ -266,13 +263,11 @@ export function createBackupRestoreService({
         emitRestoreLifecycle('restore-started', journalId);
 
         try {
-        // 1. Validate
+
         const validated = validate(rawBackup);
 
-        // 2. Stage (captures both previousRecords and previousSettings)
         const staged = await stage(validated);
 
-        // 3. Persist durable rollback snapshot (sensitive settings stored ONLY here, never in journal)
         const createdAt = now();
         try {
           await durableSnapshotStore.put({
@@ -303,7 +298,6 @@ export function createBackupRestoreService({
 
         renewLock(op, journalId);
 
-        // 4. Write durable non-sensitive journal metadata (never contains plaintext secrets)
         const baseJournal = {
           id: journalId,
           status: RESTORE_STAGES.JOURNALED,
@@ -334,7 +328,6 @@ export function createBackupRestoreService({
           ...lockMeta,
         });
 
-        // 5a. Apply IndexedDB transaction with atomic durable commit marker (with ownerId & operationId)
         writeJournal({
           ...baseJournal,
           status: RESTORE_STAGES.APPLYING_IDB,
@@ -375,14 +368,12 @@ export function createBackupRestoreService({
           });
         }
 
-        // IDB + commit marker are now atomically committed on disk.
         writeJournal({
           ...baseJournal,
           status: RESTORE_STAGES.IDB_COMMITTED,
           idbCommitted: true,
         }, { allowCompactFallback: true });
 
-        // 5b. Apply Web Storage settings (separate storage engine; NOT atomic with IDB)
         writeJournal({
           ...baseJournal,
           status: RESTORE_STAGES.APPLYING_SETTINGS,
@@ -427,8 +418,6 @@ export function createBackupRestoreService({
           );
         }
 
-        // Mark settings applied before cleanup so crash between settings apply and cleanup
-        // triggers full cross-storage rollback (both IDB + Web Storage) on restart.
         writeJournal({
           ...baseJournal,
           status: RESTORE_STAGES.SETTINGS_APPLIED,
@@ -436,7 +425,6 @@ export function createBackupRestoreService({
           settingsApplied: true,
         }, { allowCompactFallback: true });
 
-        // 6. Finalize — wipe journal, durable snapshot (including sensitive settings), and commit marker.
         clearJournal();
         await removeSnapshotQuietly(journalId);
         await clearCommitMarkerQuietly();

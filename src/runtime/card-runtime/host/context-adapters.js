@@ -1,5 +1,5 @@
 import { postFrameMessage } from './rpc-dispatcher.js';
-// Recovered from the application host. One owner; dependency getters preserve late binding.
+
 export function createRuntimeContextAdapters(dependencies = {}) {
   var DEFAULT_RPC_TIMEOUT_MS = 5e3;
   var normalizeImportedName = (value, fallback) => String(value ?? "").trim().slice(0,300) || fallback;

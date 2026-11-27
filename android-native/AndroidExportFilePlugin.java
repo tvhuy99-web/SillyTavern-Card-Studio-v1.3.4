@@ -20,7 +20,6 @@ import java.io.File;
 import java.io.OutputStream;
 import java.util.UUID;
 
-/** SAF export; no broad storage permission or network access. */
 @CapacitorPlugin(name = "AndroidExportFile")
 public class AndroidExportFilePlugin extends Plugin {
     private static final String TAG = "CardStudioExport";
@@ -28,11 +27,11 @@ public class AndroidExportFilePlugin extends Plugin {
     private final NativeSerialWorker writer = new NativeSerialWorker("CardStudioExport");
     private final NativeExportSession session = new NativeExportSession();
     private final String instanceId = UUID.randomUUID().toString();
-    // Picker identity is guarded by synchronized begin/callback/destroy.
+
     private PluginCall pickerCall;
     private long pickerToken;
     private String pickerFileName;
-    // Worker-owned fields; never inspected on the bridge/activity thread.
+
     private OutputStream output;
     private Uri documentUri;
     private long totalWritten;
@@ -84,7 +83,9 @@ public class AndroidExportFilePlugin extends Plugin {
                 documentUri = chosen;
                 journalId = exportId(token);
                 journal().begin(journalId, fileName);
-                OutputStream stream = getContext().getContentResolver().openOutputStream(chosen, "w");
+                OutputStream stream;
+                try { stream = getContext().getContentResolver().openOutputStream(chosen, "wt"); }
+                catch (IllegalArgumentException unsupportedMode) { stream = getContext().getContentResolver().openOutputStream(chosen, "w"); }
                 if (stream == null) throw new IOException("Unable to open destination document");
                 output = new BufferedOutputStream(stream, 128 * 1024);
                 totalWritten = 0;
@@ -102,7 +103,7 @@ public class AndroidExportFilePlugin extends Plugin {
         }
         return journal;
     }
-    /** Reports uncertainty, not a proof that the destination is incomplete. */
+
     @PluginMethod public void getInterruptedSave(PluginCall call) {
         writer.submit(() -> {
             try {
@@ -160,7 +161,7 @@ public class AndroidExportFilePlugin extends Plugin {
             settleReceipt(true);
             session.release(token);
             call.resolve(result);
-            // Notification is not part of the file commit.
+
             try {
                 Activity activity = getActivity();
                 if (activity != null) activity.runOnUiThread(() -> {

@@ -1,4 +1,3 @@
-// Select one deployed layout; no fallback to repository assets or another build.
 const sourceLayout = new URL(location.href).searchParams.get('layout') === 'source';
 const { APP_DATABASE, createAppDatabase } = await import(sourceLayout ? '/modules/app/persistence/app-database.js' : '/assets/m5/app/persistence/app-database.js');
 const { createEntityRepositories, prepareCharacterRecord } = await import(sourceLayout ? '/modules/app/persistence/entity-repositories.js' : '/assets/m5/app/persistence/entity-repositories.js');

@@ -1,3 +1,4 @@
+import { portableCompositionPaths } from './helpers/composition-paths.mjs';
 import assert from 'node:assert/strict';
 import { readFile, writeFile } from 'node:fs/promises';
 import vm from 'node:vm';
@@ -43,8 +44,7 @@ function snapshot(components) {
     return components[id](props);
   }), (key,value) => typeof value === 'function' ? '[callback]' : value));
 }
-// Optional fixture regeneration from AST-extracted definitions in the exact previous bundle.
-// Normal test execution has no TypeScript or legacy extraction dependency.
+
 if (process.env.P09_PREVIOUS_DEFINITIONS) {
   const old = JSON.parse(await readFile(process.env.P09_PREVIOUS_DEFINITIONS,'utf8'));
   const context = vm.createContext({wt,b,...bindings});
@@ -83,7 +83,7 @@ tabElements(tree)[3].props.onClick('chat');tree=renderShell();assert.equal(panel
 panel(tree).props.onCloseSession();tree=renderShell();assert.equal(panel(tree).props.activeSessionId,null);
 let selected;current.Yf({onSessionSelect:v=>selected=v}).props.onSessionSelect('x');assert.equal(selected,'x');
 let closed=false;current.Yf({activeSessionId:'x',onCloseSession:()=>closed=true}).props.onBack();assert.equal(closed,true);
-const bundle=(await Promise.all(['../assets/app-production-v1.3.6.js','../assets/recovered/app/composition/persistence-composition.js','../assets/recovered/app/composition/provider-composition.js','../assets/recovered/app/composition/store-composition.js','../assets/recovered/app/composition/conversation-composition.js','../assets/recovered/app/composition/runtime-composition.js','../assets/recovered/app/composition/ui-composition.js'].map(p=>readFile(new URL(p,import.meta.url),'utf8')))).join('\n');
+const bundle=(await Promise.all(portableCompositionPaths.map(p=>readFile(new URL(p,import.meta.url),'utf8')))).join('\n');
 for(const marker of ['Icon=__stsCreateIcon(jsxRuntime)','AppHeader=__stsCreateAppHeader(jsxRuntime,Icon)','ToggleSwitch=__stsCreateToggleSwitch(jsxRuntime,React,Tooltip)','PresetTab=__stsCreatePresetTab(jsxRuntime)','SettingsTab=__stsCreateSettingsTab(jsxRuntime)','MainTab=__stsCreateMainTab(jsxRuntime,Icon)','ApplicationShell=__stsCreateApplicationShell(jsxRuntime,React,{Header:AppHeader,MainTab:MainTab,Characters:CharacterScreen,Presets:PresetScreen,Lorebooks:LorebookLibrary,Chat:ChatRoute,Settings:SettingsScreen})','ChatRoute=__stsCreateChatRoute(jsxRuntime,{ChatSession:ChatSessionScreen,SessionList:SessionListScreen})']) assert.equal(bundle.split(marker).length-1,1);
 assert.ok(!bundle.includes('onKeyDown:vu'));
 console.log(`P09 shell: ${scenarios.length} legacy element trees, keyboard navigation, switches, chat routing and shell state: OK`);

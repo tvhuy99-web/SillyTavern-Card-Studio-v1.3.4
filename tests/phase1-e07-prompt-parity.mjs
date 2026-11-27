@@ -18,7 +18,6 @@ import { normalizePresetConfig } from '../src/features/presets/prompt-normalizer
 
 const root = fileURLToPath(new URL('../', import.meta.url));
 
-// 1. Verify legacy transitional modules have been removed after canonical cutover (E04.4, E07.2, E10)
 for (const removed of [
   'src/features/prompts/legacy-prompt-builder.js',
   'assets/recovered/features/prompts/legacy-prompt-builder.js',
@@ -158,7 +157,6 @@ function createSharedDependencies({
   };
 }
 
-// 2. extractStoryContent golden tests
 assert.equal(
   extractStoryContent('<thinking>internal plan</thinking><content>The lantern flickers softly.</content><UpdateVariable>{"hp":9}</UpdateVariable>'),
   'The lantern flickers softly.',
@@ -173,7 +171,6 @@ assert.equal(
 );
 assert.equal(extractStoryContent(''), '');
 
-// 3. Canonical Prompt Assembler & Prompt Service golden workflow tests
 const deps = createSharedDependencies();
 const assembler = createPromptAssembler(deps);
 
@@ -294,7 +291,6 @@ assert.ok(assembled.fullPrompt.includes('Campaign=Chronicles'), 'Global variable
 assert.ok(assembled.fullPrompt.includes('chronicler'), 'Prompt-only regex script should rewrite archivist -> chronicler');
 assert.equal(assembled.updatedVariables?.gold, 12, 'updatedVariables should persist gold=12');
 
-// Verify prompt-service works directly with canonical assembler (without passing legacy buildBaseSections/buildPromptCore)
 const viaService = await buildConversationPrompt({
   state: {
     card,
@@ -319,7 +315,6 @@ const viaService = await buildConversationPrompt({
 assert.equal(viaService.fullPrompt, assembled.fullPrompt, 'prompt-service canonical path must match prompt-assembler directly');
 assert.deepEqual(viaService.updatedVariables, assembled.updatedVariables);
 
-// Direct standalone exports parity check
 const { baseSections: directBase } = buildBaseSections(card, preset, deps);
 assert.deepEqual(directBase, baseSections);
 const directAssembled = await assemblePrompt(

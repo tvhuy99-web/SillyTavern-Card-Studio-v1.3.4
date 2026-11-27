@@ -1,5 +1,3 @@
-// Recovered from the application host. One owner; dependency getters preserve late binding.
-
 const PROTECTED_TOKEN_SUFFIX = '___';
 
 const BLOCK_CONTAINER_TAGS = new Set([

@@ -1,4 +1,3 @@
-// Recovered from the application host. One owner; dependency getters preserve late binding.
 export const MAX_AVATAR_BASE64_LENGTH = 14e7;
 
 export function isPlainObject(value) {
@@ -47,7 +46,7 @@ export async function decodeBase64ToBuffer(base64, _mimeType = 'application/octe
 
 export function createBackupCodec(_dependencies = {}) {
   return {
-    // Meaningful names
+
     MAX_AVATAR_BASE64_LENGTH,
     isPlainObject,
     assertBackupArray,
@@ -56,8 +55,6 @@ export function createBackupCodec(_dependencies = {}) {
   };
 }
 
-// Validate primary keys and duplicate identities before any write is attempted.
-// Unknown record fields remain untouched for compatibility with newer backups.
 export function validateRecordBatches(batches) {
   const keys = { characters: 'fileName', presets: 'name', lorebooks: 'name', personas: 'id', chatSessions: 'sessionId' };
   for (const [kind, key] of Object.entries(keys)) {
@@ -73,7 +70,6 @@ export function validateRecordBatches(batches) {
   return batches;
 }
 
-// Keep the v1 backup keys while honoring the current credential owners.
 export function readBackupSetting(key, { local, session, connections, proxy, keys }) {
   if (key === keys.gemini) return JSON.stringify(connections.getGemini());
   if (key === keys.openrouter) return connections.getOpenRouterKey();
@@ -83,8 +79,6 @@ export function readBackupSetting(key, { local, session, connections, proxy, key
   return local.getItem(key);
 }
 
-// Preflight recognized settings before committing database records. Unknown keys
-// remain ignored as in backup v1, and the existing size limits still apply.
 export function prepareBackupSettings(settings, { allowed, prefix, keys, proxy }) {
   const output = [];
   let size = 0;
@@ -105,8 +99,7 @@ export function prepareBackupSettings(settings, { allowed, prefix, keys, proxy }
   return output;
 }
 export function restoreBackupSettings(entries, { local, session, connections, proxy, keys }) {
-  // IndexedDB has already committed separately. Roll back only touched settings
-  // and owner keys in this synchronous Web Storage phase, not unrelated data.
+
   const touched = new Set(entries.map(([key]) => key));
   if (touched.has(keys.profiles) || touched.has(keys.password)) {
     for (const key of proxy.getOwnedStorageKeys()) touched.add(key);

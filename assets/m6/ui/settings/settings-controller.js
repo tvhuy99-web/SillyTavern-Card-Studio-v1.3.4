@@ -12,10 +12,9 @@ function persistAiStudioStatus(value) {
   try {
     if (value) globalThis.sessionStorage?.setItem(AI_STUDIO_STATUS_KEY, JSON.stringify(value));
     else globalThis.sessionStorage?.removeItem(AI_STUDIO_STATUS_KEY);
-  } catch { /* optional diagnostic state */ }
+  } catch {   }
 }
-// Owns the connection draft and its lifecycle. The host supplies existing
-// repositories and the React instance until the legacy UI migration is complete.
+
 export function useConnectionSettings({
   react, useToast, useGeminiModels, defaultGeminiModels,
   readSettings, saveSettings, readGemini, readOpenRouterKey, readOpenRouterModels,
@@ -73,7 +72,7 @@ export function useConnectionSettings({
   const visibilityRevision = useRef(0);
 
   function recordAiStudio(stage, details, level = 'state') {
-    try { window.__STS_AI_STUDIO_LOGS__?.record?.(stage, details, level); } catch { /* diagnostics must not interrupt model discovery */ }
+    try { window.__STS_AI_STUDIO_LOGS__?.record?.(stage, details, level); } catch {   }
   }
   useEffect(() => {
     mounted.current = true;
@@ -183,7 +182,7 @@ export function useConnectionSettings({
     setProfiles(installedProfiles);
     setProfileId(saved.proxy_profile_id || '');
     if (saved.proxy_profile_id) {
-      // A missing profile is not permission to display or send global credentials.
+
       setProxyUrl(selected?.url || '');
       setProxyPassword(selected?.password || '');
       setLegacyMode(selected?.legacyMode ?? false);
@@ -204,7 +203,7 @@ export function useConnectionSettings({
     if (field === 'proxy_protocol' || field === 'source') invalidateProxyCatalog();
     if (field === 'proxy_protocol' && value !== settings.proxy_protocol) setProxyPassword('');
     setSettings(previous => ({ ...previous, [field]: value }));
-    // AI Studio has historically applied these fields immediately.
+
     if (/^aistudio_(model|tool_model|thinking|tool_thinking)$/.test(field)) {
       saveSettings({ ...readSettings(), [field]: value });
       window.__STS_AI_STUDIO_LOGS__?.record?.('SETTING_SAVED', {
@@ -239,8 +238,6 @@ export function useConnectionSettings({
       protocol: settings.proxy_protocol, chatModel: settings.proxy_model, toolModel: settings.proxy_tool_model };
   }
 
-  // Profile selection and manual refresh share one model-catalog path. Capture
-  // the entire target before awaiting, including the protocol and credentials.
   async function refreshProxyCatalog(target, automatic = false) {
     if (!target.url) {
       if (!automatic) showToast('Vui lòng nhập Proxy URL.', 'warning');

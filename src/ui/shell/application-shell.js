@@ -1,4 +1,3 @@
-// Host React and feature screens are injected until the legacy entry is retired.
 export function createAppHeader({ jsx, jsxs }, Icon) {
   return function AppHeader() {
     return jsx('header', {

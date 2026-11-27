@@ -1,5 +1,3 @@
-// AST inventory of short lexical bindings. This is a review aid, not a dead-code
-// detector or proof that every short identifier is a minifier artifact.
 const fs = require('node:fs');
 const path = require('node:path');
 const { execFileSync } = require('node:child_process');
@@ -54,8 +52,6 @@ function inventory(ref) {
   return { files: rows.length, count: rows.reduce((n, row) => n + row.count, 0), topLevel: rows.reduce((n, row) => n + row.topLevel, 0), byKind, rows };
 }
 
-// These short names have ordinary meanings in the reviewed first-party code.
-// They are not a general exemption for property aliases or generated scripts.
 const conventionalNames = Object.freeze({
   id: 'identifier', db: 'database', tx: 'transaction', op: 'operation',
   fn: 'function callback', ui: 'UI-facing action', ok: 'success flag',
@@ -76,13 +72,13 @@ function reviewBindings(rows) {
   return { accepted: Object.values(acceptedByName).reduce((total, count) => total + count, 0),
     acceptedByName, unresolved: unresolved.length, candidates: unresolved };
 }
-function inspectCompositionAliases(content) {
-  const source = ts.createSourceFile('src/app/host.js', content, ts.ScriptTarget.Latest, true, ts.ScriptKind.JS);
+function inspectCompositionAliases(file, content) {
+  const source = ts.createSourceFile(file, content, ts.ScriptTarget.Latest, true, ts.ScriptKind.JS);
   if(source.parseDiagnostics.length) throw Error('Cannot parse composition root');
   const entries=[];
   const record=(key,value,kind,node)=>{
     if(!key||!value||!ts.isIdentifier(key)||!shortName.test(key.text)||!ts.isIdentifier(value)||shortName.test(value.text)) return;
-    entries.push({key:key.text,binding:value.text,kind,line:source.getLineAndCharacterOfPosition(node.getStart(source)).line+1});
+    entries.push({file,key:key.text,binding:value.text,kind,line:source.getLineAndCharacterOfPosition(node.getStart(source)).line+1});
   };
   function visit(node) {
     if(ts.isBindingElement(node)&&node.propertyName) record(node.propertyName,node.name,'destructure',node);
@@ -95,7 +91,6 @@ function inspectCompositionAliases(content) {
   for(const entry of entries){byKind[entry.kind]=(byKind[entry.kind]||0)+1;byKey[entry.key]=(byKey[entry.key]||0)+1;}
   return {count:entries.length,byKind,byKey,entries};
 }
-
 
 function inspectEmbeddedRuntime() {
   const file = 'src/runtime/card-runtime/core-builder.js';
@@ -122,7 +117,13 @@ const baseline = baselineRef ? inventory(baselineRef) : null;
 const before = new Map(baseline?.rows.map(row => [row.file, row.count]) || []);
 const summarize = ({ files, count, topLevel, byKind }) => ({ files, count, topLevel, byKind });
 const hostFile = 'src/app/host.js';
-const hostAliases = inspectCompositionAliases(fs.readFileSync(path.join(root, hostFile), 'utf8'));
+const compositionFiles = [hostFile, ...walkFiles(path.join(root, 'src/app/composition')).map(relative).filter(inScope)];
+const compositionEntries = compositionFiles.flatMap(file => inspectCompositionAliases(file, fs.readFileSync(path.join(root, file), 'utf8')).entries);
+const hostAliases = { count: compositionEntries.length, byKind: {}, byKey: {}, entries: compositionEntries };
+for (const entry of compositionEntries) {
+  hostAliases.byKind[entry.kind] = (hostAliases.byKind[entry.kind] || 0) + 1;
+  hostAliases.byKey[entry.key] = (hostAliases.byKey[entry.key] || 0) + 1;
+}
 const bindingReview = reviewBindings(current.rows);
 const report = {
   scope: 'First-party src/**/*.js, .mjs and .cjs; excludes src/vendor, property keys, export aliases and embedded script strings. Short-name candidates include legitimate abbreviations and loop indices.',
@@ -130,7 +131,7 @@ const report = {
   conventionalNames,
   bindingReview,
   embeddedRuntime: args.includes('--embedded-runtime') ? inspectEmbeddedRuntime() : null,
-  compositionAliasCandidates: { scope: 'Short identifier property keys mapped to longer local names in host.js; includes legitimate keys and repeated dependency edges, not a semantic defect count.', count: hostAliases.count, byKind: hostAliases.byKind, byKey: hostAliases.byKey, ...(args.includes('--details') ? { entries: hostAliases.entries } : {}) },
+  compositionAliasCandidates: { scope: 'Short identifier property keys mapped to longer local names in host.js and app/composition; includes legitimate keys and repeated dependency edges, not a semantic defect count.', count: hostAliases.count, byKind: hostAliases.byKind, byKey: hostAliases.byKey, ...(args.includes('--details') ? { entries: hostAliases.entries } : {}) },
   baselineRef,
   baseline: baseline ? summarize(baseline) : null,
   current: summarize(current),

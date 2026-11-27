@@ -1,7 +1,4 @@
 import { getAndroidPlugin, ANDROID_PLUGINS } from '../../../recovered/platform/android/native-bridge.js';
-// EmbeddingGemma 2 Text 270M runs only in Capacitor Android APK via LiteRT-LM.
-// No model/backend switching: an absent plugin, model, or runtime is an error.
-// Browser users can keep using the original EmbeddingGemma 300M / Qwen3 paths.
 
 export const EMBEDDINGGEMMA2_MODEL_ID = 'litert-community/embeddinggemma-2-text-270m-litert-lm';
 export const EMBEDDINGGEMMA2_FILE_NAME = 'embeddinggemma-2-text-270m.litertlm';
@@ -25,7 +22,6 @@ export async function getEmbeddingGemma2Status() {
   return { status: state.sessionReady ? 'ready' : state.modelReady ? 'cached' : 'missing', progress: state.modelReady ? 100 : 0 };
 }
 
-// Only called when the user clicks "Tải mô hình" in Smart Scan Settings.
 export async function downloadEmbeddingGemma2(onProgress) {
   const plugin = requirePlugin();
   const state = await plugin.status();
@@ -69,9 +65,6 @@ export function validateEmbeddingGemma2Vectors(vectors, count) {
   });
 }
 
-// Capacitor base64 transport: each embedding is 768 little-endian float32
-// values. Preserve the existing L2-normalization, index dimensions and
-// provider identity, while avoiding thousands of JSON number objects.
 export function decodeEmbeddingGemma2Binary(base64, count, dimensions = 768) {
   if (typeof base64 !== 'string' || !Number.isInteger(count) || count < 1 || count > 4
     || dimensions !== 768) {

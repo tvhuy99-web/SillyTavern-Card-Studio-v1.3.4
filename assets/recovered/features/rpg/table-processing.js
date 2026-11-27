@@ -1,5 +1,3 @@
-// Recovered from the application host. One owner; dependency getters preserve late binding.
-
 const DEFAULT_MYTHIC_SYSTEM_PROMPT = [
   '',
   'Bạn là một Medusa chuyên điền bảng biểu. Bạn cần tham khảo bối cảnh thiết lập trước đó cũng như <Dữ liệu chính văn> được gửi cho bạn để ghi lại dưới dạng bảng. ',

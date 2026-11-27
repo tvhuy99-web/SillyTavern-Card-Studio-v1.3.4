@@ -1,4 +1,3 @@
-// Shared icon vocabulary. Preserve the original SVG paths and fallback.
 const iconPaths = Object.freeze({
   brand: "M7 3h10a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2Zm-3 5H3a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h9a2 2 0 0 0 2-2v-1M12 7v6m-3-3h6",
   character: "M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8Zm7 8a7 7 0 0 0-14 0",

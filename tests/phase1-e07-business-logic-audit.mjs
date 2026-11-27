@@ -18,9 +18,6 @@ import {
 } from '../src/features/state/smart-state-service.js';
 import { extractStoryContent } from '../src/features/prompts/story-content.js';
 
-// ============================================================================
-// 1. Static Readability & De-minification Audit across all 10 recovered files
-// ============================================================================
 const RECOVERED_FILES = [
   'src/features/chat/regex-processing.js',
   'src/features/rpg/table-processing.js',
@@ -59,9 +56,6 @@ for (const relativePath of RECOVERED_FILES) {
   );
 }
 
-// ============================================================================
-// 2. regex-processing audit (official-local + legacy masking)
-// ============================================================================
 {
   let mode = 'official-local';
   const { processRegex } = createRegexProcessing({ readCardRuntimeEngineMode: () => mode });
@@ -117,9 +111,6 @@ for (const relativePath of RECOVERED_FILES) {
   assert.ok(legacyMasked.interactiveHtml?.includes('<div>Protected</div>'));
 }
 
-// ============================================================================
-// 3. table-processing audit (hybrid table, snapshot, filter, parse, apply)
-// ============================================================================
 {
   const { formatRpgHybridTable: Xs, createRpgRowSnapshot: Qs, buildMythicPrompt: Zs, filterRpgDatabaseByActiveEntries: el, parseRpgActions: tl, applyRpgActions: nl, defaultMythicSystemPrompt: Js } = createTableProcessing({
     HarmCategory: {
@@ -192,9 +183,6 @@ for (const relativePath of RECOVERED_FILES) {
   assert.ok(applied.notifications.some(note => note.includes('Mới: Rope (Inventory)')));
 }
 
-// ============================================================================
-// 4. keyword-matching audit (boolean ops, whole words, selective, recursion, sticky)
-// ============================================================================
 {
   const { resolveWorldInfo } = createKeywordMatching({});
   const entries = [
@@ -253,9 +241,6 @@ for (const relativePath of RECOVERED_FILES) {
   assert.equal(resolved.updatedRuntimeState.e_cooldown.cooldownDuration, 1);
 }
 
-// ============================================================================
-// 5. macro-processing audit
-// ============================================================================
 {
   const { resolveCharacterName: Vu, resolvePromptOverride: Ku, expandBasicMacros: Ju, expandRandomMacros: Xu, extractRegexScripts: Zu } = createMacroProcessing({});
   assert.equal(Vu({ name: 'Aria', nickname: 'Captain Aria' }), 'Captain Aria');
@@ -284,9 +269,6 @@ for (const relativePath of RECOVERED_FILES) {
   });
 }
 
-// ============================================================================
-// 6. summary-generation audit
-// ============================================================================
 {
   let capturedPrompt = '';
   const { generateSummary } = createSummaryGeneration({
@@ -313,9 +295,6 @@ for (const relativePath of RECOVERED_FILES) {
   assert.ok(!capturedPrompt.includes('<thinking>'));
 }
 
-// ============================================================================
-// 7. arena/state-machine audit
-// ============================================================================
 {
   const arena = {
     enabled: true,
@@ -337,9 +316,6 @@ for (const relativePath of RECOVERED_FILES) {
   assert.equal(retry.side.completed, false);
 }
 
-// ============================================================================
-// 8. variable-scope-service & smart-state-service audit
-// ============================================================================
 {
   const backing = new Map();
   const storage = {

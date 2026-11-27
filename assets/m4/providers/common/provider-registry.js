@@ -1,4 +1,3 @@
-/** Provider identity, model resolution and capability contracts. No DOM/storage. */
 export const CONNECTION_DEFAULTS = Object.freeze({
   source: 'gemini', aistudio_model: 'default', aistudio_tool_model: 'default',
   aistudio_thinking: 'default', aistudio_tool_thinking: 'default',

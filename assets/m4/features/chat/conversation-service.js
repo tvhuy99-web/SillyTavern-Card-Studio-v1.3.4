@@ -44,8 +44,7 @@ export function createConversationService(deps) {
 
     try {
       while (!controller.signal.aborted) {
-        // AI Studio may need first-use account login in its native WebView.
-        // Keep the existing timeouts unchanged for all other providers.
+
         const isAiStudio = String(label).startsWith('aistudio:');
         const timeoutMs = chunkCount === 0
           ? (isAiStudio ? Math.max(streamFirstChunkTimeoutMs, 320000) : streamFirstChunkTimeoutMs)
@@ -272,8 +271,7 @@ export function createConversationService(deps) {
 
   async function generateSingle(state, message, prompt, controller, ownsSession, assertActive) {
     let content = '';
-    // AI Studio uses a native WebView and must show live text even if the
-    // character preset disables API streaming. No change for other providers.
+
     const connectionSource = deps.getConnectionSettings?.()?.source;
     if (state.preset.stream_response || connectionSource === 'aistudio') {
       const stream = deps.generationGateway.stream({
@@ -346,8 +344,7 @@ export function createConversationService(deps) {
 
     let succeeded = true;
     try {
-      // Let React/Zustand paint the busy state before preprocessing, rewind work,
-      // state snapshots, Smart Scan, or prompt construction can occupy the main thread.
+
       await yieldToBrowser();
       assertActive();
 
@@ -427,8 +424,6 @@ export function createConversationService(deps) {
     return succeeded && ownsSession() && !controller.signal.aborted;
   }
 
-  // Retry uses the exact same streaming and Arena status path as an initial turn.
-  // Preserve the original turn's model/profile snapshot and active lorebook UIDs.
   async function retryArena(messageId, sideName) {
     const state = deps.getState();
     const message = state.messages.find(item => item.id === messageId);

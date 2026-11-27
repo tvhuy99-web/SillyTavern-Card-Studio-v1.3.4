@@ -1,3 +1,4 @@
+import { sourceCompositionPaths } from './helpers/composition-paths.mjs';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { createGuardedStorage } from '../src/app/persistence/guarded-storage.js';
@@ -31,11 +32,8 @@ import {
   createConnectionRepository,
 } from '../src/providers/common/connection-repository.js';
 
-// ============================================================================
-// 1. Static + structural production wiring assertions on host.js & use-session-persistence.js
-// ============================================================================
 {
-  const hostSrc = ['src/app/host.js','src/app/composition/persistence-composition.js','src/app/composition/provider-composition.js','src/app/composition/store-composition.js','src/app/composition/conversation-composition.js','src/app/composition/runtime-composition.js','src/app/composition/ui-composition.js'].map(f => readFileSync(new URL('../' + f, import.meta.url), 'utf8')).join('\n');
+  const hostSrc = sourceCompositionPaths.map(f => readFileSync(new URL('../' + f, import.meta.url), 'utf8')).join('\n');
   assert.ok(
     hostSrc.includes('__stsRepositories.setWriteGuard?.(operation=>__stsBackupRestoreService.assertNotRestoring(operation))'),
     'host.js must wire writeGuard onto __stsRepositories',
@@ -59,9 +57,6 @@ import {
   assert.ok(hookSrc.includes('subscribeRestoreLifecycle:'), 'useSessionPersistence must wire subscribeRestoreLifecycle');
 }
 
-// ============================================================================
-// 2. Live end-to-end production-wired integration test
-// ============================================================================
 function createControllableDatabase() {
   const stores = Object.fromEntries(Object.keys(APP_DATABASE.stores).map(key => [key, new Map()]));
   let beforeMergeHook = null;
@@ -166,7 +161,6 @@ function buildProductionWiredStack({ webLocks = null } = {}) {
     webLocks,
   });
 
-  // Exact same centralized wiring as src/app/host.js:
   repositories.setWriteGuard(op => backupRestoreService.assertNotRestoring(op));
   repositories.setWriteCoordinator(backupRestoreService.runOrdinaryWrite);
   sessionWriteQueue.setWriteGuard({
@@ -190,12 +184,9 @@ function buildProductionWiredStack({ webLocks = null } = {}) {
   };
 }
 
-// 2a. Pause real restore() mid-flight; verify useSessionPersistence autosave, explicit saveSession,
-//     pre-restore queued writes, and all entity/settings mutations are blocked & invalidated cleanly.
 {
   const stack = buildProductionWiredStack();
 
-  // Seed initial baseline data
   await stack.repositories.characters.put({ fileName: 'hero.png', card: { name: 'Hero' } });
   await stack.repositories.presets.put({ name: 'Default', prompts: [] });
   await stack.repositories.lorebooks.put({ name: 'Book1', entries: [] });
@@ -207,7 +198,6 @@ function buildProductionWiredStack({ webLocks = null } = {}) {
     chatHistory: [{ id: 'm0', role: 'user', content: 'pre-restore message' }],
   });
 
-  // Mount real useSessionPersistence hook wired identically to host.js
   let revision = 1;
   const sessionState = {
     sessionId: null,
@@ -290,18 +280,15 @@ function buildProductionWiredStack({ webLocks = null } = {}) {
     __stsDiagnosticsState: { activate: () => ({ turns: [] }) },
   }, 's1');
 
-  // Run mount effects to load s1 and claim edit ownership
   const cleanups = effects.map(fn => fn()).filter(fn => typeof fn === 'function');
   await new Promise(resolve => setImmediate(resolve));
   assert.equal(sessionState.sessionId, 's1');
 
-  // Trigger a pre-restore dirty edit (schedules autosave timer)
   sessionState.messages = [{ id: 'm0', role: 'user', content: 'STALE PRE-RESTORE EDIT' }];
   const dirtyEffect = effects[2];
   dirtyEffect();
   assert.equal(typeof scheduledTick, 'function', 'autosave timer should be armed before restore');
 
-  // Also queue a pre-restore write behind a blocker in sessionWriteQueue
   const staleQueuedRecord = createSessionSnapshot(sessionState);
   let releaseMerge;
   const enteredMerge = new Promise(resolve => {
@@ -332,20 +319,16 @@ function buildProductionWiredStack({ webLocks = null } = {}) {
     },
   };
 
-  // Start restore -> lifecycle emits 'restore-started' -> cancels autosave timer & invalidates queued writes!
   const restorePromise = stack.backupRestoreService.restore(incomingBackup);
   await enteredMerge;
 
-  // Autosave timer MUST have been cancelled immediately by 'restore-started'
   assert.equal(scheduledTick, null, 'restore-started must cancel pre-restore autosave timer');
 
-  // Explicit saveSession during active restore MUST reject with RESTORE_IN_PROGRESS
   await assert.rejects(
     hookResult.saveSession(),
     err => err.code === 'RESTORE_IN_PROGRESS',
   );
 
-  // All normal entity & settings mutations MUST reject during active restore!
   await assert.rejects(stack.repositories.characters.put({ fileName: 'c2.png', card: { name: 'C2' } }), err => err.code === 'RESTORE_IN_PROGRESS');
   await assert.rejects(stack.repositories.characters.remove('hero.png'), err => err.code === 'RESTORE_IN_PROGRESS');
   await assert.rejects(stack.repositories.presets.put({ name: 'P2', prompts: [] }), err => err.code === 'RESTORE_IN_PROGRESS');
@@ -359,7 +342,6 @@ function buildProductionWiredStack({ webLocks = null } = {}) {
   assert.throws(() => stack.settingsRepository.setJson(SETTINGS_STORAGE_KEYS.engineMode, 'current'), err => err.code === 'RESTORE_IN_PROGRESS');
   assert.throws(() => stack.settingsRepository.remove(SETTINGS_STORAGE_KEYS.engineMode), err => err.code === 'RESTORE_IN_PROGRESS');
 
-  // U01: normal connection / proxy / feature writes must be blocked, including imports and editor claims.
   const blocked = err => err.code === 'RESTORE_IN_PROGRESS';
   assert.throws(() => stack.ordinaryConnections.saveSettings({source:'proxy'}), blocked);
   assert.throws(() => stack.ordinaryConnections.saveGemini({useDefault:false,keys:['test-only']}), blocked);
@@ -372,18 +354,14 @@ function buildProductionWiredStack({ webLocks = null } = {}) {
   await assert.rejects(() => stack.repositories.mergeRecords({characters:[{fileName:'bypass.png'}]}), blocked);
   await assert.rejects(async () => stack.repositories.openSessionForEditing('s1'), blocked);
 
-  // Finish restore
   releaseMerge();
   const restoreRes = await restorePromise;
   assert.equal(restoreRes.ok, true);
 
-  // Verify freshly restored data is intact and NOT overwritten by pre-restore dirty state!
   const restoredSession = await stack.repositories.sessions.get('s1');
   assert.equal(restoredSession.chatHistory[0].content, 'FRESHLY RESTORED CONTENT');
   assert.equal((await stack.repositories.characters.get('hero.png')).card.name, 'Restored Hero');
 
-  // Test pre-restore queued write invalidation explicitly:
-  // Enqueue a write behind a paused queue item, start a second restore -> queued write MUST be skipped!
   let releaseBlocker;
   let resolveEnteredBlocker;
   const enteredBlocker = new Promise(r => { resolveEnteredBlocker = r; });
@@ -405,14 +383,13 @@ function buildProductionWiredStack({ webLocks = null } = {}) {
   const pBlocker = customQueue.enqueue({ ...freshEdit, marker: 'blocker' });
   const pStaleQueued = customQueue.enqueue({ ...freshEdit, marker: 'stale-pre-restore' });
   await enteredBlocker;
-  // Trigger restore (bumps epoch & emits restore-started -> invalidates pStaleQueued!)
+
   await stack.backupRestoreService.restore(incomingBackup);
   releaseBlocker();
   await pBlocker;
   assert.deepEqual(await pStaleQueued, {status:"discarded"});
   assert.equal(writeExecuted, false, 'pre-restore queued write MUST be skipped and never execute after restore');
 
-  // Normal writes resume cleanly after restore completes!
   await stack.repositories.characters.put({ fileName: 'post-restore.png', card: { name: 'Post Restore' } });
   assert.equal((await stack.repositories.characters.get('post-restore.png')).card.name, 'Post Restore');
   stack.settingsRepository.setJson(SETTINGS_STORAGE_KEYS.engineMode, 'official-local');
@@ -421,9 +398,6 @@ function buildProductionWiredStack({ webLocks = null } = {}) {
   for (const cleanup of cleanups) cleanup();
 }
 
-// 2b. During unresolved pending recovery (QuotaExceededError after IDB commit), all normal writes
-//     are blocked with PENDING_RECOVERY_EXISTS while recover({ strategy: 'rollback-idb' }) succeeds
-//     and normal writes resume afterward!
 {
   const stack = buildProductionWiredStack();
   await stack.repositories.characters.put({ fileName: 'orig.png', card: { name: 'Original' } });
@@ -465,7 +439,6 @@ function buildProductionWiredStack({ webLocks = null } = {}) {
     err => err instanceof BackupRestoreError && err.code === 'WEB_STORAGE_RESTORE_FAILED',
   );
 
-  // Unresolved pending recovery exists -> normal mutations MUST be rejected with PENDING_RECOVERY_EXISTS!
   await assert.rejects(stack.repositories.characters.put({ fileName: 'blocked.png', card: { name: 'Blocked' } }), err => err.code === 'PENDING_RECOVERY_EXISTS');
   await assert.rejects(stack.repositories.presets.put({ name: 'BlockedP', prompts: [] }), err => err.code === 'PENDING_RECOVERY_EXISTS');
   await assert.rejects(stack.repositories.lorebooks.put({ name: 'BlockedL', entries: [] }), err => err.code === 'PENDING_RECOVERY_EXISTS');
@@ -477,7 +450,6 @@ function buildProductionWiredStack({ webLocks = null } = {}) {
   assert.throws(() => stack.ordinaryProxy.setPassword('test-only'), err => err.code === 'PENDING_RECOVERY_EXISTS');
   assert.throws(() => stack.guardedStorage.setItem(SETTINGS_STORAGE_KEYS.globalContext, '{}'), err => err.code === 'PENDING_RECOVERY_EXISTS');
 
-  // Valid recovery rollback MUST still succeed even though normal writes are blocked!
   failQuota = false;
   const rolledBack = await stack.backupRestoreService.recover({ strategy: 'rollback-idb' });
   assert.equal(rolledBack.ok, true);
@@ -485,7 +457,6 @@ function buildProductionWiredStack({ webLocks = null } = {}) {
   assert.equal(await stack.repositories.characters.get('new.png'), undefined);
   assert.equal((await stack.repositories.characters.get('orig.png')).card.name, 'Original');
 
-  // Normal writes resume cleanly after recovery completes!
   await stack.repositories.characters.put({ fileName: 'after-recovery.png', card: { name: 'After Recovery' } });
   assert.equal((await stack.repositories.characters.get('after-recovery.png')).card.name, 'After Recovery');
   stack.settingsRepository.setRaw(SETTINGS_STORAGE_KEYS.engineMode, 'safe');
@@ -494,7 +465,6 @@ function buildProductionWiredStack({ webLocks = null } = {}) {
 
 console.log('T02 production write-guard integration (host wiring, autosave discard, queued-write invalidation, entity/settings blocking & resume): OK');
 
-// U02: a discarded queue operation must not be reported as a successful save.
 {
   const state = {sessionId:'s'};
   const coordinator = createSessionSaveCoordinator({sessionId:'s', getState:()=>state,
@@ -502,7 +472,7 @@ console.log('T02 production write-guard integration (host wiring, autosave disca
   assert.equal(await coordinator.flush({force:true}), false);
   coordinator.dispose();
 }
-// U03: fallback mode drains already-started local transactions before staging rollback data.
+
 {
   const stack = buildProductionWiredStack();
   let release, entered;
@@ -523,8 +493,6 @@ console.log('T02 production write-guard integration (host wiring, autosave disca
 }
 console.log('U01-U03 guard coverage, discarded result and in-flight write drain: OK');
 
-// Shared Web Locks prevent an exclusive restore from overtaking writers in another
-// context; this is a protocol simulation, not browser acceptance.
 {
   let shared = 0, exclusive = false;
   const locks = {async request(name, options, callback) {

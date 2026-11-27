@@ -1,5 +1,3 @@
-// Custom hook composition. Dependencies are supplied by the application host.
-
 function classifyDiagnosticLevel(line) {
   if (line.includes('[ERR]') || line.includes('[LỖI]') || line.includes('Error')) {
     return 'error';

@@ -17,8 +17,6 @@ import {
   chunkEmbeddingText,
 } from '../src/features/world-info/embedding-service.js';
 
-// The Android APK uses ONNX native. Ordinary Android browsers must not
-// be forced through a Capacitor plugin they do not have.
 assert.equal(isNativeAndroidEmbeddingHost({
   navigator: { userAgent: 'Mozilla/5.0 (Linux; Android 15)' },
 }), false);
@@ -35,8 +33,6 @@ assert.equal(isNativeAndroidEmbeddingHost({
   Capacitor: { getPlatform: () => 'android' },
 }), false);
 
-// Android WebView sets allowLocalModels=false, which conflicts with
-// local_files_only=true when loading cached ONNX weights for offline sync.
 {
   const env = {
     allowLocalModels: false,
@@ -68,7 +64,6 @@ assert.equal(getEmbeddingProvider('gemini').modelId, 'gemini-embedding-2');
 assert.equal(getEmbeddingProvider('gemini').indexKey, 'gemini:gemini-embedding-2:v1');
 assert.match(getEmbeddingProvider('gemini').label, /Stable/);
 
-
 assert.equal(formatEmbeddingQuery('gemini', ' hello '), 'hello');
 assert.equal(formatEmbeddingQuery('embeddinggemma2', 'hello'),
   'task: search result | query: hello');
@@ -99,8 +94,6 @@ assert.equal(chunkEmbeddingText('   ', 1000).length, 0);
 
 assert.equal((await hashEmbeddingText('abc')).length, 64);
 
-// The console must show a checkpoint while a long-running ONNX step is pending,
-// then a warning with the last checkpoint if no progress is reported.
 {
   const records = [];
   let clock = 1000;
@@ -137,8 +130,6 @@ assert.equal((await hashEmbeddingText('abc')).length, 64);
   assert.equal(records.length, length, 'closed journal must never emit more console entries');
 }
 
-// Failure during configuration must reach the system console instead of being
-// hidden by the chat input's indefinite "Đang đồng bộ" state.
 {
   const logs = [];
   const service = createEmbeddingService({
@@ -150,8 +141,6 @@ assert.equal((await hashEmbeddingText('abc')).length, 64);
   assert.ok(logs.some(args => args[0] === 'error' && String(args[2]).includes('THẤT BẠI')));
 }
 
-// Existing production bridge captures console.warn/error into the system panel;
-// the embedding service must still report when no explicit logger is injected.
 {
   const previousWarn = console.warn;
   const previousError = console.error;
@@ -172,8 +161,6 @@ assert.equal((await hashEmbeddingText('abc')).length, 64);
   }
 }
 
-// Memory-aware WASM batching, inspired by NgheTruyen's adaptive profiles.
-// Never select a different model or Smart Scan mode based on these signals.
 {
   const cfg = (providerId, deviceMemoryGB, hardwareConcurrency = 8, requestedBatchSize = 30) =>
     planLocalEmbeddingBatch(providerId, { deviceMemoryGB, hardwareConcurrency, requestedBatchSize });
@@ -205,9 +192,6 @@ assert.equal((await hashEmbeddingText('abc')).length, 64);
   assert.equal(single.next(9), 1);
 }
 
-// We intentionally keep 1,000-character chunking and per-provider max_length
-// unchanged. Shortening model context without rechunking would silently truncate
-// Lorebook content and force an unintended index policy change.
 assert.deepEqual(chunkEmbeddingText('abc', 1000), ['abc']);
 
 console.log('M4 embedding service checks: OK');

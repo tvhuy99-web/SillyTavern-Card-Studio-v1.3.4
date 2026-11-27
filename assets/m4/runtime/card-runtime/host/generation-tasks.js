@@ -1,6 +1,5 @@
 import { abortError, awaitAbortable, iterateAbortable } from '../../../core/async/cancellation.js';
 
-/** A generation ID is local to the originating frame, not a global key. */
 export function createRuntimeGenerationTasks({ register, unregister, makeController = () => new AbortController() }) {
   const frames = new Map();
   function start(source, id) {
@@ -36,7 +35,6 @@ export function createRuntimeGenerationTasks({ register, unregister, makeControl
   return Object.freeze({ start, finish, stop, stopAll, dispose });
 }
 
-/** Generation lifecycle for card requests. The host injects its prompt/provider adapters. */
 export function createRuntimeGenerationService({ tasks, buildPrompt, resolvePreset, generateOnce, stream, emit, readMessageCount,
   makeId = () => `card-gen-${Date.now()}-${Math.random().toString(36).slice(2, 8)}` }) {
   return async function generate(source, raw, options, lease) {

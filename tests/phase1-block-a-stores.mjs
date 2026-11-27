@@ -4,7 +4,7 @@ import {createLorebookMutations} from '../src/features/world-info/lorebook-mutat
 import * as runtime from '../src/app/state/runtime-state.js';
 import * as diagnostics from '../src/diagnostics/state.js';
 import {createLorebookStore,createSessionStore,createCharacterStore,createPresetStore,createPersonaStore} from '../src/app/state/application-stores.js';
-// Exercise the original bundled Zustand/Immer implementations, not replacement test stores.
+
 globalThis.document={createElement:()=>({relList:{supports:()=>true}})};
 const {At,It}=await import('../src/vendor/react-state-runtime.js');
 const storage=new Map();globalThis.localStorage={getItem:k=>storage.get(k)??null,setItem:(k,v)=>storage.set(k,String(v)),removeItem:k=>storage.delete(k)};

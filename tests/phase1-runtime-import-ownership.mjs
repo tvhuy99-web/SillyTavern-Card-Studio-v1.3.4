@@ -21,12 +21,12 @@ let loaded, slashed, model='default';
 const rpc = createUtilityRpcHandlers({readState:()=>state,characters:()=>character,presets:()=>preset,personas:()=>({activePersonaId:'user'}),describeCharacter:id=>character.characters.find(c=>c.fileName===id),readText:async value=>{if(parseGate)await parseGate.promise;return String(value);},safeName:(v,d)=>String(v||d),clone:structuredClone,sessions:repos.sessions,slash:async value=>{slashed=value;return 'slash result';},loadPreset:async value=>{loaded=value;},listProxyModels:async(...args)=>{reads.push(args);return [{id:'x'}];},currentModel:()=>model,now:()=>123});
 const call=(method,args={})=>rpc(method,args,lease);
 assert.equal(UTILITY_RPC_METHODS.length,8);
-// A failed replacement must not claim that an existing record is the imported record.
+
 fail=true; await assert.rejects(call('raw.import.character',{name:'same.json',content:'replacement'}),/write failed/); assert.equal(character.characters[0].card.name,'old'); assert.deepEqual(revoked,['new-avatar']); fail=false;
 await call('raw.import.character',{name:'same.json',content:'replacement'}); assert.equal(character.characters[0].card.name,'replacement'); assert.deepEqual(revoked,['new-avatar','old-avatar']);
-// Preserve a user's newer selection while an import is committing.
+
 gate=deferred(); const importing=call('raw.import.character',{name:'second.json',content:'second'}); await new Promise(setImmediate); character.activeCharacterFileName='user-choice'; gate.resolve();gate=null;await importing;assert.equal(character.activeCharacterFileName,'user-choice');
-// Session lease checked again after parser finishes, before persistence.
+
 const before=writes.length; parseGate=deferred();const stale=character.importCharacterStrict(new File(['stale'],'stale.json'),lease.assertCurrent);await new Promise(setImmediate);active=false;parseGate.resolve();parseGate=null;await assert.rejects(stale,/inactive/);active=true;assert.equal(writes.length,before);assert.ok(!character.characters.some(c=>c.fileName==='stale.json'));
 fail=true;await assert.rejects(call('raw.import.preset',{name:'P',content:'{"name":"P","prompts":[1]}'}),/write failed/);assert.deepEqual(preset.presets[0].prompts,[]);fail=false;
 const result=await call('raw.import.preset',{name:'new',content:'{"name":"new","prompts":[2]}'});assert.equal(result.preset.normalized,true);assert.equal(preset.activePresetName,'P');await preset.addPreset(new File(['{"name":"ui"}'],'ui.json'));assert.equal(preset.activePresetName,'ui');
@@ -39,6 +39,6 @@ assert.equal(await call('slash.execute',{command:'x'.repeat(200001)}),'slash res
 assert.deepEqual(await call('generation.models'),['default']);assert.deepEqual(await call('generation.models',{custom_api:{apiurl:'http://test',key:'key'}}),[{id:'x'}]);assert.deepEqual(reads,[['http://test','key',false]]);
 assert.deepEqual(await call('preset.get'),{name:'P'});assert.equal(await call('preset.load',{name:'Q'}),true);assert.equal(loaded,'Q');assert.deepEqual(await call('scripts.buttons'),{a:1});await assert.rejects(call('__proto__'),/Unsupported/);
 let settings={source:'aistudio',aistudio_model:'default',openrouter_model:'wrong'};const gateway=createGenerationGateway({getConnectionSettings:()=>settings});assert.equal(gateway.getCurrentModel(),'default');settings={source:'proxy',proxy_model:'custom'};assert.equal(gateway.getCurrentModel(),'custom');settings={source:'unknown'};assert.throws(()=>gateway.getCurrentModel(),/không được hỗ trợ/);
-// Production integration is routing only for all eight methods, not another implementation.
+
 const bundle=readRecoveredHostView();assert.equal(HOST_RPC_METHODS.length,53);assert.equal(new Set(HOST_RPC_METHODS).size,53);for(const method of UTILITY_RPC_METHODS)assert.ok(HOST_RPC_METHODS.includes(method),method);assert.ok(bundle.includes('utility: utilityRpc'));
 console.log('Runtime utility routes, strict imports, stale guards, JSON/JSONL and provider model ownership: OK');

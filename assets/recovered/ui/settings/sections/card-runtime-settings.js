@@ -1,4 +1,3 @@
-
 export function createCardRuntimeSettings(getDependencies) {
   return function CardRuntimeSettings() {
     const {

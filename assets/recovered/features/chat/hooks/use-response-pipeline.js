@@ -1,5 +1,3 @@
-// Extracted custom hook. Its caller preserves the original unconditional hook order.
-
 const CHOICE_TAG_RE = /\[CHOICE:\s*(?:["'“「])(.*?)(?:["'”」])\s*\]/gi;
 
 function extractQuickReplyChoices(rawResponseText) {

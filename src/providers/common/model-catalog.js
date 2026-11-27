@@ -1,4 +1,3 @@
-// Network discovery and installed cache format are owned here, not UI handlers.
 const KEYS = Object.freeze({ gemini: 'sillyTavernStudio_geminiModels', openrouter: 'sillyTavernStudio_openrouterModels' });
 const record = value => value && typeof value === 'object' && !Array.isArray(value);
 function unique(items, transform) {
@@ -30,8 +29,7 @@ export function createModelCatalog({ storage, request, geminiRequest = request, 
   const write = (key,value) => storage.setItem(key,JSON.stringify(value));
   const readGemini = () => unique(read(KEYS.gemini,[]),basic);
   const readOpenRouter = () => unique(read(KEYS.openrouter,[]),openRouter);
-  // Authenticated catalogs are deliberately process-local: never write a raw
-  // credential or a reusable credential fingerprint into Web Storage.
+
   const targetCache = new Map();
   const pendingRefreshes = new Map();
   const targetKey = target => JSON.stringify([normalizeProxyUrl(String(target.url || '')), target.protocol || 'openai', !!target.legacyMode, String(target.id || ''), String(target.password || '')]);
@@ -44,7 +42,7 @@ export function createModelCatalog({ storage, request, geminiRequest = request, 
     targetCache.delete(key); targetCache.set(key, {...previous, ...patch});
     while (targetCache.size > 64) targetCache.delete(targetCache.keys().next().value);
   }
-  // Only manually configured IDs survive a network catalog replacement.
+
   function mergeProxyTarget(target, items) {
     if (!target?.url) return;
     const key = targetKey(target), previous = targetCache.get(key);
@@ -100,7 +98,7 @@ export function createModelCatalog({ storage, request, geminiRequest = request, 
       if(!Array.isArray(list)) throw new Error('Proxy model catalog is invalid.');
       return proxyModels(list);
   }
-  // A later refresh wins; an earlier response cannot replace the newer cache.
+
   let geminiRevision=0;
   return Object.freeze({
     readGemini, readOpenRouter, readProxyTarget, mergeProxyTarget, clearProxyTarget,
@@ -132,14 +130,13 @@ export function createModelCatalog({ storage, request, geminiRequest = request, 
   });
 }
 
-/** Resolve explicit profile without falling back to global credentials. */
 export function resolveCatalogTarget({ profileId, profiles, global }) {
   if (!profileId) return { ...global, id: '' };
   const profile = profiles.find(item => item.id === profileId);
   if (!profile) throw Error('Cấu hình Proxy đã chọn không còn tồn tại.');
   return { id: profile.id, url: profile.url, password: profile.password, legacyMode: profile.legacyMode, protocol: profile.protocol };
 }
-/** Publish only while the dialog still owns this connection. */
+
 export async function refreshDialogProxyCatalog({ catalog, target, signal, isCurrent, publish }) {
   if (!target.url?.trim()) throw Error('Chưa cấu hình Proxy URL.');
   const current = () => !signal?.aborted && isCurrent();

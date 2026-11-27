@@ -39,7 +39,6 @@ await assert.rejects(gateway.testModel({provider:'typo',model:'m'}), Unsupported
 await assert.rejects(gateway.testModel({provider:'aistudio',model:'default'}), /AI Studio chưa hỗ trợ/);
 assert.equal(calls.length,0); assert.equal(sdkCalls.length,0);
 
-// A probe uses its exact provider, model and draft credentials, not the current saved provider.
 let result = await gateway.testModel({provider:'proxy',model:'draft',proxy:{url:'https://draft.example',password:'draft-secret',legacyMode:false,protocol:'openai'}});
 assert.equal(result.ok,true); assert.equal(result.provider,'proxy'); assert.equal(calls.at(-1).url,'https://draft.example/v1/chat/completions');
 assert.equal(calls.at(-1).body.model,'draft'); assert.equal(calls.at(-1).body.max_tokens,8); assert.equal(calls.at(-1).init.headers.Authorization,'Bearer draft-secret');
@@ -51,7 +50,6 @@ assert.equal(result.ok,true); assert.equal(sdkCalls.at(-1).key,'draft-g'); asser
 assert.equal(sdkCalls.at(-1).request.config.maxOutputTokens,8); assert.equal(logs.length,0);
 sdkResponse='not a valid answer'; await assert.rejects(gateway.testModel({provider:'gemini',model:'g'}),/nội dung kiểm tra không hợp lệ/); sdkResponse='OK';
 
-// Native protocol is owned by the same adapter for probe, generation and stream.
 settings.proxy_protocol='google_native';
 await gateway.generateOnce({prompt:'hi',preset:{temp:0.4,max_tokens:19,top_p:0.8,stopping_strings:['stop']}});
 let req=calls.at(-1); assert.equal(req.url,'https://proxy.example/v1beta/models/p-model:generateContent');
@@ -72,7 +70,6 @@ await gateway.testModel({provider:'proxy',model:'g',proxy:{url:'https://native.e
 assert.equal(calls.at(-1).url,'https://native.example/v1beta/models/g:generateContent');
 await assert.rejects(gateway.generateOnce({source:'proxy',prompt:'hi',proxyConfig:{protocol:'nonsense'}}),/Giao thức Proxy/);
 
-// Existing response shape, selected model and cancellation remain stable.
 const openrouter=await gateway.generateOnce({source:'openrouter',model:'or',prompt:'hi'});
 assert.deepEqual(openrouter,{response:{text:'OK'},reasoning:'WHY'});
 const aborted=new AbortController(); aborted.abort(); const count=calls.length;

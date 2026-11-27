@@ -1,4 +1,3 @@
-/** Host-owned variable, scoped storage and extension mutations. */
 export const STATE_RPC_METHODS = Object.freeze([
   'variables.replace', 'storage.set', 'storage.remove', 'storage.clear',
   'extension.settings.save', 'character.data.get', 'character.data.save',
@@ -38,8 +37,7 @@ export function createStateRpcHandlers({ readState, saveSession, persistMessages
       await persistMessages(state.messages.map((message, messageIndex) => messageIndex === index ? { ...message, contextState: clean } : message));
       assertCurrent(lease);
       const current = readState().messages[index];
-      // A later mutation may have replaced the scope while persistence awaited.
-      // Publish only the current state for the same message, never stale input.
+
       if (!current || current.id !== messageId) return clean;
       publishedValue = clone(current.contextState || {});
     } else {
@@ -57,7 +55,7 @@ export function createStateRpcHandlers({ readState, saveSession, persistMessages
     assertCurrent(lease);
     const type = args.storageType === 'session' ? 'session' : 'local';
     const storage = getStorage(type), key = webStorageKey(type, readContext());
-    // Null-prototype records keep arbitrary web Storage keys (including __proto__) inert.
+
     const record = Object.assign(Object.create(null), readRecord(storage, key));
     const item = String(args.key || '').slice(0, 500);
     if (method === 'storage.set') record[item] = String(args.value ?? '').slice(0, 1e6);

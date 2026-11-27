@@ -38,16 +38,12 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
 
-/** EmbeddingGemma 2 Text 270M: explicit user download, offline-only inference.
- * Separate from the EmbeddingGemma 300M ONNX plugin, its model files and index.
- * Never selects a different model or an alternate inference backend on errors.
- */
 @CapacitorPlugin(name = "EmbeddingGemma2LiteRT")
 public class EmbeddingGemma2LiteRTPlugin extends Plugin {
     private static final String TAG = "CardStudioGemma2LiteRT";
     private static final String FILE_NAME = "embeddinggemma-2-text-270m.litertlm";
     private static final String URL = "https://huggingface.co/litert-community/embeddinggemma-2-text-270m-litert-lm/resolve/main/" + FILE_NAME;
-    // SHA-256 published by the model repository; do not accept a different file silently.
+
     private static final String SHA256 = "2d079ee2f6f066b1f368e8d7c819f55214eaef1d0513b312321901f30ab286fb";
     private static final int MAX_BATCH = 4;
     private static final int VECTOR_SIZE = 768;
@@ -60,9 +56,7 @@ public class EmbeddingGemma2LiteRTPlugin extends Plugin {
     private int activeCpuThreads = 4;
     private int selectedBatch = 2;
     private String lastBackendNote = "";
-    // Profiles are computed on the user's actual Lorebook input once per app
-    // install/model version. A GPU crash leaves a guard flag on disk, preventing
-    // the next session from automatically repeating a driver crash.
+
     private static final String PROFILE_PREFS = "embeddinggemma2-litert-profiler-v2";
     private static final int PROFILE_VERSION = 2;
     private static final int[] TRIAL_BATCHES = { 1, 2, 4 };
@@ -120,8 +114,7 @@ public class EmbeddingGemma2LiteRTPlugin extends Plugin {
 
     private boolean isOpenClAccessible() {
         try {
-            // AndroidManifest declares this optional vendor native library.
-            // Successfully opening it is a necessary, not sufficient, GPU test.
+
             System.loadLibrary("OpenCL");
             return true;
         } catch (UnsatisfiedLinkError | SecurityException unavailable) {
@@ -130,7 +123,7 @@ public class EmbeddingGemma2LiteRTPlugin extends Plugin {
     }
 
     private void initializeEngine(String backend, int cpuThreads) throws Exception {
-        closeEngine(); // Do not retain two 165 MB native sessions simultaneously.
+        closeEngine();
         final boolean gpu = "GPU".equals(backend);
         Backend selected = gpu ? new Backend.GPU()
             : new Backend.CPU(Integer.valueOf(cpuThreads), null);
@@ -197,7 +190,7 @@ public class EmbeddingGemma2LiteRTPlugin extends Plugin {
     private Trial bestTrialForSession(List<String> examples, String backend,
                                       int threads, JSArray results, float[] cpuReference) {
         EmbeddingOptions opts = options();
-        // Warm up the delegate before measuring steady-state throughput.
+
         List<EmbeddingResponse> warm = engine.computeEmbeddingBatch(wrapInputs(examples, 1), opts);
         float[] sample = warm.get(0).getEmbedding();
         if (sample == null || sample.length != VECTOR_SIZE) {
@@ -263,10 +256,6 @@ public class EmbeddingGemma2LiteRTPlugin extends Plugin {
         });
     }
 
-    /** Called only by the user's explicit Smart Scan model download action.
-     * HTTP Range reuses an incomplete part file; a final SHA mismatch is an error.
-     * Sync and query methods NEVER download weights or fall back to the cloud.
-     */
     @PluginMethod
     public void download(PluginCall call) {
         dispatch(call, () -> {
@@ -394,11 +383,6 @@ public class EmbeddingGemma2LiteRTPlugin extends Plugin {
         });
     }
 
-    /**
-     * Benchmark the actual Lorebook text, CPU 2/4 threads and GPU (only
-     * when Android exposes OpenCL). Run once per model/profile version and
-     * persist the winning backend+batch. Never switch models or scan mode.
-     */
     @PluginMethod
     public void tune(PluginCall call) {
         dispatch(call, () -> {
@@ -431,8 +415,7 @@ public class EmbeddingGemma2LiteRTPlugin extends Plugin {
             JSArray measurements = new JSArray();
             JSArray failures = new JSArray();
             boolean gpuPossible = !prefs.getBoolean("gpuBlocked", false) && isOpenClAccessible();
-            // CPU 4 is the known-working baseline. Candidate engines are always
-            // closed before creating the next, avoiding multiple large sessions.
+
             if (!"CPU".equals(activeBackend) || activeCpuThreads != 4) initializeEngine("CPU", 4);
             float[] cpuReference = engine.computeEmbeddingBatch(wrapInputs(sample, 1), options())
                 .get(0).getEmbedding();
@@ -446,8 +429,7 @@ public class EmbeddingGemma2LiteRTPlugin extends Plugin {
                 Log.w(TAG, "CPU2 benchmarking unavailable", error);
             }
             if (gpuPossible) {
-                // Persist synchronously before entering vendor GPU native code.
-                // If a driver kills the process, next launch disables GPU trial.
+
                 prefs.edit().putBoolean("gpuTrialInProgress", true).commit();
                 try {
                     initializeEngine("GPU", 4);
@@ -519,9 +501,7 @@ public class EmbeddingGemma2LiteRTPlugin extends Plugin {
             if (vectors.size() != batches.size()) {
                 throw new IllegalStateException("Native embedding batch count mismatch");
             }
-            // Transfer 4 x 768 float32 as one little-endian base64 buffer
-            // rather than 3072 JSON numbers. Significantly lowers WebView
-            // JSON serialization and GC overhead without changing vectors.
+
             ByteBuffer binary = ByteBuffer.allocate(vectors.size() * VECTOR_SIZE * Float.BYTES)
                 .order(ByteOrder.LITTLE_ENDIAN);
             for (EmbeddingResponse item : vectors) {

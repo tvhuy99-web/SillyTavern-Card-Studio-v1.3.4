@@ -17,7 +17,6 @@ import {
 
 const ROOT = fileURLToPath(new URL('../', import.meta.url));
 
-// 1. Complete RPC Method Manifest Inventory
 const GENERATION_RPC_METHODS = ['generation.generate', 'generation.stop', 'generation.stopAll'];
 const expectedManifest = [
   ...CHAT_RPC_METHODS,
@@ -34,7 +33,6 @@ const expectedManifest = [
 assert.equal(new Set(HOST_RPC_METHODS).size, HOST_RPC_METHODS.length, 'HOST_RPC_METHODS must not contain duplicates');
 assert.deepEqual([...HOST_RPC_METHODS].sort(), [...expectedManifest].sort(), 'HOST_RPC_METHODS must match all domain handler method lists');
 
-// Safe vs Full-Only partition must cover 100% of HOST_RPC_METHODS with zero overlap
 const safeSet = new Set(SAFE_RPC_METHODS);
 const fullOnlySet = new Set(FULL_ONLY_RPC_METHODS);
 assert.equal(safeSet.size, SAFE_RPC_METHODS.length, 'SAFE_RPC_METHODS must not contain duplicates');
@@ -48,7 +46,6 @@ assert.deepEqual(
   'SAFE_RPC_METHODS U FULL_ONLY_RPC_METHODS must equal HOST_RPC_METHODS',
 );
 
-// 2. Method Router Dispatch Coverage for Every Registered Method
 {
   const routed = [];
   const emitted = [];
@@ -80,7 +77,6 @@ assert.deepEqual(
   );
 }
 
-// 3. Safe Mode vs Full Mode Permission Boundaries
 {
   const safeFrame = { hasAttribute: name => name === 'sandbox' };
   const fullFrame = { hasAttribute: () => false };
@@ -92,10 +88,8 @@ assert.deepEqual(
   };
   const noBookState = { card: { name: 'Aria' } };
 
-  // Missing frame is always rejected
   assert.throws(() => authorizeFrameRpc({ method: 'chat.get', args: {} }, null, embeddedState), /Inactive card runtime frame/);
 
-  // Every FULL_ONLY method is blocked in Safe Mode and allowed in Full Mode
   for (const method of FULL_ONLY_RPC_METHODS) {
     assert.throws(
       () => authorizeFrameRpc({ method, args: {} }, safeFrame, embeddedState),
@@ -108,7 +102,6 @@ assert.deepEqual(
     );
   }
 
-  // Every SAFE method is allowed in Safe Mode with safe arguments and in Full Mode
   for (const method of SAFE_RPC_METHODS) {
     const safeArgs = method === 'variables.replace'
       ? { option: { type: 'chat' }, variables: {} }
@@ -125,7 +118,6 @@ assert.deepEqual(
     );
   }
 
-  // Safe Mode scoped escalation boundaries
   for (const allowedScope of ['chat', 'message', 'script']) {
     assert.doesNotThrow(() =>
       authorizeFrameRpc({ method: 'variables.replace', args: { option: { type: allowedScope } } }, safeFrame, embeddedState),
@@ -141,7 +133,6 @@ assert.deepEqual(
     );
   }
 
-  // Custom API endpoints / credentials blocked in Safe Mode, allowed in Full Mode
   assert.throws(
     () => authorizeFrameRpc({ method: 'generation.generate', args: { options: { custom_api: { apiurl: 'https://example.invalid' } } } }, safeFrame, embeddedState),
     /Custom API endpoints or credentials require Full compatibility mode/,
@@ -154,7 +145,6 @@ assert.deepEqual(
     authorizeFrameRpc({ method: 'generation.generate', args: { options: { custom_api: { apiurl: 'https://example.invalid', key: 'k' } } } }, fullFrame, embeddedState),
   );
 
-  // External lorebook mutations blocked in Safe Mode, allowed in Full Mode
   for (const method of ['lorebook.entries.replace', 'lorebook.entries.create', 'lorebook.entries.delete']) {
     assert.throws(
       () => authorizeFrameRpc({ method, args: { name: 'External Worldbook' } }, safeFrame, embeddedState),
@@ -170,7 +160,6 @@ assert.deepEqual(
   }
 }
 
-// 4. Timeout, Cancellation, Replay Protection, and Concurrency Limits
 {
   let revision = 1;
   let sessionId = 'session-1';
@@ -187,7 +176,6 @@ assert.deepEqual(
     maxPendingTotal: 4,
   });
 
-  // 4a. Timeout aborts lease signal and responds with timeout error
   let timedOutSignalAborted = false;
   await dispatcher.dispatch(
     { source, data: { type: 'CARD_RUNTIME_RPC', requestId: 'req-timeout', method: 'slow.timeout', args: {} } },
@@ -209,7 +197,6 @@ assert.deepEqual(
     error: 'Card runtime request timed out.',
   });
 
-  // 4b. Duplicate requestId replay is ignored
   const beforeCount = replies.length;
   const replayed = await dispatcher.dispatch(
     { source, data: { type: 'CARD_RUNTIME_RPC', requestId: 'req-timeout', method: 'chat.get', args: {} } },
@@ -218,7 +205,6 @@ assert.deepEqual(
   assert.equal(replayed, true);
   assert.equal(replies.length, beforeCount, 'Replayed requestId must not send another response');
 
-  // 4c. cancelAll() cancels in-flight RPCs
   let cancelSignalAborted = false;
   const cancelPromise = dispatcher.dispatch(
     { source, data: { type: 'CARD_RUNTIME_RPC', requestId: 'req-cancel', method: 'chat.get', args: {} } },
@@ -239,7 +225,6 @@ assert.deepEqual(
   assert.equal(replies.at(-1).ok, false);
   assert.match(replies.at(-1).error, /inactive session or frame/);
 
-  // 4d. Session revision change + sweep() aborts stale requests without leaking to new session
   let sweepAborted = false;
   const sweepPromise = dispatcher.dispatch(
     { source, data: { type: 'CARD_RUNTIME_RPC', requestId: 'req-sweep', method: 'chat.get', args: {} } },
@@ -259,7 +244,6 @@ assert.deepEqual(
   assert.equal(sweepAborted, true, 'sweep() must abort requests belonging to a previous session revision');
 }
 
-// 5. Zero Static/Dynamic Imports from assets/ in Card Runtime and host.js (B08)
 {
   function listJs(dir) {
     return fs.readdirSync(dir, { withFileTypes: true }).flatMap(entry => {

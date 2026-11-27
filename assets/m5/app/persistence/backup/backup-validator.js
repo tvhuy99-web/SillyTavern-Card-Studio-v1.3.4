@@ -1,6 +1,44 @@
 import { MAX_AVATAR_BASE64_LENGTH, assertBackupArray, isPlainObject, validateRecordBatches } from '../../../../recovered/app/persistence/backup-codec.js';
 import { BackupRestoreError } from './backup-constants.js';
 
+function normalizeLegacyNamedRecords(records, { fallbackPrefix, candidateKeys }) {
+  const usedNames = new Set();
+  for (const item of records) {
+    if (isPlainObject(item) && typeof item.name === 'string' && item.name.trim()) {
+      usedNames.add(item.name);
+    }
+  }
+  let generatedIndex = 1;
+  const pickUnique = base => {
+    const clean = String(base || '').trim().slice(0, 300);
+    if (clean && !usedNames.has(clean)) {
+      usedNames.add(clean);
+      return clean;
+    }
+    let candidate = clean ? `${clean} (${generatedIndex})` : `${fallbackPrefix} #${generatedIndex}`;
+    while (usedNames.has(candidate)) {
+      generatedIndex += 1;
+      candidate = clean ? `${clean} (${generatedIndex})` : `${fallbackPrefix} #${generatedIndex}`;
+    }
+    generatedIndex += 1;
+    usedNames.add(candidate);
+    return candidate;
+  };
+  return records.map(item => {
+    if (!isPlainObject(item)) return item;
+    if (typeof item.name === 'string' && item.name.trim()) return item;
+    let fallback = '';
+    for (const key of candidateKeys) {
+      const raw = item[key];
+      if (typeof raw === 'string' && raw.trim()) {
+        fallback = key === 'fileName' ? raw.trim().replace(/\.json$/i, '') : raw.trim();
+        break;
+      }
+    }
+    return { ...item, name: pickUnique(fallback) };
+  });
+}
+
 export function validateBackupEnvelope(rawBackup) {
   if (!isPlainObject(rawBackup) || rawBackup.dataType !== 'full_system_backup' || !isPlainObject(rawBackup.data)) {
     throw new BackupRestoreError('File không phải là định dạng Sao lưu Hệ thống hợp lệ.', {
@@ -10,8 +48,8 @@ export function validateBackupEnvelope(rawBackup) {
   }
   const data = rawBackup.data;
   const characters = assertBackupArray(data.characters, 'characters');
-  const presets = assertBackupArray(data.presets, 'presets');
-  const lorebooks = assertBackupArray(data.lorebooks, 'lorebooks');
+  const rawPresets = assertBackupArray(data.presets, 'presets');
+  const rawLorebooks = assertBackupArray(data.lorebooks, 'lorebooks');
   const personas = assertBackupArray(data.personas, 'personas');
   const chatSessions = assertBackupArray(data.chatSessions, 'chatSessions');
   if (!isPlainObject(data.appSettings)) {
@@ -21,7 +59,7 @@ export function validateBackupEnvelope(rawBackup) {
     });
   }
 
-  for (const item of [...presets, ...lorebooks, ...personas]) {
+  for (const item of [...rawPresets, ...rawLorebooks, ...personas]) {
     if (!isPlainObject(item)) {
       throw new BackupRestoreError('Dữ liệu sao lưu không hợp lệ: có mục dữ liệu không phải đối tượng.', {
         code: 'INVALID_BACKUP_RECORD',
@@ -29,6 +67,14 @@ export function validateBackupEnvelope(rawBackup) {
       });
     }
   }
+  const presets = normalizeLegacyNamedRecords(rawPresets, {
+    fallbackPrefix: 'Preset khôi phục',
+    candidateKeys: ['presetName', 'title', 'fileName', 'id'],
+  });
+  const lorebooks = normalizeLegacyNamedRecords(rawLorebooks, {
+    fallbackPrefix: 'Lorebook khôi phục',
+    candidateKeys: ['title', 'fileName', 'id'],
+  });
   for (const character of characters) {
     if (!isPlainObject(character) || !isPlainObject(character.card) || typeof character.fileName !== 'string' || !character.fileName.trim() || character.fileName.length > 500) {
       throw new BackupRestoreError('Dữ liệu sao lưu không hợp lệ: có nhân vật không hợp lệ.', {
@@ -57,4 +103,3 @@ export function validateBackupEnvelope(rawBackup) {
   validateRecordBatches({ characters, presets, lorebooks, personas, chatSessions });
   return { characters, presets, lorebooks, personas, chatSessions, appSettings: data.appSettings };
 }
-

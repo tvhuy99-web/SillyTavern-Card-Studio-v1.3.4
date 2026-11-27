@@ -1,4 +1,3 @@
-
 export function createSmartContextSettings(getDependencies) {
   return function SmartContextSettings() {
     const {

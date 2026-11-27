@@ -1,141 +1,117 @@
-// Factories receive the existing React/runtime bindings lazily via getDependencies().
-// Mechanically extracted for F02.07 while preserving original component logic and contracts.
+const LONG_PRESS_DELAY_MS = 500;
 
 export function createPromptListItem(getDependencies) {
   return function PromptListItem({
     prompt: propPrompt,
-    index: index,
-    onUpdate: onUpdate,
-    onRemove: onRemove,
-    onEdit: onEdit,
-    movingPromptIndex: movingPromptIndex,
-    onSelectToMove: onSelectToMove,
-    onMoveTo: onMoveTo,
-    onCancelMove: onCancelMove
+    index,
+    onUpdate,
+    onEdit,
+    onOpenActions,
+    movingPromptIndex,
+    onMoveTo
   }) {
     const {
+      react,
       jsxRuntime,
       ToggleSwitch
     } = getDependencies();
-    let isMovingThis = movingPromptIndex === index;
-    let isMoveActive = null !== movingPromptIndex;
-    let displayName = propPrompt.name?.trim() || "Untitled Prompt";
-    let headingId = `prompt-heading-${propPrompt.identifier || index}`.replace(/[^a-zA-Z0-9_-]/g, "-");
-    let promptContent = propPrompt.content || "";
+    const useRef = react?.useRef;
+    const pressTimerRef = useRef ? useRef(null) : { current: null };
+    const longPressFiredRef = useRef ? useRef(false) : { current: false };
+
+    const isMovingThis = movingPromptIndex === index;
+    const isMoveActive = movingPromptIndex !== null && movingPromptIndex !== undefined;
+    const displayName = propPrompt.name?.trim() || "Untitled Prompt";
+    const promptContent = propPrompt.content || "";
+
+    const clearPressTimer = () => {
+      if (pressTimerRef.current !== null) {
+        clearTimeout(pressTimerRef.current);
+        pressTimerRef.current = null;
+      }
+    };
+
+    const startLongPress = () => {
+      if (isMoveActive) return;
+      clearPressTimer();
+      longPressFiredRef.current = false;
+      pressTimerRef.current = setTimeout(() => {
+        pressTimerRef.current = null;
+        longPressFiredRef.current = true;
+        onOpenActions?.(index);
+      }, LONG_PRESS_DELAY_MS);
+    };
+
+    const handleTitleClick = event => {
+      event.stopPropagation();
+      if (longPressFiredRef.current) {
+        longPressFiredRef.current = false;
+        return;
+      }
+      if (isMoveActive) {
+        onMoveTo?.(index);
+        return;
+      }
+      onEdit?.(index);
+    };
+
+    const handleContextMenu = event => {
+      if (isMoveActive) return;
+      event.preventDefault();
+      event.stopPropagation();
+      clearPressTimer();
+      longPressFiredRef.current = false;
+      onOpenActions?.(index);
+    };
+
     return (0, jsxRuntime.jsx)("article", {
-      "aria-labelledby": headingId,
-      className: `bg-slate-800 rounded-lg border border-slate-700 ${isMovingThis ? "ring-2 ring-sky-500 shadow-lg" : ""} ${isMoveActive && !isMovingThis ? "opacity-60" : ""}`,
+      className: `bg-slate-800 rounded-lg border border-slate-700 ${isMovingThis ? "ring-2 ring-sky-500 shadow-lg" : ""} ${isMoveActive && !isMovingThis ? "opacity-80 hover:border-sky-500/70" : ""}`,
       children: (0, jsxRuntime.jsxs)("div", {
         className: "flex items-start p-3",
-        children: [(0, jsxRuntime.jsx)("div", {
-          className: "flex items-center gap-2 flex-shrink-0 mr-4 pt-1",
-          onClick: event => event.stopPropagation(),
-          children: (0, jsxRuntime.jsx)(ToggleSwitch, {
-            label: "",
-            ariaLabel: undefined,
-            checked: propPrompt.enabled ?? false,
-            onChange: enabled => onUpdate(index, {
-              ...propPrompt,
-              enabled: enabled
-            }),
-            clean: true
+        children: [
+          (0, jsxRuntime.jsx)("div", {
+            className: "flex items-center flex-shrink-0 mr-4 pt-1",
+            onClick: event => event.stopPropagation(),
+            children: (0, jsxRuntime.jsx)(ToggleSwitch, {
+              label: "",
+              ariaLabel: undefined,
+              checked: propPrompt.enabled ?? false,
+              onChange: enabled => onUpdate(index, {
+                ...propPrompt,
+                enabled
+              }),
+              clean: true
+            })
+          }),
+          (0, jsxRuntime.jsxs)("div", {
+            className: "min-w-0 flex-grow",
+            children: [
+              (0, jsxRuntime.jsx)("h3", {
+                className: "font-semibold text-base leading-6 " + (propPrompt.enabled ? "text-slate-100" : "text-slate-500 line-through"),
+                children: (0, jsxRuntime.jsx)("button", {
+                  type: "button",
+                  onClick: handleTitleClick,
+                  onContextMenu: handleContextMenu,
+                  onPointerDown: startLongPress,
+                  onPointerUp: clearPressTimer,
+                  onPointerCancel: clearPressTimer,
+                  onPointerLeave: clearPressTimer,
+                  className: "w-full select-none rounded text-left hover:text-sky-300 focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-800",
+                  children: displayName
+                })
+              }),
+              promptContent.trim()
+                ? (0, jsxRuntime.jsx)("p", {
+                    className: "mt-2 whitespace-pre-wrap break-words text-sm leading-6 text-slate-400",
+                    children: promptContent
+                  })
+                : (0, jsxRuntime.jsx)("p", {
+                    className: "mt-2 text-sm italic text-slate-500",
+                    children: "Lời nhắc này chưa có nội dung."
+                  })
+            ]
           })
-        }), (0, jsxRuntime.jsxs)("div", {
-          className: "min-w-0 flex-grow",
-          children: [(0, jsxRuntime.jsx)("h3", {
-            id: headingId,
-            className: "font-medium text-base leading-6 " + (propPrompt.enabled ? "text-slate-200" : "text-slate-500 line-through"),
-            children: (0, jsxRuntime.jsx)("button", {
-              type: "button",
-              onClick: event => {
-                event.stopPropagation();
-                onEdit(index);
-              },
-              className: "rounded text-left hover:text-sky-300 focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-800",
-              children: displayName
-            })
-          }), promptContent.trim() ? (0, jsxRuntime.jsx)("p", {
-            className: "mt-2 whitespace-pre-wrap break-words text-sm leading-6 text-slate-400",
-            children: promptContent
-          }) : (0, jsxRuntime.jsx)("p", {
-            className: "mt-2 text-sm italic text-slate-500",
-            children: "Lời nhắc này chưa có nội dung."
-          })]
-        }), (0, jsxRuntime.jsxs)("div", {
-          className: "flex items-center ml-4 flex-shrink-0 gap-1",
-          children: [isMoveActive ? isMovingThis ? (0, jsxRuntime.jsx)("button", {
-            type: "button",
-            onClick: event => {
-              event.stopPropagation();
-              onCancelMove();
-            },
-            className: "p-2 bg-red-600/50 hover:bg-red-500/50 text-white rounded-md ",
-            "aria-label": "Hủy di chuyển",
-            children: (0, jsxRuntime.jsx)("svg", {
-              "aria-hidden": "true",
-              xmlns: "http://www.w3.org/2000/svg",
-              className: "h-5 w-5",
-              viewBox: "0 0 20 20",
-              fill: "currentColor",
-              children: (0, jsxRuntime.jsx)("path", {
-                fillRule: "evenodd",
-                d: "M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z",
-                clipRule: "evenodd"
-              })
-            })
-          }) : (0, jsxRuntime.jsx)("button", {
-            type: "button",
-            onClick: event => {
-              event.stopPropagation();
-              onMoveTo(index);
-            },
-            className: "px-3 py-1.5 text-sm bg-sky-600 hover:bg-sky-500 text-white font-semibold rounded-md ",
-            "aria-label": "Di chuyển đến vị trí này",
-            children: "Di chuyển đến đây"
-          }) : (0, jsxRuntime.jsx)("button", {
-            type: "button",
-            onClick: event => {
-              event.stopPropagation();
-              onSelectToMove(index);
-            },
-            className: "p-2 text-slate-400 hover:text-sky-400 disabled:text-slate-600 disabled:cursor-not-allowed ",
-            "aria-label": "Chọn để di chuyển",
-            children: (0, jsxRuntime.jsx)("svg", {
-              "aria-hidden": "true",
-              xmlns: "http://www.w3.org/2000/svg",
-              className: "h-5 w-5",
-              fill: "none",
-              viewBox: "0 0 24 24",
-              stroke: "currentColor",
-              strokeWidth: "2",
-              children: (0, jsxRuntime.jsx)("path", {
-                strokeLinecap: "round",
-                strokeLinejoin: "round",
-                d: "M4 6h16M4 12h16M4 18h16"
-              })
-            })
-          }), (0, jsxRuntime.jsx)("button", {
-            type: "button",
-            onClick: event => {
-              event.stopPropagation();
-              onRemove(index);
-            },
-            className: "text-slate-500 hover:text-red-400 p-1",
-            "aria-label": `Xóa lời nhắc ${displayName}`,
-            children: (0, jsxRuntime.jsx)("svg", {
-              "aria-hidden": "true",
-              xmlns: "http://www.w3.org/2000/svg",
-              className: "h-5 w-5",
-              viewBox: "0 0 20 20",
-              fill: "currentColor",
-              children: (0, jsxRuntime.jsx)("path", {
-                fillRule: "evenodd",
-                d: "M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm4 0a1 1 0 012 0v6a1 1 0 11-2 0V8z",
-                clipRule: "evenodd"
-              })
-            })
-          })]
-        })]
+        ]
       })
     });
   };
@@ -143,76 +119,132 @@ export function createPromptListItem(getDependencies) {
 
 export function createPromptManager(getDependencies) {
   return function PromptManager({
-    preset: preset,
-    onUpdate: onUpdate
+    preset,
+    onUpdate
   }) {
     const {
-      EntrySelectionControl,
       react,
       MacroReference,
       PromptEditDialog,
       PromptPreview,
       PromptListItem,
+      useToast,
       jsxRuntime
     } = getDependencies();
-    let [filterMode, setFilterMode] = (0, react.useState)("all");
-    let [movingPromptIndex, setMovingPromptIndex] = (0, react.useState)(null);
-    let [editingPromptIndex, setEditingPromptIndex] = (0, react.useState)(null);
-    let lastFocusedRef = (0, react.useRef)(null);
-    let prompts = preset.prompts || [];
-    let handleUpdatePrompt = (0, react.useCallback)((index, updatedPrompt) => {
-      let nextPrompts = [...prompts];
+    const toastApi = typeof useToast === "function" ? useToast() : null;
+    const showToast = toastApi?.showToast || (() => {});
+
+    const [filterMode, setFilterMode] = (0, react.useState)("all");
+    const [movingPromptIndex, setMovingPromptIndex] = (0, react.useState)(null);
+    const [editingPromptIndex, setEditingPromptIndex] = (0, react.useState)(null);
+    const [actionPromptIndex, setActionPromptIndex] = (0, react.useState)(null);
+    const lastFocusedRef = (0, react.useRef)(null);
+    const prompts = preset.prompts || [];
+
+    if (typeof react.useEffect === "function") {
+      (0, react.useEffect)(() => {
+        if (actionPromptIndex === null) return;
+        const handleKeyDown = event => {
+          if (event.key === "Escape") setActionPromptIndex(null);
+        };
+        document.addEventListener("keydown", handleKeyDown);
+        return () => document.removeEventListener("keydown", handleKeyDown);
+      }, [actionPromptIndex]);
+    }
+
+    const handleUpdatePrompt = (0, react.useCallback)((index, updatedPrompt) => {
+      const nextPrompts = [...prompts];
       nextPrompts[index] = updatedPrompt;
       onUpdate({
         ...preset,
         prompts: nextPrompts
       });
     }, [prompts, preset, onUpdate]);
-    let handleRemovePrompt = (0, react.useCallback)(index => {
-      movingPromptIndex === index && setMovingPromptIndex(null);
-      let remainingPrompts = prompts.filter((prompt, promptIndex) => promptIndex !== index);
+
+    const handleRemovePrompt = (0, react.useCallback)(index => {
+      const target = prompts[index];
+      const name = target?.name?.trim() || "Untitled Prompt";
+      if (typeof window !== "undefined" && typeof window.confirm === "function") {
+        if (!window.confirm(`Bạn có chắc chắn muốn xóa lời nhắc "${name}" không?`)) return;
+      }
+      if (movingPromptIndex === index) setMovingPromptIndex(null);
+      const remainingPrompts = prompts.filter((_, promptIndex) => promptIndex !== index);
       onUpdate({
         ...preset,
         prompts: remainingPrompts
       });
     }, [prompts, preset, onUpdate, movingPromptIndex]);
-    let handleAddPrompt = (0, react.useCallback)(() => {
-      let newPrompt = {
-        identifier: `prompt_${Date.now()}`,
-        name: "New Prompt",
-        role: "system",
-        content: "",
-        enabled: true,
-        include_title: false
-      };
+
+    const createBlankPrompt = () => ({
+      identifier: `prompt_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`,
+      name: "New Prompt",
+      role: "system",
+      content: "",
+      enabled: true,
+      include_title: false
+    });
+
+    const handleAddPrompt = (0, react.useCallback)(() => {
       onUpdate({
         ...preset,
-        prompts: [...prompts, newPrompt]
+        prompts: [...prompts, createBlankPrompt()]
       });
     }, [prompts, preset, onUpdate]);
-    let handleOpenEdit = (0, react.useCallback)(index => {
+
+    const handleInsertPromptBelow = (0, react.useCallback)(index => {
+      const nextPrompts = [...prompts];
+      nextPrompts.splice(index + 1, 0, createBlankPrompt());
+      onUpdate({
+        ...preset,
+        prompts: nextPrompts
+      });
+      setEditingPromptIndex(index + 1);
+    }, [prompts, preset, onUpdate]);
+
+    const handleCopyPromptContent = (0, react.useCallback)(async index => {
+      const content = prompts[index]?.content || "";
+      try {
+        if (navigator?.clipboard?.writeText) {
+          await navigator.clipboard.writeText(content);
+          showToast("Đã sao chép nội dung lời nhắc.", "success");
+        }
+      } catch {
+        showToast("Không thể sao chép nội dung lời nhắc.", "error");
+      }
+    }, [prompts, showToast]);
+
+    const handleOpenEdit = (0, react.useCallback)(index => {
       lastFocusedRef.current = document.activeElement;
       setEditingPromptIndex(index);
     }, []);
-    let handleCloseEdit = (0, react.useCallback)(() => {
+
+    const handleCloseEdit = (0, react.useCallback)(() => {
       setEditingPromptIndex(null);
       setTimeout(() => lastFocusedRef.current?.focus(), 0);
     }, []);
-    let handleSaveEdit = (0, react.useCallback)(updatedPrompt => {
-      null !== editingPromptIndex && handleUpdatePrompt(editingPromptIndex, updatedPrompt);
+
+    const handleSaveEdit = (0, react.useCallback)(updatedPrompt => {
+      if (editingPromptIndex !== null) handleUpdatePrompt(editingPromptIndex, updatedPrompt);
       handleCloseEdit();
     }, [editingPromptIndex, handleUpdatePrompt, handleCloseEdit]);
-    let filteredPrompts = (0, react.useMemo)(() => prompts.map((prompt, index) => ({
-      prompt: prompt,
+
+    const filteredPrompts = (0, react.useMemo)(() => prompts.map((prompt, index) => ({
+      prompt,
       originalIndex: index
-    })).filter(({
-      prompt: prompt
-    }) => "enabled" === filterMode ? true === prompt.enabled : "disabled" !== filterMode || !prompt.enabled), [prompts, filterMode]);
-    let handleMovePrompt = (0, react.useCallback)(targetIndex => {
-      if (null === movingPromptIndex || movingPromptIndex === targetIndex) return void setMovingPromptIndex(null);
-      let nextPrompts = [...prompts];
-      let [movedPrompt] = nextPrompts.splice(movingPromptIndex, 1);
-      let insertionIndex = targetIndex > movingPromptIndex ? targetIndex - 1 : targetIndex;
+    })).filter(({ prompt }) => (
+      filterMode === "enabled"
+        ? prompt.enabled === true
+        : filterMode !== "disabled" || !prompt.enabled
+    )), [prompts, filterMode]);
+
+    const handleMovePrompt = (0, react.useCallback)(targetIndex => {
+      if (movingPromptIndex === null || movingPromptIndex === targetIndex) {
+        setMovingPromptIndex(null);
+        return;
+      }
+      const nextPrompts = [...prompts];
+      const [movedPrompt] = nextPrompts.splice(movingPromptIndex, 1);
+      const insertionIndex = targetIndex > movingPromptIndex ? targetIndex - 1 : targetIndex;
       nextPrompts.splice(insertionIndex, 0, movedPrompt);
       onUpdate({
         ...preset,
@@ -220,113 +252,143 @@ export function createPromptManager(getDependencies) {
       });
       setMovingPromptIndex(null);
     }, [prompts, preset, onUpdate, movingPromptIndex]);
-    let handleToggleAllVisible = (0, react.useCallback)(() => {
-      if (!preset || 0 === filteredPrompts.length) return void alert("Không có lời nhắc nào để xuất cho bộ lọc hiện tại.");
-      let exportText = "all" === filterMode ? filteredPrompts.map(({
-        prompt: prompt
-      }) => `--- Lời nhắc: ${prompt.name || "Không có tiêu đề"} ---\n\n${prompt.content || ""}`).join("\n\n\n") : filteredPrompts.map(({
-        prompt: prompt
-      }) => prompt.content || "").join("\n\n----------------------------------------\n\n");
-      let blob = new Blob([exportText], {
-        type: "text/plain;charset=utf-8"
-      });
-      let downloadUrl = URL.createObjectURL(blob);
-      let anchor = document.createElement("a");
-      anchor.href = downloadUrl;
-      anchor.download = `${preset.name.replace(/\.json$/i, "")}_prompts_${filterMode}.txt`;
-      document.body.appendChild(anchor);
-      anchor.click();
-      document.body.removeChild(anchor);
-      URL.revokeObjectURL(downloadUrl);
-    }, [preset, filteredPrompts, filterMode]);
+
+    const movingPrompt = movingPromptIndex !== null ? prompts[movingPromptIndex] : null;
+    const actionPrompt = actionPromptIndex !== null ? prompts[actionPromptIndex] : null;
+
     return (0, jsxRuntime.jsxs)("div", {
-      className: "space-y-6",
-      children: [(0, jsxRuntime.jsx)(MacroReference, {}), (0, jsxRuntime.jsxs)("div", {
-        className: "flex flex-col sm:flex-row justify-between items-center gap-4 p-2 bg-slate-800/50 rounded-lg",
-        children: [(0, jsxRuntime.jsxs)("div", {
-          className: "p-1 bg-slate-900 rounded-lg flex space-x-1",
-          children: [(0, jsxRuntime.jsx)(EntrySelectionControl, {
-            filter: "all",
-            currentFilter: filterMode,
-            onClick: setFilterMode,
-            label: "Tất cả"
-          }), (0, jsxRuntime.jsx)(EntrySelectionControl, {
-            filter: "enabled",
-            currentFilter: filterMode,
-            onClick: setFilterMode,
-            label: "Đã bật"
-          }), (0, jsxRuntime.jsx)(EntrySelectionControl, {
-            filter: "disabled",
-            currentFilter: filterMode,
-            onClick: setFilterMode,
-            label: "Đã tắt"
-          })]
-        }), (0, jsxRuntime.jsxs)("button", {
-          onClick: handleToggleAllVisible,
-          disabled: 0 === filteredPrompts.length,
-          className: "flex items-center gap-2 px-4 py-1.5 text-sm font-semibold rounded-md   focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400 text-sky-300 bg-sky-800/50 hover:bg-sky-700/60 disabled:bg-slate-700 disabled:text-slate-500 disabled:cursor-not-allowed",
-          children: [(0, jsxRuntime.jsx)("svg", {
-            "aria-hidden": "true",
-            xmlns: "http://www.w3.org/2000/svg",
-            className: "h-4 w-4",
-            viewBox: "0 0 20 20",
-            fill: "currentColor",
-            children: (0, jsxRuntime.jsx)("path", {
-              fillRule: "evenodd",
-              d: "M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z",
-              clipRule: "evenodd"
+      className: "space-y-5",
+      children: [
+        (0, jsxRuntime.jsx)(MacroReference, {}),
+        (0, jsxRuntime.jsx)("div", {
+          className: "flex items-center justify-between gap-3 p-2 bg-slate-800/50 rounded-lg",
+          children: (0, jsxRuntime.jsxs)("select", {
+            "aria-label": "Lọc lời nhắc",
+            value: filterMode,
+            onChange: event => setFilterMode(event.target.value),
+            className: "bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-200 focus:outline-none focus:ring-2 focus:ring-sky-500",
+            children: [
+              (0, jsxRuntime.jsx)("option", { value: "all", children: "Tất cả" }),
+              (0, jsxRuntime.jsx)("option", { value: "enabled", children: "Đã bật" }),
+              (0, jsxRuntime.jsx)("option", { value: "disabled", children: "Đã tắt" })
+            ]
+          })
+        }),
+        movingPrompt && (0, jsxRuntime.jsxs)("div", {
+          role: "status",
+          className: "flex items-center justify-between gap-3 p-3 bg-sky-950/60 border border-sky-500/60 rounded-lg",
+          children: [
+            (0, jsxRuntime.jsx)("p", {
+              className: "text-sm text-sky-200",
+              children: `Đang di chuyển "${movingPrompt.name?.trim() || "Untitled Prompt"}". Nhấn vào lời nhắc đích để đặt vào vị trí đó.`
+            }),
+            (0, jsxRuntime.jsx)("button", {
+              type: "button",
+              onClick: () => setMovingPromptIndex(null),
+              className: "flex-shrink-0 px-3 py-1.5 text-sm font-semibold bg-red-600/80 hover:bg-red-500 text-white rounded-md",
+              children: "Hủy di chuyển"
             })
-          }), (0, jsxRuntime.jsx)("span", {
-            children: "Xuất theo bộ lọc"
-          })]
-        })]
-      }), (0, jsxRuntime.jsxs)("div", {
-        id: "prompt-list",
-        className: "space-y-3",
-        children: [filteredPrompts.map(({
-          prompt: prompt,
-          originalIndex: index
-        }) => (0, jsxRuntime.jsx)(PromptListItem, {
-          prompt: prompt,
-          index: index,
-          onUpdate: handleUpdatePrompt,
-          onRemove: handleRemovePrompt,
-          movingPromptIndex: movingPromptIndex,
-          onSelectToMove: setMovingPromptIndex,
-          onMoveTo: handleMovePrompt,
-          onCancelMove: () => setMovingPromptIndex(null),
-          onEdit: handleOpenEdit
-        }, prompt.identifier || index)), 0 === filteredPrompts.length && (0, jsxRuntime.jsx)("div", {
-          className: "text-center py-8 text-slate-500",
-          children: (0, jsxRuntime.jsx)("p", {
-            children: "Không có lời nhắc nào khớp với bộ lọc này."
-          })
-        })]
-      }), (0, jsxRuntime.jsxs)("button", {
-        onClick: handleAddPrompt,
-        className: "w-full bg-slate-700 hover:bg-slate-600 text-sky-400 font-semibold py-3 px-4 rounded-lg   flex items-center justify-center gap-2 border border-slate-600",
-        children: [(0, jsxRuntime.jsx)("svg", {
-          "aria-hidden": "true",
-          xmlns: "http://www.w3.org/2000/svg",
-          className: "h-5 w-5",
-          viewBox: "0 0 20 20",
-          fill: "currentColor",
-          children: (0, jsxRuntime.jsx)("path", {
-            fillRule: "evenodd",
-            d: "M10 18a8 8 0 100-16 8 8 0 000 16zm1-11a1 1 0 10-2 0v2H7a1 1 0 100 2h2v2a1 1 0 102 0v-2h2a1 1 0 100-2h-2V7z",
-            clipRule: "evenodd"
-          })
-        }), (0, jsxRuntime.jsx)("span", {
+          ]
+        }),
+        (0, jsxRuntime.jsxs)("div", {
+          id: "prompt-list",
+          className: "space-y-3",
+          children: [
+            filteredPrompts.map(({ prompt, originalIndex }) => (0, jsxRuntime.jsx)(PromptListItem, {
+              prompt,
+              index: originalIndex,
+              onUpdate: handleUpdatePrompt,
+              onEdit: handleOpenEdit,
+              onOpenActions: setActionPromptIndex,
+              movingPromptIndex,
+              onMoveTo: handleMovePrompt
+            }, prompt.identifier || originalIndex)),
+            filteredPrompts.length === 0 && (0, jsxRuntime.jsx)("div", {
+              className: "text-center py-8 text-slate-500",
+              children: (0, jsxRuntime.jsx)("p", {
+                children: "Không có lời nhắc nào khớp với bộ lọc này."
+              })
+            })
+          ]
+        }),
+        prompts.length === 0 && (0, jsxRuntime.jsx)("button", {
+          type: "button",
+          onClick: handleAddPrompt,
+          className: "w-full bg-slate-700 hover:bg-slate-600 text-sky-400 font-semibold py-3 px-4 rounded-lg flex items-center justify-center gap-2 border border-slate-600",
           children: "Thêm Lời nhắc Mới"
-        })]
-      }), (0, jsxRuntime.jsx)(PromptEditDialog, {
-        isOpen: null !== editingPromptIndex,
-        prompt: null === editingPromptIndex ? null : prompts[editingPromptIndex],
-        onSave: handleSaveEdit,
-        onClose: handleCloseEdit
-      }), (0, jsxRuntime.jsx)(PromptPreview, {
-        prompts: prompts
-      })]
+        }),
+        actionPrompt && (0, jsxRuntime.jsx)("div", {
+          className: "fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4",
+          onClick: () => setActionPromptIndex(null),
+          children: (0, jsxRuntime.jsxs)("div", {
+            role: "dialog",
+            "aria-modal": "true",
+            "aria-label": `Tùy chọn cho ${actionPrompt.name?.trim() || "Untitled Prompt"}`,
+            className: "w-full max-w-xs bg-slate-900 border border-slate-700 rounded-xl shadow-2xl overflow-hidden",
+            onClick: event => event.stopPropagation(),
+            children: [
+              (0, jsxRuntime.jsx)("div", {
+                className: "px-4 py-3 border-b border-slate-800 text-sm font-semibold text-slate-200 truncate",
+                children: actionPrompt.name?.trim() || "Untitled Prompt"
+              }),
+              (0, jsxRuntime.jsxs)("div", {
+                className: "py-1",
+                children: [
+                  (0, jsxRuntime.jsx)("button", {
+                    type: "button",
+                    onClick: () => {
+                      const idx = actionPromptIndex;
+                      setActionPromptIndex(null);
+                      setMovingPromptIndex(idx);
+                    },
+                    className: "w-full text-left px-4 py-3 text-sm text-slate-100 hover:bg-slate-800",
+                    children: "Chọn để di chuyển"
+                  }),
+                  (0, jsxRuntime.jsx)("button", {
+                    type: "button",
+                    onClick: () => {
+                      const idx = actionPromptIndex;
+                      setActionPromptIndex(null);
+                      handleCopyPromptContent(idx);
+                    },
+                    className: "w-full text-left px-4 py-3 text-sm text-slate-100 hover:bg-slate-800",
+                    children: "Sao chép nội dung"
+                  }),
+                  (0, jsxRuntime.jsx)("button", {
+                    type: "button",
+                    onClick: () => {
+                      const idx = actionPromptIndex;
+                      setActionPromptIndex(null);
+                      handleInsertPromptBelow(idx);
+                    },
+                    className: "w-full text-left px-4 py-3 text-sm text-slate-100 hover:bg-slate-800",
+                    children: "Thêm lời nhắc bên dưới"
+                  }),
+                  (0, jsxRuntime.jsx)("button", {
+                    type: "button",
+                    onClick: () => {
+                      const idx = actionPromptIndex;
+                      setActionPromptIndex(null);
+                      handleRemovePrompt(idx);
+                    },
+                    className: "w-full text-left px-4 py-3 text-sm text-red-400 hover:bg-red-950/60",
+                    children: "Xóa"
+                  })
+                ]
+              })
+            ]
+          })
+        }),
+        (0, jsxRuntime.jsx)(PromptEditDialog, {
+          isOpen: editingPromptIndex !== null,
+          prompt: editingPromptIndex === null ? null : prompts[editingPromptIndex],
+          onSave: handleSaveEdit,
+          onClose: handleCloseEdit
+        }),
+        (0, jsxRuntime.jsx)(PromptPreview, {
+          prompts
+        })
+      ]
     });
   };
 }

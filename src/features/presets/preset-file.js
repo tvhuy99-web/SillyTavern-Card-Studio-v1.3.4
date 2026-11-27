@@ -1,4 +1,3 @@
-// Recovered from the application host. One owner; dependency getters preserve late binding.
 export function createPresetFileCodec(dependencies = {}) {
 var parsePresetFile = async file => {
   if (!file.size) throw Error(`Không thể đọc preset "${file.name}": tệp trống.`);

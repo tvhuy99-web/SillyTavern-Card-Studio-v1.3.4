@@ -15,10 +15,6 @@ import com.getcapacitor.PluginCall;
 import java.util.UUID;
 import java.util.function.Supplier;
 
-/**
- * Coordinates Android foreground-service protection, app background/foreground
- * transitions, background status reporting, and model catalog discovery.
- */
 final class AiStudioSessionController {
     private final Supplier<Activity> activitySupplier;
     private final Supplier<Context> contextSupplier;
@@ -45,9 +41,6 @@ final class AiStudioSessionController {
         this.webViewController = webViewController;
     }
 
-    // The foreground service is started by a user-initiated generation call
-    // before the user presses Home. This avoids Android 12+ restrictions on
-    // starting foreground services after the app has gone to the background.
     void startBackgroundGeneration(boolean requestActive) {
         try {
             foregroundToken = UUID.randomUUID().toString();
@@ -107,8 +100,7 @@ final class AiStudioSessionController {
     void handleOnPause(boolean active, int responseChars, int polls) {
         appInBackground = true;
         if (active) {
-            // WebView.onPause() is not a JavaScript hard-stop; nevertheless
-            // keep both WebView and Chromium timers resumed for UI polling.
+
             webViewController.resumeWebView();
             diagnostics.trace("state", "APP_BACKGROUND",
                 "Card Studio left foreground; native AI Studio polling continues",

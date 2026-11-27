@@ -1,4 +1,3 @@
-// Transitional output mapping; retain public asset URLs until migration is complete.
 import { posix } from 'node:path';
 import { copyFile, mkdir, readFile, writeFile, readdir } from 'node:fs/promises';
 import assert from 'node:assert/strict';
@@ -120,6 +119,13 @@ export const copiedAssets = Object.freeze([
   Object.freeze(['src/ui/components/file-name-dialog.js', 'assets/recovered/ui/components/file-name-dialog.js']),
   Object.freeze(['src/runtime/card-runtime/core-builder.js', 'assets/card-runtime-core-builder-v1.3.6.js']),
   Object.freeze(['src/runtime/card-runtime/renderer.js', 'assets/card-runtime-renderer-v1.3.6.js']),
+  Object.freeze(['src/runtime/card-runtime/renderer/bootstrap.js', 'assets/renderer/bootstrap.js']),
+  Object.freeze(['src/runtime/card-runtime/renderer/markup.js', 'assets/renderer/markup.js']),
+  Object.freeze(['src/runtime/card-runtime/renderer/accessibility.js', 'assets/renderer/accessibility.js']),
+  Object.freeze(['src/runtime/card-runtime/renderer/script-descriptors.js', 'assets/renderer/script-descriptors.js']),
+  Object.freeze(['src/runtime/card-runtime/renderer/variable-readiness.js', 'assets/renderer/variable-readiness.js']),
+  Object.freeze(['src/runtime/card-runtime/renderer/script-execution.js', 'assets/renderer/script-execution.js']),
+  Object.freeze(['src/runtime/card-runtime/renderer/frame-lifecycle.js', 'assets/renderer/frame-lifecycle.js']),
   Object.freeze(['src/platform/android/native-bridge.js', 'assets/recovered/platform/android/native-bridge.js']),
   Object.freeze(['src/core/async/cancellation.js', 'assets/m4/core/async/cancellation.js']),
   Object.freeze(['src/runtime/card-runtime/host/rpc-dispatcher.js', 'assets/m4/runtime/card-runtime/host/rpc-dispatcher.js']),
@@ -161,6 +167,9 @@ export const copiedAssets = Object.freeze([
   Object.freeze(['src/app/persistence/guarded-storage.js', 'assets/m5/app/persistence/guarded-storage.js']),
   Object.freeze(['src/app/persistence/app-database.js', 'assets/m5/app/persistence/app-database.js']),
   Object.freeze(['src/app/persistence/entity-repositories.js', 'assets/m5/app/persistence/entity-repositories.js']),
+  Object.freeze(['src/app/persistence/repositories/session-operations.js', 'assets/m5/app/persistence/repositories/session-operations.js']),
+  Object.freeze(['src/app/persistence/repositories/restore-operations.js', 'assets/m5/app/persistence/repositories/restore-operations.js']),
+  Object.freeze(['src/app/persistence/repositories/cross-entity-operations.js', 'assets/m5/app/persistence/repositories/cross-entity-operations.js']),
   Object.freeze(['src/app/state/runtime-state.js', 'assets/m5/app/state/runtime-state.js']),
   Object.freeze(['src/diagnostics/state.js', 'assets/m5/diagnostics/state.js']),
   Object.freeze(['src/features/arena/state-machine.js', 'assets/m5/features/arena/state-machine.js']),
@@ -267,6 +276,16 @@ export const copiedAssets = Object.freeze([
   Object.freeze(['src/app/composition/runtime-composition.js', 'assets/recovered/app/composition/runtime-composition.js']),
   Object.freeze(['src/app/composition/store-composition.js', 'assets/recovered/app/composition/store-composition.js']),
   Object.freeze(['src/app/composition/ui-composition.js', 'assets/recovered/app/composition/ui-composition.js']),
+  Object.freeze(['src/app/composition/ui/editor-foundations.js', 'assets/recovered/app/composition/ui/editor-foundations.js']),
+  Object.freeze(['src/app/composition/ui/catalog-editor.js', 'assets/recovered/app/composition/ui/catalog-editor.js']),
+  Object.freeze(['src/app/composition/ui/preset-catalog.js', 'assets/recovered/app/composition/ui/preset-catalog.js']),
+  Object.freeze(['src/app/composition/ui/settings.js', 'assets/recovered/app/composition/ui/settings.js']),
+  Object.freeze(['src/app/composition/ui/session-navigation.js', 'assets/recovered/app/composition/ui/session-navigation.js']),
+  Object.freeze(['src/app/composition/ui/message-view.js', 'assets/recovered/app/composition/ui/message-view.js']),
+  Object.freeze(['src/app/composition/ui/diagnostics.js', 'assets/recovered/app/composition/ui/diagnostics.js']),
+  Object.freeze(['src/app/composition/ui/world-info-dialogs.js', 'assets/recovered/app/composition/ui/world-info-dialogs.js']),
+  Object.freeze(['src/app/composition/ui/rpg-actions.js', 'assets/recovered/app/composition/ui/rpg-actions.js']),
+  Object.freeze(['src/app/composition/ui/application-shell.js', 'assets/recovered/app/composition/ui/application-shell.js']),
 ]);
 export const vendorAssets = Object.freeze([
   'assets/ejs.min-Cthf3_XD.js',
@@ -278,7 +297,7 @@ export const vendorAssets = Object.freeze([
 ]);
 export const generatedAssets = Object.freeze([entryOutput, productionOutput, ...copiedAssets.map(([, output]) => output)]);
 export const deploymentRoots = Object.freeze(['index.html', 'assets', 'scripts', 'api-unavailable.json', 'version.json', '_redirects', '_headers']);
-// Relocate only entry import specifiers and the explicit legacy production URL.
+
 export function renderEntry(source) {
   const outputs = new Map([...copiedAssets, [hostSource, productionOutput], [productionOutput, productionOutput]]);
   const relocate = specifier => {
@@ -292,8 +311,7 @@ export function renderEntry(source) {
   return source.replace(/(^import[^\n]*? from ')([^']+)(';)$/gm, (_, prefix, specifier, suffix) => prefix + relocate(specifier) + suffix)
     .replace(/(new URL\(')([^']+)(', import\.meta\.url\))/g, (_, prefix, specifier, suffix) => prefix + relocate(specifier) + suffix);
 }
-// The recovered host owns the application body. Only its module specifiers
-// are relocated to the portable deployment layout; no code patching is done.
+
 export const hostBanner = `/* GENERATED FILE. DO NOT EDIT DIRECTLY.
    Source: src/app/host.js
    Build pipeline: build/build-production-bundle.mjs
@@ -319,7 +337,7 @@ export function renderHost(source) {
 }
 export async function emitOwnedAssets() {
   for (const [source, output] of copiedAssets) {
-    if (output === runtimeRendererOutput) continue; // emitted by Card Runtime builder
+    if (output === runtimeRendererOutput) continue;
     await mkdir(new URL('./', file(output)), {recursive:true});
     if (source.endsWith('.js')) await writeFile(file(output), renderOwnedModule(source, output, await readFile(file(source), 'utf8')));
     else await copyFile(file(source), file(output));

@@ -1,6 +1,3 @@
-// Source-owned React components recovered from the legacy host.
-// JSX runtime is injected temporarily so the host and these components share
-// the same React instance. Remove the factories when native JSX build lands.
 export function createImmersiveContainer({ jsx }) {
   return function ImmersiveContainer({ children, isImmersive, globalClass = '' }) {
     const layout = isImmersive

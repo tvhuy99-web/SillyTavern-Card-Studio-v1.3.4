@@ -1,120 +1,89 @@
-// Semantic dependency contract: callers inject named dependencies directly.
-// Factories receive the existing React/runtime bindings lazily to preserve initialization order.
+const CHAR_BOOK_PREFIX = "__char__:";
 
 export function createLorebookListItem(getDependencies) {
   return function LorebookListItem({
-    lorebook: lorebook,
-    onEdit: onEdit,
-    onDelete: onDelete
+    lorebook,
+    onEdit,
+    onDelete
   }) {
-    const {
-      jsxRuntime
-    } = getDependencies();
-    let entryCount = lorebook.book?.entries?.length || 0;
+    const { jsxRuntime } = getDependencies();
+    const entryCount = lorebook.book?.entries?.length || 0;
     return (0, jsxRuntime.jsxs)("div", {
-      className: "bg-slate-800 border border-slate-700 rounded-xl overflow-hidden hover:border-sky-500/50 hover:shadow-lg  flex flex-col h-full group",
-      children: [(0, jsxRuntime.jsx)("div", {
-        onClick: onEdit,
-        onKeyDown: event => {
-          ("Enter" === event.key || " " === event.key) && (event.preventDefault(), onEdit());
-        },
-        role: "button",
-        tabIndex: 0,
-        className: "p-4 flex-grow cursor-pointer hover:bg-slate-750 focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400 flex flex-col items-center justify-center min-h-[100px]",
-        children: (0, jsxRuntime.jsxs)("h3", {
-          className: "text-lg font-bold text-slate-200 group-hover:text-sky-400  text-center leading-snug break-words w-full",
-          children: [lorebook.name, (0, jsxRuntime.jsxs)("span", {
-            className: "ml-2 text-slate-500 text-base font-normal whitespace-nowrap",
-            children: ["(", entryCount, ")"]
-          })]
+      className: "bg-slate-800 border border-slate-700 rounded-xl overflow-hidden flex flex-col h-full group",
+      children: [
+        (0, jsxRuntime.jsx)("div", {
+          onClick: onEdit,
+          onKeyDown: event => {
+            if (event.key === "Enter" || event.key === " ") {
+              event.preventDefault();
+              onEdit();
+            }
+          },
+          role: "button",
+          tabIndex: 0,
+          className: "p-4 flex-grow cursor-pointer hover:bg-slate-750 focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400 flex flex-col items-center justify-center min-h-[100px]",
+          children: (0, jsxRuntime.jsxs)("h3", {
+            className: "text-lg font-bold text-slate-200 group-hover:text-sky-400 text-center leading-snug break-words w-full",
+            children: [lorebook.name, (0, jsxRuntime.jsxs)("span", {
+              className: "ml-2 text-slate-500 text-base font-normal whitespace-nowrap",
+              children: ["(", entryCount, ")"]
+            })]
+          })
+        }),
+        (0, jsxRuntime.jsxs)("div", {
+          className: "grid grid-cols-2 border-t border-slate-700 bg-slate-900/30",
+          children: [
+            (0, jsxRuntime.jsx)("button", {
+              type: "button",
+              onClick: event => {
+                event.stopPropagation();
+                onDelete();
+              },
+              className: "p-3 text-sm font-bold text-red-400/80 hover:text-red-300 hover:bg-red-900/20 border-r border-slate-700",
+              children: "Xóa"
+            }),
+            (0, jsxRuntime.jsx)("button", {
+              type: "button",
+              onClick: event => {
+                event.stopPropagation();
+                onEdit();
+              },
+              className: "p-3 text-sm font-bold text-sky-400/80 hover:text-sky-300 hover:bg-sky-900/20",
+              children: "Sửa"
+            })
+          ]
         })
-      }), (0, jsxRuntime.jsxs)("div", {
-        className: "grid grid-cols-2 border-t border-slate-700 bg-slate-900/30",
-        children: [(0, jsxRuntime.jsxs)("button", {
-          onClick: event => {
-            event.stopPropagation();
-            onDelete();
-          },
-          className: "p-3 text-sm font-bold text-red-400/80 hover:text-red-300 hover:bg-red-900/20  border-r border-slate-700 flex items-center justify-center gap-2",
-          title: "Xóa sổ tay (có xác nhận)",
-          children: [(0, jsxRuntime.jsx)("svg", {
-            "aria-hidden": "true",
-            xmlns: "http://www.w3.org/2000/svg",
-            className: "h-4 w-4",
-            viewBox: "0 0 20 20",
-            fill: "currentColor",
-            children: (0, jsxRuntime.jsx)("path", {
-              fillRule: "evenodd",
-              d: "M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm4 0a1 1 0 012 0v6a1 1 0 11-2 0V8z",
-              clipRule: "evenodd"
-            })
-          }), "Xóa"]
-        }), (0, jsxRuntime.jsxs)("button", {
-          onClick: event => {
-            event.stopPropagation();
-            onEdit();
-          },
-          className: "p-3 text-sm font-bold text-sky-400/80 hover:text-sky-300 hover:bg-sky-900/20  flex items-center justify-center gap-2",
-          children: [(0, jsxRuntime.jsx)("svg", {
-            "aria-hidden": "true",
-            xmlns: "http://www.w3.org/2000/svg",
-            className: "h-4 w-4",
-            viewBox: "0 0 20 20",
-            fill: "currentColor",
-            children: (0, jsxRuntime.jsx)("path", {
-              d: "M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z"
-            })
-          }), "Sửa"]
-        })]
-      })]
+      ]
     });
   };
 }
 
 export function createLorebookUploadControl(getDependencies) {
   return function LorebookUploadControl({
-    onUpload: onUpload,
-    isLoading: isLoading
+    onUpload,
+    isLoading
   }) {
-    const {
-      LoadingIndicator,
-      jsxRuntime
-    } = getDependencies();
+    const { LoadingIndicator, jsxRuntime } = getDependencies();
     return (0, jsxRuntime.jsxs)("div", {
       onClick: isLoading ? undefined : onUpload,
       onKeyDown: event => {
-        !isLoading && ("Enter" === event.key || " " === event.key) && (event.preventDefault(), onUpload());
+        if (!isLoading && (event.key === "Enter" || event.key === " ")) {
+          event.preventDefault();
+          onUpload();
+        }
       },
       role: "button",
       tabIndex: isLoading ? -1 : 0,
       "aria-disabled": isLoading,
       "aria-label": "Tải lên Sổ tay Mới",
       className: "border-2 border-dashed border-slate-700 rounded-xl p-6 flex flex-col items-center justify-center text-center h-full min-h-[140px] focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400 " + (isLoading ? "opacity-50 cursor-not-allowed" : "hover:border-sky-500/50 hover:bg-slate-800/30 cursor-pointer group"),
-      children: [(0, jsxRuntime.jsx)("div", {
-        className: "bg-slate-800 p-3 rounded-full mb-3 group- ",
-        children: isLoading ? (0, jsxRuntime.jsx)(LoadingIndicator, {
-          message: ""
-        }) : (0, jsxRuntime.jsx)("svg", {
-          "aria-hidden": "true",
-          xmlns: "http://www.w3.org/2000/svg",
-          className: "h-6 w-6 text-sky-500",
-          fill: "none",
-          viewBox: "0 0 24 24",
-          stroke: "currentColor",
-          children: (0, jsxRuntime.jsx)("path", {
-            strokeLinecap: "round",
-            strokeLinejoin: "round",
-            strokeWidth: "2",
-            d: "M12 4v16m8-8H4"
-          })
+      children: [
+        isLoading ? (0, jsxRuntime.jsx)(LoadingIndicator, { message: "" }) : null,
+        (0, jsxRuntime.jsx)("h3", {
+          className: "text-sm font-bold text-slate-300 group-hover:text-white",
+          children: "Tải lên Sổ tay Mới"
         })
-      }), (0, jsxRuntime.jsx)("h3", {
-        className: "text-sm font-bold text-slate-300 group-hover:text-white ",
-        children: "Tải lên Sổ tay Mới"
-      }), (0, jsxRuntime.jsx)("p", {
-        className: "mt-1 text-xs text-slate-500",
-        children: "Hỗ trợ một hoặc nhiều tệp JSON"
-      })]
+      ]
     });
   };
 }
@@ -122,145 +91,493 @@ export function createLorebookUploadControl(getDependencies) {
 export function createLorebookLibrary(getDependencies) {
   return function LorebookLibrary() {
     const {
-      LorebookUploadControl,
       FileNameDialog,
-      LorebookListItem,
-      LorebookManager,
+      LorebookEntryList,
       react,
-      Icon,
       lorebookStore,
+      characterStore,
+      useToast,
       jsxRuntime
     } = getDependencies();
-    let {
-      lorebooks: lorebooks,
-      isLoading: isLoading,
-      error: error,
-      loadLorebooks: loadLorebooks,
-      updateLorebook: updateLorebook,
-      deleteLorebook: deleteLorebook
+
+    const {
+      lorebooks,
+      error,
+      loadLorebooks,
+      createLorebook,
+      renameLorebook,
+      updateLorebook,
+      deleteLorebook
     } = lorebookStore();
-    let [activeLorebookName, setActiveLorebookName] = (0, react.useState)(null);
-    let [isExportDialogOpen, setIsExportDialogOpen] = (0, react.useState)(false);
-    let [searchQuery, setSearchQuery] = (0, react.useState)("");
-    let fileInputRef = (0, react.useRef)(null);
-    let activeLorebook = lorebooks.find(lorebook => lorebook.name === activeLorebookName);
-    let filteredLorebooks = (0, react.useMemo)(() => {
-      let query = searchQuery.trim().toLocaleLowerCase("vi");
-      return query ? lorebooks.filter(lorebook => lorebook.name.toLocaleLowerCase("vi").includes(query)) : lorebooks;
-    }, [lorebooks, searchQuery]);
+
+    const charStoreApi = typeof characterStore === "function" ? characterStore() : { characters: [] };
+    const characters = charStoreApi.characters || [];
+    const updateCharacterByFileName = charStoreApi.updateCharacter || null;
+    const setActiveCharacterFileName = charStoreApi.setActiveCharacterFileName || null;
+    const updateActiveCharacter = charStoreApi.updateActiveCharacter || null;
+
+    const toastApi = typeof useToast === "function" ? useToast() : null;
+    const showToast = toastApi?.showToast || (() => {});
+
+    const allBooks = (0, react.useMemo)(() => {
+      const standalone = lorebooks.map(book => ({
+        id: book.name,
+        kind: "standalone",
+        name: book.name,
+        isGlobal: Boolean(book.isGlobal || book.book?.isGlobal),
+        entries: book.book?.entries || [],
+        record: book,
+        label: `${book.name}${book.isGlobal || book.book?.isGlobal ? " [Toàn cầu]" : ""}`
+      }));
+      const characterBooks = characters.map(character => {
+        const displayName = `${character.card?.name || character.fileName} (Mặc định)`;
+        const isGlobal = Boolean(character.card?.char_book?.isGlobal);
+        return {
+          id: `${CHAR_BOOK_PREFIX}${character.fileName}`,
+          kind: "character",
+          fileName: character.fileName,
+          name: displayName,
+          isGlobal,
+          entries: character.card?.char_book?.entries || [],
+          character,
+          label: `${displayName}${isGlobal ? " [Toàn cầu]" : ""}`
+        };
+      });
+      return [...standalone, ...characterBooks];
+    }, [lorebooks, characters]);
+
+    const [selectedId, setSelectedId] = (0, react.useState)(() => allBooks[0]?.id || "");
+    const [isOptionsOpen, setIsOptionsOpen] = (0, react.useState)(false);
+    const [isExportDialogOpen, setIsExportDialogOpen] = (0, react.useState)(false);
+    const [nameDialogMode, setNameDialogMode] = (0, react.useState)(null);
+    const [nameInput, setNameInput] = (0, react.useState)("");
+    const [isMergeDialogOpen, setIsMergeDialogOpen] = (0, react.useState)(false);
+    const [mergeSourceId, setMergeSourceId] = (0, react.useState)("");
+
+    const fileInputRef = (0, react.useRef)(null);
+    const menuRef = (0, react.useRef)(null);
+
+    const activeBook = allBooks.find(book => book.id === selectedId) || allBooks[0] || null;
+    const effectiveSelectedId = activeBook?.id || "";
+
+    if (typeof react.useEffect === "function") {
+      (0, react.useEffect)(() => {
+        if (!isOptionsOpen) return;
+        const handleOutside = event => {
+          if (menuRef.current && !menuRef.current.contains(event.target)) {
+            setIsOptionsOpen(false);
+          }
+        };
+        const handleKey = event => {
+          if (event.key === "Escape") setIsOptionsOpen(false);
+        };
+        document.addEventListener("mousedown", handleOutside);
+        document.addEventListener("keydown", handleKey);
+        return () => {
+          document.removeEventListener("mousedown", handleOutside);
+          document.removeEventListener("keydown", handleKey);
+        };
+      }, [isOptionsOpen]);
+    }
+
+    const persistCharacterBook = (character, nextCharBook) => {
+      const updatedCard = {
+        ...character.card,
+        char_book: nextCharBook
+      };
+      if (typeof updateCharacterByFileName === "function") {
+        updateCharacterByFileName(character.fileName, updatedCard);
+      } else if (typeof setActiveCharacterFileName === "function" && typeof updateActiveCharacter === "function") {
+        setActiveCharacterFileName(character.fileName);
+        updateActiveCharacter(updatedCard);
+      }
+    };
+
+    const handleUpdateEntries = nextEntries => {
+      if (!activeBook) return;
+      if (activeBook.kind === "standalone") {
+        updateLorebook({
+          ...activeBook.record,
+          book: {
+            ...(activeBook.record.book || {}),
+            entries: nextEntries
+          }
+        });
+      } else {
+        persistCharacterBook(activeBook.character, {
+          ...(activeBook.character.card?.char_book || {}),
+          entries: nextEntries
+        });
+      }
+    };
+
+    const handleToggleGlobal = () => {
+      if (!activeBook) return;
+      const nextGlobal = !activeBook.isGlobal;
+      if (activeBook.kind === "standalone") {
+        updateLorebook({
+          ...activeBook.record,
+          isGlobal: nextGlobal,
+          book: {
+            ...(activeBook.record.book || {}),
+            isGlobal: nextGlobal
+          }
+        });
+      } else {
+        persistCharacterBook(activeBook.character, {
+          ...(activeBook.character.card?.char_book || { entries: [] }),
+          isGlobal: nextGlobal
+        });
+      }
+      showToast(
+        nextGlobal
+          ? `Đã bật áp dụng toàn cầu cho "${activeBook.name}".`
+          : `Đã bỏ áp dụng toàn cầu cho "${activeBook.name}".`,
+        "success"
+      );
+    };
+
+    const openNameDialog = mode => {
+      setNameDialogMode(mode);
+      if (mode === "rename" && activeBook) setNameInput(activeBook.name);
+      else if (mode === "duplicate" && activeBook) setNameInput(`${activeBook.name.replace(/\s*\(Mặc định\)$/, "")} (Bản sao)`);
+      else setNameInput("");
+    };
+
+    const handleConfirmNameDialog = async () => {
+      const cleanName = nameInput.trim();
+      if (!cleanName) {
+        showToast("Tên sổ tay không được để trống.", "error");
+        return;
+      }
+      try {
+        if (nameDialogMode === "create") {
+          if (typeof createLorebook === "function") {
+            await createLorebook(cleanName, []);
+          } else {
+            await updateLorebook({ name: cleanName, isGlobal: false, book: { name: cleanName, entries: [] } });
+          }
+          setSelectedId(cleanName);
+          showToast(`Đã tạo sổ tay "${cleanName}".`, "success");
+        } else if (nameDialogMode === "rename" && activeBook?.kind === "standalone") {
+          if (typeof renameLorebook === "function") {
+            await renameLorebook(activeBook.name, cleanName);
+            setSelectedId(cleanName);
+            showToast(`Đã đổi tên thành "${cleanName}".`, "success");
+          }
+        } else if (nameDialogMode === "duplicate" && activeBook) {
+          if (typeof createLorebook === "function") {
+            await createLorebook(cleanName, activeBook.entries, { isGlobal: false });
+          }
+          setSelectedId(cleanName);
+          showToast(`Đã nhân bản thành sổ tay độc lập "${cleanName}".`, "success");
+        }
+        setNameDialogMode(null);
+      } catch (dialogError) {
+        showToast(`Lỗi: ${dialogError instanceof Error ? dialogError.message : String(dialogError)}`, "error");
+      }
+    };
+
+    const mergeCandidates = allBooks.filter(book => book.id !== effectiveSelectedId);
+
+    const openMergeDialog = () => {
+      if (!activeBook) return;
+      setMergeSourceId(mergeCandidates[0]?.id || "");
+      setIsMergeDialogOpen(true);
+    };
+
+    const handleConfirmMerge = () => {
+      if (!activeBook || !mergeSourceId) {
+        setIsMergeDialogOpen(false);
+        return;
+      }
+      const sourceBook = allBooks.find(book => book.id === mergeSourceId);
+      if (!sourceBook) {
+        setIsMergeDialogOpen(false);
+        return;
+      }
+      const cloned = JSON.parse(JSON.stringify(sourceBook.entries || [])).map((entry, idx) => ({
+        ...entry,
+        uid: `merged_${Date.now()}_${idx}_${Math.random().toString(36).slice(2, 7)}`,
+        source_lorebook: undefined,
+        enabled: entry.enabled !== false
+      }));
+      handleUpdateEntries([...activeBook.entries, ...cloned]);
+      showToast(`Đã gộp ${cloned.length} quy tắc từ "${sourceBook.name}".`, "success");
+      setIsMergeDialogOpen(false);
+    };
+
+    const handleDeleteBook = () => {
+      if (!activeBook || activeBook.kind !== "standalone") return;
+      if (window.confirm(`Bạn có chắc chắn muốn xóa sổ tay "${activeBook.name}" không?`)) {
+        deleteLorebook(activeBook.name);
+        const remaining = allBooks.find(book => book.id !== activeBook.id);
+        setSelectedId(remaining?.id || "");
+      }
+    };
+
+    const runMenuAction = action => {
+      setIsOptionsOpen(false);
+      action();
+    };
+
+    const isCharacterDefault = activeBook?.kind === "character";
+
     return (0, jsxRuntime.jsxs)("div", {
-      className: "lorebook-library h-full flex flex-col",
-      children: [(0, jsxRuntime.jsxs)("div", {
-        className: "library-toolbar mb-6",
-        children: [(0, jsxRuntime.jsxs)("div", {
-          children: [(0, jsxRuntime.jsxs)("h2", {
-            className: "text-2xl font-bold text-white",
-            children: ["Thư viện Sổ tay Thế giới", (0, jsxRuntime.jsx)("span", {
-              className: "sidebar-count",
-              children: lorebooks.length
-            })]
-          }), (0, jsxRuntime.jsx)("p", {
-            className: "text-sm text-slate-400 mt-1",
-            children: "Quản lý kiến thức nền và dữ liệu thế giới dùng lại."
-          })]
-        }), (0, jsxRuntime.jsxs)("label", {
-          className: "sidebar-search library-search",
-          children: [(0, jsxRuntime.jsx)(Icon, {
-            name: "search",
-            className: "h-4 w-4"
-          }), (0, jsxRuntime.jsx)("input", {
-            type: "search",
-            value: searchQuery,
-            onChange: event => setSearchQuery(event.target.value),
-            placeholder: "Tìm sổ tay...",
-            "aria-label": "Tìm sổ tay thế giới"
-          })]
-        })]
-      }), error && (0, jsxRuntime.jsxs)("div", {
-        className: "bg-red-900/30 border border-red-500/50 text-red-200 px-4 py-3 rounded-lg mb-6 flex items-center gap-3",
-        children: [(0, jsxRuntime.jsx)("svg", {
-          "aria-hidden": "true",
-          xmlns: "http://www.w3.org/2000/svg",
-          className: "h-5 w-5",
-          viewBox: "0 0 20 20",
-          fill: "currentColor",
-          children: (0, jsxRuntime.jsx)("path", {
-            fillRule: "evenodd",
-            d: "M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z",
-            clipRule: "evenodd"
+      className: "max-w-4xl mx-auto space-y-5",
+      children: [
+        (0, jsxRuntime.jsxs)("div", {
+          className: "bg-slate-800/50 p-4 rounded-xl border border-slate-700/60 space-y-3",
+          children: [
+            (0, jsxRuntime.jsx)("h2", {
+              className: "text-xl font-bold text-slate-100",
+              children: "Sổ tay Thế giới"
+            }),
+            (0, jsxRuntime.jsxs)("div", {
+              className: "flex items-center gap-3",
+              children: [
+                (0, jsxRuntime.jsx)("select", {
+                  "aria-label": "Chọn sổ tay thế giới",
+                  value: effectiveSelectedId,
+                  onChange: event => setSelectedId(event.target.value),
+                  className: "flex-grow min-w-0 bg-slate-900 border border-slate-700 rounded-lg px-3 py-2.5 text-sm font-medium text-slate-100 focus:outline-none focus:ring-2 focus:ring-sky-500",
+                  children: allBooks.length === 0
+                    ? (0, jsxRuntime.jsx)("option", { value: "", children: "Chưa có sổ tay nào" })
+                    : allBooks.map(book => (0, jsxRuntime.jsx)("option", {
+                        value: book.id,
+                        children: book.label
+                      }, book.id))
+                }),
+                (0, jsxRuntime.jsxs)("div", {
+                  ref: menuRef,
+                  className: "relative flex-shrink-0",
+                  children: [
+                    (0, jsxRuntime.jsx)("button", {
+                      type: "button",
+                      "aria-haspopup": "menu",
+                      "aria-expanded": isOptionsOpen ? "true" : "false",
+                      onClick: () => setIsOptionsOpen(open => !open),
+                      className: "px-3.5 py-2.5 bg-slate-700 hover:bg-slate-600 text-slate-100 text-sm font-semibold rounded-lg border border-slate-600 focus:outline-none focus:ring-2 focus:ring-sky-500",
+                      children: "Tùy chọn khác"
+                    }),
+                    isOptionsOpen && (0, jsxRuntime.jsxs)("div", {
+                      role: "menu",
+                      "aria-label": "Tùy chọn Sổ tay Thế giới",
+                      className: "absolute right-0 mt-2 w-56 bg-slate-900 border border-slate-700 rounded-xl shadow-xl py-1.5 z-30",
+                      children: [
+                        (0, jsxRuntime.jsx)("button", {
+                          type: "button",
+                          role: "menuitem",
+                          onClick: () => runMenuAction(() => openNameDialog("create")),
+                          className: "w-full text-left px-4 py-2.5 text-sm text-slate-200 hover:bg-slate-800",
+                          children: "Tạo mới sổ tay"
+                        }),
+                        !isCharacterDefault && (0, jsxRuntime.jsx)("button", {
+                          type: "button",
+                          role: "menuitem",
+                          disabled: !activeBook,
+                          onClick: () => runMenuAction(() => openNameDialog("rename")),
+                          className: "w-full text-left px-4 py-2.5 text-sm text-slate-200 hover:bg-slate-800 disabled:opacity-40 disabled:cursor-not-allowed",
+                          children: "Đổi tên"
+                        }),
+                        (0, jsxRuntime.jsx)("button", {
+                          type: "button",
+                          role: "menuitem",
+                          disabled: !activeBook,
+                          onClick: () => runMenuAction(() => openNameDialog("duplicate")),
+                          className: "w-full text-left px-4 py-2.5 text-sm text-slate-200 hover:bg-slate-800 disabled:opacity-40 disabled:cursor-not-allowed",
+                          children: "Nhân bản"
+                        }),
+                        (0, jsxRuntime.jsx)("button", {
+                          type: "button",
+                          role: "menuitem",
+                          disabled: !activeBook || mergeCandidates.length === 0,
+                          onClick: () => runMenuAction(openMergeDialog),
+                          className: "w-full text-left px-4 py-2.5 text-sm text-slate-200 hover:bg-slate-800 disabled:opacity-40 disabled:cursor-not-allowed",
+                          children: "Gộp"
+                        }),
+                        (0, jsxRuntime.jsx)("button", {
+                          type: "button",
+                          role: "menuitem",
+                          disabled: !activeBook,
+                          onClick: () => runMenuAction(handleToggleGlobal),
+                          className: "w-full text-left px-4 py-2.5 text-sm text-sky-300 hover:bg-slate-800 disabled:opacity-40 disabled:cursor-not-allowed",
+                          children: activeBook?.isGlobal ? "Bỏ áp dụng toàn cầu" : "Áp dụng toàn cầu"
+                        }),
+                        (0, jsxRuntime.jsx)("button", {
+                          type: "button",
+                          role: "menuitem",
+                          onClick: () => runMenuAction(() => fileInputRef.current?.click()),
+                          className: "w-full text-left px-4 py-2.5 text-sm text-slate-200 hover:bg-slate-800",
+                          children: "Nhập"
+                        }),
+                        (0, jsxRuntime.jsx)("button", {
+                          type: "button",
+                          role: "menuitem",
+                          disabled: !activeBook,
+                          onClick: () => runMenuAction(() => setIsExportDialogOpen(true)),
+                          className: "w-full text-left px-4 py-2.5 text-sm text-slate-200 hover:bg-slate-800 disabled:opacity-40 disabled:cursor-not-allowed",
+                          children: "Xuất"
+                        }),
+                        !isCharacterDefault && (0, jsxRuntime.jsx)("button", {
+                          type: "button",
+                          role: "menuitem",
+                          disabled: !activeBook,
+                          onClick: () => runMenuAction(handleDeleteBook),
+                          className: "w-full text-left px-4 py-2.5 text-sm text-red-400 hover:bg-red-950/60 disabled:opacity-40 disabled:cursor-not-allowed",
+                          children: "Xóa"
+                        })
+                      ]
+                    })
+                  ]
+                })
+              ]
+            }),
+            error && (0, jsxRuntime.jsx)("p", {
+              className: "text-red-400 text-xs p-2 bg-red-900/30 rounded",
+              children: error
+            }),
+            (0, jsxRuntime.jsx)("input", {
+              ref: fileInputRef,
+              type: "file",
+              "aria-label": "Nhập sổ tay JSON",
+              className: "sr-only",
+              accept: ".json",
+              multiple: true,
+              onChange: event => {
+                if (event.target.files && event.target.files.length > 0) {
+                  loadLorebooks(event.target.files);
+                  event.target.value = "";
+                }
+              }
+            })
+          ]
+        }),
+        activeBook && LorebookEntryList
+          ? (0, jsxRuntime.jsx)(LorebookEntryList, {
+              entries: activeBook.entries,
+              onUpdate: handleUpdateEntries
+            })
+          : (0, jsxRuntime.jsx)("div", {
+              className: "flex items-center justify-center py-16 bg-slate-800/30 rounded-xl border-2 border-dashed border-slate-700",
+              children: (0, jsxRuntime.jsx)("p", {
+                className: "text-center text-slate-500 font-semibold",
+                children: "Chưa có sổ tay nào. Hãy tạo mới hoặc nhập từ Tùy chọn khác."
+              })
+            }),
+        nameDialogMode && (0, jsxRuntime.jsx)("div", {
+          className: "fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4",
+          onClick: () => setNameDialogMode(null),
+          children: (0, jsxRuntime.jsxs)("div", {
+            role: "dialog",
+            "aria-modal": "true",
+            "aria-label": nameDialogMode === "create" ? "Tạo mới sổ tay" : nameDialogMode === "rename" ? "Đổi tên sổ tay" : "Nhân bản sổ tay",
+            className: "w-full max-w-sm bg-slate-900 border border-slate-700 rounded-xl shadow-2xl p-5 space-y-4",
+            onClick: event => event.stopPropagation(),
+            children: [
+              (0, jsxRuntime.jsx)("h3", {
+                className: "text-lg font-bold text-slate-100",
+                children: nameDialogMode === "create" ? "Tạo mới sổ tay" : nameDialogMode === "rename" ? "Đổi tên sổ tay" : "Nhân bản thành sổ tay độc lập"
+              }),
+              (0, jsxRuntime.jsx)("input", {
+                type: "text",
+                "aria-label": "Tên sổ tay",
+                value: nameInput,
+                onChange: event => setNameInput(event.target.value),
+                placeholder: "Nhập tên sổ tay...",
+                className: "w-full bg-slate-800 border border-slate-600 rounded-lg px-3 py-2 text-sm text-slate-100 focus:outline-none focus:ring-2 focus:ring-sky-500"
+              }),
+              (0, jsxRuntime.jsxs)("div", {
+                className: "flex justify-end gap-2",
+                children: [
+                  (0, jsxRuntime.jsx)("button", {
+                    type: "button",
+                    onClick: () => setNameDialogMode(null),
+                    className: "px-4 py-2 rounded-lg bg-slate-700 hover:bg-slate-600 text-slate-200 text-sm font-semibold",
+                    children: "Hủy"
+                  }),
+                  (0, jsxRuntime.jsx)("button", {
+                    type: "button",
+                    onClick: handleConfirmNameDialog,
+                    className: "px-4 py-2 rounded-lg bg-sky-600 hover:bg-sky-500 text-white text-sm font-semibold",
+                    children: "Đồng ý"
+                  })
+                ]
+              })
+            ]
           })
-        }), error]
-      }), (0, jsxRuntime.jsx)("input", {
-        ref: fileInputRef,
-        type: "file",
-        "aria-label": "Nhập sổ tay JSON",
-        className: "sr-only",
-        accept: ".json",
-        onChange: event => {
-          event.target.files && event.target.files.length > 0 && (loadLorebooks(event.target.files), event.target.value = "");
-        },
-        multiple: true
-      }), (0, jsxRuntime.jsxs)("div", {
-        className: "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 pb-10",
-        children: [(0, jsxRuntime.jsx)(LorebookUploadControl, {
-          onUpload: () => fileInputRef.current?.click(),
-          isLoading: isLoading
-        }), filteredLorebooks.map(lorebook => (0, jsxRuntime.jsx)(LorebookListItem, {
-          lorebook: lorebook,
-          onEdit: () => setActiveLorebookName(lorebook.name),
-          onDelete: () => (name => {
-            window.confirm(`Bạn có chắc chắn muốn xóa sổ tay "${name}" không?`) && deleteLorebook(name);
-          })(lorebook.name)
-        }, lorebook.name)), searchQuery && 0 === filteredLorebooks.length && (0, jsxRuntime.jsx)("div", {
-          className: "col-span-full rounded-xl border border-dashed border-slate-700 p-8 text-center text-sm text-slate-500",
-          children: "Không tìm thấy sổ tay phù hợp."
-        })]
-      }), activeLorebook && (0, jsxRuntime.jsx)(LorebookManager, {
-        initialEntries: activeLorebook.book.entries || [],
-        onSave: entries => {
-          if (!activeLorebook) return;
-          let updatedLorebook = {
-            ...activeLorebook,
-            book: {
-              ...activeLorebook.book,
-              entries: entries
-            }
-          };
-          updateLorebook(updatedLorebook);
-          setActiveLorebookName(null);
-        },
-        onClose: () => setActiveLorebookName(null),
-        onExport: () => {
-          activeLorebook && setIsExportDialogOpen(true);
-        },
-        onDelete: () => {
-          activeLorebook && window.confirm(`Bạn có chắc chắn muốn xóa sổ tay "${activeLorebook.name}" không?`) && (deleteLorebook(activeLorebook.name), setActiveLorebookName(null));
-        },
-        characterId: `global_lb_${activeLorebook.name}`
-      }), (0, jsxRuntime.jsx)(FileNameDialog, {
-        isOpen: isExportDialogOpen,
-        onClose: () => setIsExportDialogOpen(false),
-        onConfirm: fileName => {
-          activeLorebook && ((lorebook, fileName) => {
+        }),
+        isMergeDialogOpen && (0, jsxRuntime.jsx)("div", {
+          className: "fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4",
+          onClick: () => setIsMergeDialogOpen(false),
+          children: (0, jsxRuntime.jsxs)("div", {
+            role: "dialog",
+            "aria-modal": "true",
+            "aria-label": "Gộp sổ tay",
+            className: "w-full max-w-sm bg-slate-900 border border-slate-700 rounded-xl shadow-2xl p-5 space-y-4",
+            onClick: event => event.stopPropagation(),
+            children: [
+              (0, jsxRuntime.jsx)("h3", {
+                className: "text-lg font-bold text-slate-100",
+                children: "Gộp sổ tay"
+              }),
+              (0, jsxRuntime.jsx)("select", {
+                "aria-label": "Chọn sổ tay cần gộp",
+                value: mergeSourceId,
+                onChange: event => setMergeSourceId(event.target.value),
+                className: "w-full bg-slate-800 border border-slate-600 rounded-lg px-3 py-2.5 text-sm text-slate-100 focus:outline-none focus:ring-2 focus:ring-sky-500",
+                children: mergeCandidates.map(book => (0, jsxRuntime.jsx)("option", {
+                  value: book.id,
+                  children: book.label
+                }, book.id))
+              }),
+              (0, jsxRuntime.jsxs)("div", {
+                className: "flex justify-end gap-2",
+                children: [
+                  (0, jsxRuntime.jsx)("button", {
+                    type: "button",
+                    onClick: () => setIsMergeDialogOpen(false),
+                    className: "px-4 py-2 rounded-lg bg-slate-700 hover:bg-slate-600 text-slate-200 text-sm font-semibold",
+                    children: "Hủy"
+                  }),
+                  (0, jsxRuntime.jsx)("button", {
+                    type: "button",
+                    disabled: !mergeSourceId,
+                    onClick: handleConfirmMerge,
+                    className: "px-4 py-2 rounded-lg bg-sky-600 hover:bg-sky-500 text-white text-sm font-semibold disabled:opacity-40",
+                    children: "Đồng ý"
+                  })
+                ]
+              })
+            ]
+          })
+        }),
+        (0, jsxRuntime.jsx)(FileNameDialog, {
+          isOpen: isExportDialogOpen,
+          onClose: () => setIsExportDialogOpen(false),
+          onConfirm: fileName => {
+            if (!activeBook) return;
             try {
-              let book = lorebook.book;
-              let downloadUrl = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(book, null, 2));
-              let anchor = document.createElement("a");
+              const payload = activeBook.kind === "standalone"
+                ? activeBook.record.book
+                : { name: activeBook.name, entries: activeBook.entries };
+              const downloadUrl = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(payload, null, 2));
+              const anchor = document.createElement("a");
               anchor.setAttribute("href", downloadUrl);
               anchor.setAttribute("download", fileName);
               document.body.appendChild(anchor);
               anchor.click();
               anchor.remove();
-            } catch (error) {
-              console.error("Failed to export lorebook:", error);
-              alert("An error occurred while trying to export the lorebook file.");
+            } catch (exportError) {
+              console.error("Failed to export lorebook:", exportError);
+              showToast("Lỗi khi xuất sổ tay.", "error");
             }
-          })(activeLorebook, fileName);
-        },
-        initialFileName: activeLorebook?.name || "Lorebook",
-        title: "Xuất Sổ tay Thế giới",
-        fileExtension: ".json"
-      })]
+          },
+          initialFileName: activeBook?.name?.replace(/\s*\(Mặc định\)$/, "") || "lorebook",
+          title: "Xuất Sổ tay Thế giới",
+          fileExtension: ".json"
+        })
+      ]
     });
   };
 }

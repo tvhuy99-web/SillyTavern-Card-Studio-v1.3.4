@@ -1,8 +1,6 @@
 import { ANDROID_PLUGINS, requireNativePromiseBridge, awaitNativeDeadline, acquireNativeListener, releaseNativeListener } from '../../../recovered/platform/android/native-bridge.js';
 import { createConnectionRepository } from '../common/connection-repository.js';
-// Experimental Android AI Studio WebView text adapter.
-// Emits true UI-observed partial text updates (not fabricated SSE).
-// Does not access credentials, cookies, tokens or undocumented endpoints.
+
 const AI_STUDIO_SOURCE = 'aistudio';
 
 function log(stage, data = {}, level = 'state') {
@@ -11,7 +9,6 @@ function log(stage, data = {}, level = 'state') {
 
 const bridge = requireNativePromiseBridge;
 
-// "default" means leave the model selection to the signed-in AI Studio page.
 export function resolveAiStudioWebModelId(model) {
   const id = String(model ?? '').trim();
   return id === 'default' || id === 'web_default' ? '' : id;
@@ -103,9 +100,7 @@ export function createAiStudioTextProvider({requestTimeoutMs = 510000, listenerT
     if (outerSignal?.aborted) throw new DOMException('Stopped', 'AbortError');
     const listener = await acquireNativeListener(listenerAPI, 'textProgress', event => {
       if (event?.requestId !== requestId || signal?.aborted) return;
-      // AI Studio may rewrite previously rendered Markdown and thinking text.
-      // Always send the FULL current text; the consumer replaces its preview.
-      // Holding only the latest snapshot also avoids a slow UI backlog.
+
       if (event?.replace !== true) return;
       latestSnapshot = String(event?.text ?? '');
       latestReasoning = typeof event?.reasoning==='string'?event.reasoning:null;

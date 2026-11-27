@@ -1,6 +1,3 @@
-// Factories receive the existing React/runtime bindings lazily via getDependencies().
-// Mechanically extracted for F02.07 while preserving original component logic and contracts.
-
 export function createCharacterDialogueSection(getDependencies) {
   return function CharacterDialogueSection({
     card: card,
@@ -133,7 +130,7 @@ export function createCharacterDialogueSection(getDependencies) {
             message: "Đang dịch..."
           }) : (0, jsxRuntime.jsxs)(jsxRuntime.Fragment, {
             children: [(0, jsxRuntime.jsx)("span", {
-              children: "✨"
+              children: ""
             }), " Dịch toàn bộ Lời chào (AI)"]
           })
         })

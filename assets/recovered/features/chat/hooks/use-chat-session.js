@@ -13,7 +13,6 @@ function updateSessionVisualState(state, key, value) {
   state.setSessionData({ visualState: { ...state.visualState, [field]: next } });
 }
 
-/** Story queue ownership is independent of the rendering callback's snapshot. */
 export function createStoryAdvance({ readState, getRevision, sendMessage, saveSession, isSummarizing, expectedSessionId = readState().sessionId, expectedRevision = getRevision() }) {
   return async function advanceStoryChunk() {
     const state = readState();
@@ -35,7 +34,7 @@ export function createChatSessionHook(dependencies) {
   return function useChatSession(sessionId) {
     const state = dependencies.sessionStore();
     const diagnostics = dependencies.useDiagnostics();
-    dependencies.lorebookStore(); // Retain the original catalog subscription.
+    dependencies.lorebookStore();
     const { saveSession, changePreset, changePersona } = useSessionPersistence(dependencies, sessionId);
     const conversation = dependencies.useConversation();
     const { sendMessage, stopGeneration, interactiveError, handleUserDecision, manualMythicTrigger, handleArenaSelection, handleArenaRetry } = conversation;

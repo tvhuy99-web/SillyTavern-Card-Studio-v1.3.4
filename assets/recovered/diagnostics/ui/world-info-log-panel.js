@@ -1,5 +1,3 @@
-// Recovered application UI. The existing React instance and feature dependencies are injected.
-// Keep the factory boundary until the native React build replaces the recovered host.
 function resolveDiagnosticDeps(getDependencies) {
   const deps = getDependencies();
   return {
@@ -243,7 +241,7 @@ export function createSmartScanLogItem(react, getDependencies) {
         children: [(0, jsxRuntime.jsxs)("summary", {
           className: "cursor-pointer text-[10px] text-slate-400 hover:text-sky-400 font-bold mb-1 flex items-center gap-2",
           children: [(0, jsxRuntime.jsx)("span", {
-            children: "📤 Lời nhắc Gửi đi (Outgoing Prompt)"
+            children: "Lời nhắc Gửi đi (Outgoing Prompt)"
           }), (0, jsxRuntime.jsx)("span", {
             className: " group-open:rotate-90  text-[8px]",
             "aria-hidden": "true",
@@ -268,7 +266,7 @@ export function createSmartScanLogItem(react, getDependencies) {
           className: "flex justify-between items-center mb-1",
           children: [(0, jsxRuntime.jsx)("span", {
             className: "text-[10px] text-green-400 font-bold",
-            children: "📥 Phản hồi Thô (AI Response)"
+            children: "Phản hồi Thô (AI Response)"
           }), (0, jsxRuntime.jsx)(CopyButton, {
             textToCopy: parsedLog.rawResponse,
             label: "Copy JSON",

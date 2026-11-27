@@ -1,6 +1,3 @@
-// Factories receive the existing React/runtime bindings lazily via getDependencies().
-// Mechanically extracted for F02.07 while preserving original component logic and contracts.
-
 export function createPresetBasicSection(getDependencies) {
   return function PresetBasicSection({
     preset: preset,

@@ -13,8 +13,7 @@ for (const platform of ['web','ios']) {
   const host={Capacitor:{...api,getPlatform:()=>platform}};
   assert.equal(getAndroidPlugin(ANDROID_PLUGINS.aiStudio,host),null); assert.equal(getNativePromiseBridge(host),null);
 }
-// A native promise can ignore cancellation forever. Abort locally and address
-// only the request we own, never a later request or a second frame.
+
 {
   const calls=[], native=deferred();
   globalThis.Capacitor={getPlatform:()=> 'android',nativePromise(plugin,method,args){ calls.push({method,args}); return method==='generate'?native.promise:Promise.resolve({}); }};
@@ -28,7 +27,7 @@ for (const platform of ['web','ios']) {
   const before=calls.length, already=new AbortController(); already.abort();
   await assert.rejects(provider.generate({prompt:'test',signal:already.signal}),{name:'AbortError'}); assert.equal(calls.length,before);
 }
-// Stop an active stream after its first snapshot even without a caller signal.
+
 {
   const calls=[], native=deferred(); let event, removed=0;
   globalThis.Capacitor={getPlatform:()=> 'android',Plugins:{AIStudioText:{async addListener(name,fn){event=fn;return {remove(){removed++;}};}}},nativePromise(plugin,method,args){calls.push({method,args});return method==='generate'?native.promise:Promise.resolve({});}};
@@ -41,7 +40,7 @@ for (const platform of ['web','ios']) {
   assert.equal(removed,1); assert.deepEqual(calls.filter(x=>x.method==='cancel'),[{method:'cancel',args:{requestId}}]);
   native.resolve({text:'late'});
 }
-// Abort while listener registration is pending; late listener still gets removed.
+
 {
   const acquisition=deferred(), calls=[]; let removed=0;
   globalThis.Capacitor={getPlatform:()=> 'android',Plugins:{AIStudioText:{addListener(){return acquisition.promise;}}},nativePromise(...args){calls.push(args);return Promise.resolve({});}};
@@ -51,7 +50,7 @@ for (const platform of ['web','ios']) {
   acquisition.resolve({remove(){removed++;}}); await delay(); assert.equal(removed,1); assert.equal(calls.length,0);
 }
 delete globalThis.Capacitor;
-// ONNX transfer passes the same ownership token through begin/append/abort.
+
 {
   const calls=[]; let cancelled=false;
   const provider={id:'embeddinggemma',modelId:'example/model'};
@@ -60,8 +59,7 @@ delete globalThis.Capacitor;
   await within(assert.rejects(copyCachedModelToNative(plugin,provider,()=>{},cache),/write failed/));
   assert.equal(calls.length,3); assert.ok(calls[0][1].importId); assert.equal(calls[1][1].importId,calls[0][1].importId); assert.deepEqual(calls[2][1],calls[0][1]); assert.equal(cancelled,true);
 }
-// Rejecting the SAF picker releases the unconsumed source; duplicate blob
-// exports hold the URL until both queued saves finish.
+
 {
   let cancelled=false;
   await assert.rejects(streamExportUrlToAndroid({url:'blob:cancel',filename:'x',fetcher:async()=>new Response(new ReadableStream({cancel(){cancelled=true;}})),plugin:{beginSave:async()=>{throw Error('picker closed');},appendChunk(){},finishSave(){}}}),/picker closed/);

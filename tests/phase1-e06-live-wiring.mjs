@@ -1,3 +1,4 @@
+import { sourceCompositionPaths } from './helpers/composition-paths.mjs';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { createSessionStore } from '../src/app/state/session-store.js';
@@ -6,7 +7,6 @@ import { createBackupSettings } from '../src/ui/settings/sections/backup-setting
 import { useConnectionSettings } from '../src/ui/settings/settings-controller.js';
 import { createMemoryStorage } from '../src/providers/proxy/persistence.js';
 
-// 1. session-store.js: Es must NOT be called inside the Immer setState updater.
 {
   let insideReducer = false;
   let storeState = null;
@@ -77,7 +77,6 @@ import { createMemoryStorage } from '../src/providers/proxy/persistence.js';
   });
 }
 
-// 2. settings-screens.js (BackupSettings): uses cleanupSessionDiagnostics & __stsBackupRestoreService.restore.
 {
   const jsx = (type, props, key) => ({ type, props, key });
   const wt = { jsx, jsxs: jsx, Fragment: 'Fragment' };
@@ -192,7 +191,6 @@ import { createMemoryStorage } from '../src/providers/proxy/persistence.js';
 
     const tree = BackupSettings();
 
-    // Test cleanup button uses cleanupSessionDiagnostics (no Vt/Wt loop)
     const cleanupBtn = find(tree, node =>
       node.type === 'button' &&
       Array.isArray(node.props.children?.props?.children) &&
@@ -206,7 +204,6 @@ import { createMemoryStorage } from '../src/providers/proxy/persistence.js';
     assert.equal(legacyPutCalls, 0);
     assert.ok(toasts.at(-1)[0].includes('3') && toasts.at(-1)[1] === 'success');
 
-    // Test restore input routes through __stsBackupRestoreService.restore
     const restoreInput = find(tree, node => node.type === 'input' && node.props['aria-label'] === 'Chọn tệp khôi phục');
     assert.ok(restoreInput, 'Restore file input must exist');
     const sampleBackup = { version: 1, dataType: 'full_system_backup', data: { characters: [], presets: [], lorebooks: [], personas: [], chatSessions: [], appSettings: {} } };
@@ -217,7 +214,6 @@ import { createMemoryStorage } from '../src/providers/proxy/persistence.js';
     assert.deepEqual(reloads.slice(-4).sort(), ['characters', 'lorebooks', 'personas', 'presets']);
     assert.equal(toasts.at(-1)[1], 'success');
 
-    // Test partial IDB commit failure still reloads catalogs and reports error toast
     reloads.length = 0;
     const partialErr = new Error('QuotaExceededError on Web Storage');
     partialErr.idbCommitted = true;
@@ -230,7 +226,6 @@ import { createMemoryStorage } from '../src/providers/proxy/persistence.js';
   }
 }
 
-// 3. use-session-persistence.js: passes initialRevision, onOwnershipLost, publishes & subscribes crossTabSync with cleanup.
 {
   let coordinatorArgs = null;
   let cancelTimerCalls = 0;
@@ -339,7 +334,6 @@ import { createMemoryStorage } from '../src/providers/proxy/persistence.js';
   coordinatorArgs.onOwnershipLost(new Error('stale'));
   assert.equal(toasts.at(-1)[1], 'warning');
 
-  // Run all mount effects
   const cleanups = effects.map(fn => fn()).filter(fn => typeof fn === 'function');
   await new Promise(resolve => setImmediate(resolve));
 
@@ -350,22 +344,18 @@ import { createMemoryStorage } from '../src/providers/proxy/persistence.js';
   assert.ok(subscriptions.has('session-claimed'));
   assert.ok(subscriptions.has('restore-completed'));
 
-  // Simulate remote tab claiming the same session
   subscriptions.get('session-claimed')({ type: 'session-claimed', payload: { sessionId: 'sess-99' } });
   assert.equal(cancelTimerCalls, 1);
   assert.ok(invalidations.includes('cross-tab-session-claimed'));
 
-  // Simulate remote tab completing restore
   subscriptions.get('restore-completed')({ type: 'restore-completed', payload: { ok: true } });
   assert.equal(cancelTimerCalls, 2);
   assert.ok(invalidations.includes('cross-tab-restore-completed'));
 
-  // Verify cleanup unsubscribes both cross-tab listeners
   for (const cleanup of cleanups) cleanup();
   assert.deepEqual(unsubscribed.sort(), ['restore-completed', 'session-claimed']);
 }
 
-// 4. settings-controller.js: routes proxy keys and sts_aistudio_show_page through settingsRepository.
 {
   const repoWrites = [];
   const mem = createMemoryStorage({ sts_aistudio_show_page: 'false' });
@@ -445,9 +435,8 @@ import { createMemoryStorage } from '../src/providers/proxy/persistence.js';
   }
 }
 
-// 5. host.js: initializes and injects all 3 E06 services + 3 missing backup keys in Ns.
 {
-  const hostSrc = ['src/app/host.js','src/app/composition/persistence-composition.js','src/app/composition/provider-composition.js','src/app/composition/store-composition.js','src/app/composition/conversation-composition.js','src/app/composition/runtime-composition.js','src/app/composition/ui-composition.js'].map(f => readFileSync(new URL('../' + f, import.meta.url), 'utf8')).join('\n');
+  const hostSrc = sourceCompositionPaths.map(f => readFileSync(new URL('../' + f, import.meta.url), 'utf8')).join('\n');
   assert.ok(hostSrc.includes("createCrossTabSync as __stsCreateCrossTabSync } from '../persistence/cross-tab-sync.js'"));
   assert.ok(hostSrc.includes("createBackupRestoreService as __stsCreateBackupRestoreService } from '../persistence/backup-restore-service.js'"));
   assert.ok(hostSrc.includes("createSettingsRepository as __stsCreateSettingsRepository } from '../state/settings-repository.js'"));
@@ -463,7 +452,6 @@ import { createMemoryStorage } from '../src/providers/proxy/persistence.js';
   assert.ok(hostSrc.includes('get __stsCrossTabSync(){return __stsCrossTabSync}'));
 }
 
-// 6. settings-screens.js: must NOT contain inline restoreBackupSettings( fallback.
 {
   const settingsScreensSrc = readFileSync(new URL('../src/ui/settings/sections/backup-settings.js', import.meta.url), 'utf8');
   assert.equal(settingsScreensSrc.includes('restoreBackupSettings('), false, 'legacy inline restoreBackupSettings fallback must be removed');

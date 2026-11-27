@@ -1,6 +1,3 @@
-// Semantic dependency contract: callers inject named dependencies directly.
-// Factories receive the existing React/runtime bindings lazily to preserve initialization order.
-
 function resolveChatControlDeps(getDependencies) {
   const deps = getDependencies();
   return {
@@ -129,7 +126,7 @@ export function createTokenCountControl(getDependencies) {
         className: 'text-[10px] bg-indigo-600 hover:bg-indigo-500 text-white border border-indigo-400 px-2 py-0.5 rounded shadow-sm   flex items-center gap-1 font-mono',
         title: 'Nhấn để thu gọn',
         children: [
-          jsxRuntime.jsxs('span', { children: ['📝 ', metrics.chars, ' ký tự'] }),
+          jsxRuntime.jsxs('span', { children: ['', metrics.chars, ' ký tự'] }),
           jsxRuntime.jsx('span', { className: 'opacity-60', children: '|' }),
           jsxRuntime.jsxs('span', { className: 'text-indigo-200', children: ['~', metrics.tokens, ' tokens'] }),
         ],
@@ -457,7 +454,7 @@ export function createStoryRevisionDialog(getDependencies) {
                     className: 'text-sm font-bold text-teal-400 mb-4 uppercase tracking-wider flex items-center gap-2',
                     children: [
                       jsxRuntime.jsx('span', { children: 'Bản cải thiện' }),
-                      isLoading && jsxRuntime.jsx('span', { className: 'animate-spin', children: '⏳' }),
+                      isLoading && jsxRuntime.jsx('span', { className: 'text-xs', children: 'Đang xử lý...' }),
                     ],
                   }),
                   jsxRuntime.jsx('div', {
@@ -497,7 +494,6 @@ export function createStoryRevisionDialog(getDependencies) {
                 className: 'px-6 py-2.5 rounded-lg bg-indigo-600/80 hover:bg-indigo-500 font-bold text-white transition-colors disabled:opacity-50 border border-indigo-500/50 flex items-center gap-2',
                 children: [
                   jsxRuntime.jsx('span', { children: 'Thử lại' }),
-                  jsxRuntime.jsx('span', { className: 'text-sm', children: '🔄' }),
                 ],
               }),
               jsxRuntime.jsxs('button', {
@@ -506,7 +502,6 @@ export function createStoryRevisionDialog(getDependencies) {
                 className: 'px-6 py-2.5 rounded-lg bg-teal-600 hover:bg-teal-500 font-bold text-white transition-colors disabled:opacity-50 shadow-lg shadow-teal-900/50 flex items-center gap-2',
                 children: [
                   jsxRuntime.jsx('span', { children: 'Áp dụng bản dịch' }),
-                  jsxRuntime.jsx('span', { className: 'text-sm', children: '✨' }),
                 ],
               }),
             ],

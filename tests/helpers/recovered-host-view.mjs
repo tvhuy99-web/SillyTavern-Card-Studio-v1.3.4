@@ -1,6 +1,3 @@
-// Read the actual emitted owners for architecture assertions that historically
-// inspected a single minified bundle. This is a test-only lexical view, not an
-// executable build transform. Never include historical input or fixtures.
 import { readFileSync } from 'node:fs';
 import { copiedAssets, productionOutput } from '../../build/asset-manifest.mjs';
 const read = path => readFileSync(new URL('../../' + path, import.meta.url), 'utf8');

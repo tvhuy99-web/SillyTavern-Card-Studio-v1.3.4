@@ -10,7 +10,6 @@ import { createHostMethodRouter } from '../../../runtime/card-runtime/host/metho
 import { createRuntimePromptBuilder } from '../../../runtime/card-runtime/host/runtime-prompt.js';
 import { createRuntimeMessageHandler, subscribeRuntimeSession, subscribeRuntimeLorebooks } from '../../../runtime/card-runtime/host/runtime-events.js';
 
-/** Composition adapter from the chat session to the runtime bridge. */
 export function useCardRuntime(dependencies, options) {
   return useRuntimeBridge({
     react: dependencies.react, sessionStore: dependencies.sessionStore, lorebookStore: dependencies.lorebookStore, characterStore: dependencies.characterStore,
@@ -29,7 +28,6 @@ export function useCardRuntime(dependencies, options) {
   }, options);
 }
 
-/** React owns subscriptions and stable callbacks; domain modules own behavior. */
 function useRuntimeBridge(deps, { logSystemMessage, executeSlashCommands, saveSession, changePreset }) {
   const { useMemo, useCallback, useEffect } = deps.react;
   const { sessionStore, lorebookStore, runtimeState } = deps;

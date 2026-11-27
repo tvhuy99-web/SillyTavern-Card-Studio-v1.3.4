@@ -6,8 +6,7 @@ import { createEntityRepositories, prepareCharacterRecord } from '../src/app/per
 import { normalizePresetConfig, normalizePresetList } from '../src/features/presets/prompt-normalizer.js';
 
 assert.deepEqual(APP_DATABASE, { name: 'SillyTavernCardStudioDB', version: 6, stores: { lorebooks: 'name', characters: 'fileName', presets: 'name', chatSessions: 'sessionId', userPersonas: 'id' } });
-// Test the driver independently from repositories. Events are explicitly controlled;
-// this is a transaction protocol simulation, not a real browser storage engine.
+
 let openCount = 0, tx, request;
 const created = [];
 const db = {
@@ -45,7 +44,6 @@ await assert.rejects(aborted, error => error.cause.message === 'ConstraintError'
 const success = database.transaction(['characters'], 'readwrite', (_, result) => result(42));
 await new Promise(resolve => setImmediate(resolve)); tx.oncomplete(); assert.equal(await success, 42);
 
-// Repository contract: inspect the exact set of writes and transaction scope.
 const transactions = [];
 const records = [{ name: 'P', prompts: [], prompt_order: [] }];
 const simulated = {

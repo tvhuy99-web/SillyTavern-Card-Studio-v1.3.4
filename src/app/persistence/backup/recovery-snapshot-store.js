@@ -48,9 +48,6 @@ async function deserializeRecordsFromStorage(records) {
   };
 }
 
-// Durable snapshot store backed by a dedicated IndexedDB database (SillyTavernCardStudioRecoveryDB v1,
-// objectStore "restoreSnapshots", keyPath "journalId") with structured Web Storage fallback when
-// IndexedDB is unavailable (e.g., Node test environments without global indexedDB).
 export function createDurableRecoveryStore({
   indexedDB = typeof globalThis.indexedDB !== 'undefined' ? globalThis.indexedDB : null,
   storage = typeof globalThis.localStorage !== 'undefined' ? globalThis.localStorage : null,

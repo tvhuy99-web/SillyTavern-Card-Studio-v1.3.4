@@ -1,6 +1,3 @@
-// Factories receive the existing React/runtime bindings lazily via getDependencies().
-// Mechanically extracted for F02.07 while preserving original component logic and contracts.
-
 export function createCharacterExtensionsSection(getDependencies) {
   return function CharacterExtensionsSection({
     card: card,
@@ -87,7 +84,10 @@ export function createCharacterDetailSections(getDependencies) {
   return function CharacterDetailSections({
     card: card,
     onUpdate: onUpdate,
-    onOpenLorebook: onOpenLorebook
+    onOpenLorebook: onOpenLorebook,
+    activeTab = "all",
+    avatarSlot = null,
+    tokensSlot = null
   }) {
     const {
       MythicSection,
@@ -174,6 +174,43 @@ export function createCharacterDetailSections(getDependencies) {
         availableLorebooks: lorebooks
       };
     })(card, onUpdate);
+    if (activeTab !== "all") {
+      return (0, jsxRuntime.jsxs)("div", {
+        className: "character-editor space-y-4",
+        children: [
+          activeTab === "basic" && (0, jsxRuntime.jsxs)(jsxRuntime.Fragment, {
+            children: [
+              (0, jsxRuntime.jsx)(CharacterCoreSection, { card, onChange: handleChange }),
+              avatarSlot,
+              (0, jsxRuntime.jsx)(CharacterMetadataSection, { card, onChange: handleChange })
+            ]
+          }),
+          activeTab === "dialogue" && (0, jsxRuntime.jsxs)(jsxRuntime.Fragment, {
+            children: [
+              (0, jsxRuntime.jsx)(CharacterDialogueSection, { card, onUpdate, onChange: handleChange }),
+              (0, jsxRuntime.jsx)(CharacterScenarioSection, { card, onChange: handleChange })
+            ]
+          }),
+          activeTab === "world" && (0, jsxRuntime.jsxs)(jsxRuntime.Fragment, {
+            children: [
+              (0, jsxRuntime.jsx)(CharacterLorebookSection, { card, availableLorebooks, onOpenLorebook, onImport: handleImportLorebook }),
+              (0, jsxRuntime.jsx)(MythicSection, { card, onUpdate })
+            ]
+          }),
+          activeTab === "advanced" && (0, jsxRuntime.jsxs)(jsxRuntime.Fragment, {
+            children: [
+              (0, jsxRuntime.jsx)(CharacterExtensionsSection, {
+                card,
+                onRegexUpdate: handleRegexScriptsUpdate,
+                onTavernUpdate: handleTavernScriptsUpdate,
+                onCardUpdate: onUpdate
+              }),
+              tokensSlot
+            ]
+          })
+        ]
+      });
+    }
     return (0, jsxRuntime.jsxs)("div", {
       className: "character-editor space-y-4",
       children: [(0, jsxRuntime.jsx)(SectionNavigator, {

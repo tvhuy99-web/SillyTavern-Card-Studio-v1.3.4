@@ -1,7 +1,6 @@
 import { openAiStudioSession } from '../../../../m4/providers/aistudio/text.js';
 import { modelTestProps } from './model-test-props.js';
-// Provider-specific render helpers. These are pure render functions, not mounted components.
-// Preserve the previous element tree and hook ownership in the screen controller.
+
 export function renderAiStudioSection({ ModelSelect, modelTest, aiStudioLoading, aiStudioModels, aiStudioStatus, aiStudioVisible, aiStudioVisibilityBusy, changeAiStudioVisibility, loadAiStudioModels, clearAiStudioModels, defaultGeminiModels, jsxRuntime, settings, showToast, updateSetting }) { return jsxRuntime.jsxs("div", {
     className: "space-y-4", children: [jsxRuntime.jsxs("div", {
             className: "bg-slate-900/50 p-4 rounded-lg border border-slate-600 space-y-4", children: [jsxRuntime.jsxs("div", {

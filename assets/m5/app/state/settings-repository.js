@@ -1,7 +1,5 @@
 import { CROSS_TAB_EVENTS } from '../persistence/cross-tab-sync.js';
 
-// Unified write owner for application settings stored in localStorage.
-// Designed for Wave 3 migration of UI and store consumers away from direct localStorage calls.
 export const SETTINGS_STORAGE_KEYS = Object.freeze({
   compatibilityMode: 'st-card-studio:card-runtime:compatibility-mode',
   engineMode: 'st-card-studio:card-runtime:engine-mode',
@@ -57,7 +55,7 @@ export function createSettingsRepository({
       try {
         listener(change);
       } catch {
-        // Keep repository writes isolated from subscriber errors.
+
       }
     }
   }
@@ -146,7 +144,6 @@ export function createSettingsRepository({
     return output;
   }
 
-  // Transactional batch write over localStorage with rollback on QuotaExceededError.
   function setMany(entries, { broadcast = true } = {}) {
     assertWriteAllowed('settings.set');
     if (!storage || typeof storage.setItem !== 'function') {

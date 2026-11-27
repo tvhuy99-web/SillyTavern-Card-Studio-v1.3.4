@@ -11,10 +11,6 @@ import java.util.Locale;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
 
-/**
- * Configures and verifies the AI Studio thinking-level UI control before
- * prompt transfer begins.
- */
 final class AiStudioThinkingController {
     private final Handler handler;
     private final AiStudioDiagnostics diagnostics;
@@ -94,7 +90,7 @@ final class AiStudioThinkingController {
                     "reason", state.optString("reason", "none"), "attempt", attempt + 1));
             if (!state.optBoolean("ok", false)) {
                 if (attempt == 0) {
-                    // Many AI Studio layouts hide thinking under Run settings.
+
                     AiStudioWebViewPolicy.evaluate(webViewController.getWebView(),
                         AiStudioPageScripts.RUN_SETTINGS_EXPAND_JS,
                         opened -> {

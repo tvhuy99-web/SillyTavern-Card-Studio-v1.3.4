@@ -48,7 +48,7 @@ export function composeBackupAndGuards(ctx) {
   var __stsBackupKeys={gemini:geminiSettingsKey,rotation:geminiRotationKey,openrouter:openRouterApiKeyStorageKey,profiles:proxyProfilesKey,password:proxyPasswordKey};
   var __stsBackupStorage={get local(){return globalThis.localStorage},get session(){return globalThis.sessionStorage},connections:recoveryConnections,proxy:recoveryProxy,keys:__stsBackupKeys};
   var __stsBackupRestoreService=__stsCreateBackupRestoreService({repositories:__stsRepositories,storage:__stsBackupStorage,backupOptions:{allowed:backupSettingKeySet,prefix:cardRuntimeStoragePrefix,keys:__stsBackupKeys,proxy:__stsProxyPersistence},crossTabSync:__stsCrossTabSync});
-  ctx.__stsBackupRestoreService = __stsBackupRestoreService;
+  ctx.publishBackupService(__stsBackupRestoreService);
   __stsRepositories.setWriteGuard?.(operation=>__stsBackupRestoreService.assertNotRestoring(operation));
   __stsRepositories.setWriteCoordinator(__stsBackupRestoreService.runOrdinaryWrite);
   __stsSessionWriteQueue.setWriteGuard?.({assertWriteAllowed:operation=>__stsBackupRestoreService.assertNotRestoring(operation),getRestoreEpoch:()=>__stsBackupRestoreService.getRestoreEpoch(),subscribeRestoreLifecycle:listener=>__stsBackupRestoreService.subscribeRestoreLifecycle(listener)});

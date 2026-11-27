@@ -1,6 +1,3 @@
-// Recovered application UI. The existing React instance and feature dependencies are injected.
-// Semantic dependency contract: callers inject named dependencies directly.
-
 function downloadJsonFile(payload, fileName) {
   const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
   const objectUrl = URL.createObjectURL(blob);
@@ -118,7 +115,6 @@ export function createRpgImportDialog(getDependencies) {
         jsxRuntime.jsxs('div', {
           className: 'bg-slate-800/50 border border-slate-700 rounded-xl p-6 text-center',
           children: [
-            jsxRuntime.jsx('div', { className: 'text-4xl mb-4', children: '📤' }),
             jsxRuntime.jsx('h3', {
               className: 'text-lg font-bold text-emerald-400 mb-2',
               children: 'Xuất Dữ Liệu',
@@ -143,7 +139,6 @@ export function createRpgImportDialog(getDependencies) {
             jsxRuntime.jsxs('div', {
               className: 'flex items-center gap-2 mb-4',
               children: [
-                jsxRuntime.jsx('span', { className: 'text-2xl', children: '📥' }),
                 jsxRuntime.jsx('h3', {
                   className: 'text-lg font-bold text-sky-400',
                   children: 'Nhập Dữ Liệu',

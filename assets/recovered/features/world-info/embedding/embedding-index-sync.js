@@ -23,9 +23,6 @@ export async function syncEmbeddingIndexOwned(context, characterId, entries, onP
     loadIndex,
   } = context;
 
-  // The shipped app already mirrors console.warn/error into
-  // "1. BẢNG ĐIỀU KHIỂN HỆ THỐNG (CONSOLE)" (category: console).
-  // This path works without rebuilding the legacy minified UI bridge.
   const consoleLogger = (level, _category, message) => {
     if (level === 'error') console.error(message);
     else console.warn(message);
@@ -113,9 +110,6 @@ export async function syncEmbeddingIndexOwned(context, characterId, entries, onP
     let batchPlanner = profile ? createLocalEmbeddingBatchPlanner(profile) : null;
     let nativeGemma2Profiled = false;
 
-    // Existing users may already have all 334 entries indexed. Allow them to
-    // benchmark the new CPU/GPU path on their next Sync without modifying or
-    // rewriting any vectors.
     if (provider.id === 'embeddinggemma2' && pending.length === 0 && searchable.length > 0) {
       currentStep = 'đo LiteRT trên Lorebook đã đồng bộ';
       journal.stage('LiteRT-LM [ACCEL] Tất cả mục đã có chỉ mục; thử tăng tốc mà không tạo lại vectors');
@@ -158,8 +152,6 @@ export async function syncEmbeddingIndexOwned(context, characterId, entries, onP
         });
       }
 
-      // Entry batch size does not bound the number of chunks: a single long lorebook
-      // entry can yield dozens of chunks and kill the Android WebView process.
       const texts = flattened.map(item => item.text);
       if (provider.id === 'embeddinggemma2' && !nativeGemma2Profiled && texts.length) {
         nativeGemma2Profiled = true;
@@ -170,8 +162,7 @@ export async function syncEmbeddingIndexOwned(context, characterId, entries, onP
           currentStep = detail;
           journal.info(detail);
         });
-        // Prefer the measured LiteRT batch to WASM-specific WebView heuristics,
-        // but never exceed the user's batch setting or the device RAM limit.
+
         const tunedBatch = Math.max(1, Math.min(
           Number(preference.preferredBatch) || 2,
           profile?.maxBatch || 1,
@@ -280,7 +271,7 @@ export async function syncEmbeddingIndexOwned(context, characterId, entries, onP
     journal.fail(currentStep, error);
     throw error;
   } finally {
-    // On Android the ONNX runtime competes with the chat UI for one WebView memory budget.
+
     if (isAndroidHost() && provider.kind === 'local') {
       journal.stage('Giải phóng runtime embedding offline để trả RAM cho Android WebView');
       try {

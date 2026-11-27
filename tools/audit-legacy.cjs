@@ -1,4 +1,3 @@
-// Read-only scope audit. Install TypeScript 5.8.3 locally or supply TYPESCRIPT_PATH.
 const path = require('node:path');
 const ts = require(process.env.TYPESCRIPT_PATH || 'typescript');
 const root = path.resolve(__dirname, '..');

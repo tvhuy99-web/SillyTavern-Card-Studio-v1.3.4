@@ -1,5 +1,3 @@
-// Extracted custom hook. Its caller preserves the original unconditional hook order.
-
 function dispatchToastError(message) {
   window.dispatchEvent(new CustomEvent('toast', {
     detail: { message, type: 'error' },

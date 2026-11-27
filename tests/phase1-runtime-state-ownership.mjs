@@ -45,7 +45,7 @@ await rpc('character.data.save',{data:{foo:1}}); assert.deepEqual(await rpc('cha
 await rpc('character.extension.write',{key:'new',value:{enabled:true}}); assert.deepEqual(state.card.extensions,{other:1,new:{enabled:true}}); assert.deepEqual(state.extensionSettings.__cardRuntimeCardExtensions,state.card.extensions);
 assert.deepEqual(await rpc('regex.replace',{regexes:[{id:'r'}]}),[{id:'r'}]); assert.deepEqual(state.card.extensions.new,{enabled:true});
 const count=writes.length; active=false; await assert.rejects(rpc('variables.replace',{variables:{bad:1}}),/inactive/); assert.equal(writes.length,count); active=true;
-let release; wait=new Promise(resolve=>{release=resolve;}); const pending=rpc('variables.replace',{option:{type:'message',message_id:0},variables:{value:3}}); // message persistence does not wait for saveSession
+let release; wait=new Promise(resolve=>{release=resolve;}); const pending=rpc('variables.replace',{option:{type:'message',message_id:0},variables:{value:3}});
 await pending;
 const stale=rpc('extension.settings.save',{settings:{old:true}}); active=false; release(); await assert.rejects(stale,/inactive/); wait=null; active=true;
 fail=true; await assert.rejects(rpc('variables.replace',{variables:{hp:3}}),/save failed/); fail=false;

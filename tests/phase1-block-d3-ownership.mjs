@@ -24,7 +24,7 @@ a.resolve(Response.json({data:[{id:'old-account'}]}));await pending;
 assert.deepEqual(catalog.readProxyTarget(targetA),[]);assert.equal(displayed.at(-1)[0].id,'native');
 assert.equal(calls[0].headers.Authorization,'Bearer a-key');assert.equal(calls[1].headers['x-goog-api-key'],'b-key');assert.match(calls[1].url,/v1beta\/models/);
 assert.ok(!JSON.stringify(storage.toJSON()).includes('native'));
-// All 53 registered methods have exactly one policy classification.
+
 const methods=[...SAFE_RPC_METHODS,...FULL_ONLY_RPC_METHODS];assert.equal(new Set(methods).size,53);assert.deepEqual(methods.sort(),[...HOST_RPC_METHODS].sort());
 const safe={hasAttribute:()=>true},full={hasAttribute:()=>false};
 const state={card:{name:'Hero',char_book:{name:'Embedded'}}};
@@ -33,16 +33,16 @@ for(const method of SAFE_RPC_METHODS)assert.doesNotThrow(()=>authorizeFrameRpc({
 for(const type of ['global','preset','character','extension'])assert.throws(()=>authorizeFrameRpc({method:'variables.replace',args:{option:{type}}},safe,state),/Full compatibility/);
 assert.throws(()=>authorizeFrameRpc({method:'lorebook.entries.create',args:{name:'External'}},safe,state),/Full compatibility/);
 assert.throws(()=>authorizeFrameRpc({method:'unknown',args:{}},safe,state),/Full compatibility/);
-// A reused WindowProxy may emit request ID 1 again in a new document.
+
 const source={responses:[],postMessage(message){this.responses.push(message);}};let doc='old';const frame={getAttribute:key=>key==='srcdoc'?doc:null};
 const identity=createFrameIdentityReader(()=>frame);const dispatcher=createHostRpcDispatcher({isActiveSource:()=>true,getFrameIdentity:identity,getSessionRevision:()=>1,getSessionId:()=> 's',validatePayload(){},clone:structuredClone});
 const send=()=>dispatcher.dispatch({source,data:{type:'CARD_RUNTIME_RPC',requestId:'same',method:'chat.get',args:{}}},{execute:()=>doc});
 await send();await send();assert.equal(source.responses.length,1);doc='new';await send();assert.equal(source.responses.length,2);assert.equal(source.responses.at(-1).result,'new');
-// Safe prompt generation cannot commit global macro writes; state edits while awaiting invalidate results.
+
 let live={sessionId:'s',card:{name:'Hero'},preset:{},messages:[],variables:{x:1},visualState:{},longTermSummaries:[]};let writes=0,globalWrites=0;live.setSessionData=patch=>{writes++;live={...live,...patch};};let gate=defer();
 const build=createRuntimePromptBuilder({readState:()=>live,readLorebooks:()=>[],resolvePreset:()=>live.preset,turnPolicy:{modelContextContent:m=>m.content},baseSections:()=>({baseSections:[]}),buildPrompt:()=>gate.promise,readContextSettings:()=>({}),writeGlobalVariables:()=>globalWrites++,publish(){}});
 const run=build(false,{user_input:'hello'},()=>{}, {allowGlobalWrites:false});gate.resolve({fullPrompt:'prompt',updatedVariables:{x:2},updatedGlobalVariables:{bad:1}});assert.equal(await run,'prompt');assert.equal(globalWrites,0);assert.equal(writes,1);
 gate=defer();const obsolete=build(false,{user_input:'hello'},()=>{});live={...live,variables:{x:9}};gate.resolve({fullPrompt:'old',updatedVariables:{x:0}});await assert.rejects(obsolete,/state changed/);assert.equal(live.variables.x,9);
-// Summary chunk size changed while provider was running: discard stale result.
+
 let summaryState={sessionId:'s',card:{name:'Hero'},messages:[{id:'u',role:'user',content:'user'},{id:'m',role:'model',content:'reply'}],longTermSummaries:[],summaryQueue:[],isSummarizing:false};summaryState.setSessionData=patch=>{summaryState={...summaryState,...patch};};let size=1;const ol=()=>summaryState;ol.getState=()=>summaryState;gate=defer();const summary=useSmartContext({sessionStore:ol,react:{useCallback:f=>f},__stsRuntimeState:runtimeState,getSmartContextSettings:()=>({summarization_chunk_size:size}),dispatchSystemLog(){},generateSummary:()=>gate.promise});const task=summary.triggerSummarization();await Promise.resolve();size=2;gate.resolve('stale summary');await task;assert.deepEqual(summaryState.longTermSummaries,[]);assert.deepEqual(summaryState.summaryQueue,[]);assert.equal(summaryState.isSummarizing,false);
 console.log('D3: scoped dialog cache, 53-method permissions, frame replay, prompt and summary ownership PASS');

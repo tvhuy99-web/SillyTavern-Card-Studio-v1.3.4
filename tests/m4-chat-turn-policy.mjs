@@ -34,8 +34,6 @@ assert.deepEqual(context.promptHistory, [
   { role: 'user', content: 'u2' },
 ]);
 
-// Previously all three assistant messages preceded the user's newest turn.
-// Truncation at 2,048 embedding tokens could drop that turn entirely.
 const longAnswer = 'truyện dài kỳ '.repeat(1400);
 const turnTwo = policy.buildContext([
   { role: 'model', content: '<content>' + longAnswer + '</content>' },

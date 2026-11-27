@@ -41,8 +41,7 @@ function parseSelection(rawResponse, parseJson) {
 }
 
 const DEFAULT_LLM_SELECTION_MODEL = 'gemini-3.5-flash-lite';
-// Never override an explicitly selected model. Failed models must report an error,
-// not be silently replaced by another model.
+
 export function resolveSmartScanLlmModel(model) {
   return String(model || '').trim() || DEFAULT_LLM_SELECTION_MODEL;
 }
@@ -72,7 +71,8 @@ export async function scanWorldInfo(input, deps) {
   );
   const attachedEntries = (input.lorebooks || []).flatMap(lorebook => {
     const lorebookName = String(lorebook?.name || '');
-    return attachedLorebookNames.has(lorebookName)
+    const isGlobal = Boolean(lorebook?.isGlobal || lorebook?.book?.isGlobal);
+    return (isGlobal || attachedLorebookNames.has(lorebookName))
       && !hydratedLorebookNames.has(lorebookName)
       ? (lorebook?.book?.entries || [])
       : [];
@@ -94,9 +94,6 @@ export async function scanWorldInfo(input, deps) {
   const keywordEnabled = !settings.enabled || ['keyword', 'hybrid_fast', 'ultimate'].includes(mode);
   const forced = Array.isArray(input.forceActiveUids) && input.forceActiveUids.length > 0;
 
-  // A SillyTavern Lorebook may use numeric UIDs while IndexedDB and logs
-  // serialize them as strings. Match by canonical key but return the original
-  // entry UID type to the World Info resolver.
   const entryUidByKey = new Map(
     entries.filter(entry => entry?.uid != null).map(entry => [String(entry.uid), entry.uid]),
   );
@@ -229,8 +226,7 @@ export async function scanWorldInfo(input, deps) {
           requestedModel = resolveSmartScanLlmModel(settings.model);
           requestPrompt = prompt;
           attemptedRequest = true;
-          // Record the exact outbound prompt before calling the provider. Persist
-          // the result (including errors) into section 3 of Smart Scan diagnostics.
+
           smartScanLog = {
             fullPrompt: requestPrompt,
             rawResponse: '[ĐÃ GỬI] Chưa có phản hồi từ mô hình ' + requestedModel,
@@ -257,8 +253,7 @@ export async function scanWorldInfo(input, deps) {
       } catch (error) {
         const message = error instanceof Error ? error.message : String(error);
         console.error('[Smart Scan] Error:', error);
-        // Without this record, a provider error makes both the sent prompt and
-        // the error/response disappear from the Smart Scan journal.
+
         smartScanLog = {
           fullPrompt: requestPrompt || '[Không gửi yêu cầu: lỗi trước khi chuẩn bị xong prompt]',
           rawResponse: (rawResponseText ? rawResponseText + '\n\n' : '') +

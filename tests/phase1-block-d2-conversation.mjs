@@ -23,8 +23,7 @@ const old=mythic('old','a');await Promise.resolve();assert.equal(await mythic('d
 runtimeState.invalidateSession();state={...state,sessionId:'new',card:{...card,rpg_data:{hp:99}}};await old;assert.ok(signal.aborted);gate.resolve('late');assert.equal(state.card.rpg_data.hp,99);assert.equal(runtimeState.size(),0);
 state={...state,sessionId:'s',card,messages};gate=defer();const changed=mythic('old','a');await Promise.resolve();state={...state,card:{...card,rpg_data:{hp:33}}};gate.resolve('stale');assert.equal(await changed,false);assert.equal(state.card.rpg_data.hp,33);
 state={...state,card,messages};gate=defer();const good=mythic('old','a');await Promise.resolve();gate.resolve('good');assert.equal(await good,true);assert.equal(state.card.rpg_data.hp,40);assert.equal(state.messages[0].rpgState.hp,40);assert.deepEqual(state.generatedLorebookEntries,[{hp:40}]);assert.equal(runtimeState.size(),0);
-// Output scripts run asynchronously: neither variables nor quick replies may
-// be committed into a reopened session or overwrite newer variable changes.
+
 let scriptGate=defer(),writes=0;
 state={...state,sessionId:'s',variables:{hp:100},visualState:{},setVariables(){writes++;},setQuickReplies(){writes++;},updateMessage(){writes++;}};
 const ol=()=>state;ol.getState=()=>state;

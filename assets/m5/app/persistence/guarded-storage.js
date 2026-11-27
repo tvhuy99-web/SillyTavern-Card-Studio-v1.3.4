@@ -1,4 +1,3 @@
-// Ordinary application storage port. Recovery receives raw storage instead.
 export function createGuardedStorage(getStorage, assertWriteAllowed) {
   return Object.freeze({
     getItem: key => getStorage().getItem(key),

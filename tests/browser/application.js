@@ -1,5 +1,3 @@
-// Real browser, real React mount, fresh isolated browser profile and IndexedDB.
-// No live provider calls: inspect the provider forms without submitting requests.
 const checks = [];
 const check = (condition, label) => { if (!condition) throw Error(label); checks.push(label); };
 const frame = document.querySelector('#app');
@@ -62,7 +60,7 @@ try {
   const sectionLabels = {openrouter:'API Key (OpenRouter)',proxy:'Proxy URL',aistudio:'Mô hình Google AI Studio',gemini:'API Key (Gemini)'};
   for (const provider of ['openrouter','proxy','aistudio','gemini']) {
     const field=selector();
-    // Use the platform setter, bypassing React's instance value tracker.
+
     Object.getOwnPropertyDescriptor(frame.contentWindow.HTMLSelectElement.prototype,'value').set.call(field,provider);
     field.dispatchEvent(new frame.contentWindow.Event('change',{bubbles:true}));
     await waitFor(() => selector()?.value === provider && doc().getElementById('settings-subtabpanel-api')?.textContent.includes(sectionLabels[provider]), `provider ${provider}`);

@@ -7,8 +7,6 @@ import android.webkit.WebView;
 import android.webkit.ValueCallback;
 import android.view.ViewGroup;
 
-/** Shared first-party WebView policy; sign-in navigation remains user-visible,
- * but automation is restricted to the exact HTTPS AI Studio origin. */
 final class AiStudioWebViewPolicy {
     static final String ORIGIN = AiStudioOrigin.ORIGIN;
     private AiStudioWebViewPolicy() {}
@@ -34,8 +32,7 @@ final class AiStudioWebViewPolicy {
             callback.onReceiveValue(null);
             return;
         }
-        // Guard again inside the executing document in case navigation starts
-        // after getUrl() but before Chromium runs the JavaScript.
+
         String guarded = "(location.origin === '" + ORIGIN + "' ? (" + expression + ") : null)";
         try {
             view.evaluateJavascript(guarded, result -> callback.onReceiveValue(

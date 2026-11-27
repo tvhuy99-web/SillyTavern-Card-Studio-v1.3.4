@@ -9,7 +9,6 @@ const deferred = () => { let resolve; const promise = new Promise(r => resolve =
 const delay = () => new Promise(r => setTimeout(r, 0));
 const never = () => new Promise(() => {});
 
-// A bridge registration may hang or deliver its handle long after timeout.
 {
   const pending = deferred(); let callback, removed=0, observed=0;
   const plugin={addListener(event, listener){callback=listener;return pending.promise;}};
@@ -23,8 +22,7 @@ const never = () => new Promise(() => {});
   const waiting=awaitNativeDeadline(()=>{workCalled=true;return never();},{signal:controller.signal,timeoutMs:1000});
   controller.abort(); await assert.rejects(waiting,{name:'AbortError'}); assert.equal(workCalled,false);
 }
-// Even without an external AbortSignal, a missing native callback cannot
-// keep a generation or completed stream waiting forever.
+
 {
   const calls=[];
   globalThis.Capacitor={getPlatform:()=> 'android',nativePromise(plugin,method,args){calls.push({method,args});return method==='generate'?never():Promise.resolve({});}};
@@ -37,9 +35,7 @@ const never = () => new Promise(() => {});
   assert.deepEqual(observed,['done']); assert.equal(removed,1);
   delete globalThis.Capacitor;
 }
-// Exercise the actual Java-source stop-selector script using its existing
-// text-block decoding convention. Generic Cancel and ambiguous controls
-// must never be clicked.
+
 {
   const source=fs.readFileSync(new URL('../android-native/AiStudioPageScripts.java',import.meta.url),'utf8');
   const block=source.match(/INSTALL_JS = """\n([\s\S]*?)\n        """;/)[1];
@@ -91,7 +87,7 @@ for(const config of [{failWeights:true},{byteMismatch:true}]) {
   await assert.rejects(copyCachedModelToNative(plugin,provider,()=>{},cacheWith([[url('a',graph),url('a',weights)]])),/weights failed|không khớp/);
   assert.equal(calls.at(-1)[0],'abortModel'); assert.ok(calls.some(c=>c[0]==='abortFile')); assert.ok(!calls.some(c=>c[0]==='commitModel'));
 }
-// Send the actual byte count to native before it closes and publishes a file.
+
 {
   let args, written=0;
   const plugin={beginSave:async()=>({exportId:'e'}),appendChunk:async({base64})=>{written+=Buffer.from(base64,'base64').length;},finishSave:async input=>{args=input;return {bytes:written,destination:'content://file'};}};

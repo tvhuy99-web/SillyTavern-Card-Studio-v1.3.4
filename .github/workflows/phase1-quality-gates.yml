@@ -46,6 +46,23 @@ jobs:
       - name: Run Phase 1 quality gate auditor (E10 / E11)
         run: npm run audit:quality
 
+      - name: Enforce F02 module ownership and AST factory parity
+        run: |
+          git fetch --no-tags --depth=1 origin d7b483fbe6d3663c313a4e4523b208156b801396 2abd57d73301389ba00319a8898171ab3bfe0ec8
+          npm install --prefix "$RUNNER_TEMP/f02-audit" --no-save --package-lock=false --ignore-scripts --no-audit --no-fund typescript@5.8.3
+          export TYPESCRIPT_PATH="$RUNNER_TEMP/f02-audit/node_modules/typescript"
+          node tools/audit-f02-modules.cjs --strict
+          node tools/audit-f02-factory-parity.cjs
+          node tools/audit-f02-ui-composition.cjs
+          node tools/audit-f02-domain-composition.cjs
+          node tools/audit-f02-renderer-parity.mjs
+          git fetch --no-tags --depth=1 origin ab71bcd1c877807b631c6900c7d2312787733b9c decccad6022412ea4b1457c229ed6dcf95e804ea
+          status=0
+          node tools/audit-f01-names.cjs --baseline ab71bcd1c877807b631c6900c7d2312787733b9c --check-host --check-host-aliases --check-opaque --embedded-runtime --check-embedded-opaque --details > "$RUNNER_TEMP/f01-inventory.json" || status=$?
+          cat "$RUNNER_TEMP/f01-inventory.json"
+          test "$status" -eq 0
+          node tools/audit-f01-ui-alpha.cjs decccad6022412ea4b1457c229ed6dcf95e804ea d7b483fbe6d3663c313a4e4523b208156b801396
+
       - name: Run unit & contract regression suite
         run: npm test
 
@@ -121,18 +138,6 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '22'
-
-      - name: Inventory F01 lexical bindings against the pre-F01 baseline (AST)
-        run: |
-          git fetch --no-tags --depth=1 origin ab71bcd1c877807b631c6900c7d2312787733b9c
-          npm install --prefix "$RUNNER_TEMP/f01-audit" --no-save --package-lock=false --ignore-scripts --no-audit --no-fund typescript@5.8.3
-          TYPESCRIPT_PATH="$RUNNER_TEMP/f01-audit/node_modules/typescript" node tools/audit-f01-names.cjs --baseline ab71bcd1c877807b631c6900c7d2312787733b9c --check-host --check-host-aliases --check-opaque --embedded-runtime --check-embedded-opaque --details > "$RUNNER_TEMP/f01-inventory.json"
-          cat "$RUNNER_TEMP/f01-inventory.json"
-
-      - name: Verify F01 UI renames preserve AST binding and literal structure
-        run: |
-          git fetch --no-tags --depth=1 origin decccad6022412ea4b1457c229ed6dcf95e804ea
-          TYPESCRIPT_PATH="$RUNNER_TEMP/f01-audit/node_modules/typescript" node tools/audit-f01-ui-alpha.cjs decccad6022412ea4b1457c229ed6dcf95e804ea
 
       - name: Run canonical locked npm release build
         run: |

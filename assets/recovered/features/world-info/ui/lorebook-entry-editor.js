@@ -1,6 +1,3 @@
-// Semantic dependency contract: callers inject named dependencies directly.
-// Factories receive the existing React/runtime bindings lazily to preserve initialization order.
-
 export function createEntryPositionControl(getDependencies) {
   return function EntryPositionControl({
     value: value,

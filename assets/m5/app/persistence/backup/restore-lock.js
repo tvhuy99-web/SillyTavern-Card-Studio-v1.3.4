@@ -28,7 +28,6 @@ export function createRestoreLockManager({
     }
   }
 
-  // Advisory lease keyed by BOTH ownerId and unique operationId (never ownerId-only re-entry).
   function acquireAdvisoryLock(op, journalId) {
     if (!journalStorage || typeof journalStorage.setItem !== 'function') return true;
     const current = readLock();
@@ -121,14 +120,13 @@ export function createRestoreLockManager({
         journalStorage.removeItem(lockKey);
       }
     } catch {
-      // Ignore lock release errors during teardown.
+
     }
   }
 
-  // Acquire exclusive cross-tab lock: Web Locks API when available, localStorage advisory fallback otherwise.
   async function withExclusiveLock(op, journalId, work) {
     if (hasWebLocks) {
-      // Stop admitting new local writers and let already-started writes release their shared locks.
+
       await drainOrdinaryWrites();
       return webLocks.request(lockKey, { mode: 'exclusive', ifAvailable: true }, async lock => {
         if (!lock) {
@@ -162,7 +160,6 @@ export function createRestoreLockManager({
     }
   }
 
-  // Revalidate active in-process operation, journal identity, and lock ownership immediately before any mutation.
   function assertOwnershipBeforeMutation(op, expectedJournalId) {
     const activeOperation = getActiveOperation();
     if (!activeOperation || activeOperation.operationId !== op.operationId) {
@@ -184,7 +181,6 @@ export function createRestoreLockManager({
     }
     renewLock(op, expectedJournalId);
   }
-
 
   return { readLock, acquireAdvisoryLock, renewLock, releaseAdvisoryLock, withExclusiveLock, assertOwnershipBeforeMutation };
 }

@@ -1,6 +1,3 @@
-// Recovered application UI. The existing React instance and feature dependencies are injected.
-// Semantic dependency contract: callers inject named dependencies directly.
-
 export function createActionSuggestionDialog(getDependencies) {
   return function ActionSuggestionDialog({
     isOpen,
@@ -319,7 +316,6 @@ export function createActionSuggestionDialog(getDependencies) {
                   id: 'copilot-title',
                   className: 'font-bold text-sky-400 flex items-center gap-2',
                   children: [
-                    jsxRuntime.jsx('span', { children: '🤖' }),
                     ' Trợ Lý Co-pilot (Architect)',
                   ],
                 }),

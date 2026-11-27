@@ -10,8 +10,6 @@ import {
 
 assert.equal(AI_STICKY_DEFAULT_TURNS, 3);
 
-// Existing installations often persisted the old default of 5. Migrate
-// exactly once without resetting model, threshold, or other preferences.
 const previous = {
   mode: 'hybrid_fast', embedding_provider: 'embeddinggemma2',
   semantic_threshold: 0.1, max_semantic_entries: 20, aiStickyDuration: 5,
@@ -28,7 +26,6 @@ const saved = markSmartScanStickySettingsSaved({ ...updated, aiStickyDuration: 5
 assert.equal(migrateSmartScanStickySettings(saved).aiStickyDuration, 5,
   'user can explicitly change the slider back to 5 later');
 
-// Exercise the actual extracted resolver, rather than evaluating a slice of a bundle.
 const production = readRecoveredHostView();
 const {createKeywordMatching} = await import('../src/features/world-info/keyword-matching.js');
 const legacyResolver = createKeywordMatching().resolveWorldInfo;
@@ -39,8 +36,6 @@ const numericEntry = {
   keys: ['dragon'], enabled: true, insertion_order: 0,
 };
 
-// Control regression: unmodified legacy resolver fails when runtime object
-// key is string but Lorebook UID is numeric.
 const oldCode = legacyResolver('', [numericEntry], {}, {
   '42': { stickyDuration: 2, cooldownDuration: 0 },
 }, {}, [], true, 11, 3);
@@ -65,7 +60,6 @@ for (const turn of [11, 12, 13]) {
 assert.deepEqual(play(14).activeEntries, [],
   'without another match, entry expires on the fourth following response');
 
-// A second match refreshes Sticky to three following turns.
 runtime = {};
 play(20, ['42']);
 play(21);
@@ -73,8 +67,6 @@ assert.equal(play(22, [42]).updatedRuntimeState['42'].stickyDuration, 3);
 for (const turn of [23, 24, 25]) assert.equal(play(turn).activeEntries.length, 1);
 assert.equal(play(26).activeEntries.length, 0);
 
-// Older sessions may have 5 remaining. Existing 5-turn state is capped to 3;
-// explicit per-entry Sticky longer than the global duration still wins.
 runtime = { '42': { stickyDuration: 5, cooldownDuration: 0 } };
 let capped = play(30);
 assert.equal(capped.activeEntries.length, 1);
@@ -87,8 +79,6 @@ const customStored = resolver('', [custom], {}, {
 }, {}, [], true, 34, 3);
 assert.equal(customStored.updatedRuntimeState['42'].stickyDuration, 5);
 
-// UID zero, pinned entries, cooldown and keyword scanning retain their prior
-// semantics after canonicalization.
 const zero = { ...numericEntry, uid: 0 };
 const zeroResult = resolver('', [zero], {}, {}, {}, [0], true, 1, 3);
 assert.deepEqual(zeroResult.activeEntries.map(e => e.uid), [0]);
@@ -101,8 +91,6 @@ const cooling = resolver('dragon', [numericEntry], {}, {
 }, {}, [], false, 41, 3);
 assert.equal(cooling.activeEntries.length, 0);
 
-// The generated production bundle must have the actual 3-turn default,
-// migrating getter, original semantic provider and the always-visible slider.
 assert.ok(production.includes('aiStickyDuration:3,system_prompt:'));
 assert.match(production, /__stsMigrateSmartScanStickySettings\)?\(savedSettings\)/);
 assert.match(production, /__stsMarkSmartScanStickySettingsSaved\)?\(settings\)/);

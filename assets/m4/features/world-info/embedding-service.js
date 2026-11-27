@@ -1,5 +1,3 @@
-// Canonical owner & facade for World Info Embedding Service
-// (Gemini Embedding 2, EmbeddingGemma 300M Q4 - Offline, EmbeddingGemma 2 Text 270M INT4, Qwen3-Embedding 0.6B Q4 - Offline).
 import { createSerialQueue } from '../../../recovered/core/async/serial-queue.js';
 import { getNativeEmbeddingPlugin } from './native-embedding-bridge.js';
 import {
@@ -56,8 +54,7 @@ export function createEmbeddingService(deps) {
   const memoryIndexes = new Map();
   const indexLoads = new Map();
   const activeSyncs = new Set();
-  // All local entrypoints share the same runtime/disposal owner. The sync
-  // implementation calls internal inference directly to avoid nested queues.
+
   const runLocal = createSerialQueue();
 
   const settings = () => deps.getSettings?.() || {};
@@ -151,8 +148,7 @@ export function createEmbeddingService(deps) {
   async function syncIndex(characterId, entries, onProgress) {
     const config = { ...settings() };
     const provider = resolveEmbeddingProvider(config);
-    // One sync at a time per character/provider index; local engines also
-    // share a runtime and disposal lifecycle across character indexes.
+
     const lock = provider.kind === 'local' ? 'local-runtime' : memoryKey(characterId, provider);
     if (activeSyncs.has(lock)) throw Error('Đồng bộ embedding đang được thực hiện.');
     activeSyncs.add(lock);
@@ -216,8 +212,7 @@ export function createEmbeddingService(deps) {
     }
     if (provider.kind !== 'local') return getProviderStatus(provider.id);
     await runtimeManager.ensureLocalRuntime(provider, { localOnly: false, onProgress });
-    // Downloaded model weights stay in browser cache; do not retain a second
-    // full ONNX model in RAM while the user prepares other providers.
+
     await runtimeManager.disposeUnusedLocalRuntimes();
     return getProviderStatus(provider.id);
   }

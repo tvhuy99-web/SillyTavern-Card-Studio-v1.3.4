@@ -1,4 +1,3 @@
-// Required by the recovered dynamic JSZip imports and legacy CommonJS bridge.
 export function commonJsFactory(factory, cache) {
   return () => { if (!cache) { cache = { exports: {} }; factory(cache.exports, cache); } return cache.exports; };
 }

@@ -11,7 +11,6 @@ const latest = (messages, field) => {
   return undefined;
 };
 
-/** Rewind derives a complete patch before touching the live session. */
 export function buildRewindPatch(state, index, { initialVariables, initialRpg, buildLorebook, countTurns, settings }) {
   const messages = state.messages.slice(0, index);
   const variables = latest(messages, 'contextState') ?? initialVariables(state.card);
@@ -32,15 +31,12 @@ export function buildRewindPatch(state, index, { initialVariables, initialRpg, b
   return patch;
 }
 
-// Edits/deletions invalidate summaries whose covered prefix may have changed.
 export function invalidateHistorySummaries(state, index, settings, countTurns) {
   const chunk = summaryChunkSize(settings, state);
   const completed = Math.floor(countTurns(state.messages.slice(0,index)) / chunk);
   return { longTermSummaries: state.longTermSummaries.slice(0,completed), summaryQueue: [] };
 }
 
-/** Find the first changed message in an existing conversation. Appends do not
- * invalidate summaries; changed, deleted or reordered historical text does. */
 export function firstChangedHistoryIndex(previous, next) {
   for (let index=0;index<previous.length;index++) {
     const previousMessage=previous[index], nextMessage=next[index];

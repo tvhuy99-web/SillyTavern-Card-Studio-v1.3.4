@@ -8,12 +8,6 @@ import com.getcapacitor.JSObject;
 import org.json.JSONObject;
 import org.json.JSONTokener;
 
-/**
- * Shared diagnostics, safe URL path formatting, and guarded JavaScript
- * evaluation envelope helpers for the AI Studio WebView plugin.
- *
- * No API key, cookies, OAuth tokens, prompts, or answer texts are logged.
- */
 final class AiStudioDiagnostics {
     static final String LOG_TAG = "CardStudioAIStudio";
 
@@ -59,7 +53,7 @@ final class AiStudioDiagnostics {
         event.put("message", message);
         event.put("details", details == null ? new JSObject() : details);
         emitter.emit("diagnostic", event);
-        // Do not print prompt/response, credentials or raw URLs to Android logs.
+
         Log.i(LOG_TAG, "[" + stage + "] #" + requestId + " " + message);
     }
 
@@ -93,9 +87,6 @@ final class AiStudioDiagnostics {
         ));
     }
 
-    // JS exceptions and page navigations must not be disguised as JSONException.
-    // Android evaluateJavascript passes an outer JSON-encoded string. The
-    // inner payload is always an object with ok/value or ok/errorCode.
     String guardJs(String expression) {
         return "JSON.stringify((function(){try{" +
             "var v=(" + expression + ");" +

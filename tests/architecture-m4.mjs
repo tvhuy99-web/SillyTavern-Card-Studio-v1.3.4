@@ -75,7 +75,7 @@ assert.ok(!responseAdapter.includes('worldInfoRuntime:d'));
 assert.ok(!production.includes('stsSessionBook'));
 assert.ok(!production.includes('[Smart Scan] Skipped API call'));
 assert.ok(production.includes('embedding_provider:"gemini"'), 'Smart Scan defaults must retain Gemini as the initial embedding provider');
-const embeddingService = read('src/features/world-info/embedding-service.js');
+const embeddingService = read('src/features/world-info/embedding/embedding-provider-registry.js');
 assert.ok(embeddingService.includes('EmbeddingGemma 300M Q4 - Offline'), 'EmbeddingGemma option must be owned by embedding service');
 assert.ok(embeddingService.includes('Qwen3-Embedding 0.6B Q4 - Offline'), 'Qwen3 embedding option must be owned by embedding service');
 assert.ok(production.includes('__stsEmbeddingService.embedQuery'), 'semantic query embedding must route through the owned service');

@@ -3,9 +3,6 @@ package com.tvhuy99.cardstudio;
 import java.io.File;
 import java.io.IOException;
 
-/** Two-file ONNX publication. All operations run on the plugin's serial worker.
- * Existing onnx/ layout and markers are unchanged. Sibling directories are
- * private staging/recovery slots, never visible to inference. */
 final class NativeOnnxModelSet {
     static final String GRAPH = "model_q4.onnx";
     static final String WEIGHTS = "model_q4.onnx_data";
@@ -25,8 +22,7 @@ final class NativeOnnxModelSet {
     }
     private static void clear(File directory) throws IOException {
         if (!directory.exists()) return;
-        // Check the entire directory before deleting anything. Unknown files
-        // are not ours and must not cause a partly destructive cleanup.
+
         File[] contents = directory.listFiles();
         if (contents == null) throw new IOException("Cannot inspect model directory");
         java.util.Set<String> allowed = new java.util.HashSet<>();
@@ -40,8 +36,7 @@ final class NativeOnnxModelSet {
         if (!directory.delete()) throw new IOException("Cannot remove model staging directory: " + directory.getName());
     }
     File recover() throws IOException {
-        // A process may die between the two directory renames. Never use a
-        // partial staging directory as the live model.
+
         if (previous.exists()) {
             if (!active.exists()) move(previous, active);
             else if (complete(active)) { try { clear(previous); } catch (IOException ignored) {} }
@@ -67,8 +62,7 @@ final class NativeOnnxModelSet {
             try { move(previous, active); } catch (IOException restore) { failure.addSuppressed(restore); }
             throw failure;
         }
-        // Publication has completed. If cleanup fails, recover() can retry on
-        // the next request without falsely reporting that publication failed.
+
         try { clear(previous); } catch (IOException ignored) {}
     }
     void delete() throws IOException {

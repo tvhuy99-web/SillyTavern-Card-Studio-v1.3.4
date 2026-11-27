@@ -24,7 +24,7 @@ assert.deepEqual(await rpc('lorebook.names'),['Embedded','World']);
 assert.deepEqual(await rpc('lorebook.entries.get',{name:'Hero'}),[]);
 assert.equal((await rpc('lorebook.entries.get',{name:'World'}))[0].uid,'0');
 await assert.rejects(rpc('lorebook.entries.get',{name:'missing'}),/not found/);
-// Each operation derives the next list from the most recent committed record.
+
 gate=deferred();const a=rpc('lorebook.entries.create',{name:'World',entries:[{content:'A'}]});await tick();const b=rpc('lorebook.entries.create',{name:'World',entries:[{content:'B'}]});gate.resolve();gate=null;
 assert.deepEqual((await a).new_uids,[1]);assert.deepEqual((await b).new_uids,[2]);
 assert.deepEqual(stored.get('World').book.entries.map(e=>e.uid),['0','1','2']);assert.equal(stored.get('World').book.other,1);
@@ -34,15 +34,15 @@ const snapshot=clone(stored.get('World')), eCount=events.length;fail=true;await 
 await catalog.addLorebook({name:'Bad',book:{entries:[]}});assert.equal(catalog.error,'Failed to add lorebook');await assert.rejects(rpc('lorebook.create',{name:'Bad'}),/database failed/);fail=false;
 assert.equal(await rpc('lorebook.create',{name:'New'}),'New');assert.equal(await rpc('lorebook.delete',{name:'New'}),true);
 assert.deepEqual(await rpc('raw.import.worldbook',{name:'Imported'}),{ok:true,name:'Imported'});
-// A stale RPC queued behind another write is rejected before repository access.
+
 gate=deferred();const first=catalog.saveLorebookStrict({name:'Waiting',book:{entries:[]}});await tick();const queued=rpc('lorebook.entries.create',{name:'World',entries:[{content:'stale'}]});const oldCount=count;active=false;gate.resolve();gate=null;await first;await assert.rejects(queued,/inactive/);assert.equal(count,oldCount);active=true;
 parseGate=deferred();const importing=rpc('raw.import.worldbook',{name:'Stale'});active=false;parseGate.resolve();parseGate=null;await assert.rejects(importing,/inactive/);assert.ok(!stored.has('Stale'));active=true;
-// Embedded entries use session persistence; same-name external book is untouched.
+
 saveGate=deferred();const ea=rpc('lorebook.entries.create',{name:'Embedded',entries:[{content:'A'}]});await tick();const eb=rpc('lorebook.entries.create',{name:'Embedded',entries:[{content:'B'}]});saveGate.resolve();saveGate=null;assert.deepEqual((await ea).new_uids,[0]);assert.deepEqual((await eb).new_uids,[1]);assert.equal(state.card.char_book.entries.length,2);assert.deepEqual(stored.get('Embedded').book.entries,[{uid:'99'}]);assert.deepEqual(state.extensionSettings.__cardRuntimeCharacterBook,state.card.char_book);
 assert.ok(events.some(e=>e.type==='CARD_RUNTIME_STATE_UPDATE'&&e.payload.worldInfo.length===2));
 await assert.rejects(rpc('lorebook.entries.replace',{name:'Embedded',entries:Array(5001).fill({})}),/oversized/);
 saveGate=deferred();const ec=rpc('lorebook.entries.replace',{name:'Embedded',entries:[{uid:'old'}]});await tick();const ee=events.length;active=false;saveGate.resolve();saveGate=null;await assert.rejects(ec,/inactive/);assert.equal(events.length,ee);active=true;
-// Extension lifecycle metadata, not installation/download of executable code.
+
 const stateRpc=createStateRpcHandlers({...deps,now:()=>123,parseRegexImport:async v=>{if(parseGate)await parseGate.promise;return JSON.parse(v);}});
 const sr=(method,args={})=>stateRpc.dispatch(method,args,lease);
 assert.equal(EXTENSION_LIFECYCLE_RPC_METHODS.length,4);

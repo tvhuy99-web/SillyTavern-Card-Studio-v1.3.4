@@ -15,7 +15,6 @@ const groups = Object.freeze({
 export const HOST_RPC_METHODS = Object.freeze(Object.values(groups).flat());
 if (new Set(HOST_RPC_METHODS).size !== HOST_RPC_METHODS.length) throw Error('Duplicate host RPC registration');
 
-/** Route canonical method names without duplicating the domain API inventory. */
 export function createHostMethodRouter({ chat, catalog, state, lorebook, utility, generate, tasks, emit }) {
   const handlers = new Map();
   for (const [group, handler] of Object.entries({ chat, catalog, state, lorebook, utility })) {

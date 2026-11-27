@@ -1,7 +1,3 @@
-/**
- * Diagnostics for inspecting initial variable provenance and parsing pipelines.
- */
-
 import {
   cleanStructuredText,
   isRecord,

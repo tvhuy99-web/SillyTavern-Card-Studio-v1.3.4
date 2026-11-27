@@ -1,4 +1,3 @@
-// Persistence contract for vector indexes. Preserve the existing database and record schema.
 export const EMBEDDING_DATABASE = Object.freeze({ name: 'LorebookEmbeddingsDB', version: 2, store: 'embeddings' });
 
 export function createEmbeddingIndexRepository({ indexedDB = globalThis.indexedDB } = {}) {
@@ -10,7 +9,7 @@ export function createEmbeddingIndexRepository({ indexedDB = globalThis.indexedD
       request.onerror = () => reject(request.error || new Error('Failed to open embedding database'));
       request.onupgradeneeded = event => {
         const db = request.result;
-        // Retain the established v1 -> v2 index rebuild policy. These are derived vectors.
+
         if (event.oldVersion < 2 && db.objectStoreNames.contains(store)) db.deleteObjectStore(store);
         if (!db.objectStoreNames.contains(store)) {
           const objectStore = db.createObjectStore(store, { keyPath: 'id' });

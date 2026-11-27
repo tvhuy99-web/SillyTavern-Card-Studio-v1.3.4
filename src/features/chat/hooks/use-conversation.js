@@ -2,7 +2,6 @@ import { createStandaloneMythic } from '../standalone-mythic.js';
 import { useResponsePipeline } from './use-response-pipeline.js';
 import { useSmartScan } from './use-smart-scan.js';
 
-// Custom hook composition. Dependencies are supplied by the application host.
 export function createConversationHook(dependencies) {
   return () => {
     const chatStore = dependencies.sessionStore();
@@ -11,6 +10,17 @@ export function createConversationHook(dependencies) {
       createPlaceholderMessage,
     } = useResponsePipeline(dependencies);
     const { lorebooks } = dependencies.lorebookStore();
+    const allCharacters = dependencies.characterStore?.()?.characters || [];
+    const effectiveLorebooks = (0, dependencies.react.useMemo)(() => {
+      const globalCharBooks = allCharacters
+        .filter(item => item?.card?.char_book?.isGlobal && item.fileName !== chatStore.getState()?.card?.fileName)
+        .map(item => ({
+          name: `__char__:${item.fileName}`,
+          isGlobal: true,
+          book: item.card.char_book,
+        }));
+      return globalCharBooks.length ? [...lorebooks, ...globalCharBooks] : lorebooks;
+    }, [lorebooks, allCharacters]);
     const diagnostics = dependencies.useDiagnostics();
     const { scanInput } = useSmartScan(dependencies, chatStore.card);
     const { showToast } = dependencies.useToast();
@@ -42,7 +52,6 @@ export function createConversationHook(dependencies) {
       }
     }, []);
 
-    // Preserve unconditional hook order for interactive error decision prompt.
     dependencies.react.useCallback((title, message, error, canIgnore = true) => new Promise(resolve => {
       const errorDetails = error instanceof Error ? error.message : String(error);
       setInteractiveError({
@@ -271,7 +280,7 @@ export function createConversationHook(dependencies) {
       logSmartScan: diagnostics.logSmartScan,
       logSelection: diagnostics.logSelection,
       buildPrompt: promptInput => dependencies.__stsBuildConversationPrompt(promptInput, {
-        lorebooks,
+        lorebooks: effectiveLorebooks,
         buildBaseSections: dependencies.buildBaseSections,
         getSummaryChunkSize: () => dependencies.getSmartContextSettings().summarization_chunk_size || 12,
         buildPromptCore: dependencies.assemblePrompt,
@@ -289,7 +298,7 @@ export function createConversationHook(dependencies) {
       createPlaceholderMessage,
       getConnectionSettings: dependencies.getConnectionSettings,
       getProxyProfiles: dependencies.getProxyProfiles,
-      getLorebooks: () => lorebooks,
+      getLorebooks: () => effectiveLorebooks,
       notify: showToast,
       arenaState: dependencies.__stsArenaState,
       generationGateway: dependencies.__stsGenerationGateway,

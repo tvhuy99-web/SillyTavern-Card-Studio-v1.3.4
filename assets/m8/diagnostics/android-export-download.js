@@ -1,10 +1,5 @@
 import { getAndroidPlugin, ANDROID_PLUGINS } from '../../recovered/platform/android/native-bridge.js';
-// Android APK file export compatibility shim.
-// The existing app exports characters, Lorebooks, images and backups using
-// <a download href="blob:..."> or data: URLs. Android WebView does not launch
-// Chrome's download manager for those in-memory URLs. Capture the existing
-// export click and use ACTION_CREATE_DOCUMENT via our Capacitor native plugin.
-// Non-Android browsers, normal navigation, and import controls are untouched.
+
 const MAX_CHUNK_SIZE = 256 * 1024;
 const SUPPORTED_EXPORT_SCHEMES = /^(blob:|data:)/i;
 
@@ -45,14 +40,61 @@ function encodeBase64(bytes) {
   return btoa(result);
 }
 
-// Serialize each save operation, including the Android Save As picker.
-// Exports must never mix data when the user clicks multiple buttons rapidly.
 let queue = Promise.resolve();
 
 export function enqueueAndroidExport(task) {
   const next = queue.catch(() => {}).then(task);
   queue = next.catch(() => {});
   return next;
+}
+
+export async function streamBlobToAndroid({ blob, filename, plugin, onProgress = () => {} }) {
+  const name = normalizeExportName(filename || blob?.name);
+  if (!blob || typeof blob.slice !== 'function') {
+    throw new Error('Dữ liệu xuất tệp không hợp lệ.');
+  }
+  if (!plugin?.beginSave || !plugin?.appendChunk || !plugin?.finishSave) {
+    throw new Error('APK này không có AndroidExportFile plugin để lưu tệp.');
+  }
+
+  const totalBytes = Number(blob.size) || 0;
+  let started = false;
+  let saveArgs = {};
+  try {
+    const picked = await plugin.beginSave({
+      fileName: name,
+      mimeType: exportMimeType(name, blob.type),
+    });
+    started = true;
+    if (picked?.exportId) saveArgs = { exportId: picked.exportId };
+    let written = 0;
+    onProgress(0, totalBytes);
+    for (let offset = 0; offset < totalBytes; offset += MAX_CHUNK_SIZE) {
+      const slice = blob.slice(offset, Math.min(totalBytes, offset + MAX_CHUNK_SIZE));
+      const buffer = await slice.arrayBuffer();
+      const chunk = new Uint8Array(buffer);
+      if (!chunk.length) continue;
+      await plugin.appendChunk({ ...saveArgs, base64: encodeBase64(chunk) });
+      written += chunk.length;
+      if (written === totalBytes || written % (1024 * 1024) < MAX_CHUNK_SIZE) {
+        onProgress(written, totalBytes);
+      }
+    }
+    if (written !== totalBytes) {
+      throw new Error('Số byte đọc từ bộ nhớ không khớp kích thước tệp sao lưu.');
+    }
+    const result = await plugin.finishSave({ ...saveArgs, expectedBytes: totalBytes });
+    started = false;
+    if (Number(result?.bytes) !== totalBytes) {
+      throw new Error('Số byte tệp lưu không khớp với dữ liệu xuất.');
+    }
+    return { filename: name, bytes: totalBytes, destination: result.destination || picked.destination || '' };
+  } catch (error) {
+    if (started) {
+      try { await plugin.abortSave?.(saveArgs); } catch {}
+    }
+    throw error;
+  }
 }
 
 export async function streamExportUrlToAndroid({ url, filename, plugin, fetcher = fetch, onProgress = () => {} }) {
@@ -62,7 +104,6 @@ export async function streamExportUrlToAndroid({ url, filename, plugin, fetcher 
     throw new Error('APK này không có AndroidExportFile plugin để lưu tệp.');
   }
 
-  // Must be initiated from the user click, before asynchronous blob reads.
   const responsePromise = fetcher(url);
   let started = false;
   let response;
@@ -120,16 +161,16 @@ export function installAndroidExportInterceptor(host = globalThis) {
   const plugin = getAndroidExportPlugin(host);
   if (!plugin) return false;
   doc.__cardStudioAndroidExportInstalled = true;
-  // A process may have died after closing the file but before confirming it.
-  // Surface a diagnostic without deleting or reopening the user's document.
+  host.__cardStudioExportAndroidBlob = ({ blob, filename, onProgress }) => enqueueAndroidExport(
+    () => streamBlobToAndroid({ blob, filename, plugin, onProgress }),
+  );
+
   if (typeof plugin.getInterruptedSave === 'function') {
     Promise.resolve().then(() => plugin.getInterruptedSave()).then(receipt => {
       if (receipt?.interrupted) host.console?.warn?.('Android: lần xuất tệp trước chưa được xác nhận. Kiểm tra tệp đã lưu trước khi xuất lại.');
     }).catch(() => {});
   }
 
-  // Legacy export call sites often revokeObjectURL immediately after click().
-  // Keep only the selected export blob URL alive until the stream completes.
   const held = new Map();
   const requestedRevoke = new Set();
   const originalRevoke = host.URL.revokeObjectURL.bind(host.URL);
@@ -150,12 +191,11 @@ export function installAndroidExportInterceptor(host = globalThis) {
     const notify = message => {
       try { host.console?.warn?.('[ANDROID-EXPORT] ' + message); } catch {}
     };
-    // Capture the response synchronously within the click handler so even
-    // callers that immediately revoke their blob URL cannot invalidate it.
+
     let responsePromise;
     try { responsePromise = Promise.resolve(host.fetch(href)); }
     catch (error) { responsePromise = Promise.reject(error); }
-    // Consume rejection while this click is waiting behind another picker.
+
     responsePromise.catch(() => {});
     enqueueAndroidExport(async () => {
       try {
@@ -183,5 +223,4 @@ export function installAndroidExportInterceptor(host = globalThis) {
   return true;
 }
 
-// Capacitor's global bridge is ready before the user can press export.
 installAndroidExportInterceptor();

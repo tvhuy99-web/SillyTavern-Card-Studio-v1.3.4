@@ -1,5 +1,3 @@
-// Recovered application UI. The existing React instance and feature dependencies are injected.
-// Keep the factory boundary until the native React build replaces the recovered host.
 function resolveDiagnosticDeps(getDependencies) {
   const deps = getDependencies();
   return {
@@ -62,18 +60,18 @@ export function createSummaryLogPanel(getDependencies) {
       let dataDescription = chatLines.length > 0 ? `Bao gồm ${chatLines.length} tin nhắn (từ lượt ${startTurn + 1} đến ${modelCount}).` : "(Không tìm thấy dữ liệu tương ứng trong lịch sử hiện tại)";
       return [{
         id: "sys",
-        name: "⚙️ System Instruction (Template)",
+        name: "System Instruction (Template)",
         content: systemPrompt,
         role: "system"
       }, {
         id: "ctx",
-        name: "📚 Previous Context (Rolling Window)",
+        name: "Previous Context (Rolling Window)",
         content: contextDescription,
         role: "system",
         subSections: previousSummaries.length > 0 ? previousSummaries : undefined
       }, {
         id: "dat",
-        name: "💬 Target Data (Chat Slice)",
+        name: "Target Data (Chat Slice)",
         content: dataDescription,
         role: "user",
         subSections: chatLines.length > 0 ? chatLines : undefined
@@ -182,7 +180,7 @@ export function createSummaryLogPanel(getDependencies) {
                 children: [(0, jsxRuntime.jsxs)("summary", {
                   className: "cursor-pointer text-[10px] text-indigo-400 hover:text-indigo-300 font-bold mb-2 flex items-center gap-2",
                   children: [(0, jsxRuntime.jsx)("span", {
-                    children: "📤 Lời nhắc Tóm tắt (Reconstructed)"
+                    children: "Lời nhắc Tóm tắt (Reconstructed)"
                   }), (0, jsxRuntime.jsx)("span", {
                     className: " group-open/prompt:rotate-90  text-[8px]",
                     "aria-hidden": "true",
@@ -202,7 +200,7 @@ export function createSummaryLogPanel(getDependencies) {
                 })
               }), (0, jsxRuntime.jsx)("div", {
                 className: "text-[10px] text-green-400 font-bold mb-1",
-                children: "📥 Kết quả (Result)"
+                children: "Kết quả (Result)"
               }), (0, jsxRuntime.jsx)("div", {
                 className: "bg-amber-900/10 border border-amber-900/30 p-3 rounded mb-2",
                 children: (0, jsxRuntime.jsx)("p", {

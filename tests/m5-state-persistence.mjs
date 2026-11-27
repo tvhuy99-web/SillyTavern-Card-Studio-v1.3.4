@@ -149,7 +149,6 @@ assert.ok(sessionStateContract.persistent.includes('chatHistory'));
 assert.ok(sessionStateContract.runtimeOnly.includes('abortControllers'));
 assert.ok(sessionStateContract.diagnosticsOnly.includes('logs'));
 
-// Persisted field ownership is declared once; explicit null clears an Arena selection.
 assert.deepEqual(Object.keys(snapshot).sort(), [...sessionStateContract.identity, ...sessionStateContract.persistent].sort());
 const clearedArena = createSessionSnapshot(state, { arenaModelId: null, arenaProvider: null, arenaProfileId: null });
 assert.equal(clearedArena.arenaModelId, null);

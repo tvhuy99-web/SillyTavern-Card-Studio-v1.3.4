@@ -5,7 +5,7 @@ import { tmpdir } from 'node:os';
 import { pathToFileURL } from 'node:url';
 import { verifyPackageLock, collectDependencyEvidence } from '../build/npm-runtime/dependency-policy.mjs';
 import { installImmerMapSet } from '../build/npm-runtime/adapters/immer-mapset.js';
-// Synthetic lock fixture tests the validator, never used as the project's lockfile.
+
 const manifest={dependencies:{foo:'1.2.3'}};
 const item={version:'1.2.3',resolved:'https://registry.npmjs.org/foo/-/foo-1.2.3.tgz',integrity:'sha512-'+Buffer.alloc(64,1).toString('base64'),license:'MIT'};
 const lock={lockfileVersion:3,packages:{'':{dependencies:manifest.dependencies},'node_modules/foo':item,'node_modules/optional':{...item,optional:true,version:'2.0.0'}}};

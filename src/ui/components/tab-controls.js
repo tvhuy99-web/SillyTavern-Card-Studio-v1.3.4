@@ -1,4 +1,3 @@
-// Shared keyboard navigation; markup and class names remain specific to each tab surface.
 export function handleTabKeyDown(event) {
   const { key, currentTarget } = event;
   if (!['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', 'Home', 'End'].includes(key)) return;

@@ -1,4 +1,3 @@
-
 export function createSettingsScreen(getDependencies) {
   return function SettingsScreen() {
     const {

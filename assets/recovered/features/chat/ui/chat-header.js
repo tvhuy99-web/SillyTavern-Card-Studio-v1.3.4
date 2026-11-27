@@ -92,7 +92,6 @@ export function createChatHeader(getDependencies) {
                               className: 'truncate',
                               children: arenaModelId || 'Chọn Model',
                             }),
-                            jsxRuntime.jsx('span', { className: 'text-xs font-bold', children: '⌄' }),
                           ],
                         }),
                         jsxRuntime.jsx(ArenaSettingsDialog, {

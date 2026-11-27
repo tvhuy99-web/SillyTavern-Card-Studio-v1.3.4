@@ -1,6 +1,5 @@
 import { modelTestProps } from './model-test-props.js';
-// Provider-specific render helpers. These are pure render functions, not mounted components.
-// Preserve the previous element tree and hook ownership in the screen controller.
+
 export function renderProxySection({ LoadingIndicator, ModelSelect, TextInput, ToggleSwitch, modelTest, createProfile, loadProxyModels, clearProxyCatalog, invalidateProxyCatalog, pingProxy, jsxRuntime, legacyMode, pingError, pingLoading, pingStatus, profileFileRef, profileId, profiles, proxyForTools, proxyLoading, proxyModelOptions, proxyPassword, proxyPersistence, proxyUrl, rememberProxySecrets, saveProfiles, selectProfile, setLegacyMode, setProfileId, setProfiles, setProxyForTools, setProxyModels, setProxyPassword, setProxyUrl, setRememberProxySecrets, setSettings, settings, showToast, updateSetting }) { return jsxRuntime.jsxs("div", {
     className: "space-y-6 ", children: [jsxRuntime.jsxs("div", {
             className: "bg-slate-900/50 p-3 rounded-lg border border-slate-700 flex flex-col gap-3", children: [jsxRuntime.jsxs("div", {

@@ -42,7 +42,6 @@ gate = deferred(); gate.resolve('ok'); await dispatcher.dispatch(event(bad,'send
 await dispatcher.dispatch(event(a,'diagnostic-fails'),{execute(){throw new Error('domain error')}, diagnose(){throw new Error('logging error')}});
 assert.equal(transportErrors.length,2); assert.equal(a.responses.at(-1).error,'domain error');
 
-// Message RPC tests exercise the real migrated handlers. No UI or database is required.
 let state = { messages: [{id:'one',role:'user',content:'one',timestamp:1}, {id:'two',role:'model',content:'two',is_hidden:true,timestamp:2}], persona:{name:'P'}, card:{name:'C'} };
 let writes=0, ids=0;
 const toChatMessage = (message,index,user,character,swipes) => ({...message,message_id:index, message:message.content, user, character, swipesIncluded:swipes});
@@ -60,7 +59,6 @@ await handlers('chat.delete',{messageIds:[-1]}); assert.deepEqual(state.messages
 const before=writes; await assert.rejects(handlers('chat.rotate',{begin:1,middle:0,end:2}),/bounds/); await assert.rejects(handlers('chat.set',{messages:[]},{assertCurrent(){throw Error('stale')}}),/stale/); assert.equal(writes,before);
 await assert.rejects(handlers('__proto__',{}),/Unsupported/);
 
-// Two frames may reuse the same generation ID. Stopping one must not stop the other.
 const tasks=createRuntimeGenerationTasks({register:runtimeState.add,unregister:runtimeState.remove});
 const c1=tasks.start(a,'same'), c2=tasks.start(b,'same');
 assert.throws(()=>tasks.start(a,'same'),/Duplicate/); assert.equal(runtimeState.size(),2);
@@ -71,7 +69,6 @@ tasks.stopAll(a); assert.equal(c3.signal.aborted,true); assert.equal(c2.signal.a
 runtimeState.invalidateSession(); assert.equal(c2.signal.aborted,true); assert.equal(runtimeState.size(),0);
 tasks.dispose(); assert.equal(tasks.stop(b,'same'),false);
 
-// Generation service uses the same cancellation primitive as the conversation engine.
 const events = [], requests = [];
 let promptGate = deferred(), providerGate = deferred(), leaseCurrent = true, committed = 0;
 const lease = { assertCurrent() { if (!leaseCurrent) throw Error('inactive session'); } };
@@ -99,7 +96,6 @@ const hangGenerate=createRuntimeGenerationService({tasks:genTasks,buildPrompt:as
 const hungRequest=hangGenerate(a,false,{generation_id:'hung',stream:true},lease); await tick(); genTasks.stop(a,'hung'); await assert.rejects(hungRequest,/stopped/); assert.equal(returned,1); assert.equal(runtimeState.size(),0);
 hung.resolve({done:false,value:{text:'late'}}); await tick();
 
-// Build wiring and source ownership: the old host transport and chat bodies are absent.
 const production=readRecoveredHostView();
 for(const marker of ['dispatcher.dispatch(message, { execute, diagnose })','chat: chatRpc','Card prompt state changed during construction.','createRuntimeGenerationService({ tasks, buildPrompt: (raw, options, assertCurrent, source)','tasks.stopAll(source)','tasks.dispose()']) assert.ok(production.includes(marker),marker);
 assert.ok(!production.includes('let e=await x(n,t.source)'));

@@ -1,6 +1,3 @@
-// Recovered application UI. The existing React instance and feature dependencies are injected.
-// Semantic dependency contract: callers inject named dependencies directly.
-
 function getProposalAccentClass(toolName) {
   switch (toolName) {
     case 'add_prompt':
@@ -246,7 +243,6 @@ export function createActionProposal(getDependencies) {
               },
               className: 'w-full py-2 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-bold rounded-lg shadow-md  active:scale-95 text-sm flex items-center justify-center gap-2',
               children: [
-                jsxRuntime.jsx('span', { children: '✅' }),
                 ' ',
                 isDirectExecutionTool ? 'Thực thi Ngay' : 'Áp dụng Thay đổi',
               ],

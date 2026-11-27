@@ -27,8 +27,6 @@ function clock() {
   const f = client.request('f'); client.close(); await assert.rejects(f,/closed/); await assert.rejects(client.request('g'),/closed/); assert.equal(timer.tasks.size,0);
 }
 
-// Execute the actual generated classic runtime, with a minimal DOM/host fixture.
-// No external libraries or browser network are required for this contract test.
 async function boot(mode, engineMode, failure) {
   const listeners = new Map(), sent = [], timer = clock();
   const parent = {postMessage(message) { sent.push(message); if (failure === 'send' && message.type === 'HANDSHAKE_INIT') throw new Error('handshake send failed'); }};

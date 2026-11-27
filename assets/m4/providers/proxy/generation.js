@@ -13,8 +13,7 @@ function googleText(payload) {
 
 export function createProxyGenerationProvider(deps) {
   function config(override) {
-    // Explicit URLs (Arena profile, draft test, card custom_api) must not
-    // inherit secrets or protocol from an unrelated saved endpoint.
+
     const explicitEndpoint = override != null && Object.hasOwn(override, 'url');
     if (explicitEndpoint && !String(override.url ?? '').trim()) throw Error('Chưa cấu hình Proxy URL.');
     return {
