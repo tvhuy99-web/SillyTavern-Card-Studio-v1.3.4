@@ -1,3 +1,5 @@
+import { normalizeTurnHistoryKeep } from '../../../features/chat/history-policy.js';
+
 export function createSmartContextSettings(getDependencies) {
   return function SmartContextSettings() {
     const {
@@ -55,6 +57,14 @@ export function createSmartContextSettings(getDependencies) {
         }), (0, jsxRuntime.jsx)("p", {
           className: "text-xs text-slate-400",
           children: "Thẻ: <" + (settings.turn_summary_tag ?? "Tóm tắt ngắn") + ">...</" + (settings.turn_summary_tag ?? "Tóm tắt ngắn") + ">. Đổi chế độ không chuyển đổi dữ liệu cũ."
+        }), (0, jsxRuntime.jsx)(NumberInput, {
+          label: "Số lượt lịch sử nguyên văn giữ lại",
+          value: normalizeTurnHistoryKeep(settings.turn_history_keep),
+          onChange: value => updateSetting("turn_history_keep", normalizeTurnHistoryKeep(value)),
+          min: 1,
+          max: 100,
+          step: 1,
+          tooltip: "Giữ các lượt gần nhất trong lịch sử gửi AI. Lượt cũ chỉ bị lược khi đã có tóm tắt; không xóa tin nhắn."
         })]
       }) : (0, jsxRuntime.jsxs)("div", {
         className: "grid grid-cols-1 md:grid-cols-2 gap-6",

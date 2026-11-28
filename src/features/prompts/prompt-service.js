@@ -49,7 +49,8 @@ export async function buildConversationPrompt(input, deps = {}) {
 
   const started = nowMs();
   const { baseSections } = resolveBaseSections(state.card, state.preset, 0, state.persona);
-  const chunkSize = summaryHistoryChunkSize(deps.getSummarySettings?.() || { summarization_chunk_size: deps.getSummaryChunkSize?.() || 12 }, state);
+  const summarySettings = deps.getSummarySettings?.() || { summarization_chunk_size: deps.getSummaryChunkSize?.() || 12 };
+  const chunkSize = summaryHistoryChunkSize(summarySettings, state);
   const sourceMessages = input.messages || [...(state.messages || []), input.userMessage].filter(Boolean);
   const messages = sourceMessages.map(message => {
     if (message?.role !== 'model') return message;
@@ -79,6 +80,7 @@ export async function buildConversationPrompt(input, deps = {}) {
     state.preset,
     state.visualState?.disableInteractiveMode,
     state.persona?.description || '',
+    ...(chunkSize === 0 ? [{ turnHistoryKeep: summarySettings.turn_history_keep }] : []),
   );
   const finishedAt = nowMs();
   deps.onTiming?.({

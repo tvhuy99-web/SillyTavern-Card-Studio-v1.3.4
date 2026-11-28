@@ -35,6 +35,7 @@ export async function buildHistoryContext({
   historyMessages,
   longTermSummaries,
   summaryChunkSize,
+  turnHistoryKeep,
   contextMode,
   userName,
   characterName,
@@ -54,7 +55,7 @@ export async function buildHistoryContext({
     longTermSummaries.length * summaryChunkSize,
   );
   let currentPageMessages = summaryChunkSize === 0
-    ? selectTurnMemoryHistory(historyMessages, longTermSummaries)
+    ? selectTurnMemoryHistory(historyMessages, longTermSummaries, turnHistoryKeep)
     : historyMessages.slice(pageStartIndex);
   if (contextMode === 'ai_only') {
     currentPageMessages = currentPageMessages.filter(

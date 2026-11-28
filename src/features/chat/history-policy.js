@@ -48,17 +48,30 @@ export function buildTurnSummaryPatch(state, messageId, summary) {
   };
 }
 
-// Keep the latest full turn and any turn without a recorded summary. Never
-// discard system messages or the greeting just because a later summary exists.
-export function selectTurnMemoryHistory(messages, summaries) {
-  const latestModel = messages.findLastIndex(message => message.role === 'model');
+export function normalizeTurnHistoryKeep(value) {
+  if (value == null || String(value).trim() === '') return 10;
+  const count = Number(value);
+  return Number.isFinite(count) ? Math.max(1, Math.min(100, Math.floor(count))) : 10;
+}
+
+// Keep the configured recent full turns and every turn without a recorded
+// summary. Never discard system messages or an unsummarized greeting.
+export function selectTurnMemoryHistory(messages, summaries, keepTurns = 10) {
+  let remaining = normalizeTurnHistoryKeep(keepTurns);
+  let firstRecentModel = 0;
+  for (let index = messages.length - 1; index >= 0; index--) {
+    if (messages[index].role === 'model' && --remaining === 0) {
+      firstRecentModel = index;
+      break;
+    }
+  }
   const result = [];
   let pending = [];
   for (let index = 0; index < messages.length; index++) {
     const message = messages[index];
     pending.push(message);
     if (message.role !== 'model') continue;
-    if (index < latestModel && hasTurnSummary(message, summaries)) {
+    if (index < firstRecentModel && hasTurnSummary(message, summaries)) {
       result.push(...pending.filter(item => item.role === 'system'));
     } else result.push(...pending);
     pending = [];

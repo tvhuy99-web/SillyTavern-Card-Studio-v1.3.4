@@ -96,6 +96,7 @@ export async function assemblePrompt(
   disableInteractiveMode,
   userPersonaDescription = '',
   dependencies,
+  historyOptions = {},
 ) {
   const deps = resolveAssemblerDependencies(dependencies);
 
@@ -175,6 +176,7 @@ export async function assemblePrompt(
     historyMessages,
     longTermSummaries,
     summaryChunkSize,
+    turnHistoryKeep: historyOptions.turnHistoryKeep,
     contextMode,
     userName,
     characterName,
@@ -262,6 +264,7 @@ export function createPromptAssembler(dependencies = {}) {
       preset,
       disableInteractiveMode,
       userPersonaDescription = '',
+      historyOptions = {},
     ) {
       return assemblePrompt(
         baseSections,
@@ -282,6 +285,7 @@ export function createPromptAssembler(dependencies = {}) {
         disableInteractiveMode,
         userPersonaDescription,
         boundDeps,
+        historyOptions,
       );
     },
   };

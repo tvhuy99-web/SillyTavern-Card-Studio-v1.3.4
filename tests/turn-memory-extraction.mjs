@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { extractTurnSummary, buildTurnSummaryPatch, selectTurnMemoryHistory, invalidateHistorySummaries, summaryHistoryChunkSize } from '../src/features/chat/history-policy.js';
+import { extractTurnSummary, buildTurnSummaryPatch, selectTurnMemoryHistory, invalidateHistorySummaries, summaryHistoryChunkSize, normalizeTurnHistoryKeep } from '../src/features/chat/history-policy.js';
 import { processAIResponse } from '../src/features/chat/response-processor.js';
 
 const settings = { memory_mode: 'turn', turn_summary_tag: 'Tóm tắt ngắn' };
@@ -22,7 +22,8 @@ Object.assign(state, buildTurnSummaryPatch(state, 'a', 'Updated'));
 assert.deepEqual(state.longTermSummaries, ['Old chunk', 'Updated']);
 state.messages.push({ id: 'u2', role: 'user', content: 'Missing' }, { id: 'a2', role: 'model', content: 'Missing summary' }, { id: 'u3', role: 'user', content: 'Next' }, { id: 'a3', role: 'model', content: 'Last' });
 Object.assign(state, buildTurnSummaryPatch(state, 'a3', 'Third'));
-assert.deepEqual(selectTurnMemoryHistory(state.messages, state.longTermSummaries).map(x => x.id), ['g','u2','a2','u3','a3']);
+assert.deepEqual(selectTurnMemoryHistory(state.messages, state.longTermSummaries, 1).map(x => x.id), ['g','u2','a2','u3','a3']);
+assert.deepEqual(selectTurnMemoryHistory(state.messages, state.longTermSummaries).map(x => x.id), state.messages.map(x => x.id));
 const rewind = invalidateHistorySummaries(state, 2, settings, () => 0, state.messages.filter(x => x.id !== 'a'));
 assert.deepEqual(rewind.longTermSummaries, ['Old chunk']);
 assert.ok(rewind.messages.every(message => !Object.hasOwn(message, 'turnSummaryIndex')));
