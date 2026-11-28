@@ -1,7 +1,7 @@
 import { useSessionView } from './session-view.js';
 import { awaitAbortable } from '../../../core/async/cancellation.js';
 
-import { summaryChunkSize } from '../history-policy.js';
+import { summaryChunkSize, isTurnMemory } from '../history-policy.js';
 function findTurnRange(messages, firstTurn, endTurn) {
     let start = 0, end = -1, turn = 0;
     for (let index = 0; index < messages.length; index++) {
@@ -35,6 +35,7 @@ export function useSmartContext(dependencies) {
         const failedTask = summaryQueue?.find(task => task.status === 'failed');
         if (failedTask && !retry) return;
         const settings = (0, dependencies.getSmartContextSettings)();
+        if (isTurnMemory(settings)) return;
         const chunkSize = summaryChunkSize(settings, readState());
         const firstTurn = longTermSummaries.length * chunkSize;
         const { start, end } = findTurnRange(messages, firstTurn, firstTurn + chunkSize);
@@ -51,7 +52,7 @@ export function useSmartContext(dependencies) {
             const prompt = (settings.summarization_prompt || '').replace('{{recent_summaries}}', recent);
             const summary = await awaitAbortable(() => dependencies.generateSummary(history, card?.name || 'Character', prompt, controller.signal), controller.signal);
             if (!isCurrent()) return;
-            if (!sameHistory(start, history) || !sameSummaries(prior) || summaryChunkSize(dependencies.getSmartContextSettings(), readState()) !== chunkSize) {
+            if (isTurnMemory(dependencies.getSmartContextSettings()) || !sameHistory(start, history) || !sameSummaries(prior) || summaryChunkSize(dependencies.getSmartContextSettings(), readState()) !== chunkSize) {
                 if (readState().summaryQueue?.[0]?.id === id) setSessionData({summaryQueue: []});
                 return;
             }
@@ -71,7 +72,7 @@ export function useSmartContext(dependencies) {
         }
     }, [messages, longTermSummaries, card, setSessionData, isSummarizing, summaryQueue, sessionId, revision]);
     const retryFailedTask = dependencies.react.useCallback(async () => {
-        if (isCurrent() && summaryQueue?.some(task => task.status === 'failed')) {
+        if (isCurrent() && !isTurnMemory(dependencies.getSmartContextSettings()) && summaryQueue?.some(task => task.status === 'failed')) {
             (0, dependencies.dispatchSystemLog)('log', 'system', 'Đang thử lại tác vụ tóm tắt bị lỗi...');
             await triggerSummarization(true);
         }
@@ -81,6 +82,7 @@ export function useSmartContext(dependencies) {
         const {messages, longTermSummaries, card} = readState();
         if (index >= longTermSummaries.length) return;
         const settings = (0, dependencies.getSmartContextSettings)();
+        if (isTurnMemory(settings)) return;
         const chunkSize = summaryChunkSize(settings, readState());
         const { start, end } = findTurnRange(messages, index * chunkSize, (index + 1) * chunkSize);
         if (end === -1) {
@@ -96,7 +98,7 @@ export function useSmartContext(dependencies) {
             const recent = longTermSummaries.slice(0, index).slice(-5).join('\n---\n') || '(Chưa có bối cảnh trước đó)';
             const prompt = (settings.summarization_prompt || '').replace('{{recent_summaries}}', recent);
             const summary = await awaitAbortable(() => dependencies.generateSummary(history, card?.name || 'Character', prompt, controller.signal), controller.signal);
-            if (isCurrent() && sameHistory(start, history) && sameSummaries(prior) && summaryChunkSize(dependencies.getSmartContextSettings(), readState()) === chunkSize && summary?.trim()) {
+            if (isCurrent() && !isTurnMemory(dependencies.getSmartContextSettings()) && sameHistory(start, history) && sameSummaries(prior) && summaryChunkSize(dependencies.getSmartContextSettings(), readState()) === chunkSize && summary?.trim()) {
                 const updated = [...dependencies.sessionStore.getState().longTermSummaries];
                 updated[index] = summary;
                 setSessionData({ longTermSummaries: updated, summaryChunkSize: chunkSize });

@@ -46,7 +46,7 @@ function useRuntimeBridge(deps, { logSystemMessage, executeSlashCommands, saveSe
     const compact = deps.turnPolicy.compactModelMessages(messages, { keepLatest: true }).messages;
     const state = readState();
     const changed = firstChangedHistoryIndex(state.messages,messages);
-    const patch = {messages:compact,...(changed<0?{}:invalidateHistorySummaries(state,changed,deps.readContextSettings(),deps.countTurns))};
+    const patch = {messages:compact,...(changed<0?{}:invalidateHistorySummaries(state,changed,deps.readContextSettings(),deps.countTurns,compact))};
     state.setSessionData(patch);
     await saveSession?.(patch);
     return deps.formatHistory(compact, state.persona?.name || 'User', state.card?.name || 'Character', true);

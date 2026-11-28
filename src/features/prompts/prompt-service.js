@@ -1,5 +1,5 @@
 import { modelContextContent } from '../chat/turn-policy.js';
-import { summaryChunkSize } from '../chat/history-policy.js';
+import { summaryHistoryChunkSize } from '../chat/history-policy.js';
 import {
   assemblePrompt,
   buildBaseSections,
@@ -49,7 +49,7 @@ export async function buildConversationPrompt(input, deps = {}) {
 
   const started = nowMs();
   const { baseSections } = resolveBaseSections(state.card, state.preset, 0, state.persona);
-  const chunkSize = summaryChunkSize({ summarization_chunk_size: deps.getSummaryChunkSize?.() || 12 }, state);
+  const chunkSize = summaryHistoryChunkSize(deps.getSummarySettings?.() || { summarization_chunk_size: deps.getSummaryChunkSize?.() || 12 }, state);
   const sourceMessages = input.messages || [...(state.messages || []), input.userMessage].filter(Boolean);
   const messages = sourceMessages.map(message => {
     if (message?.role !== 'model') return message;

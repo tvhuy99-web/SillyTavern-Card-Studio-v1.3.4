@@ -1,3 +1,4 @@
+import { selectTurnMemoryHistory } from '../../chat/history-policy.js';
 import { extractStoryContent } from '../story-content.js';
 
 function yieldMacrotask() {
@@ -52,7 +53,9 @@ export async function buildHistoryContext({
     historyMessages,
     longTermSummaries.length * summaryChunkSize,
   );
-  let currentPageMessages = historyMessages.slice(pageStartIndex);
+  let currentPageMessages = summaryChunkSize === 0
+    ? selectTurnMemoryHistory(historyMessages, longTermSummaries)
+    : historyMessages.slice(pageStartIndex);
   if (contextMode === 'ai_only') {
     currentPageMessages = currentPageMessages.filter(
       message => message.role === 'model' || message.role === 'system',

@@ -1,5 +1,5 @@
 import { useSessionView } from './session-view.js';
-import { summaryChunkSize } from '../history-policy.js';
+import { summaryChunkSize, isTurnMemory } from '../history-policy.js';
 import { useSessionPersistence } from './use-session-persistence.js';
 import { useSmartContext } from './use-smart-context.js';
 import { useMessageHistory } from './use-message-history.js';
@@ -54,7 +54,9 @@ export function createChatSessionHook(dependencies) {
     const advanceStoryChunk = useCallback(createStoryAdvance({ readState: () => dependencies.sessionStore.getState(), getRevision: dependencies.__stsRuntimeState.getSessionRevision, sendMessage, saveSession, expectedSessionId: sessionId, expectedRevision: sessionRevision, isSummarizing: () => isSummarizing || dependencies.sessionStore.getState().isSummarizing }), [sessionId, sessionRevision, state.storyQueue, state.isLoading, isSummarizing, sendMessage, saveSession, state.setStoryQueue]);
     useEffect(() => {
       if (state.isLoading || isSummarizing || !state.preset || state.visualState.disableInteractiveMode) return;
-      const settings = dependencies.getSmartContextSettings(), depth = settings.context_depth || 24, chunkSize = summaryChunkSize(settings, state);
+      const settings = dependencies.getSmartContextSettings();
+      if (isTurnMemory(settings)) return;
+      const depth = settings.context_depth || 24, chunkSize = summaryChunkSize(settings, state);
       const turns = dependencies.countModelMessages(state.messages), summarizedTurns = state.longTermSummaries.length * chunkSize;
       if (Math.max(0, turns - summarizedTurns) >= depth) triggerSmartContext();
     }, [state.messages.length, state.isLoading, isSummarizing, state.preset, state.longTermSummaries.length, triggerSmartContext, state.visualState.disableInteractiveMode]);

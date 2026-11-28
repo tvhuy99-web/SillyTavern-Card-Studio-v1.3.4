@@ -39,7 +39,7 @@ export function useMessageHistory(dependencies, {saveSession, logSystemMessage: 
       message.content=result.displayContent; message.originalRawContent=content; message.interactiveHtml=result.interactiveHtml||undefined; message.interactiveHtmlBlocks=result.interactiveHtmlBlocks?.length?result.interactiveHtmlBlocks:undefined;
     } else { delete message.interactiveHtml; delete message.interactiveHtmlBlocks; delete message.originalRawContent; }
     messages[index] = message;
-    const patch = {messages,...invalidateHistorySummaries(state,index,dependencies.getSmartContextSettings(),dependencies.countModelMessages)};
+    const patch = {messages,...invalidateHistorySummaries(state,index,dependencies.getSmartContextSettings(),dependencies.countModelMessages,messages)};
     state.setSessionData(patch); await saveSession(patch); return true;
   },[saveSession]);
   const deleteOneMessage = useCallback(async id => {
@@ -48,7 +48,8 @@ export function useMessageHistory(dependencies, {saveSession, logSystemMessage: 
     const index = state.messages.findIndex(message=>message.id===id);
     if (index < 0) return false;
     const revision = dependencies.__stsRuntimeState.getSessionRevision();
-    const patch = {messages:state.messages.filter(message=>message.id!==id),...invalidateHistorySummaries(state,index,dependencies.getSmartContextSettings(),dependencies.countModelMessages)};
+    const messages = state.messages.filter(message=>message.id!==id);
+    const patch = {messages,...invalidateHistorySummaries(state,index,dependencies.getSmartContextSettings(),dependencies.countModelMessages,messages)};
     state.setSessionData(patch); await saveSession(patch);
     if (revision===dependencies.__stsRuntimeState.getSessionRevision()) log('interaction','system',`Deleted single message: ${id}`);
     return true;

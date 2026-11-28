@@ -1,4 +1,4 @@
-import { summaryChunkSize } from '../../../features/chat/history-policy.js';
+import { summaryHistoryChunkSize } from '../../../features/chat/history-policy.js';
 
 export function createRuntimePromptBuilder({ readState, readLorebooks, resolvePreset, turnPolicy,
   baseSections, buildPrompt, readContextSettings, writeGlobalVariables, publish }) {
@@ -59,7 +59,7 @@ export function createRuntimePromptBuilder({ readState, readLorebooks, resolvePr
     const card = { ...state.card, description: overrides.char_description ?? state.card.description, personality: overrides.char_personality ?? state.card.personality, scenario: overrides.scenario ?? state.card.scenario, mes_example: overrides.dialogue_examples ?? state.card.mes_example };
     const { baseSections: sections } = baseSections(card, preset, 0, state.persona, state.worldInfoState, 0, state.worldInfoPlacement);
     const settings = readContextSettings();
-    const result = await buildPrompt(sections, history, overrides.chat_history?.author_note ?? state.authorNote, card, (limit >= state.messages.length && !Array.isArray(overrides.chat_history?.prompts)) ? state.longTermSummaries : [], summaryChunkSize(settings, state), state.variables, state.lastStateBlock, lorebooks, 'standard', state.persona?.name || 'User', state.worldInfoState, undefined, state.worldInfoPlacement, preset, state.visualState.disableInteractiveMode, overrides.persona_description ?? state.persona?.description ?? '');
+    const result = await buildPrompt(sections, history, overrides.chat_history?.author_note ?? state.authorNote, card, (limit >= state.messages.length && !Array.isArray(overrides.chat_history?.prompts)) ? state.longTermSummaries : [], summaryHistoryChunkSize(settings, state), state.variables, state.lastStateBlock, lorebooks, 'standard', state.persona?.name || 'User', state.worldInfoState, undefined, state.worldInfoPlacement, preset, state.visualState.disableInteractiveMode, overrides.persona_description ?? state.persona?.description ?? '');
     assertCurrent();
     const latest = readState();
     if (latest.messages !== state.messages || latest.variables !== state.variables || latest.card !== state.card || latest.preset !== state.preset || latest.longTermSummaries !== state.longTermSummaries || latest.summaryChunkSize !== state.summaryChunkSize) throw Error("Card prompt state changed during construction.");

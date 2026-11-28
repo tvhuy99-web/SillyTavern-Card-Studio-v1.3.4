@@ -1,3 +1,5 @@
+import { isTurnMemory, extractTurnSummary, buildTurnSummaryPatch } from './history-policy.js';
+
 export async function processAIResponse(input, deps) {
   const state = deps.getState();
   const sessionId = state.sessionId;
@@ -16,8 +18,15 @@ export async function processAIResponse(input, deps) {
     deps.logSystemMessage('warn', 'system', `Phản hồi ngắn (${wordCount} từ). Mythic Engine có thể không hoạt động chính xác.`);
   }
 
-  const output = await deps.processOutput(content, input.messageId);
+  const settings = deps.getSmartContextSettings?.();
+  const extracted = !input.forced && isTurnMemory(settings)
+    ? extractTurnSummary(content, settings.turn_summary_tag) : { content, summary: "" };
+  const output = await deps.processOutput(extracted.content, input.messageId);
   if (output === false || !ownsResponse()) return;
+  if (extracted.summary) {
+    const patch = buildTurnSummaryPatch(deps.getState(), input.messageId, extracted.summary);
+    if (patch) deps.setSessionData(patch);
+  }
   deps.logResponse(content);
   if (!input.forced) deps.playSound('ai');
 
@@ -26,7 +35,7 @@ export async function processAIResponse(input, deps) {
   const turn = deps.nextSequence(state.messages);
 
   if (state.card?.rpg_data && executionMode === 'integrated') {
-    const actions = deps.parseRpgActions(content, snapshot);
+    const actions = deps.parseRpgActions(extracted.content, snapshot);
     if (actions.length > 0) {
       deps.logSystemMessage('state', 'system', `[Integrated RPG] Detected ${actions.length} actions.`);
       const { newDb, notifications, logs } = deps.applyRpgActions(state.card.rpg_data, actions);
@@ -59,6 +68,6 @@ export async function processAIResponse(input, deps) {
       deps.logSystemMessage('log', 'system', '[Integrated RPG] No actions found in response.');
     }
   } else if (state.card?.rpg_data && executionMode === 'standalone') {
-    await deps.runStandaloneMythic(content, input.messageId);
+    await deps.runStandaloneMythic(extracted.content, input.messageId);
   }
 }

@@ -48,7 +48,7 @@ export function createDiagnosticsDialog(getDependencies) {
     let [isMaximized, setIsMaximized] = (0, react.useState)(false);
     if (isImmersive) return null;
     let errorCount = logs.systemLog.filter(log => log.level.includes("error")).length;
-    let hasFailedSummary = summaryQueue?.some(task => "failed" === task.status);
+    let hasFailedSummary = summaryStats?.memoryMode !== "turn" && summaryQueue?.some(task => "failed" === task.status);
     return (0, jsxRuntime.jsxs)("div", {
       className: "mt-4 border-t border-slate-700/50",
       children: [(0, jsxRuntime.jsxs)("button", {

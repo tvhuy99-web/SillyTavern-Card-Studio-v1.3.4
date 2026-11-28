@@ -1,4 +1,4 @@
-import { summaryChunkSize } from '../history-policy.js';
+import { summaryChunkSize, isTurnMemory } from '../history-policy.js';
 
 export function createChatSessionScreen(getDependencies) {
   return function ChatSessionScreen({ sessionId, onBack }) {
@@ -481,6 +481,7 @@ export function createChatSessionScreen(getDependencies) {
             isImmersive,
             onLorebookCreatorOpen: () => setIsLorebookCreatorOpen(true),
             summaryStats: {
+              memoryMode: isTurnMemory(summarySettings) ? "turn" : "chunk",
               messageCount: unsummarizedTurnCount,
               summaryCount: session.longTermSummaries.length,
               contextDepth,

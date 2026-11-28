@@ -32,7 +32,31 @@ export function createSmartContextSettings(getDependencies) {
       children: [(0, jsxRuntime.jsx)("h2", {
         className: "text-xl font-bold text-sky-400 mb-4",
         children: "Smart Context & Memory (Toàn Cục)"
-      }), (0, jsxRuntime.jsxs)("div", {
+      }), (0, jsxRuntime.jsx)(SearchableSelect, {
+        label: "Chế độ lưu trữ bộ nhớ",
+        value: settings.memory_mode === "turn" ? "turn" : "chunk",
+        onChange: event => updateSetting("memory_mode", event.target.value),
+        options: [
+          { value: "chunk", label: "Tóm tắt theo gói" },
+          { value: "turn", label: "Trích xuất theo từng lượt" }
+        ]
+      }), settings.memory_mode === "turn" ? (0, jsxRuntime.jsxs)("div", {
+        className: "space-y-2",
+        children: [(0, jsxRuntime.jsx)("label", {
+          htmlFor: "sts-turn-summary-tag",
+          className: "block text-sm font-medium text-slate-300",
+          children: "Tên thẻ trích xuất"
+        }), (0, jsxRuntime.jsx)("input", {
+          id: "sts-turn-summary-tag",
+          type: "text",
+          className: "w-full rounded-lg bg-slate-800 border border-slate-600 p-3 text-slate-100",
+          value: settings.turn_summary_tag ?? "Tóm tắt ngắn",
+          onChange: event => updateSetting("turn_summary_tag", event.target.value)
+        }), (0, jsxRuntime.jsx)("p", {
+          className: "text-xs text-slate-400",
+          children: "Thẻ: <" + (settings.turn_summary_tag ?? "Tóm tắt ngắn") + ">...</" + (settings.turn_summary_tag ?? "Tóm tắt ngắn") + ">. Đổi chế độ không chuyển đổi dữ liệu cũ."
+        })]
+      }) : (0, jsxRuntime.jsxs)("div", {
         className: "grid grid-cols-1 md:grid-cols-2 gap-6",
         children: [(0, jsxRuntime.jsxs)("div", {
           className: "space-y-6",

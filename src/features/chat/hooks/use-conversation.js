@@ -141,6 +141,7 @@ export function createConversationHook(dependencies) {
           getState: () => dependencies.sessionStore.getState(),
           getSessionRevision: dependencies.__stsRuntimeState.getSessionRevision,
           processOutput: runOutputPipeline,
+          getSmartContextSettings: dependencies.getSmartContextSettings,
           logResponse: diagnostics.logResponse,
           playSound,
           logSystemMessage: diagnostics.logSystemMessage,
@@ -284,6 +285,7 @@ export function createConversationHook(dependencies) {
         lorebooks: effectiveLorebooks,
         buildBaseSections: dependencies.buildBaseSections,
         getSummaryChunkSize: () => dependencies.getSmartContextSettings().summarization_chunk_size || 12,
+        getSummarySettings: dependencies.getSmartContextSettings,
         buildPromptCore: dependencies.assemblePrompt,
         onTiming: timing => {
           if (timing.totalMs >= 500) {
