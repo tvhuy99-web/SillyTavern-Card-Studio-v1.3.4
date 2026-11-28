@@ -52,7 +52,30 @@ for(const record of records){
   if(baselineFile)record.cases=[];
   for(const scenario of baselineFile?['default',...(['PromptEditDialog','LorebookEntryDialog'].includes(record.name)?['open']:[])]:record.cases.map(x=>x.scenario)){
     const next=factory(()=>dependencies(record,scenario));
-    const current=hash(next(props));
+    const tree=next(props);
+    // Preserve the historical tree comparison except for the explicitly approved
+    // accessibility label change. Assert the new label before mapping it back
+    // to the historical wording for the baseline hash.
+    if (record.name === 'PromptListItem' || record.name === 'LorebookEntryCard') {
+      const isPrompt = record.name === 'PromptListItem';
+      const historicalLabel = isPrompt ? 'Bật lời nhắc ' + prompt.name : 'Bật quy tắc ' + entry.comment;
+      const checked = isPrompt ? prompt.enabled ?? false : entry.enabled !== false;
+      let matched = 0;
+      const visit = node => {
+        if (Array.isArray(node)) { node.forEach(visit); return; }
+        if (!node || typeof node !== 'object') return;
+        if (node.type === 'component:yl' && node.props && Object.hasOwn(node.props, 'ariaLabel')) {
+          assert.equal(node.props.checked, checked, record.name + ': checked');
+          assert.equal(node.props.ariaLabel, checked ? 'Đã chọn' : 'Chưa chọn', record.name + ': status label');
+          node.props.ariaLabel = historicalLabel;
+          matched++;
+        }
+        visit(node.props?.children);
+      };
+      visit(tree);
+      assert.equal(matched, 1, record.name + ': exactly one status toggle');
+    }
+    const current=hash(tree);
     if(baselineFile){
       const original=vm.runInNewContext('('+declarations.get(record.symbol)+')',dependencies(record,scenario));
       const expected=hash(original(props)); assert.equal(current,expected,record.name+': '+scenario);record.cases.push({scenario,hash:expected});
