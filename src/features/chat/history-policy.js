@@ -56,7 +56,7 @@ export function normalizeTurnHistoryKeep(value) {
 
 // Keep the configured recent full turns and every turn without a recorded
 // summary. Never discard system messages or an unsummarized greeting.
-export function selectTurnMemoryHistory(messages, summaries, keepTurns = 10) {
+export function partitionTurnMemory(messages, summaries, keepTurns = 10) {
   let remaining = normalizeTurnHistoryKeep(keepTurns);
   let firstRecentModel = 0;
   for (let index = messages.length - 1; index >= 0; index--) {
@@ -66,17 +66,34 @@ export function selectTurnMemoryHistory(messages, summaries, keepTurns = 10) {
     }
   }
   const result = [];
+  const archivedIndices = new Set();
+  const linkedCounts = new Map();
+  for (const message of messages) {
+    if (hasTurnSummary(message, summaries)) {
+      linkedCounts.set(message.turnSummaryIndex, (linkedCounts.get(message.turnSummaryIndex) || 0) + 1);
+    }
+  }
   let pending = [];
   for (let index = 0; index < messages.length; index++) {
     const message = messages[index];
     pending.push(message);
     if (message.role !== 'model') continue;
-    if (index < firstRecentModel && hasTurnSummary(message, summaries)) {
+    if (index < firstRecentModel && hasTurnSummary(message, summaries)
+        && linkedCounts.get(message.turnSummaryIndex) === 1) {
+      archivedIndices.add(message.turnSummaryIndex);
       result.push(...pending.filter(item => item.role === 'system'));
     } else result.push(...pending);
     pending = [];
   }
-  return [...result, ...pending];
+  return {
+    messages: [...result, ...pending],
+    summaries: summaries.filter((_summary, index) => archivedIndices.has(index)),
+    archivedIndices,
+  };
+}
+
+export function selectTurnMemoryHistory(messages, summaries, keepTurns = 10) {
+  return partitionTurnMemory(messages, summaries, keepTurns).messages;
 }
 
 function invalidateTurnMemory(state, index, nextMessages) {

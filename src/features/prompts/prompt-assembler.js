@@ -201,7 +201,7 @@ export async function assemblePrompt(
     allDefinitions,
     externalLorebooks,
     disableInteractiveMode,
-    longTermSummaries,
+    longTermSummaries: historyContext.promptSummaries,
     worldInfoBeforeItems: worldInfo.worldInfoBeforeItems,
     worldInfoAfterItems: worldInfo.worldInfoAfterItems,
     allWorldInfoItems: worldInfo.allWorldInfoItems,

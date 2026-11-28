@@ -1,4 +1,4 @@
-import { selectTurnMemoryHistory } from '../../chat/history-policy.js';
+import { partitionTurnMemory } from '../../chat/history-policy.js';
 import { extractStoryContent } from '../story-content.js';
 
 function yieldMacrotask() {
@@ -46,16 +46,20 @@ export async function buildHistoryContext({
   expandMacros,
   deps,
 }) {
-  const longTermSummaryText = longTermSummaries.length > 0
-    ? `${longTermSummaries.join('\n\n---\n\n')}`
+  const turnMemory = summaryChunkSize === 0
+    ? partitionTurnMemory(historyMessages, longTermSummaries, turnHistoryKeep)
+    : null;
+  const promptSummaries = turnMemory ? turnMemory.summaries : longTermSummaries;
+  const longTermSummaryText = promptSummaries.length > 0
+    ? `${promptSummaries.join('\n\n---\n\n')}`
     : 'Đây là khởi đầu của cuộc trò chuyện.';
 
   const pageStartIndex = findCurrentPageStartIndex(
     historyMessages,
     longTermSummaries.length * summaryChunkSize,
   );
-  let currentPageMessages = summaryChunkSize === 0
-    ? selectTurnMemoryHistory(historyMessages, longTermSummaries, turnHistoryKeep)
+  let currentPageMessages = turnMemory
+    ? turnMemory.messages
     : historyMessages.slice(pageStartIndex);
   if (contextMode === 'ai_only') {
     currentPageMessages = currentPageMessages.filter(
@@ -180,6 +184,7 @@ export async function buildHistoryContext({
   const lastTurnText = lastTurnLines.join('\n');
 
   return {
+    promptSummaries,
     longTermSummaryText,
     currentPageLines,
     currentPageHistoryText,

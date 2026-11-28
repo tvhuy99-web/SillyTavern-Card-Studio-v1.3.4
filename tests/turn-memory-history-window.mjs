@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { selectTurnMemoryHistory, normalizeTurnHistoryKeep } from '../src/features/chat/history-policy.js';
+import { selectTurnMemoryHistory, normalizeTurnHistoryKeep, partitionTurnMemory } from '../src/features/chat/history-policy.js';
 import { buildHistoryContext } from '../src/features/prompts/assembler/history-context-builder.js';
 import { buildConversationPrompt } from '../src/features/prompts/prompt-service.js';
 
@@ -24,7 +24,12 @@ const expected = count => messages.filter(message =>
 ).map(message => message.id);
 assert.deepEqual(ids(selectTurnMemoryHistory(messages, summaries)), expected(10));
 for (const count of [1, 5, 10, 20, 100]) {
-  assert.deepEqual(ids(selectTurnMemoryHistory(messages, summaries, count)), expected(count));
+  const partition = partitionTurnMemory(messages, summaries, count);
+  assert.deepEqual(ids(partition.messages), expected(count));
+  assert.deepEqual(partition.summaries, summaries.filter(summary => Number(summary.split(' ')[1]) <= 20 - count));
+  for (const message of partition.messages) {
+    if (message.turnSummary) assert.ok(!partition.archivedIndices.has(message.turnSummaryIndex));
+  }
 }
 assert.equal(normalizeTurnHistoryKeep(undefined), 10);
 assert.equal(normalizeTurnHistoryKeep(null), 10);
@@ -47,7 +52,21 @@ assert.ok(!context.currentPageLines.includes('AI: Response 15'));
 assert.ok(context.currentPageLines.includes('AI: Response 3'));
 assert.ok(context.currentPageLines.includes('System: System instruction'));
 assert.ok(context.longTermSummaryText.includes('Summary 1'));
-assert.ok(context.longTermSummaryText.includes('Summary 20'));
+assert.ok(!context.longTermSummaryText.includes('Summary 20'));
+assert.deepEqual(context.promptSummaries, summaries.filter(summary => Number(summary.split(' ')[1]) <= 15));
+const allRecent = await buildHistoryContext({
+  historyMessages: messages, longTermSummaries: summaries, summaryChunkSize: 0,
+  turnHistoryKeep: 100, contextMode: 'standard', userName: 'User',
+  characterName: 'AI', card: {}, expandMacros: text => text,
+  deps: { getRegexEngineMode: () => 'legacy' },
+});
+assert.deepEqual(allRecent.promptSummaries, []);
+assert.equal(allRecent.longTermSummaryText, 'Đây là khởi đầu của cuộc trò chuyện.');
+const duplicateLink = [...messages, {...messages.find(message => message.id === 'a1'), id: 'duplicate'}];
+const ambiguous = partitionTurnMemory(duplicateLink, summaries, 5);
+assert.ok(ambiguous.messages.some(message => message.id === 'a1'));
+assert.ok(!ambiguous.archivedIndices.has(0));
+assert.deepEqual(partitionTurnMemory(messages, [...summaries, 'Unlinked legacy summary'], 10).summaries, summaries.filter(summary => Number(summary.split(' ')[1]) <= 10));
 
 let args;
 const state = { messages, longTermSummaries: summaries, card: {}, preset: {}, variables: {} };

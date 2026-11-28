@@ -1,3 +1,5 @@
+import { partitionTurnMemory } from '../../features/chat/history-policy.js';
+
 function resolveDiagnosticDeps(getDependencies) {
   const deps = getDependencies();
   return {
@@ -30,11 +32,12 @@ export function createSummaryLogPanel(getDependencies) {
     let [expandedIndices, setExpandedIndices] = (0, react.useState)(new Set());
     let [showPromptModal, setShowPromptModal] = (0, react.useState)(false);
     if (stats?.memoryMode === "turn") {
+      const active = partitionTurnMemory(messages || [], longTermSummaries, getSmartContextSettings().turn_history_keep).archivedIndices;
       return (0, jsxRuntime.jsxs)("div", {
         className: "space-y-3",
         children: [(0, jsxRuntime.jsx)("p", {
           className: "text-sm text-slate-300",
-          children: "Tóm tắt theo từng lượt: " + longTermSummaries.length + " bản ghi"
+          children: "Tóm tắt theo từng lượt: " + longTermSummaries.length + " bản ghi đã lưu; " + active.size + " bản dùng trong prompt"
         }), longTermSummaries.length === 0 ? (0, jsxRuntime.jsx)("p", {
           className: "text-xs text-slate-500",
           children: "Chưa có tóm tắt được trích xuất."
@@ -42,7 +45,7 @@ export function createSummaryLogPanel(getDependencies) {
           className: "bg-slate-900/30 border border-slate-700 rounded-lg",
           children: [(0, jsxRuntime.jsx)("summary", {
             className: "p-3 text-sm font-semibold text-amber-400 cursor-pointer",
-            children: "Tóm tắt #" + (index + 1) + " (Dữ liệu bền vững)"
+            children: "Tóm tắt #" + (index + 1) + (active.has(index) ? " (Đưa vào bộ nhớ gửi AI)" : " (Đã lưu, chưa đưa vào prompt)")
           }), (0, jsxRuntime.jsxs)("div", {
             className: "p-3 border-t border-slate-700 space-y-2",
             children: [(0, jsxRuntime.jsx)(CopyButton, { textToCopy: summary }), (0, jsxRuntime.jsx)("p", {
